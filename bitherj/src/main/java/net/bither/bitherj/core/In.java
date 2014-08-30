@@ -213,7 +213,7 @@ public class In extends Message {
     public String getFromAddress(){
         if(getConnectedOut() != null){
             return getConnectedOut().getOutAddress();
-        } else {
+        } else if (this.getInSignature() != null){
             Script script = new Script(this.getInSignature());
             if (script.getChunks().size() == 2) {
                 try {
