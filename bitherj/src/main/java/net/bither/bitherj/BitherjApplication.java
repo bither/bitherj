@@ -55,7 +55,6 @@ public abstract class BitherjApplication extends Application {
         NotificationUtil.removeAddressLoadCompleteState();
         initApp();
 
-
     }
 
     @Override
