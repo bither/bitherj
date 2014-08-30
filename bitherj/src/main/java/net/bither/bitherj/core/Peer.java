@@ -270,22 +270,24 @@ public class Peer extends PeerSocketHandler {
             for (int i = 0;
                  i < eachTx.getIns().size();
                  i++) {
-                if (Arrays.equals(eachTx.getIns().get(i).getTxHash(), eachTx.getTxHash())) {
-                    byte[] outScript = tx.getOuts().get(eachTx.getIns().get(i).getInSn())
-                            .getOutScript();
-                    Script pubKeyScript = new Script(outScript);
-                    Script script = new Script(eachTx.getIns().get(i).getInSignature());
-                    try {
-                        script.correctlySpends(eachTx, i, pubKeyScript, true);
-                        valid &= true;
-                    } catch (ScriptException e) {
-                        valid &= false;
+                if (Arrays.equals(eachTx.getIns().get(i).getTxHash(), tx.getTxHash())) {
+                    if (eachTx.getIns().get(i).getInSn() < tx.getOuts().size()) {
+                        byte[] outScript = tx.getOuts().get(eachTx.getIns().get(i).getInSn())
+                                .getOutScript();
+                        Script pubKeyScript = new Script(outScript);
+                        Script script = new Script(eachTx.getIns().get(i).getInSignature());
+                        try {
+                            script.correctlySpends(eachTx, i, pubKeyScript, true);
+                            valid &= true;
+                        } catch (ScriptException e) {
+                            valid &= false;
+                        }
+                    } else {
+                        valid = false;
                     }
-                } else {
-                    valid = false;
-                }
-                if (!valid) {
-                    break;
+                    if (!valid) {
+                        break;
+                    }
                 }
             }
             if (valid) {
@@ -636,7 +638,7 @@ public class Peer extends PeerSocketHandler {
 
         sendMessage(new VersionAck());
     }
-    
+
     public boolean getDownloadData() {
         if (PeerManager.instance().getDownloadingPeer() != null) {
             return equals(PeerManager.instance().getDownloadingPeer());
