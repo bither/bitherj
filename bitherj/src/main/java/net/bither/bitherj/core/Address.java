@@ -104,9 +104,7 @@ public class Address implements Comparable<Address> {
 
     public void updateBalance() {
         long balance = 0;
-        LogUtil.d(Address.class.getClass().getSimpleName(), "address t1");
         List<Tx> txs = this.getTxs();
-        LogUtil.d(Address.class.getClass().getSimpleName(), "address t2");
 
         Set<byte[]> invalidTx = new HashSet<byte[]>();
         Set<OutPoint> spentOut = new HashSet<OutPoint>();
