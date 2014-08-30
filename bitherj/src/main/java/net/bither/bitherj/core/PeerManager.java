@@ -278,7 +278,7 @@ public class PeerManager {
 
     public void peerConnected(final Peer peer) {
         if (running) {
-            if (peer.getLastBlockHeight() + 10 < getLastBlockHeight()) {
+            if (peer.getVersionLastBlockHeight() + 10 < getLastBlockHeight()) {
                 LogUtil.w(PeerManager.class.getSimpleName(), "Peer height low abandon : " + peer
                         .getPeerAddress().getHostAddress());
                 executor.submit(new Runnable() {
@@ -301,10 +301,10 @@ public class PeerManager {
                 public void run() {
                     peer.connectSucceed();
                     if (connected && ((downloadingPeer != null && downloadingPeer
-                            .getLastBlockHeight() >= peer.getLastBlockHeight()) ||
-                            getLastBlockHeight() >= peer.getLastBlockHeight())) {
+                            .getVersionLastBlockHeight() >= peer.getVersionLastBlockHeight()) ||
+                            getLastBlockHeight() >= peer.getVersionLastBlockHeight())) {
                         if (downloadingPeer != null && getLastBlockHeight() < downloadingPeer
-                                .getLastBlockHeight()) {
+                                .getVersionLastBlockHeight()) {
                             return; // don't load bloom filter yet if we're syncing
                         }
                         peer.sendFilterLoadMessage(bloomFilterForPeer(peer));
@@ -318,9 +318,9 @@ public class PeerManager {
                     }
                     Peer dp = peer;
                     for (Peer p : connectedPeers) {
-                        if ((p.pingTime < peer.pingTime && p.getLastBlockHeight() >= peer
-                                .getLastBlockHeight()) || p.getLastBlockHeight() > peer
-                                .getLastBlockHeight()) {
+                        if ((p.pingTime < peer.pingTime && p.getVersionLastBlockHeight() >= peer
+                                .getVersionLastBlockHeight()) || p.getVersionLastBlockHeight() > peer
+                                .getVersionLastBlockHeight()) {
                             dp = p;
                         }
                     }
@@ -342,7 +342,7 @@ public class PeerManager {
                     // generated addresses
                     dp.sendFilterLoadMessage(bloomFilterForPeer(dp));
 
-                    if (getLastBlockHeight() < dp.getLastBlockHeight()) {
+                    if (getLastBlockHeight() < dp.getVersionLastBlockHeight()) {
 
                         lastRelayTime = 0;
                         synchronizing = true;
@@ -550,7 +550,7 @@ public class PeerManager {
                     abandonPeer(fromPeer);
                     log.warn("Peer {} relay block Error. Drop it", fromPeer.getPeerAddress().getHostAddress());
                 }
-                if (getLastBlockHeight() == fromPeer.getLastBlockHeight()) {
+                if (getLastBlockHeight() == fromPeer.getVersionLastBlockHeight()) {
                     syncStopped();
                     fromPeer.sendGetAddrMessage(); // request a list of other bitcoin peers
                     syncStartHeight = 0;
@@ -614,7 +614,7 @@ public class PeerManager {
                     log.warn("Peer {} relay block {} error, drop this peer", fromPeer.getPeerAddress().getHostAddress(), Utils.hashToString(block.getBlockHash()));
                 }
 
-                if (block.getBlockNo() == fromPeer.getLastBlockHeight() && block.getBlockNo() ==
+                if (block.getBlockNo() == fromPeer.getVersionLastBlockHeight() && block.getBlockNo() ==
                         getLastBlockHeight()) {
                     syncStopped();
                     fromPeer.sendGetAddrMessage(); // request a list of other bitcoin peers
@@ -713,15 +713,14 @@ public class PeerManager {
             filterFpRate = BloomFilter.DEFAULT_BLOOM_FILTER_FP_RATE;
 
             if (downloadingPeer != null && filterUpdateHeight + BitherjSettings
-                    .BLOCK_DIFFICULTY_INTERVAL < downloadingPeer.getLastBlockHeight()) {
+                    .BLOCK_DIFFICULTY_INTERVAL < downloadingPeer.getVersionLastBlockHeight()) {
                 filterFpRate = BloomFilter.BLOOM_REDUCED_FALSEPOSITIVE_RATE; // lower false
                 // positive rate during chain sync
             } else if (downloadingPeer != null && filterUpdateHeight < downloadingPeer
-                    .getLastBlockHeight()) { // partially
+                    .getVersionLastBlockHeight()) { // partially
                 // lower fp rate if we're nearly synced
                 filterFpRate -= (BloomFilter.DEFAULT_BLOOM_FILTER_FP_RATE - BloomFilter
-                        .BLOOM_REDUCED_FALSEPOSITIVE_RATE) * (downloadingPeer.getLastBlockHeight
-                        () - filterUpdateHeight) / BitherjSettings.BLOCK_DIFFICULTY_INTERVAL;
+                        .BLOOM_REDUCED_FALSEPOSITIVE_RATE) * (downloadingPeer.getVersionLastBlockHeight() - filterUpdateHeight) / BitherjSettings.BLOCK_DIFFICULTY_INTERVAL;
             }
             List<Out> outs = TxProvider.getInstance().getOuts();
             List<Address> addresses = AddressManager.getInstance().getAllAddresses();

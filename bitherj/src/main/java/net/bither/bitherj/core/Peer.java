@@ -85,7 +85,9 @@ public class Peer extends PeerSocketHandler {
     protected int peerPort;
     protected long peerServices;
     protected int peerConnectedCnt;
-    protected long lastBlockHeight;
+    protected long versionLastBlockHeight;
+    // This may be wrong. Do not rely on it.
+    private int incrementalBlockHeight;
     protected int version;
     protected long nonce;
     protected String userAgent;
@@ -116,6 +118,7 @@ public class Peer extends PeerSocketHandler {
         knownTxHashes = new HashSet<Sha256Hash>();
         requestedBlockHashes = new HashSet<Sha256Hash>();
         needToRequestDependencyDict = new HashMap<Sha256Hash, HashSet<Tx>>();
+        incrementalBlockHeight = 0;
         nonce = new Random().nextLong();
         peerTimestamp = (int) (new Date().getTime() / 1000 - 24 * 60 * 60 * (3 + new Random()
                 .nextFloat() * 4));
@@ -410,6 +413,10 @@ public class Peer extends PeerSocketHandler {
                 }
             }
         }
+
+        if(blockHashSha256Hashs.size() == 1){
+            incrementalBlockHeight ++;
+        }
     }
 
     private void processBlock(BlockMessage m) {
@@ -597,7 +604,7 @@ public class Peer extends PeerSocketHandler {
                 boolean passedTime = header.getBlock().getBlockTime() >= PeerManager.instance()
                         .earliestKeyTime;
                 boolean reachedTop = PeerManager.instance().getLastBlockHeight() >= this
-                        .lastBlockHeight;
+                        .versionLastBlockHeight;
                 if (!passedTime && !reachedTop) {
                     if (header.getBlock().getBlockTime() > lastBlockTime) {
                         lastBlockTime = header.getBlock().getBlockTime();
@@ -634,7 +641,7 @@ public class Peer extends PeerSocketHandler {
         peerTimestamp = (int) version.time;
         userAgent = version.subVer;
 
-        lastBlockHeight = version.bestHeight;
+        versionLastBlockHeight = version.bestHeight;
 
         sendMessage(new VersionAck());
     }
@@ -919,8 +926,13 @@ public class Peer extends PeerSocketHandler {
         this.peerConnectedCnt = peerConnectedCnt;
     }
 
-    public long getLastBlockHeight() {
-        return lastBlockHeight;
+    public long getVersionLastBlockHeight() {
+        return versionLastBlockHeight;
+    }
+
+    // This may be wrong. Do not rely on it.
+    public long getDisplayLastBlockHeight(){
+        return versionLastBlockHeight + incrementalBlockHeight;
     }
 
     public int getClientVersion(){
