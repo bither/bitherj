@@ -25,15 +25,14 @@ import java.util.Arrays;
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA1;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA2;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA4;
+import static com.google.common.base.Preconditions.checkState;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_0;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_1;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_16;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_1NEGATE;
-import static net.bither.bitherj.script.ScriptOpCodes.getOpCodeName;
-import static com.google.common.base.Preconditions.checkState;
+import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA1;
+import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA2;
+import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA4;
 import static net.bither.bitherj.script.ScriptOpCodes.getOpCodeName;
 import static net.bither.bitherj.script.ScriptOpCodes.getPushDataName;
 

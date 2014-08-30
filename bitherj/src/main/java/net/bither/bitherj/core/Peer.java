@@ -85,7 +85,9 @@ public class Peer extends PeerSocketHandler {
     protected int peerPort;
     protected long peerServices;
     protected int peerConnectedCnt;
-    protected long lastBlockHeight;
+    protected long versionLastBlockHeight;
+    // This may be wrong. Do not rely on it.
+    private int incrementalBlockHeight;
     protected int version;
     protected long nonce;
     protected String userAgent;
@@ -116,6 +118,7 @@ public class Peer extends PeerSocketHandler {
         knownTxHashes = new HashSet<Sha256Hash>();
         requestedBlockHashes = new HashSet<Sha256Hash>();
         needToRequestDependencyDict = new HashMap<Sha256Hash, HashSet<Tx>>();
+        incrementalBlockHeight = 0;
         nonce = new Random().nextLong();
         peerTimestamp = (int) (new Date().getTime() / 1000 - 24 * 60 * 60 * (3 + new Random()
                 .nextFloat() * 4));
@@ -270,22 +273,24 @@ public class Peer extends PeerSocketHandler {
             for (int i = 0;
                  i < eachTx.getIns().size();
                  i++) {
-                if (Arrays.equals(eachTx.getIns().get(i).getTxHash(), eachTx.getTxHash())) {
-                    byte[] outScript = tx.getOuts().get(eachTx.getIns().get(i).getInSn())
-                            .getOutScript();
-                    Script pubKeyScript = new Script(outScript);
-                    Script script = new Script(eachTx.getIns().get(i).getInSignature());
-                    try {
-                        script.correctlySpends(eachTx, i, pubKeyScript, true);
-                        valid &= true;
-                    } catch (ScriptException e) {
-                        valid &= false;
+                if (Arrays.equals(eachTx.getIns().get(i).getTxHash(), tx.getTxHash())) {
+                    if (eachTx.getIns().get(i).getInSn() < tx.getOuts().size()) {
+                        byte[] outScript = tx.getOuts().get(eachTx.getIns().get(i).getInSn())
+                                .getOutScript();
+                        Script pubKeyScript = new Script(outScript);
+                        Script script = new Script(eachTx.getIns().get(i).getInSignature());
+                        try {
+                            script.correctlySpends(eachTx, i, pubKeyScript, true);
+                            valid &= true;
+                        } catch (ScriptException e) {
+                            valid &= false;
+                        }
+                    } else {
+                        valid = false;
                     }
-                } else {
-                    valid = false;
-                }
-                if (!valid) {
-                    break;
+                    if (!valid) {
+                        break;
+                    }
                 }
             }
             if (valid) {
@@ -407,6 +412,10 @@ public class Peer extends PeerSocketHandler {
                     iterator.remove();
                 }
             }
+        }
+
+        if(blockHashSha256Hashs.size() == 1){
+            incrementalBlockHeight ++;
         }
     }
 
@@ -595,7 +604,7 @@ public class Peer extends PeerSocketHandler {
                 boolean passedTime = header.getBlock().getBlockTime() >= PeerManager.instance()
                         .earliestKeyTime;
                 boolean reachedTop = PeerManager.instance().getLastBlockHeight() >= this
-                        .lastBlockHeight;
+                        .versionLastBlockHeight;
                 if (!passedTime && !reachedTop) {
                     if (header.getBlock().getBlockTime() > lastBlockTime) {
                         lastBlockTime = header.getBlock().getBlockTime();
@@ -632,11 +641,11 @@ public class Peer extends PeerSocketHandler {
         peerTimestamp = (int) version.time;
         userAgent = version.subVer;
 
-        lastBlockHeight = version.bestHeight;
+        versionLastBlockHeight = version.bestHeight;
 
         sendMessage(new VersionAck());
     }
-    
+
     public boolean getDownloadData() {
         if (PeerManager.instance().getDownloadingPeer() != null) {
             return equals(PeerManager.instance().getDownloadingPeer());
@@ -917,8 +926,13 @@ public class Peer extends PeerSocketHandler {
         this.peerConnectedCnt = peerConnectedCnt;
     }
 
-    public long getLastBlockHeight() {
-        return lastBlockHeight;
+    public long getVersionLastBlockHeight() {
+        return versionLastBlockHeight;
+    }
+
+    // This may be wrong. Do not rely on it.
+    public long getDisplayLastBlockHeight(){
+        return versionLastBlockHeight + incrementalBlockHeight;
     }
 
     public int getClientVersion(){

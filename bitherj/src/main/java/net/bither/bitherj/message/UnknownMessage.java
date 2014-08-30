@@ -16,8 +16,8 @@
 
 package net.bither.bitherj.message;
 
-import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.exception.ProtocolException;
+import net.bither.bitherj.utils.Utils;
 
 public class UnknownMessage extends EmptyMessage {
     private static final long serialVersionUID = 3614705938207918775L;

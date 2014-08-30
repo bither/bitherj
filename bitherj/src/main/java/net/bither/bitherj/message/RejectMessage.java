@@ -17,7 +17,6 @@
 package net.bither.bitherj.message;
 
 import net.bither.bitherj.exception.ProtocolException;
-import net.bither.bitherj.message.Message;
 import net.bither.bitherj.utils.VarInt;
 
 import java.io.IOException;

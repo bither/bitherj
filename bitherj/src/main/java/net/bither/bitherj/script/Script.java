@@ -17,16 +17,15 @@
 
 package net.bither.bitherj.script;
 
+import com.google.common.collect.Lists;
+
+import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.crypto.ECKey;
+import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
-import net.bither.bitherj.utils.Sha256Hash;
-import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
 import net.bither.bitherj.utils.Utils;
-import net.bither.bitherj.crypto.TransactionSignature;
-
-import com.google.common.collect.Lists;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,10 +47,9 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import static net.bither.bitherj.utils.Utils.bytesToHexString;
-import static net.bither.bitherj.script.ScriptOpCodes.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static net.bither.bitherj.script.ScriptOpCodes.*;
 
 // TODO: Make this class a superclass with derived classes giving accessor methods for the various common templates.
 

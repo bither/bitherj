@@ -21,9 +21,6 @@ import net.bither.bitherj.core.Block;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.VerificationException;
-import net.bither.bitherj.utils.LogUtil;
-import net.bither.bitherj.utils.Sha256Hash;
-import net.bither.bitherj.utils.Utils;
 
 import java.io.IOException;
 import java.io.OutputStream;

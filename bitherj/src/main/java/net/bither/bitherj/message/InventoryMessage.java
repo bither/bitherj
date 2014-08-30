@@ -17,9 +17,9 @@
 package net.bither.bitherj.message;
 
 import net.bither.bitherj.core.Block;
-import net.bither.bitherj.utils.InventoryItem;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.exception.ProtocolException;
+import net.bither.bitherj.utils.InventoryItem;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
