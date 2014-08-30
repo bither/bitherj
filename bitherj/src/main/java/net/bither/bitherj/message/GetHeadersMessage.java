@@ -16,7 +16,6 @@
 
 package net.bither.bitherj.message;
 
-import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.exception.ProtocolException;
 
 import java.util.List;

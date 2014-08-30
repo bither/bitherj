@@ -18,7 +18,6 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.db.BlockProvider;
 import net.bither.bitherj.db.TxProvider;
-import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.VerificationException;
 import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.Utils;

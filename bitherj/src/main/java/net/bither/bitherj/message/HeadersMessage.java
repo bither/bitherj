@@ -16,8 +16,8 @@
 
 package net.bither.bitherj.message;
 
-import net.bither.bitherj.utils.VarInt;
 import net.bither.bitherj.exception.ProtocolException;
+import net.bither.bitherj.utils.VarInt;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -22,7 +22,6 @@ import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.script.ScriptBuilder;
-import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.NotificationUtil;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;

@@ -22,9 +22,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import net.bither.bitherj.BitherjApplication;
-import net.bither.bitherj.utils.Base58;
-import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.core.Block;
+import net.bither.bitherj.exception.AddressFormatException;
+import net.bither.bitherj.utils.Base58;
 
 import java.util.ArrayList;
 import java.util.Arrays;

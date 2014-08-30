@@ -16,8 +16,8 @@
 
 package net.bither.bitherj.message;
 
-import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.exception.ProtocolException;
+import net.bither.bitherj.utils.Utils;
 
 import java.io.IOException;
 import java.io.OutputStream;
