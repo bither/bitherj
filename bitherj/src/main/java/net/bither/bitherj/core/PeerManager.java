@@ -186,7 +186,7 @@ public class PeerManager {
                         p.connect();
                     }
                 }
-                sendPeerCountChangeNotifiation();
+                sendPeerCountChangeNotification();
                 if (connectedPeers.size() == 0) {
                     stop();
                 }
@@ -421,7 +421,7 @@ public class PeerManager {
                     sendAvailabilityChangeBroadcast();
                 }
 
-                sendPeerCountChangeNotifiation();
+                sendPeerCountChangeNotification();
 
                 for (Sha256Hash txHash : txRelays.keySet()) {
                     txRelays.get(txHash).remove(peer);
@@ -769,7 +769,7 @@ public class PeerManager {
         BitherjApplication.mContext.sendBroadcast(intent);
     }
 
-    private void sendPeerCountChangeNotifiation() {
+    private void sendPeerCountChangeNotification() {
         NotificationUtil.sendBroadcastPeerState(connectedPeers.size());
     }
 
