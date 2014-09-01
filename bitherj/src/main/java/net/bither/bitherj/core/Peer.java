@@ -591,40 +591,41 @@ public class Peer extends PeerSocketHandler {
             byte[] lastHash = m.getBlockHeaders().get(m.getBlockHeaders().size() - 1).getBlock()
                     .getBlockHash();
             ArrayList<Block> blocksToRelay = new ArrayList<Block>();
-            for (int i = 0;
-                 i < m.getBlockHeaders().size();
-                 i++) {
-                BlockMessage header = m.getBlockHeaders().get(i);
-                // Process headers until we pass the fast catchup time,
-                // or are about to catch up with the head
-                // of the chain - always process the last block as a full/filtered block to kick
-                // us out of the
-                // fast catchup mode (in which we ignore new blocks).
-
-                boolean passedTime = header.getBlock().getBlockTime() >= PeerManager.instance()
-                        .earliestKeyTime;
-                boolean reachedTop = PeerManager.instance().getLastBlockHeight() >= this
-                        .versionLastBlockHeight;
-                if (!passedTime && !reachedTop) {
-                    if (header.getBlock().getBlockTime() > lastBlockTime) {
-                        lastBlockTime = header.getBlock().getBlockTime();
-                        if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance()
-                                .earliestKeyTime - 2 * 60 * 60) {
-                            lastHash = header.getBlock().getBlockHash();
-                        }
-                    }
-                    if(!blocksToRelay.contains(header.getBlock())){
-                        blocksToRelay.add(header.getBlock());
-                    }
-                }
+            for (int i = 0; i < m.getBlockHeaders().size(); i++) {
+                blocksToRelay.add(m.getBlockHeaders().get(i).getBlock());
             }
+//            for (int i = 0; i < m.getBlockHeaders().size(); i++) {
+//                BlockMessage header = m.getBlockHeaders().get(i);
+//                // Process headers until we pass the fast catchup time,
+//                // or are about to catch up with the head
+//                // of the chain - always process the last block as a full/filtered block to kick
+//                // us out of the
+//                // fast catchup mode (in which we ignore new blocks).
+//
+//                boolean passedTime = header.getBlock().getBlockTime() >= PeerManager.instance()
+//                        .earliestKeyTime;
+//                boolean reachedTop = PeerManager.instance().getLastBlockHeight() >= this
+//                        .versionLastBlockHeight;
+//                if (!passedTime && !reachedTop) {
+//                    if (header.getBlock().getBlockTime() > lastBlockTime) {
+//                        lastBlockTime = header.getBlock().getBlockTime();
+//                        if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance()
+//                                .earliestKeyTime - 2 * 60 * 60) {
+//                            lastHash = header.getBlock().getBlockHash();
+//                        }
+//                    }
+//                    if(!blocksToRelay.contains(header.getBlock())){
+//                        blocksToRelay.add(header.getBlock());
+//                    }
+//                }
+//            }
             PeerManager.instance().relayedBlockHeadersForMainChain(this, blocksToRelay);
-            if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance().earliestKeyTime - 2 *
-                    60 * 60) {
-                sendGetBlocksMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);
-            } else {
-                sendGetHeadersMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);
-            }
+//            if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance().earliestKeyTime - 2 *
+//                    60 * 60) {
+//                sendGetBlocksMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);
+//            } else {
+            sendGetHeadersMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);
+//            }
         } catch (VerificationException e) {
             log.warn("Block header verification failed", e);
         }
