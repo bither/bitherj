@@ -261,7 +261,7 @@ public class BlockChain {
         Block b1 = block1;
         Block b2 = block2;
 
-        while (b1 != null && b2 != null && b1.getBlockHash() != b2.getBlockHash()) {
+        while (b1 != null && b2 != null && !Arrays.equals(b1.getBlockHash(), b2.getBlockHash())) {
             b1 = BlockProvider.getInstance().getBlock(b1.getBlockPrev());
             if (b1.getBlockNo() < b2.getBlockNo()) {
                 b2 = BlockProvider.getInstance().getBlock(b2.getBlockPrev());
