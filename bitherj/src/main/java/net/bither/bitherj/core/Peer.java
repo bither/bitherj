@@ -587,13 +587,12 @@ public class Peer extends PeerSocketHandler {
 
         try {
             int lastBlockTime = 0;
-            byte[] firstHash = m.getBlockHeaders().get(0).getBlock().getBlockHash();
-            byte[] lastHash = m.getBlockHeaders().get(m.getBlockHeaders().size() - 1).getBlock()
-                    .getBlockHash();
-            ArrayList<Block> blocksToRelay = new ArrayList<Block>();
-            for (int i = 0; i < m.getBlockHeaders().size(); i++) {
-                blocksToRelay.add(m.getBlockHeaders().get(i).getBlock());
-            }
+            byte[] firstHash = m.getBlockHeaders().get(0).getBlockHash();
+            byte[] lastHash = m.getBlockHeaders().get(m.getBlockHeaders().size() - 1).getBlockHash();
+//            ArrayList<Block> blocksToRelay = new ArrayList<Block>();
+//            for (int i = 0; i < m.getBlockHeaders().size(); i++) {
+//                blocksToRelay.add(m.getBlockHeaders().get(i));
+//            }
 //            for (int i = 0; i < m.getBlockHeaders().size(); i++) {
 //                BlockMessage header = m.getBlockHeaders().get(i);
 //                // Process headers until we pass the fast catchup time,
@@ -619,7 +618,7 @@ public class Peer extends PeerSocketHandler {
 //                    }
 //                }
 //            }
-            PeerManager.instance().relayedBlockHeadersForMainChain(this, blocksToRelay);
+            PeerManager.instance().relayedBlockHeadersForMainChain(this, m.getBlockHeaders());
 //            if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance().earliestKeyTime - 2 *
 //                    60 * 60) {
 //                sendGetBlocksMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);

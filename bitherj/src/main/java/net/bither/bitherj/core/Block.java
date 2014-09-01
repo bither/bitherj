@@ -714,6 +714,20 @@ public class Block extends Message {
         blockRoot = null;
     }
 
+    public Block cloneAsHeader() {
+        Block block = new Block();
+        block.setBlockNo(this.getBlockNo());
+        block.setBlockNonce(this.getBlockNonce());
+        block.setBlockPrev(this.getBlockPrev().clone());
+        block.setBlockRoot(this.getBlockRoot().clone());
+        block.setBlockVer(this.getBlockVer());
+        block.setBlockTime(this.getBlockTime());
+        block.setBlockBits(this.getBlockBits());
+        block.setTransactions(null);
+        block.setBlockHash(this.getBlockHash().clone());
+        return block;
+    }
+
 }
 
 
