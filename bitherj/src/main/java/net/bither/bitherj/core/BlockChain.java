@@ -273,7 +273,7 @@ public class BlockChain {
     private void forkMainChain(Block forkStartBlock, Block lastBlock) {
         Block b = this.lastBlock;
         Block next = lastBlock;
-        while (b.getBlockHash() != forkStartBlock.getBlockHash()) {
+        while (!Arrays.equals(b.getBlockHash(), forkStartBlock.getBlockHash())) {
             next = BlockProvider.getInstance().getOrphanBlockByPrevHash(b.getBlockPrev());
             BlockProvider.getInstance().updateBlock(b.getBlockHash(), false);
             b = BlockProvider.getInstance().getMainChainBlock(b.getBlockPrev());
@@ -282,7 +282,7 @@ public class BlockChain {
         b = next;
         BlockProvider.getInstance().updateBlock(next.getBlockHash(), true);
         this.lastBlock = next;
-        while (b.getBlockHash() != lastBlock.getBlockPrev()) {
+        while (!Arrays.equals(b.getBlockHash(), lastBlock.getBlockPrev())) {
             BlockProvider.getInstance().updateBlock(b.getBlockHash(), true);
             this.lastBlock = b;
             b = BlockProvider.getInstance().getOrphanBlockByPrevHash(b.getBlockHash());

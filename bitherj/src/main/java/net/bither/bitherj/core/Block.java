@@ -430,7 +430,7 @@ public class Block extends Message {
 
     private void checkMerkleRoot() throws VerificationException {
         byte[] calculatedRoot = calculateMerkleRoot();
-        if (calculatedRoot != blockRoot) {
+        if (!Arrays.equals(calculatedRoot, blockRoot)) {
             log.error("Merkle tree did not verify");
             throw new VerificationException("Merkle hashes do not match: "
                     + Utils.bytesToHexString(calculatedRoot) + " vs "
