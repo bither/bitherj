@@ -31,6 +31,8 @@ import net.bither.bitherj.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -826,8 +828,9 @@ public class PeerManager {
                 }
             }
             if (t != null) {
-                t.printStackTrace();
-                log.error("exception in PeerManager: " + t.getMessage());
+                ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                t.printStackTrace(new PrintStream(bout));
+                log.error("exception in PeerManager: " + new String(bout.toByteArray()));
             }
             if (isWaiting && waiting < TaskCapacity - TaskCapacityWaitForRoom) {
                 try {
