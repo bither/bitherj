@@ -67,7 +67,7 @@ public class PeerManager {
 
     private long tweak, syncStartHeight, filterUpdateHeight;
     private long lastRelayTime;
-    public long earliestKeyTime;
+//    public long earliestKeyTime;
 
     private BloomFilter bloomFilter;
     private int bloomFilterElementCount;
@@ -96,7 +96,7 @@ public class PeerManager {
         txRelays = new HashMap<Sha256Hash, HashSet<Peer>>();
         publishedTx = new HashMap<Sha256Hash, Tx>();
         tweak = new Random().nextLong();
-        earliestKeyTime = new Date().getTime() / 1000;//TODO how to set this field
+//        earliestKeyTime = new Date().getTime() / 1000;//TODO how to set this field
         executor = new PeerManagerExecutorService();
         initPublishedTx();
     }
@@ -528,25 +528,26 @@ public class PeerManager {
             @Override
             public void run() {
                 Block oldLastBlock = BlockChain.getInstance().getLastBlock();
-                ArrayList<Block> blocksToRelay = new ArrayList<Block>();
-                for (Block block : blocks) {
-                    if ((block.getTxHashes() == null || block.getTxHashes().size() == 0) && block
-                            .getBlockTime() - new Date().getTime() / 1000 + 60 * 60 * 24 * 7 >
-                            earliestKeyTime) {
-                        continue;
-                    } else {
-                        if (!blocksToRelay.contains(block)) {
-                            blocksToRelay.add(block);
-                        }
-                    }
-                }
+                // do not need earliest time
+//                ArrayList<Block> blocksToRelay = new ArrayList<Block>();
+//                for (Block block : blocks) {
+//                    if ((block.getTxHashes() == null || block.getTxHashes().size() == 0) && block
+//                            .getBlockTime() - new Date().getTime() / 1000 + 60 * 60 * 24 * 7 >
+//                            earliestKeyTime) {
+//                        continue;
+//                    } else {
+//                        if (!blocksToRelay.contains(block)) {
+//                            blocksToRelay.add(block);
+//                        }
+//                    }
+//                }
                 try {
-                    int relayedCount = BlockChain.getInstance().relayedBlockHeadersForMainChain(blocksToRelay);
-                    if (relayedCount == blocksToRelay.size()) {
+                    int relayedCount = BlockChain.getInstance().relayedBlockHeadersForMainChain(blocks);
+                    if (relayedCount == blocks.size()) {
                         log.info("Peer {} relay {} block headers OK, last block No.{}, total block: {}", fromPeer.getPeerAddress().getHostAddress(), relayedCount, BlockChain.getInstance().getLastBlock().getBlockNo(), BlockChain.getInstance().getBlockCount());
                     } else {
                         abandonPeer(fromPeer);
-                        log.info("Peer {} relay {}/{} block headers. drop this peer", fromPeer.getPeerAddress().getHostAddress(), relayedCount, blocksToRelay.size());
+                        log.info("Peer {} relay {}/{} block headers. drop this peer", fromPeer.getPeerAddress().getHostAddress(), relayedCount, blocks.size());
                     }
                 } catch (Exception e) {
                     abandonPeer(fromPeer);
@@ -580,11 +581,12 @@ public class PeerManager {
         if (fromPeer == downloadingPeer) {
             lastRelayTime = new Date().getTime() / 1000;
         }
-        if ((block.getTxHashes() == null || block.getTxHashes().size() == 0) && block
-                .getBlockTime() - new Date().getTime() / 1000 + 60 * 60 * 24 * 7 >
-                earliestKeyTime) {
-            return;
-        }
+        // do not need earliest time
+//        if ((block.getTxHashes() == null || block.getTxHashes().size() == 0) && block
+//                .getBlockTime() - new Date().getTime() / 1000 + 60 * 60 * 24 * 7 >
+//                earliestKeyTime) {
+//            return;
+//        }
 
         // track the observed bloom filter false positive rate using a low pass filter to smooth
         // out variance
