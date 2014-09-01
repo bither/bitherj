@@ -61,9 +61,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Created by zhouqi on 14-8-15.
- */
 public class Peer extends PeerSocketHandler {
     private static final int MAX_GETDATA_HASHES = 50000;
 
