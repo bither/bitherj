@@ -82,7 +82,6 @@ public class PeerManager {
     private boolean synchronizing;
     private Peer downloadingPeer;
 
-
     public static final PeerManager instance() {
 
         return instance;
@@ -110,6 +109,12 @@ public class PeerManager {
 
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        executor.shutdownNow();
+        super.finalize();
+    }
+
     public boolean isConnected() {
         return connected;
     }
@@ -129,35 +134,6 @@ public class PeerManager {
         } else {
             LogUtil.i(PeerManager.class.getSimpleName(), "peer manager call start, but it is connected already");
         }
-    }
-
-    public void stop() {
-        if (running) {
-            log.info("peer manager stop");
-            running = false;
-            if (connected) {
-                NotificationUtil.removeBroadcastPeerState();
-                bloomFilter = null;
-                connected = false;
-                sendConnectedChangeBroadcast();
-                executor.getQueue().clear();
-                executor.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (Peer peer : connectedPeers) {
-                            peer.disconnect();
-                        }
-                    }
-                });
-            }
-        } else {
-            LogUtil.i(PeerManager.class.getSimpleName(), "peer manager call stop, but it does not running");
-        }
-    }
-
-    public long getLastBlockHeight() {
-        Block lastBlock = BlockChain.getInstance().lastBlock;
-        return lastBlock == null ? 0 : lastBlock.getBlockNo();
     }
 
     private void reconnect() {
@@ -194,6 +170,35 @@ public class PeerManager {
         });
     }
 
+    public void stop() {
+        if (running) {
+            log.info("peer manager stop");
+            running = false;
+            if (connected) {
+                NotificationUtil.removeBroadcastPeerState();
+                bloomFilter = null;
+                connected = false;
+                sendConnectedChangeBroadcast();
+                executor.getQueue().clear();
+                executor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (Peer peer : connectedPeers) {
+                            peer.disconnect();
+                        }
+                    }
+                });
+            }
+        } else {
+            LogUtil.i(PeerManager.class.getSimpleName(), "peer manager call stop, but it does not running");
+        }
+    }
+
+    public long getLastBlockHeight() {
+        Block lastBlock = BlockChain.getInstance().lastBlock;
+        return lastBlock == null ? 0 : lastBlock.getBlockNo();
+    }
+
     public List<Peer> getConnectedPeers() {
         List<Peer> peerList = new ArrayList<Peer>();
         for (Peer peer : connectedPeers) {
@@ -225,12 +230,6 @@ public class PeerManager {
         Collections.addAll(peers, ps);
         PeerProvider.getInstance().addPeers(new ArrayList<Peer>(peers));
         return peers;
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        executor.shutdownNow();
-        super.finalize();
     }
 
     private void abandonPeer(final Peer peer) {
@@ -279,120 +278,84 @@ public class PeerManager {
     }
 
     public void peerConnected(final Peer peer) {
-        if (running) {
-            if (peer.getVersionLastBlockHeight() + 10 < getLastBlockHeight()) {
-                LogUtil.w(PeerManager.class.getSimpleName(), "Peer height low abandon : " + peer
-                        .getPeerAddress().getHostAddress());
-                executor.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        abandonPeer(peer);
-                    }
-                });
-                return;
-            }
-            if (!connected) {
-                connected = true;
-                sendConnectedChangeBroadcast();
-            }
-            log.info("Peer {} connected", peer.getPeerAddress().getHostAddress());
-            connectFailure = 0;
-            bloomFilter = null;
-            executor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    peer.connectSucceed();
-                    if (connected && ((downloadingPeer != null && downloadingPeer
-                            .getVersionLastBlockHeight() >= peer.getVersionLastBlockHeight()) ||
-                            getLastBlockHeight() >= peer.getVersionLastBlockHeight())) {
-                        if (downloadingPeer != null && getLastBlockHeight() < downloadingPeer
-                                .getVersionLastBlockHeight()) {
-                            return; // don't load bloom filter yet if we're syncing
-                        }
-                        peer.sendFilterLoadMessage(bloomFilterForPeer(peer));
-                        for (Tx tx : publishedTx.values()) {
-                            if (tx.getSource() > 0 && tx.getSource() <= MaxPeerCount) {
-                                peer.sendInvMessageWithTxHash(new Sha256Hash(tx.getTxHash()));
-                            }
-                        }
-                        peer.sendMemPoolMessage();
-                        return; // we're already connected to a download peer
-                    }
-                    Peer dp = peer;
-                    for (Peer p : connectedPeers) {
-                        if ((p.pingTime < peer.pingTime && p.getVersionLastBlockHeight() >= peer
-                                .getVersionLastBlockHeight()) || p.getVersionLastBlockHeight() > peer
-                                .getVersionLastBlockHeight()) {
-                            dp = p;
-                        }
-                    }
-                    if (downloadingPeer != null) {
-                        downloadingPeer.disconnect();
-                    }
-                    downloadingPeer = dp;
-                    connected = true;
-
-                    // every time a new wallet address is added, the bloom filter has to be
-                    // rebuilt, and each address is only used for
-                    // one transaction, so here we generate some spare addresses to avoid
-                    // rebuilding the filter each time a wallet
-                    // transaction is encountered during the blockchain download (generates twice
-                    // the external gap limit for both
-                    // address chains)
-
-                    bloomFilter = null; // make sure the bloom filter is updated with any newly
-                    // generated addresses
-                    dp.sendFilterLoadMessage(bloomFilterForPeer(dp));
-
-                    if (getLastBlockHeight() < dp.getVersionLastBlockHeight()) {
-
-                        lastRelayTime = 0;
-                        synchronizing = true;
-
-                        // request just block headers up to a week before earliestKeyTime,
-                        // and then merkleblocks after that
-//            if (self.blockChain.lastBlock.blockTime-NSTimeIntervalSince1970 + ONE_WEEK >= self
-// .earliestKeyTime) {
-                        if (doneSyncFromSPV()) {
-                            dp.sendGetBlocksMessage(BlockChain.getInstance().getBlockLocatorArray
-                                    (), null);
-                        } else {
-                            dp.sendGetHeadersMessage(BlockChain.getInstance()
-                                    .getBlockLocatorArray(), null);
-                        }
-                    } else { // we're already synced
-                        syncStopped();
-                        dp.sendGetAddrMessage();
-                        syncStartHeight = 0;
-                        NotificationUtil.sendBroadcastSyncSPVFinished(true);
-                    }
-                }
-            });
-        } else {
-            executor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    peer.disconnect();
-                }
-            });
+        if (!running) {
+            peer.disconnect();
+            return;
         }
+
+        if (peer.getVersionLastBlockHeight() + 10 < getLastBlockHeight()) {
+            LogUtil.w(PeerManager.class.getSimpleName(), "Peer height low abandon : " + peer
+                    .getPeerAddress().getHostAddress());
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    abandonPeer(peer);
+                }
+            });
+            return;
+        }
+
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                log.info("{} connected with lastblock {}", peer.getPeerAddress().getHostAddress(), peer.getVersionLastBlockHeight());
+                connectFailure = 0;
+                if (!connected) {
+                    connected = true;
+                    sendConnectedChangeBroadcast();
+                }
+
+                bloomFilter = null;
+                peer.connectSucceed();
+                for (Tx tx : publishedTx.values()) {
+                        if (tx.getSource() > 0 && tx.getSource() <= MaxPeerCount) {
+                            peer.sendInvMessageWithTxHash(new Sha256Hash(tx.getTxHash()));
+                        }
+                    }
+                peer.sendMemPoolMessage();
+
+                if ((downloadingPeer != null && downloadingPeer.getVersionLastBlockHeight() >= peer.getVersionLastBlockHeight())
+                        || getLastBlockHeight() >= peer.getVersionLastBlockHeight()) {
+                    return; // we're already connected to a download peer or do not need to sync from this peer
+                }
+
+                Peer dPeer = peer;
+                for (Peer p : connectedPeers) {
+                    if ((p.pingTime < peer.pingTime && p.getVersionLastBlockHeight() >= peer
+                            .getVersionLastBlockHeight()) || p.getVersionLastBlockHeight() > peer
+                            .getVersionLastBlockHeight()) {
+                        dPeer = p;
+                    }
+                }
+
+                if (downloadingPeer != null) {
+                    downloadingPeer.disconnect();
+                }
+                downloadingPeer = dPeer;
+
+                lastRelayTime = new Date().getTime() / 1000;
+                synchronizing = true;
+                // todo: need add timeout logic
+
+                if (doneSyncFromSPV()) {
+                    dPeer.sendGetBlocksMessage(BlockChain.getInstance().getBlockLocatorArray
+                            (), null);
+                } else {
+                    dPeer.sendGetHeadersMessage(BlockChain.getInstance()
+                            .getBlockLocatorArray(), null);
+                }
+            }
+        });
     }
 
     private void syncStopped() {
         synchronizing = false;
 
+        bloomFilter = null;
         for (Peer p : connectedPeers) { // after syncing, load filters and get mempools from the
-            // other peers
-            if (p != downloadingPeer) {
-                p.sendFilterLoadMessage(bloomFilterForPeer(p));
-            }
-            for (Tx tx : publishedTx.values()) {
-                if (tx.getSource() > 0 && tx.getSource() <= MaxPeerCount) {
-                    p.sendInvMessageWithTxHash(new Sha256Hash(tx.getTxHash()));
-                }
-            }
-            p.sendMemPoolMessage();
+            p.sendFilterLoadMessage(bloomFilterForPeer(p));
         }
+        // todo: cancel timeout
     }
 
     public void peerDisconnected(final Peer peer, final Peer.DisconnectReason reason) {
@@ -446,7 +409,6 @@ public class PeerManager {
             }
         });
     }
-
 
     public void relayedPeers(Peer fromPeer, List<Peer> peers) {
         if (!isRunning()) {
