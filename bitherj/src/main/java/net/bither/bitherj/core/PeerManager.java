@@ -51,10 +51,10 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class PeerManager {
-    public static final String AvailabilityChangeBroadcast = PeerManager.class.getPackage()
-            .getName() + ".peer_manager_availability_change";
+    public static final String ConnectedChangeBroadcast = PeerManager.class.getPackage()
+            .getName() + ".peer_manager_connected_change";
     private static final Logger log = LoggerFactory.getLogger(PeerManager.class);
-    private static final int MAX_FAILED_COUNT = 12;
+    private static final int MAX_CONNECT_FAILURE_COUNT = 12;
 
     private static final int MaxPeerCount = 100;
     private static final int MaxConnectFailure = 20;
@@ -110,8 +110,8 @@ public class PeerManager {
 
     }
 
-    public boolean isAvailable() {
-        return running && connected;
+    public boolean isConnected() {
+        return connected;
     }
 
     public boolean isRunning() {
@@ -120,12 +120,12 @@ public class PeerManager {
 
     public void start() {
         if (!running) {
-            log.info("peer manager call start");
+            log.info("peer manager start");
             running = true;
-            if (!connected) {
-                bloomFilter = null;
-                reconnect();
-            }
+            bloomFilter = null;
+            if (this.connectFailure >= MAX_CONNECT_FAILURE_COUNT)
+                this.connectFailure = 0;
+            reconnect();
         } else {
             LogUtil.i(PeerManager.class.getSimpleName(), "peer manager call start, but it is connected already");
         }
@@ -133,13 +133,13 @@ public class PeerManager {
 
     public void stop() {
         if (running) {
-            log.info("peer manager call stop");
+            log.info("peer manager stop");
             running = false;
             if (connected) {
                 NotificationUtil.removeBroadcastPeerState();
                 bloomFilter = null;
                 connected = false;
-                sendAvailabilityChangeBroadcast();
+                sendConnectedChangeBroadcast();
                 executor.getQueue().clear();
                 executor.submit(new Runnable() {
                     @Override
@@ -293,7 +293,7 @@ public class PeerManager {
             }
             if (!connected) {
                 connected = true;
-                sendAvailabilityChangeBroadcast();
+                sendConnectedChangeBroadcast();
             }
             log.info("Peer {} connected", peer.getPeerAddress().getHostAddress());
             connectFailure = 0;
@@ -402,7 +402,7 @@ public class PeerManager {
                 if (reason == null || reason == Peer.DisconnectReason.Normal) {
                     peer.connectFail();
                 } else if (reason == Peer.DisconnectReason.Timeout) {
-                    if (peer.getPeerConnectedCnt() > MAX_FAILED_COUNT) {
+                    if (peer.getPeerConnectedCnt() > MAX_CONNECT_FAILURE_COUNT) {
                         // Failed too many times, we don't want to play with it any more.
                         abandonPeer(peer);
                     } else {
@@ -418,7 +418,7 @@ public class PeerManager {
                         peer.getPeerAddress().getHostAddress(), connectedPeers.size());
                 if (previousConnectedCount > 0 && connectedPeers.size() == 0) {
                     connected = false;
-                    sendAvailabilityChangeBroadcast();
+                    sendConnectedChangeBroadcast();
                 }
 
                 sendPeerCountChangeNotification();
@@ -762,10 +762,10 @@ public class PeerManager {
         return BitherjApplication.getInitialize().getBitherjDoneSyncFromSpv();
     }
 
-    private void sendAvailabilityChangeBroadcast() {
-        Intent intent = new Intent(AvailabilityChangeBroadcast);
-        intent.putExtra(AvailabilityChangeBroadcast, isAvailable());
-        log.info("peer manager availability changed to " + isAvailable());
+    private void sendConnectedChangeBroadcast() {
+        Intent intent = new Intent(ConnectedChangeBroadcast);
+        intent.putExtra(ConnectedChangeBroadcast, isConnected());
+        log.info("peer manager connected changed to " + isConnected());
         BitherjApplication.mContext.sendBroadcast(intent);
     }
 
