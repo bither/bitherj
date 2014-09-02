@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.core;
 
+import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.utils.NotificationUtil;
 import net.bither.bitherj.utils.Utils;
@@ -44,6 +45,7 @@ public class AddressManager {
         synchronized (lock) {
             initPrivateKeyList();
             initWatchOnlyList();
+            BitherjApplication.addressIsReady = true;
             NotificationUtil.sendBroadcastAddressLoadCompleteState();
         }
     }
