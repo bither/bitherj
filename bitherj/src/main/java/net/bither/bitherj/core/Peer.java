@@ -902,6 +902,11 @@ public class Peer extends PeerSocketHandler {
         }
     }
 
+    @Override
+    public int hashCode() {
+        return getPeerAddress().hashCode();
+    }
+
     public InetAddress getPeerAddress() {
         return peerAddress;
     }
