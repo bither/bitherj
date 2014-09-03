@@ -74,6 +74,15 @@ public class AddressManager {
         return needAdd;
     }
 
+    public boolean isTxRelated(Tx tx){
+        for (Address address : this.getAllAddresses()) {
+            if(isAddressContainsTx(address.getAddress(), tx)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean isAddressContainsTx(String address, Tx tx) {
         Set<String> outAddress = new HashSet<String>();
         for (Out out : tx.getOuts()) {

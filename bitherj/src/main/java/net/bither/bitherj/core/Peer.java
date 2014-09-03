@@ -64,6 +64,8 @@ import java.util.Random;
 public class Peer extends PeerSocketHandler {
     private static final int MAX_GETDATA_HASHES = 50000;
 
+    private static final int MAX_UNRELATED_TX_RELAY_COUNT = 1000;
+
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
     private static final int TimeOutDelay = 5000;
 
@@ -103,6 +105,8 @@ public class Peer extends PeerSocketHandler {
     private VersionMessage versionMessage;
     private boolean bloomFilterSent;
 
+    private int unrelatedTxRelayCount;
+
 
     public Peer(InetAddress address) {
         super(new InetSocketAddress(address, BitherjSettings.port));
@@ -116,6 +120,7 @@ public class Peer extends PeerSocketHandler {
         requestedBlockHashes = new HashSet<Sha256Hash>();
         needToRequestDependencyDict = new HashMap<Sha256Hash, HashSet<Tx>>();
         incrementalBlockHeight = 0;
+        unrelatedTxRelayCount = 0;
         nonce = new Random().nextLong();
         peerTimestamp = (int) (new Date().getTime() / 1000 - 24 * 60 * 60 * (3 + new Random()
                 .nextFloat() * 4));
@@ -374,7 +379,7 @@ public class Peer extends PeerSocketHandler {
 
         log.info(getPeerAddress().getHostAddress() + " got inv with " + items.size() + " items "
                 + txHashSha256Hashs.size() + " tx " + blockHashSha256Hashs.size() + " block");
-        
+
         //TODO if we receive too many transactions not related to us, we abandon this peer.
         if (txHashSha256Hashs.size() > 10000) {
             return;
@@ -482,6 +487,18 @@ public class Peer extends PeerSocketHandler {
         } else {
             log.info("peer[{}:{}] receive tx {}", this.peerAddress.getHostAddress(),
                     this.peerPort, Utils.hashToString(tx.getTxHash()));
+            if(needToRequestDependencyDict.get(tx.getTxHash()) == null || needToRequestDependencyDict.get(tx.getTxHash()).size() == 0){
+                if(AddressManager.getInstance().isTxRelated(tx)){
+                    unrelatedTxRelayCount = 0;
+                } else {
+                    unrelatedTxRelayCount++;
+                    if(unrelatedTxRelayCount > MAX_UNRELATED_TX_RELAY_COUNT){
+                        exceptionCaught(new Exception("Peer " + getPeerAddress().getHostAddress() + " is junking us. Drop it."));
+                        return;
+                    }
+                }
+            }
+
             // check dependency
             HashMap<Sha256Hash, Tx> dependency = TxProvider.getInstance().getTxDependencies(tx);
             HashSet<Sha256Hash> needToRequest = new HashSet<Sha256Hash>();
