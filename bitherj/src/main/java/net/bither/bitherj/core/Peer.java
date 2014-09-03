@@ -487,7 +487,7 @@ public class Peer extends PeerSocketHandler {
         } else {
             log.info("peer[{}:{}] receive tx {}", this.peerAddress.getHostAddress(),
                     this.peerPort, Utils.hashToString(tx.getTxHash()));
-            if(needToRequestDependencyDict.get(tx.getTxHash()) == null || needToRequestDependencyDict.get(tx.getTxHash()).size() == 0){
+            if(needToRequestDependencyDict.get(new Sha256Hash(tx.getTxHash())) == null || needToRequestDependencyDict.get(new Sha256Hash(tx.getTxHash())).size() == 0){
                 if(AddressManager.getInstance().isTxRelated(tx)){
                     unrelatedTxRelayCount = 0;
                 } else {
