@@ -85,10 +85,8 @@ public class PeerManager {
     private Peer downloadingPeer;
 
     private Timer syncTimeOutTimer;
-    private TimerTask syncTimeOutTask;
 
     public static final PeerManager instance() {
-
         return instance;
     }
 
@@ -102,13 +100,6 @@ public class PeerManager {
         tweak = new Random().nextLong();
 //        earliestKeyTime = new Date().getTime() / 1000;//TODO how to set this field
         executor = new PeerManagerExecutorService();
-        syncTimeOutTimer = new Timer();
-        syncTimeOutTask = new TimerTask() {
-            @Override
-            public void run() {
-                syncTimeout();
-            }
-        };
         initPublishedTx();
     }
 
@@ -118,7 +109,6 @@ public class PeerManager {
                 publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
             }
         }
-
     }
 
     @Override
@@ -349,8 +339,7 @@ public class PeerManager {
                 lastRelayTime = new Date().getTime() / 1000;
                 synchronizing = true;
 
-                syncTimeOutTask.cancel();
-                syncTimeOutTimer.schedule(syncTimeOutTask, BitherjSettings.PROTOCOL_TIMEOUT);
+                scheduleTimeoutTimer(BitherjSettings.PROTOCOL_TIMEOUT);
 
                 if (doneSyncFromSPV()) {
                     dPeer.sendGetBlocksMessage(BlockChain.getInstance().getBlockLocatorArray
@@ -366,8 +355,7 @@ public class PeerManager {
     private void syncTimeout(){
         long now = System.currentTimeMillis()/1000;
         if (now - lastRelayTime < BitherjSettings.PROTOCOL_TIMEOUT) { // the download peer relayed something in time, so restart timer
-            syncTimeOutTask.cancel();
-            syncTimeOutTimer.schedule(syncTimeOutTask, BitherjSettings.PROTOCOL_TIMEOUT - (now - lastRelayTime));
+            scheduleTimeoutTimer(BitherjSettings.PROTOCOL_TIMEOUT - (now - lastRelayTime));
         } else {
             if(downloadingPeer != null){
                 log.warn("{} chain sync time out", downloadingPeer.getPeerAddress().getHostAddress());
@@ -377,6 +365,24 @@ public class PeerManager {
         }
     }
 
+    private void cancelTimeoutTimer(){
+        if(syncTimeOutTimer != null) {
+            syncTimeOutTimer.cancel();
+            syncTimeOutTimer = null;
+        }
+    }
+
+    private void scheduleTimeoutTimer(long delay){
+        cancelTimeoutTimer();
+        syncTimeOutTimer = new Timer();
+        syncTimeOutTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                syncTimeout();
+            }
+        }, delay);
+    }
+
     private void syncStopped() {
         synchronizing = false;
 
@@ -384,7 +390,7 @@ public class PeerManager {
         for (Peer p : connectedPeers) { // after syncing, load filters and get mempools from the
             p.sendFilterLoadMessage(bloomFilterForPeer(p));
         }
-        syncTimeOutTask.cancel();
+        cancelTimeoutTimer();
     }
 
     public void peerDisconnected(final Peer peer, final Peer.DisconnectReason reason) {
