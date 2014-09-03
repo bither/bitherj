@@ -307,17 +307,19 @@ public class PeerManager {
                     sendConnectedChangeBroadcast();
                 }
 
-                bloomFilter = null;
                 peer.connectSucceed();
-                for (Tx tx : publishedTx.values()) {
+                if ((downloadingPeer != null && downloadingPeer.getVersionLastBlockHeight() >= peer.getVersionLastBlockHeight())
+                        || getLastBlockHeight() >= peer.getVersionLastBlockHeight()) {
+                    if (getLastBlockHeight() < getDownloadingPeer().getVersionLastBlockHeight())
+                        return;
+                    bloomFilter = null;
+                    peer.sendFilterLoadMessage(bloomFilterForPeer(peer));
+                    for (Tx tx : publishedTx.values()) {
                         if (tx.getSource() > 0 && tx.getSource() <= MaxPeerCount) {
                             peer.sendInvMessageWithTxHash(new Sha256Hash(tx.getTxHash()));
                         }
                     }
-                peer.sendMemPoolMessage();
-
-                if ((downloadingPeer != null && downloadingPeer.getVersionLastBlockHeight() >= peer.getVersionLastBlockHeight())
-                        || getLastBlockHeight() >= peer.getVersionLastBlockHeight()) {
+                    peer.sendMemPoolMessage();
                     return; // we're already connected to a download peer or do not need to sync from this peer
                 }
 
@@ -387,8 +389,14 @@ public class PeerManager {
         synchronizing = false;
 
         bloomFilter = null;
-        for (Peer p : connectedPeers) { // after syncing, load filters and get mempools from the
-            p.sendFilterLoadMessage(bloomFilterForPeer(p));
+        for (Peer peer : connectedPeers) { // after syncing, load filters and get mempools from the
+            peer.sendFilterLoadMessage(bloomFilterForPeer(peer));
+            for (Tx tx : publishedTx.values()) {
+                if (tx.getSource() > 0 && tx.getSource() <= MaxPeerCount) {
+                    peer.sendInvMessageWithTxHash(new Sha256Hash(tx.getTxHash()));
+                }
+            }
+            peer.sendMemPoolMessage();
         }
         cancelTimeoutTimer();
     }
