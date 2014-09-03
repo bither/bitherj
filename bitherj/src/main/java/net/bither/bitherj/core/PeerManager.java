@@ -332,6 +332,7 @@ public class PeerManager {
                     downloadingPeer.disconnect();
                 }
                 downloadingPeer = dPeer;
+                log.info("{} is downloading now", downloadingPeer.getPeerAddress().getHostAddress());
 
                 lastRelayTime = new Date().getTime() / 1000;
                 synchronizing = true;
@@ -737,6 +738,10 @@ public class PeerManager {
 
     public Peer getDownloadingPeer() {
         return downloadingPeer;
+    }
+
+    public boolean isSynchronizing(){
+        return synchronizing;
     }
 
     static class PeerManagerExecutorService extends ThreadPoolExecutor {

@@ -160,7 +160,7 @@ public class Peer extends PeerSocketHandler {
         if (currentFilteredBlock != null && !(m instanceof Tx)) {
             currentFilteredBlock = null;
             currentTxHashes.clear();
-            exceptionCaught(new ProtocolException("Except more tx for current filtering block"));
+            exceptionCaught(new ProtocolException("Expect more tx for current filtering block, but got a " + m.getClass().getSimpleName() + " message"));
         }
 
         if (m instanceof NotFoundMessage) {
@@ -354,9 +354,11 @@ public class Peer extends PeerSocketHandler {
             }
             switch (type) {
                 case Transaction:
-                    Sha256Hash big = new Sha256Hash(hash);
-                    if (!txHashSha256Hashs.contains(big)) {
-                        txHashSha256Hashs.add(big);
+                    if(!getDownloadData() || currentFilteredBlock != null) {
+                        Sha256Hash big = new Sha256Hash(hash);
+                        if (!txHashSha256Hashs.contains(big)) {
+                            txHashSha256Hashs.add(big);
+                        }
                     }
                     break;
                 case Block:
