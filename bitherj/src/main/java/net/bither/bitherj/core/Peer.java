@@ -839,7 +839,6 @@ public class Peer extends PeerSocketHandler {
         peerConnectedCnt = 1;
         peerTimestamp = (int) (new Date().getTime() / 1000);
         PeerProvider.getInstance().connectSucceed(getPeerAddress());
-        sendFilterLoadMessage(PeerManager.instance().bloomFilterForPeer(this));
     }
 
     @Override
