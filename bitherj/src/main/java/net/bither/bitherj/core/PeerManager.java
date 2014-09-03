@@ -453,7 +453,7 @@ public class PeerManager {
             return;
         }
         if (fromPeer == this.downloadingPeer) {
-            lastRelayTime = new Date().getTime() / 1000;
+            lastRelayTime = System.currentTimeMillis();
         }
         if (peers.size() > MaxPeerCount) {
             peers = peers.subList(0, MaxPeerCount);
@@ -466,7 +466,7 @@ public class PeerManager {
             return;
         }
         if (fromPeer == downloadingPeer) {
-            lastRelayTime = new Date().getTime() / 1000;
+            lastRelayTime = System.currentTimeMillis();
         }
         executor.submit(new Runnable() {
             @Override
@@ -522,7 +522,7 @@ public class PeerManager {
             return;
         }
         if (fromPeer == downloadingPeer) {
-            lastRelayTime = new Date().getTime() / 1000;
+            lastRelayTime = System.currentTimeMillis();
         }
         executor.submit(new Runnable() {
             @Override
@@ -579,7 +579,7 @@ public class PeerManager {
             return;
         }
         if (fromPeer == downloadingPeer) {
-            lastRelayTime = new Date().getTime() / 1000;
+            lastRelayTime = System.currentTimeMillis();
         }
         // do not need earliest time
 //        if ((block.getTxHashes() == null || block.getTxHashes().size() == 0) && block
@@ -856,7 +856,7 @@ public class PeerManager {
     }
 
     private void syncTimeout(){
-        long now = System.currentTimeMillis()/1000;
+        long now = System.currentTimeMillis();
         if (now - lastRelayTime < BitherjSettings.PROTOCOL_TIMEOUT) { // the download peer relayed something in time, so restart timer
             scheduleTimeoutTimer(BitherjSettings.PROTOCOL_TIMEOUT - (now - lastRelayTime));
         } else {
