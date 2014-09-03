@@ -322,8 +322,8 @@ public class PeerManager {
                     }
                     Peer dp = peer;
                     for (Peer p : connectedPeers) {
-                        if ((p.pingTime < peer.pingTime && p.getVersionLastBlockHeight() >= peer
-                                .getVersionLastBlockHeight()) || p.getVersionLastBlockHeight() > peer
+                        if ((p.pingTime < dp.pingTime && p.getVersionLastBlockHeight() >= dp
+                                .getVersionLastBlockHeight()) || p.getVersionLastBlockHeight() > dp
                                 .getVersionLastBlockHeight()) {
                             dp = p;
                         }

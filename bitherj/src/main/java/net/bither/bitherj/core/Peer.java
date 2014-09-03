@@ -343,6 +343,7 @@ public class Peer extends PeerSocketHandler {
         }
         if(!bloomFilterSent){
             log.info("Peer {} received inv. But we didn't send bloomfilter. Ignore");
+            return;
         }
         ArrayList<Sha256Hash> txHashSha256Hashs = new ArrayList<Sha256Hash>();
         ArrayList<Sha256Hash> blockHashSha256Hashs = new ArrayList<Sha256Hash>();
@@ -373,7 +374,8 @@ public class Peer extends PeerSocketHandler {
 
         log.info(getPeerAddress().getHostAddress() + " got inv with " + items.size() + " items "
                 + txHashSha256Hashs.size() + " tx " + blockHashSha256Hashs.size() + " block");
-
+        
+        //TODO if we receive too many transactions not related to us, we abandon this peer.
         if (txHashSha256Hashs.size() > 10000) {
             return;
         }
@@ -839,6 +841,7 @@ public class Peer extends PeerSocketHandler {
         peerConnectedCnt = 1;
         peerTimestamp = (int) (new Date().getTime() / 1000);
         PeerProvider.getInstance().connectSucceed(getPeerAddress());
+        sendFilterLoadMessage(PeerManager.instance().bloomFilterForPeer(this));
     }
 
     @Override
