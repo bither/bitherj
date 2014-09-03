@@ -354,12 +354,10 @@ public class Peer extends PeerSocketHandler {
             }
             switch (type) {
                 case Transaction:
-                    if(!getDownloadData() || currentFilteredBlock != null) {
                         Sha256Hash big = new Sha256Hash(hash);
                         if (!txHashSha256Hashs.contains(big)) {
                             txHashSha256Hashs.add(big);
                         }
-                    }
                     break;
                 case Block:
                 case FilteredBlock:
