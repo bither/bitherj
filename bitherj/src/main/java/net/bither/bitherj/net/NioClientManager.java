@@ -187,6 +187,17 @@ public class NioClientManager extends AbstractExecutionThreadService implements
         }
     }
 
+    public void startUpError(){
+        State state = state();
+        log.warn("NioClientManager start up error, state is {}, retry.", state.name());
+        if(state == State.RUNNING || state == State.STARTING){
+            closeConnections(getConnectedClientCount());
+            triggerShutdown();
+        }
+        instance = new NioClientManager();
+        instance.startAndWait();
+    }
+
     @Override
     public void triggerShutdown() {
         selector.wakeup();

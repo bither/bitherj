@@ -16,6 +16,8 @@
 
 package net.bither.bitherj.core;
 
+import com.google.common.util.concurrent.Service;
+
 import net.bither.bitherj.db.PeerProvider;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.ProtocolException;
@@ -135,7 +137,9 @@ public class Peer extends PeerSocketHandler {
             log.info("peer[{}:{}] call connect", this.peerAddress.getHostAddress(), this.peerPort);
             state = State.Connecting;
             if (!NioClientManager.instance().isRunning()) {
-                NioClientManager.instance().startAndWait();
+                if(NioClientManager.instance().startAndWait() != Service.State.RUNNING){
+                    NioClientManager.instance().startUpError();
+                }
             }
             setTimeoutEnabled(true);
             setSocketTimeout(TimeOutDelay);
