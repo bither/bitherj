@@ -16,13 +16,11 @@
 
 package net.bither.bitherj.crypto;
 
-import net.bither.bitherj.core.BitherjSettings;
-import net.bither.bitherj.utils.Base58;
-import net.bither.bitherj.utils.Sha256Hash;
-import net.bither.bitherj.utils.Utils;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+
+import net.bither.bitherj.utils.Sha256Hash;
+import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

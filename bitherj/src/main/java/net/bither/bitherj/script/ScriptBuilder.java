@@ -16,14 +16,14 @@
 
 package net.bither.bitherj.script;
 
+import com.google.common.collect.Lists;
+import com.google.common.primitives.UnsignedBytes;
+
 import net.bither.bitherj.core.BitherjSettings;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Utils;
-
-import com.google.common.collect.Lists;
-import com.google.common.primitives.UnsignedBytes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,14 +33,17 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static net.bither.bitherj.script.ScriptOpCodes.OP_0;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_CHECKMULTISIG;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_CHECKSIG;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_DUP;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_EQUAL;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_EQUALVERIFY;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_HASH160;
-import static net.bither.bitherj.script.ScriptOpCodes.*;
-import static com.google.common.base.Preconditions.checkArgument;
+import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA1;
+import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA2;
+import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA4;
 
 /**
  * <p>Tools for the construction of commonly used script types. You don't normally need this as it's hidden behind

@@ -27,7 +27,6 @@ import net.bither.bitherj.message.Message;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.script.ScriptOpCodes;
-import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
 import net.bither.bitherj.utils.Utils;
@@ -53,7 +52,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static net.bither.bitherj.utils.Utils.doubleDigest;
-import static net.bither.bitherj.utils.Utils.format;
 import static net.bither.bitherj.utils.Utils.uint32ToByteStreamLE;
 
 public class Tx extends Message implements Comparable<Tx> {

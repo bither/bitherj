@@ -21,7 +21,9 @@ import com.google.common.util.concurrent.AbstractExecutionThreadService;
 
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
@@ -98,8 +100,6 @@ public class NioClientManager extends AbstractExecutionThreadService implements
                 // may cause this. Otherwise it may be any arbitrary kind of connection failure.
                 // Calling sc.socket().getRemoteSocketAddress() here throws an exception,
                 // so we can only log the error itself
-                log.error("Failed to connect with exception: {}",
-                        Throwables.getRootCause(e).getMessage());
                 handler.closeConnection();
             }
         } else if(key.isValid()) // Process bytes read
@@ -185,6 +185,17 @@ public class NioClientManager extends AbstractExecutionThreadService implements
             throw new RuntimeException(e); // This should only happen if we are, eg,
             // out of system resources
         }
+    }
+
+    public void startUpError(){
+        State state = state();
+        log.warn("NioClientManager start up error, state is {}, retry.", state.name());
+        if(state == State.RUNNING || state == State.STARTING){
+            closeConnections(getConnectedClientCount());
+            triggerShutdown();
+        }
+        instance = new NioClientManager();
+        instance.startAndWait();
     }
 
     @Override

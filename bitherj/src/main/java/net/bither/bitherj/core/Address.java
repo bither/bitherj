@@ -22,7 +22,6 @@ import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.script.ScriptBuilder;
-import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.NotificationUtil;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
@@ -104,9 +103,7 @@ public class Address implements Comparable<Address> {
 
     public void updateBalance() {
         long balance = 0;
-        LogUtil.d(Address.class.getClass().getSimpleName(), "address t1");
         List<Tx> txs = this.getTxs();
-        LogUtil.d(Address.class.getClass().getSimpleName(), "address t2");
 
         Set<byte[]> invalidTx = new HashSet<byte[]>();
         Set<OutPoint> spentOut = new HashSet<OutPoint>();

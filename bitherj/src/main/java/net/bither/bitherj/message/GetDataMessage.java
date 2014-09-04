@@ -16,9 +16,8 @@
 
 package net.bither.bitherj.message;
 
-import net.bither.bitherj.utils.InventoryItem;
 import net.bither.bitherj.exception.ProtocolException;
-import net.bither.bitherj.utils.Sha256Hash;
+import net.bither.bitherj.utils.InventoryItem;
 
 /**
  * Represents the "getdata" P2P network message, which requests the contents of blocks or transactions given their

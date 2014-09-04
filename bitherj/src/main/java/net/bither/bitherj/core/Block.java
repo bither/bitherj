@@ -430,7 +430,7 @@ public class Block extends Message {
 
     private void checkMerkleRoot() throws VerificationException {
         byte[] calculatedRoot = calculateMerkleRoot();
-        if (calculatedRoot != blockRoot) {
+        if (!Arrays.equals(calculatedRoot, blockRoot)) {
             log.error("Merkle tree did not verify");
             throw new VerificationException("Merkle hashes do not match: "
                     + Utils.bytesToHexString(calculatedRoot) + " vs "
@@ -712,6 +712,20 @@ public class Block extends Message {
         unCacheHeader();
         // Clear merkleRoot last as it may end up being parsed during unCacheHeader().
         blockRoot = null;
+    }
+
+    public Block cloneAsHeader() {
+        Block block = new Block();
+        block.setBlockNo(this.getBlockNo());
+        block.setBlockNonce(this.getBlockNonce());
+        block.setBlockPrev(this.getBlockPrev().clone());
+        block.setBlockRoot(this.getBlockRoot().clone());
+        block.setBlockVer(this.getBlockVer());
+        block.setBlockTime(this.getBlockTime());
+        block.setBlockBits(this.getBlockBits());
+        block.setTransactions(null);
+        block.setBlockHash(this.getBlockHash().clone());
+        return block;
     }
 
 }

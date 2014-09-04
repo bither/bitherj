@@ -75,6 +75,8 @@ public class BitherjSettings {
 
     public static final long TX_UNCONFIRMED = Long.MAX_VALUE;
 
+    public static final int PROTOCOL_TIMEOUT = 30000;
+
     public static final String id = ID_MAINNET;
 
     /**

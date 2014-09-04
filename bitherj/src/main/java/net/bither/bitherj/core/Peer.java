@@ -16,6 +16,8 @@
 
 package net.bither.bitherj.core;
 
+import com.google.common.util.concurrent.Service;
+
 import net.bither.bitherj.db.PeerProvider;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.ProtocolException;
@@ -61,11 +63,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Created by zhouqi on 14-8-15.
- */
 public class Peer extends PeerSocketHandler {
     private static final int MAX_GETDATA_HASHES = 50000;
+
+    private static final int MAX_UNRELATED_TX_RELAY_COUNT = 1000;
 
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
     private static final int TimeOutDelay = 5000;
@@ -85,7 +86,9 @@ public class Peer extends PeerSocketHandler {
     protected int peerPort;
     protected long peerServices;
     protected int peerConnectedCnt;
-    protected long lastBlockHeight;
+    protected long versionLastBlockHeight;
+    // This may be wrong. Do not rely on it.
+    private int incrementalBlockHeight;
     protected int version;
     protected long nonce;
     protected String userAgent;
@@ -104,6 +107,8 @@ public class Peer extends PeerSocketHandler {
     private VersionMessage versionMessage;
     private boolean bloomFilterSent;
 
+    private int unrelatedTxRelayCount;
+
 
     public Peer(InetAddress address) {
         super(new InetSocketAddress(address, BitherjSettings.port));
@@ -116,6 +121,8 @@ public class Peer extends PeerSocketHandler {
         knownTxHashes = new HashSet<Sha256Hash>();
         requestedBlockHashes = new HashSet<Sha256Hash>();
         needToRequestDependencyDict = new HashMap<Sha256Hash, HashSet<Tx>>();
+        incrementalBlockHeight = 0;
+        unrelatedTxRelayCount = 0;
         nonce = new Random().nextLong();
         peerTimestamp = (int) (new Date().getTime() / 1000 - 24 * 60 * 60 * (3 + new Random()
                 .nextFloat() * 4));
@@ -130,7 +137,9 @@ public class Peer extends PeerSocketHandler {
             log.info("peer[{}:{}] call connect", this.peerAddress.getHostAddress(), this.peerPort);
             state = State.Connecting;
             if (!NioClientManager.instance().isRunning()) {
-                NioClientManager.instance().startAndWait();
+                if(NioClientManager.instance().startAndWait() != Service.State.RUNNING){
+                    NioClientManager.instance().startUpError();
+                }
             }
             setTimeoutEnabled(true);
             setSocketTimeout(TimeOutDelay);
@@ -160,7 +169,7 @@ public class Peer extends PeerSocketHandler {
         if (currentFilteredBlock != null && !(m instanceof Tx)) {
             currentFilteredBlock = null;
             currentTxHashes.clear();
-            exceptionCaught(new ProtocolException("Except more tx for current filtering block"));
+            exceptionCaught(new ProtocolException("Expect more tx for current filtering block, but got a " + m.getClass().getSimpleName() + " message"));
         }
 
         if (m instanceof NotFoundMessage) {
@@ -270,22 +279,24 @@ public class Peer extends PeerSocketHandler {
             for (int i = 0;
                  i < eachTx.getIns().size();
                  i++) {
-                if (Arrays.equals(eachTx.getIns().get(i).getTxHash(), eachTx.getTxHash())) {
-                    byte[] outScript = tx.getOuts().get(eachTx.getIns().get(i).getInSn())
-                            .getOutScript();
-                    Script pubKeyScript = new Script(outScript);
-                    Script script = new Script(eachTx.getIns().get(i).getInSignature());
-                    try {
-                        script.correctlySpends(eachTx, i, pubKeyScript, true);
-                        valid &= true;
-                    } catch (ScriptException e) {
-                        valid &= false;
+                if (Arrays.equals(eachTx.getIns().get(i).getTxHash(), tx.getTxHash())) {
+                    if (eachTx.getIns().get(i).getInSn() < tx.getOuts().size()) {
+                        byte[] outScript = tx.getOuts().get(eachTx.getIns().get(i).getInSn())
+                                .getOutScript();
+                        Script pubKeyScript = new Script(outScript);
+                        Script script = new Script(eachTx.getIns().get(i).getInSignature());
+                        try {
+                            script.correctlySpends(eachTx, i, pubKeyScript, true);
+                            valid &= true;
+                        } catch (ScriptException e) {
+                            valid &= false;
+                        }
+                    } else {
+                        valid = false;
                     }
-                } else {
-                    valid = false;
-                }
-                if (!valid) {
-                    break;
+                    if (!valid) {
+                        break;
+                    }
                 }
             }
             if (valid) {
@@ -341,6 +352,7 @@ public class Peer extends PeerSocketHandler {
         }
         if(!bloomFilterSent){
             log.info("Peer {} received inv. But we didn't send bloomfilter. Ignore");
+            return;
         }
         ArrayList<Sha256Hash> txHashSha256Hashs = new ArrayList<Sha256Hash>();
         ArrayList<Sha256Hash> blockHashSha256Hashs = new ArrayList<Sha256Hash>();
@@ -352,10 +364,10 @@ public class Peer extends PeerSocketHandler {
             }
             switch (type) {
                 case Transaction:
-                    Sha256Hash big = new Sha256Hash(hash);
-                    if (!txHashSha256Hashs.contains(big)) {
-                        txHashSha256Hashs.add(big);
-                    }
+                        Sha256Hash big = new Sha256Hash(hash);
+                        if (!txHashSha256Hashs.contains(big)) {
+                            txHashSha256Hashs.add(big);
+                        }
                     break;
                 case Block:
                 case FilteredBlock:
@@ -372,6 +384,7 @@ public class Peer extends PeerSocketHandler {
         log.info(getPeerAddress().getHostAddress() + " got inv with " + items.size() + " items "
                 + txHashSha256Hashs.size() + " tx " + blockHashSha256Hashs.size() + " block");
 
+        //TODO if we receive too many transactions not related to us, we abandon this peer.
         if (txHashSha256Hashs.size() > 10000) {
             return;
         }
@@ -407,6 +420,10 @@ public class Peer extends PeerSocketHandler {
                     iterator.remove();
                 }
             }
+        }
+
+        if(blockHashSha256Hashs.size() == 1){
+            incrementalBlockHeight ++;
         }
     }
 
@@ -474,6 +491,18 @@ public class Peer extends PeerSocketHandler {
         } else {
             log.info("peer[{}:{}] receive tx {}", this.peerAddress.getHostAddress(),
                     this.peerPort, Utils.hashToString(tx.getTxHash()));
+            if(needToRequestDependencyDict.get(new Sha256Hash(tx.getTxHash())) == null || needToRequestDependencyDict.get(new Sha256Hash(tx.getTxHash())).size() == 0){
+                if(AddressManager.getInstance().isTxRelated(tx)){
+                    unrelatedTxRelayCount = 0;
+                } else {
+                    unrelatedTxRelayCount++;
+                    if(unrelatedTxRelayCount > MAX_UNRELATED_TX_RELAY_COUNT){
+                        exceptionCaught(new Exception("Peer " + getPeerAddress().getHostAddress() + " is junking us. Drop it."));
+                        return;
+                    }
+                }
+            }
+
             // check dependency
             HashMap<Sha256Hash, Tx> dependency = TxProvider.getInstance().getTxDependencies(tx);
             HashSet<Sha256Hash> needToRequest = new HashSet<Sha256Hash>();
@@ -578,44 +607,44 @@ public class Peer extends PeerSocketHandler {
 
         try {
             int lastBlockTime = 0;
-            byte[] firstHash = m.getBlockHeaders().get(0).getBlock().getBlockHash();
-            byte[] lastHash = m.getBlockHeaders().get(m.getBlockHeaders().size() - 1).getBlock()
-                    .getBlockHash();
-            ArrayList<Block> blocksToRelay = new ArrayList<Block>();
-            for (int i = 0;
-                 i < m.getBlockHeaders().size();
-                 i++) {
-                BlockMessage header = m.getBlockHeaders().get(i);
-                // Process headers until we pass the fast catchup time,
-                // or are about to catch up with the head
-                // of the chain - always process the last block as a full/filtered block to kick
-                // us out of the
-                // fast catchup mode (in which we ignore new blocks).
-
-                boolean passedTime = header.getBlock().getBlockTime() >= PeerManager.instance()
-                        .earliestKeyTime;
-                boolean reachedTop = PeerManager.instance().getLastBlockHeight() >= this
-                        .lastBlockHeight;
-                if (!passedTime && !reachedTop) {
-                    if (header.getBlock().getBlockTime() > lastBlockTime) {
-                        lastBlockTime = header.getBlock().getBlockTime();
-                        if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance()
-                                .earliestKeyTime - 2 * 60 * 60) {
-                            lastHash = header.getBlock().getBlockHash();
-                        }
-                    }
-                    if(!blocksToRelay.contains(header.getBlock())){
-                        blocksToRelay.add(header.getBlock());
-                    }
-                }
-            }
-            PeerManager.instance().relayedBlockHeadersForMainChain(this, blocksToRelay);
-            if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance().earliestKeyTime - 2 *
-                    60 * 60) {
-                sendGetBlocksMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);
-            } else {
-                sendGetHeadersMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);
-            }
+            byte[] firstHash = m.getBlockHeaders().get(0).getBlockHash();
+            byte[] lastHash = m.getBlockHeaders().get(m.getBlockHeaders().size() - 1).getBlockHash();
+//            ArrayList<Block> blocksToRelay = new ArrayList<Block>();
+//            for (int i = 0; i < m.getBlockHeaders().size(); i++) {
+//                blocksToRelay.add(m.getBlockHeaders().get(i));
+//            }
+//            for (int i = 0; i < m.getBlockHeaders().size(); i++) {
+//                BlockMessage header = m.getBlockHeaders().get(i);
+//                // Process headers until we pass the fast catchup time,
+//                // or are about to catch up with the head
+//                // of the chain - always process the last block as a full/filtered block to kick
+//                // us out of the
+//                // fast catchup mode (in which we ignore new blocks).
+//
+//                boolean passedTime = header.getBlock().getBlockTime() >= PeerManager.instance()
+//                        .earliestKeyTime;
+//                boolean reachedTop = PeerManager.instance().getLastBlockHeight() >= this
+//                        .versionLastBlockHeight;
+//                if (!passedTime && !reachedTop) {
+//                    if (header.getBlock().getBlockTime() > lastBlockTime) {
+//                        lastBlockTime = header.getBlock().getBlockTime();
+//                        if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance()
+//                                .earliestKeyTime - 2 * 60 * 60) {
+//                            lastHash = header.getBlock().getBlockHash();
+//                        }
+//                    }
+//                    if(!blocksToRelay.contains(header.getBlock())){
+//                        blocksToRelay.add(header.getBlock());
+//                    }
+//                }
+//            }
+            PeerManager.instance().relayedBlockHeadersForMainChain(this, m.getBlockHeaders());
+//            if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance().earliestKeyTime - 2 *
+//                    60 * 60) {
+//                sendGetBlocksMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);
+//            } else {
+            sendGetHeadersMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);
+//            }
         } catch (VerificationException e) {
             log.warn("Block header verification failed", e);
         }
@@ -632,11 +661,11 @@ public class Peer extends PeerSocketHandler {
         peerTimestamp = (int) version.time;
         userAgent = version.subVer;
 
-        lastBlockHeight = version.bestHeight;
+        versionLastBlockHeight = version.bestHeight;
 
         sendMessage(new VersionAck());
     }
-    
+
     public boolean getDownloadData() {
         if (PeerManager.instance().getDownloadingPeer() != null) {
             return equals(PeerManager.instance().getDownloadingPeer());
@@ -877,6 +906,11 @@ public class Peer extends PeerSocketHandler {
         }
     }
 
+    @Override
+    public int hashCode() {
+        return getPeerAddress().hashCode();
+    }
+
     public InetAddress getPeerAddress() {
         return peerAddress;
     }
@@ -917,8 +951,13 @@ public class Peer extends PeerSocketHandler {
         this.peerConnectedCnt = peerConnectedCnt;
     }
 
-    public long getLastBlockHeight() {
-        return lastBlockHeight;
+    public long getVersionLastBlockHeight() {
+        return versionLastBlockHeight;
+    }
+
+    // This may be wrong. Do not rely on it.
+    public long getDisplayLastBlockHeight(){
+        return versionLastBlockHeight + incrementalBlockHeight;
     }
 
     public int getClientVersion(){

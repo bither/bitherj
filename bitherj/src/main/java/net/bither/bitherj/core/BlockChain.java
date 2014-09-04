@@ -18,7 +18,6 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.db.BlockProvider;
 import net.bither.bitherj.db.TxProvider;
-import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.VerificationException;
 import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.Utils;
@@ -262,7 +261,7 @@ public class BlockChain {
         Block b1 = block1;
         Block b2 = block2;
 
-        while (b1 != null && b2 != null && b1.getBlockHash() != b2.getBlockHash()) {
+        while (b1 != null && b2 != null && !Arrays.equals(b1.getBlockHash(), b2.getBlockHash())) {
             b1 = BlockProvider.getInstance().getBlock(b1.getBlockPrev());
             if (b1.getBlockNo() < b2.getBlockNo()) {
                 b2 = BlockProvider.getInstance().getBlock(b2.getBlockPrev());
@@ -274,7 +273,7 @@ public class BlockChain {
     private void forkMainChain(Block forkStartBlock, Block lastBlock) {
         Block b = this.lastBlock;
         Block next = lastBlock;
-        while (b.getBlockHash() != forkStartBlock.getBlockHash()) {
+        while (!Arrays.equals(b.getBlockHash(), forkStartBlock.getBlockHash())) {
             next = BlockProvider.getInstance().getOrphanBlockByPrevHash(b.getBlockPrev());
             BlockProvider.getInstance().updateBlock(b.getBlockHash(), false);
             b = BlockProvider.getInstance().getMainChainBlock(b.getBlockPrev());
@@ -283,7 +282,7 @@ public class BlockChain {
         b = next;
         BlockProvider.getInstance().updateBlock(next.getBlockHash(), true);
         this.lastBlock = next;
-        while (b.getBlockHash() != lastBlock.getBlockPrev()) {
+        while (!Arrays.equals(b.getBlockHash(), lastBlock.getBlockPrev())) {
             BlockProvider.getInstance().updateBlock(b.getBlockHash(), true);
             this.lastBlock = b;
             b = BlockProvider.getInstance().getOrphanBlockByPrevHash(b.getBlockHash());

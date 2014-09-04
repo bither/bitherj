@@ -16,8 +16,6 @@
 
 package net.bither.bitherj.net;
 
-import net.bither.bitherj.net.MessageWriteTarget;
-
 import java.nio.ByteBuffer;
 
 /**

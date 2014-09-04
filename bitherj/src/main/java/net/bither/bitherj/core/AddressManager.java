@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.core;
 
+import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.utils.NotificationUtil;
 import net.bither.bitherj.utils.Utils;
@@ -44,6 +45,7 @@ public class AddressManager {
         synchronized (lock) {
             initPrivateKeyList();
             initWatchOnlyList();
+            BitherjApplication.addressIsReady = true;
             NotificationUtil.sendBroadcastAddressLoadCompleteState();
         }
     }
@@ -70,6 +72,15 @@ public class AddressManager {
             }
         }
         return needAdd;
+    }
+
+    public boolean isTxRelated(Tx tx){
+        for (Address address : this.getAllAddresses()) {
+            if(isAddressContainsTx(address.getAddress(), tx)){
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isAddressContainsTx(String address, Tx tx) {
