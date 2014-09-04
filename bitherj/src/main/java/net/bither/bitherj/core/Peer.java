@@ -384,7 +384,6 @@ public class Peer extends PeerSocketHandler {
         log.info(getPeerAddress().getHostAddress() + " got inv with " + items.size() + " items "
                 + txHashSha256Hashs.size() + " tx " + blockHashSha256Hashs.size() + " block");
 
-        //TODO if we receive too many transactions not related to us, we abandon this peer.
         if (txHashSha256Hashs.size() > 10000) {
             return;
         }
