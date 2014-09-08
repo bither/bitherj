@@ -21,6 +21,7 @@ import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.message.Message;
 import net.bither.bitherj.script.Script;
+import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
 
@@ -101,7 +102,7 @@ public class In extends Message {
         this.inSequence = inSequence;
     }
 
-    public OutPoint getOutpoint(){
+    public OutPoint getOutpoint() {
         return new OutPoint(this.prevTxHash, this.prevOutSn);
     }
 
@@ -149,7 +150,7 @@ public class In extends Message {
     }
 
     public In(@Nullable Tx parentTransaction, byte[] scriptBytes,
-                            Out outpoint) {
+              Out outpoint) {
         super();
         this.inSignature = scriptBytes;
         this.prevTxHash = outpoint.getTxHash();
@@ -197,37 +198,39 @@ public class In extends Message {
         return inSequence != NO_SEQUENCE;
     }
 
-    public Out getConnectedOut(){
-        if(connectedOut == null){
+    public Out getConnectedOut() {
+        if (connectedOut == null) {
             Tx preTx = TxProvider.getInstance().getTxDetailByTxHash(getPrevTxHash());
-            if(preTx == null){
+            if (preTx == null) {
                 return null;
             }
-            if(getPrevOutSn() >=0 && getPrevOutSn() < preTx.getOuts().size()){
+            if (getPrevOutSn() >= 0 && getPrevOutSn() < preTx.getOuts().size()) {
                 connectedOut = preTx.getOuts().get(getPrevOutSn());
             }
         }
         return connectedOut;
     }
 
-    public String getFromAddress(){
-        if(getConnectedOut() != null){
+    public String getFromAddress() {
+        if (getConnectedOut() != null) {
             return getConnectedOut().getOutAddress();
-        } else if (this.getInSignature() != null){
+        } else if (this.getInSignature() != null) {
             Script script = new Script(this.getInSignature());
             if (script.getChunks().size() == 2) {
                 try {
                     return script.getFromAddress();
                 } catch (ScriptException ex) {
-                    ex.printStackTrace();
+                    if (this.getInSignature() != null) {
+                        LogUtil.w(Out.class.getSimpleName(), "out script : " + Utils.bytesToHexString(this.getInSignature()));
+                    }
                 }
             }
         }
         return null;
     }
 
-    public long getValue(){
-        if(getConnectedOut() != null){
+    public long getValue() {
+        if (getConnectedOut() != null) {
             return getConnectedOut().getOutValue();
         }
         return 0;
