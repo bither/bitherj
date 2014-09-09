@@ -21,7 +21,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.crypto.LinuxSecureRandom;
+import net.bither.bitherj.crypto.URandom;
 import net.bither.bitherj.db.BitherjDatabaseHelper;
 import net.bither.bitherj.utils.NotificationUtil;
 import net.bither.bitherj.utils.Utils;
@@ -51,7 +51,7 @@ public abstract class BitherjApplication extends Application {
         init();
         mDbHelper = new BitherjDatabaseHelper(mContext);
         super.onCreate();
-        new LinuxSecureRandom();
+        new URandom();
         NotificationUtil.removeAddressLoadCompleteState();
         initApp();
 

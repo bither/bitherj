@@ -22,13 +22,13 @@ import junit.framework.Assert;
 import net.bither.bitherj.crypto.EncryptedPrivateKey;
 import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.KeyCrypterScrypt;
+import net.bither.bitherj.crypto.URandom;
 import net.bither.bitherj.test.ApplicationTest;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.SecureRandom;
 import java.util.Random;
 import java.util.UUID;
 
@@ -43,14 +43,14 @@ public class KeyCrypterScryptTest extends ApplicationTest {
 
     private final CharSequence WRONG_PASSWORD = "thisIsTheWrongPassword";
 
-//    private ScryptParameters scryptParameters;
+    //    private ScryptParameters scryptParameters;
     private byte[] salt;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
         byte[] salt = new byte[KeyCrypterScrypt.SALT_LENGTH];
-        new SecureRandom().nextBytes(salt);
+        URandom.nextBytes(salt);
         this.salt = salt;
 //        Protos.ScryptParameters.Builder scryptParametersBuilder = Protos.ScryptParameters.newBuilder().setSalt(ByteString.copyFrom(salt));
 //        scryptParameters = scryptParametersBuilder.build();
@@ -75,6 +75,7 @@ public class KeyCrypterScryptTest extends ApplicationTest {
     /**
      * Test with random plain text strings and random passwords.
      * UUIDs are used and hence will only cover hex characters (and the separator hyphen).
+     *
      * @throws KeyCrypterException
      * @throws java.io.UnsupportedEncodingException
      */
@@ -92,7 +93,7 @@ public class KeyCrypterScryptTest extends ApplicationTest {
 
             Assert.assertNotNull(encryptedPrivateKey);
 
-            byte[] reconstructedPlainBytes = keyCrypter.decrypt(encryptedPrivateKey,keyCrypter.deriveKey(password));
+            byte[] reconstructedPlainBytes = keyCrypter.decrypt(encryptedPrivateKey, keyCrypter.deriveKey(password));
             Assert.assertEquals(Utils.bytesToHexString(plainText.getBytes()), Utils.bytesToHexString(reconstructedPlainBytes));
             System.out.print('.');
         }
