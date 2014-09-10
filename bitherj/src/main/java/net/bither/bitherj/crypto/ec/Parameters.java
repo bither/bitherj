@@ -33,15 +33,15 @@ public class Parameters {
 
     static {
         BigInteger p = new BigInteger(1,
-                Utils.hexStringToByteArray("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F"));
+                Utils.hexStringToByteArray("fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f"));
         BigInteger a = BigInteger.ZERO;
         BigInteger b = BigInteger.valueOf(7);
         curve = new Curve(p, a, b);
         seed = null;
-        G = curve.decodePoint(Utils.hexStringToByteArray("04" + "79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798"
-                + "483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8"));
-        n = new BigInteger(1, Utils.hexStringToByteArray("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141"));
+        G = curve.decodePoint(Utils.hexStringToByteArray("04" + "79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+                + "483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"));
+        n = new BigInteger(1, Utils.hexStringToByteArray("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"));
         h = BigInteger.ONE;
-        MAX_SIG_S = new BigInteger(1, Utils.hexStringToByteArray("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0"));
+        MAX_SIG_S = new BigInteger(1, Utils.hexStringToByteArray("7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0"));
     }
 }

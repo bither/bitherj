@@ -16,6 +16,8 @@
 
 package net.bither.bitherj.crypto;
 
+import net.bither.bitherj.utils.LogUtil;
+
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;

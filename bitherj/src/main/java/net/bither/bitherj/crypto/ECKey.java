@@ -130,7 +130,7 @@ public class ECKey implements Serializable {
      * Generates an entirely new keypair. Point compression is used so the resulting public key will be 33 bytes
      * (32 for the co-ordinate and 1 byte to represent the y bit).
      */
-    public ECKey() {
+    public ECKey(XRandom xRandom) {
         int nBitLength = Parameters.n.bitLength();
         BigInteger d;
         do {
@@ -138,8 +138,7 @@ public class ECKey implements Serializable {
             // java make the same BigIntegers from the same random source with the
             // same seed. Using BigInteger(nBitLength, random)
             // produces different results on Android compared to 'classic' java.
-            byte[] bytes = new byte[nBitLength / 8];
-            URandom.nextBytes(bytes);
+            byte[] bytes = xRandom.getRandomBytes();
             bytes[0] = (byte) (bytes[0] & 0x7F); // ensure positive number
             d = new BigInteger(bytes);
         } while (d.equals(BigInteger.ZERO) || (d.compareTo(Parameters.n) >= 0));
