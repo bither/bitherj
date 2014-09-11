@@ -19,6 +19,7 @@ package net.bither.bitherj.test.script;
 
 import com.google.common.collect.Lists;
 
+import net.bither.bitherj.crypto.XRandom;
 import net.bither.bitherj.test.R;
 import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.OutPoint;
@@ -85,10 +86,11 @@ public class ScriptTest extends ApplicationTest {
     }
 
     public void testMultiSig() throws Exception {
-        List<ECKey> keys = Lists.newArrayList(new ECKey(), new ECKey(), new ECKey());
+        XRandom xRandom = new XRandom(new byte[32]);
+        List<ECKey> keys = Lists.newArrayList(new ECKey(xRandom), new ECKey(xRandom), new ECKey(xRandom));
         assertTrue(ScriptBuilder.createMultiSigOutputScript(2, keys).isSentToMultiSig());
         assertTrue(ScriptBuilder.createMultiSigOutputScript(3, keys).isSentToMultiSig());
-        assertFalse(ScriptBuilder.createOutputScript(new ECKey()).isSentToMultiSig());
+        assertFalse(ScriptBuilder.createOutputScript(new ECKey(xRandom)).isSentToMultiSig());
         try {
             // Fail if we ask for more signatures than keys.
             Script.createMultiSigOutputScript(4, keys);
@@ -179,14 +181,14 @@ public class ScriptTest extends ApplicationTest {
 
         UnsafeByteArrayOutputStream out = new UnsafeByteArrayOutputStream();
 
-        for(String w : words) {
+        for (String w : words) {
             if (w.equals(""))
                 continue;
             if (w.matches("^-?[0-9]*$")) {
                 // Number
                 long val = Long.parseLong(w);
                 if (val >= -1 && val <= 16)
-                    out.write(Script.encodeToOpN((int)val));
+                    out.write(Script.encodeToOpN((int) val));
                 else
                     Script.writeBytes(out, Utils.reverseBytes(Utils.encodeMPI(BigInteger.valueOf(val), false)));
             } else if (w.matches("^0x[0-9a-fA-F]*$")) {
@@ -289,20 +291,44 @@ public class ScriptTest extends ApplicationTest {
         List<JSONObject> list;
         boolean booleanValue;
         Integer integer;
-        JSONObject(String string) { this.string = string; }
-        JSONObject(List<JSONObject> list) { this.list = list; }
-        JSONObject(Integer integer) { this.integer = integer; }
-        JSONObject(boolean value) { this.booleanValue = value; }
-        boolean isList() { return list != null; }
-        boolean isString() { return string != null; }
-        boolean isInteger() { return integer != null; }
-        boolean isBoolean() { return !isList() && !isString() && !isInteger(); }
+
+        JSONObject(String string) {
+            this.string = string;
+        }
+
+        JSONObject(List<JSONObject> list) {
+            this.list = list;
+        }
+
+        JSONObject(Integer integer) {
+            this.integer = integer;
+        }
+
+        JSONObject(boolean value) {
+            this.booleanValue = value;
+        }
+
+        boolean isList() {
+            return list != null;
+        }
+
+        boolean isString() {
+            return string != null;
+        }
+
+        boolean isInteger() {
+            return integer != null;
+        }
+
+        boolean isBoolean() {
+            return !isList() && !isString() && !isInteger();
+        }
     }
 
     private boolean appendToList(List<JSONObject> tx, StringBuffer buffer) {
         if (buffer.length() == 0)
             return true;
-        switch(buffer.charAt(0)) {
+        switch (buffer.charAt(0)) {
             case '[':
                 int closePos = 0;
                 boolean inString = false;
@@ -310,7 +336,7 @@ public class ScriptTest extends ApplicationTest {
                 for (int i = 1; i < buffer.length() && closePos == 0; i++) {
                     switch (buffer.charAt(i)) {
                         case '"':
-                            if (buffer.charAt(i-1) != '\\')
+                            if (buffer.charAt(i - 1) != '\\')
                                 inString = !inString;
                             break;
                         case ']':
@@ -477,7 +503,7 @@ public class ScriptTest extends ApplicationTest {
                 // The reference client checks this case in CheckTransaction, but we leave it to
                 // later where we will see an attempt to double-spend, so we explicitly check here
                 HashSet<OutPoint> set = new HashSet<OutPoint>();
-                for(In input : transaction.getIns()) {
+                for (In input : transaction.getIns()) {
                     if (set.contains(input.getOutpoint()))
                         valid = false;
                     set.add(input.getOutpoint());

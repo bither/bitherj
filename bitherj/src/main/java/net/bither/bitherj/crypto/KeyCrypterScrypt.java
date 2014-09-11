@@ -27,7 +27,6 @@ import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
 
 import java.io.Serializable;
-import java.security.SecureRandom;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -54,8 +53,6 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
      */
     public static final int SALT_LENGTH = 8;
 
-    private static final transient SecureRandom secureRandom = new SecureRandom();
-
 
     // Scrypt parameters.
 
@@ -67,7 +64,7 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
      */
     public KeyCrypterScrypt() {
         mSalt = new byte[SALT_LENGTH];
-        secureRandom.nextBytes(mSalt);
+        URandom.nextBytes(mSalt);
     }
 
 
@@ -118,7 +115,7 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
         try {
             // Generate iv - each encryption call has a different iv.
             byte[] iv = new byte[BLOCK_LENGTH];
-            secureRandom.nextBytes(iv);
+            URandom.nextBytes(iv);
 
             ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, iv);
 

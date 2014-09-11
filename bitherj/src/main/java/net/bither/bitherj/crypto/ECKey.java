@@ -19,6 +19,9 @@ package net.bither.bitherj.crypto;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
+import net.bither.bitherj.crypto.ec.EcTools;
+import net.bither.bitherj.crypto.ec.Parameters;
+import net.bither.bitherj.crypto.ec.Point;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
@@ -36,10 +39,7 @@ import org.spongycastle.asn1.DLSequence;
 import org.spongycastle.asn1.sec.SECNamedCurves;
 import org.spongycastle.asn1.x9.X9ECParameters;
 import org.spongycastle.asn1.x9.X9IntegerConverter;
-import org.spongycastle.crypto.AsymmetricCipherKeyPair;
-import org.spongycastle.crypto.generators.ECKeyPairGenerator;
 import org.spongycastle.crypto.params.ECDomainParameters;
-import org.spongycastle.crypto.params.ECKeyGenerationParameters;
 import org.spongycastle.crypto.params.ECPrivateKeyParameters;
 import org.spongycastle.crypto.params.ECPublicKeyParameters;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -54,7 +54,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
-import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.util.Arrays;
 
@@ -94,7 +93,7 @@ public class ECKey implements Serializable {
      */
     public static final BigInteger HALF_CURVE_ORDER;
 
-    private static final SecureRandom secureRandom;
+
     private static final long serialVersionUID = -728224901792295832L;
 
     static {
@@ -102,7 +101,7 @@ public class ECKey implements Serializable {
         X9ECParameters params = SECNamedCurves.getByName("secp256k1");
         CURVE = new ECDomainParameters(params.getCurve(), params.getG(), params.getN(), params.getH());
         HALF_CURVE_ORDER = params.getN().shiftRight(1);
-        secureRandom = new SecureRandom();
+
     }
 
     // The two parts of the key. If "priv" is set, "pub" can always be calculated. If "pub" is set but not "priv", we
@@ -131,19 +130,28 @@ public class ECKey implements Serializable {
      * Generates an entirely new keypair. Point compression is used so the resulting public key will be 33 bytes
      * (32 for the co-ordinate and 1 byte to represent the y bit).
      */
-    public ECKey() {
-        ECKeyPairGenerator generator = new ECKeyPairGenerator();
-        ECKeyGenerationParameters keygenParams = new ECKeyGenerationParameters(CURVE, secureRandom);
-        generator.init(keygenParams);
-        AsymmetricCipherKeyPair keypair = generator.generateKeyPair();
-        ECPrivateKeyParameters privParams = (ECPrivateKeyParameters) keypair.getPrivate();
-        ECPublicKeyParameters pubParams = (ECPublicKeyParameters) keypair.getPublic();
-        priv = privParams.getD();
+    public ECKey(XRandom xRandom) {
+        int nBitLength = Parameters.n.bitLength();
+        BigInteger d;
+        do {
+            // Make a BigInteger from bytes to ensure that Andriod and 'classic'
+            // java make the same BigIntegers from the same random source with the
+            // same seed. Using BigInteger(nBitLength, random)
+            // produces different results on Android compared to 'classic' java.
+            byte[] bytes = xRandom.getRandomBytes();
+            bytes[0] = (byte) (bytes[0] & 0x7F); // ensure positive number
+            d = new BigInteger(bytes);
+        } while (d.equals(BigInteger.ZERO) || (d.compareTo(Parameters.n) >= 0));
+        priv = d;
         // Unfortunately Bouncy Castle does not let us explicitly change a point to be compressed, even though it
         // could easily do so. We must re-build it here so the ECPoints withCompression flag can be set to true.
-        ECPoint uncompressed = pubParams.getQ();
-        ECPoint compressed = compressPoint(uncompressed);
-        pub = compressed.getEncoded();
+        Point Q = EcTools.multiply(Parameters.G, d);
+        boolean compressed = true;
+        if (compressed) {
+            // Convert Q to a compressed point on the curve
+            Q = new Point(Q.getCurve(), Q.getX(), Q.getY(), true);
+        }
+        pub = Q.getEncoded();
 
         creationTimeSeconds = Utils.currentTimeMillis() / 1000;
     }

@@ -98,8 +98,9 @@ public class Out extends Message {
                 Script pubKeyScript = new Script(this.getOutScript());
                 outAddress = pubKeyScript.getToAddress();
             } catch (ScriptException e) {
-                LogUtil.e(Out.class.getSimpleName(), "out script : " + Utils.bytesToHexString(this.getOutScript()));
-                e.printStackTrace();
+                if (this.getOutScript() != null) {
+                    LogUtil.w(Out.class.getSimpleName(), "out script : " + Utils.bytesToHexString(this.getOutScript()));
+                }
             }
         }
         return outAddress;
