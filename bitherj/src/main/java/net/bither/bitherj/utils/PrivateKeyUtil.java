@@ -26,6 +26,7 @@ import net.bither.bitherj.crypto.EncryptedPrivateKey;
 import net.bither.bitherj.crypto.KeyCrypter;
 import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.KeyCrypterScrypt;
+import net.bither.bitherj.exception.URandomNotFoundException;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
@@ -191,7 +192,7 @@ public class PrivateKeyUtil {
         }
     }
 
-    public static ECKey encrypt(ECKey key, CharSequence password) {
+    public static ECKey encrypt(ECKey key, CharSequence password) throws URandomNotFoundException {
         KeyCrypter scrypt = new KeyCrypterScrypt();
         KeyParameter derivedKey = scrypt.deriveKey(password);
         ECKey encryptedKey = key.encrypt(scrypt, derivedKey);

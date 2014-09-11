@@ -17,27 +17,54 @@
 package net.bither.bitherj.crypto;
 
 import net.bither.bitherj.crypto.ec.Parameters;
+import net.bither.bitherj.exception.URandomNotFoundException;
+
+import java.math.BigInteger;
 
 public class XRandom {
 
-    private byte[] userEntropyBytes;
+    private IUEntropy uEntropy;
 
-    public XRandom(byte[] userEntropyBytes) {
-        this.userEntropyBytes = userEntropyBytes;
+    public XRandom(IUEntropy uEntropy) {
+        this.uEntropy = uEntropy;
     }
 
-    public byte[] getRandomBytes() {
+    public byte[] getRandomBytes() throws URandomNotFoundException {
         int nBitLength = Parameters.n.bitLength();
-        if (userEntropyBytes.length < nBitLength / 8) {
-            throw new RuntimeException("user entropy bytes is not enough ");
+        byte[] uRandomBytes = getURandomBytes(nBitLength / 8);
+        if (this.uEntropy == null) {
+            return uRandomBytes;
         }
-        byte[] uRandomBytes = new byte[nBitLength / 8];
-        URandom.nextBytes(uRandomBytes);
         byte[] result = new byte[nBitLength / 8];
+        byte[] userEntropyBytes = getUEntropyBytes(nBitLength);
         for (int i = 0; i < uRandomBytes.length; i++) {
             result[i] = (byte) (uRandomBytes[i] ^ userEntropyBytes[i]);
         }
         return result;
 
+    }
+
+    private byte[] getURandomBytes(int length) throws URandomNotFoundException {
+        BigInteger d;
+        byte[] uRandomBytes;
+        do {
+            uRandomBytes = new byte[length];
+            URandom.nextBytes(uRandomBytes);
+            uRandomBytes[0] = (byte) (uRandomBytes[0] & 0x7F); // ensure positive number
+            d = new BigInteger(uRandomBytes);
+        } while (d.equals(BigInteger.ZERO) || (d.compareTo(Parameters.n) >= 0));
+        return uRandomBytes;
+    }
+
+    private byte[] getUEntropyBytes(int length) {
+        BigInteger d;
+        byte[] uEntropyBytes;
+        do {
+            uEntropyBytes = new byte[length];
+            this.uEntropy.nextBytes(uEntropyBytes);
+            uEntropyBytes[0] = (byte) (uEntropyBytes[0] & 0x7F); // ensure positive number
+            d = new BigInteger(uEntropyBytes);
+        } while (d.equals(BigInteger.ZERO) || (d.compareTo(Parameters.n) >= 0));
+        return uEntropyBytes;
     }
 }

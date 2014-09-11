@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.crypto;
 
+import net.bither.bitherj.exception.URandomNotFoundException;
 import net.bither.bitherj.utils.LogUtil;
 
 import java.io.DataInputStream;
@@ -25,12 +26,11 @@ import java.io.IOException;
 
 public class URandom {
 
-    public static synchronized void nextBytes(byte[] bytes) {
+    public static synchronized void nextBytes(byte[] bytes) throws URandomNotFoundException {
         // On Android we use /dev/urandom for providing random data
         File file = new File("/dev/urandom");
         if (!file.exists()) {
-            //todo
-            throw new RuntimeException("Unable to generate random bytes on this Android device");
+            throw new URandomNotFoundException("Unable to generate random bytes on this Android device");
         }
         try {
             FileInputStream stream = new FileInputStream(file);

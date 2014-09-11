@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import net.bither.bitherj.crypto.ec.EcTools;
 import net.bither.bitherj.crypto.ec.Parameters;
 import net.bither.bitherj.crypto.ec.Point;
+import net.bither.bitherj.exception.URandomNotFoundException;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
@@ -130,7 +131,8 @@ public class ECKey implements Serializable {
      * Generates an entirely new keypair. Point compression is used so the resulting public key will be 33 bytes
      * (32 for the co-ordinate and 1 byte to represent the y bit).
      */
-    public ECKey(XRandom xRandom) {
+    public static ECKey generateECKey(XRandom xRandom) throws URandomNotFoundException {
+
         int nBitLength = Parameters.n.bitLength();
         BigInteger d;
         do {
@@ -142,7 +144,7 @@ public class ECKey implements Serializable {
             bytes[0] = (byte) (bytes[0] & 0x7F); // ensure positive number
             d = new BigInteger(bytes);
         } while (d.equals(BigInteger.ZERO) || (d.compareTo(Parameters.n) >= 0));
-        priv = d;
+        BigInteger priv = d;
         // Unfortunately Bouncy Castle does not let us explicitly change a point to be compressed, even though it
         // could easily do so. We must re-build it here so the ECPoints withCompression flag can be set to true.
         Point Q = EcTools.multiply(Parameters.G, d);
@@ -151,9 +153,12 @@ public class ECKey implements Serializable {
             // Convert Q to a compressed point on the curve
             Q = new Point(Q.getCurve(), Q.getX(), Q.getY(), true);
         }
-        pub = Q.getEncoded();
+        byte[] pub = Q.getEncoded();
 
-        creationTimeSeconds = Utils.currentTimeMillis() / 1000;
+        long creationTimeSeconds = Utils.currentTimeMillis() / 1000;
+        ECKey ecKey = new ECKey(priv, pub, compressed);
+        ecKey.setCreationTimeSeconds(creationTimeSeconds);
+        return ecKey;
     }
 
     private static ECPoint compressPoint(ECPoint uncompressed) {

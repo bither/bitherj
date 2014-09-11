@@ -17,6 +17,8 @@ package net.bither.bitherj.crypto;
 
 import com.lambdaworks.crypto.SCrypt;
 
+import net.bither.bitherj.exception.URandomNotFoundException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.BufferedBlockCipher;
@@ -27,6 +29,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
 
 import java.io.Serializable;
+import java.security.SecureRandom;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -62,9 +65,10 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
     /**
      * Encryption/ Decryption using default parameters and a random salt
      */
-    public KeyCrypterScrypt() {
+    public KeyCrypterScrypt() throws URandomNotFoundException {
         mSalt = new byte[SALT_LENGTH];
         URandom.nextBytes(mSalt);
+
     }
 
 
