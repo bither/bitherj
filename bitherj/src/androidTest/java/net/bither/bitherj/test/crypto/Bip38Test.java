@@ -20,11 +20,12 @@ import junit.framework.TestCase;
 
 import net.bither.bitherj.crypto.bip38.Bip38;
 import net.bither.bitherj.exception.AddressFormatException;
+import net.bither.bitherj.test.ApplicationTest;
 import net.bither.bitherj.utils.Utils;
 
 import java.io.UnsupportedEncodingException;
 
-public class Bip38Test extends TestCase {
+public class Bip38Test extends ApplicationTest {
 
 
     public void testEncryptNoCompression() throws InterruptedException, AddressFormatException {
