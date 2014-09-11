@@ -17,6 +17,8 @@
 package net.bither.bitherj.crypto.bip38;
 
 
+import com.lambdaworks.crypto.SCrypt;
+
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.ec.Parameters;
@@ -49,12 +51,11 @@ public class Bip38 {
      *
      * @throws InterruptedException
      */
-    public static String encryptNoEcMultiply(String passphrase, String base58EncodedPrivateKey,
-                                             SCryptProgress progressTracker) throws InterruptedException, AddressFormatException {
+    public static String encryptNoEcMultiply(String passphrase, String base58EncodedPrivateKey) throws InterruptedException, AddressFormatException {
         DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(base58EncodedPrivateKey);
         ECKey key = dumpedPrivateKey.getKey();
         byte[] salt = Bip38.calculateScryptSalt(key.toAddress());
-        byte[] stretchedKeyMaterial = bip38Stretch1(passphrase, salt, progressTracker, SCRYPT_LENGTH);
+        byte[] stretchedKeyMaterial = bip38Stretch1(passphrase, salt, SCRYPT_LENGTH);
         return encryptNoEcMultiply(stretchedKeyMaterial, key, salt);
     }
 
@@ -64,12 +65,12 @@ public class Bip38 {
      *
      * @throws InterruptedException
      */
-    public static byte[] bip38Stretch1(String passphrase, byte[] salt, SCryptProgress progressTracker, int outputSize)
+    public static byte[] bip38Stretch1(String passphrase, byte[] salt, int outputSize)
             throws InterruptedException {
         byte[] derived;
         try {
-            derived = SCrypt.scrypt(passphrase.getBytes("UTF-8"), salt, SCRYPT_N, SCRYPT_R, SCRYPT_P, outputSize,
-                    progressTracker);
+            derived = SCrypt.scrypt(passphrase.getBytes("UTF-8"), salt, SCRYPT_N, SCRYPT_R, SCRYPT_P, outputSize
+            );
             return derived;
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
@@ -235,20 +236,20 @@ public class Bip38 {
      *
      * @throws InterruptedException
      */
-    public static String decrypt(String bip38PrivateKeyString, String passphrase, SCryptProgress progressTracker) throws InterruptedException, AddressFormatException {
+    public static String decrypt(String bip38PrivateKeyString, String passphrase) throws InterruptedException, AddressFormatException {
         Bip38PrivateKey bip38Key = parseBip38PrivateKey(bip38PrivateKeyString);
         if (bip38Key == null) {
             return null;
         }
         if (bip38Key.ecMultiply) {
-            return decryptEcMultiply(bip38Key, passphrase, progressTracker);
+            return decryptEcMultiply(bip38Key, passphrase);
         } else {
-            byte[] stretcedKeyMaterial = bip38Stretch1(passphrase, bip38Key.salt, progressTracker, SCRYPT_LENGTH);
+            byte[] stretcedKeyMaterial = bip38Stretch1(passphrase, bip38Key.salt, SCRYPT_LENGTH);
             return decryptNoEcMultiply(bip38Key, stretcedKeyMaterial);
         }
     }
 
-    public static String decryptEcMultiply(Bip38PrivateKey bip38Key, String passphrase, SCryptProgress progressTracker
+    public static String decryptEcMultiply(Bip38PrivateKey bip38Key, String passphrase
     ) throws InterruptedException, AddressFormatException {
         // Get 8 byte Owner Salt
         byte[] ownerEntropy = new byte[8];
@@ -261,7 +262,7 @@ public class Bip38 {
         }
 
         // Stretch to get Pass Factor
-        byte[] passFactor = bip38Stretch1(passphrase, ownerSalt, progressTracker, 32);
+        byte[] passFactor = bip38Stretch1(passphrase, ownerSalt, 32);
 
         if (bip38Key.lotSequence) {
             byte[] tmp = new byte[40];
@@ -290,7 +291,7 @@ public class Bip38 {
         System.arraycopy(ownerEntropy, 0, saltPlusOwnerSalt, 4, 8);
         byte[] derived;
         try {
-            derived = SCrypt.scrypt(passPoint, saltPlusOwnerSalt, 1024, 1, 1, 64, null);
+            derived = SCrypt.scrypt(passPoint, saltPlusOwnerSalt, 1024, 1, 1, 64);
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
@@ -399,10 +400,6 @@ public class Bip38 {
         return dumpedPrivateKey.toString();
     }
 
-
-    public static SCryptProgress getScryptProgressTracker() {
-        return new SCryptProgress(SCRYPT_N, SCRYPT_R, SCRYPT_P);
-    }
 
     /**
      * Calculate scrypt salt from Bitcoin address
