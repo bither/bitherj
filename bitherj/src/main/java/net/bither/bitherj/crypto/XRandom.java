@@ -18,6 +18,8 @@ package net.bither.bitherj.crypto;
 
 import net.bither.bitherj.crypto.ec.Parameters;
 import net.bither.bitherj.exception.URandomNotFoundException;
+import net.bither.bitherj.utils.LogUtil;
+import net.bither.bitherj.utils.Utils;
 
 import java.math.BigInteger;
 
@@ -31,12 +33,13 @@ public class XRandom {
 
     public byte[] getRandomBytes() throws URandomNotFoundException {
         int nBitLength = Parameters.n.bitLength();
-        byte[] uRandomBytes = getURandomBytes(nBitLength / 8);
+        int byteLength = nBitLength / 8;
+        byte[] uRandomBytes = getURandomBytes(byteLength);
         if (this.uEntropy == null) {
             return uRandomBytes;
         }
-        byte[] result = new byte[nBitLength / 8];
-        byte[] userEntropyBytes = getUEntropyBytes(nBitLength);
+        byte[] result = new byte[byteLength];
+        byte[] userEntropyBytes = getUEntropyBytes(byteLength);
         for (int i = 0; i < uRandomBytes.length; i++) {
             result[i] = (byte) (uRandomBytes[i] ^ userEntropyBytes[i]);
         }
@@ -52,6 +55,7 @@ public class XRandom {
             URandom.nextBytes(uRandomBytes);
             uRandomBytes[0] = (byte) (uRandomBytes[0] & 0x7F); // ensure positive number
             d = new BigInteger(uRandomBytes);
+
         } while (d.equals(BigInteger.ZERO) || (d.compareTo(Parameters.n) >= 0));
         return uRandomBytes;
     }
