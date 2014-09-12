@@ -18,6 +18,7 @@ package net.bither.bitherj.message;
 
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.core.BitherjSettings;
+import net.bither.bitherj.core.Version;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
@@ -121,14 +122,7 @@ public class VersionMessage extends Message {
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);  // Cannot happen (illegal IP length).
         }
-        String versionName = null;
-        try {
-            versionName = BitherjApplication.mContext.getPackageManager().getPackageInfo
-                    (BitherjApplication.mContext.getPackageName(), 0).versionName;
-        } catch (Exception e) {
-
-        }
-        subVer = "/Bither" + (versionName == null ? "" : ":" + versionName) + "/";
+        subVer = "/Bither" + Version.version + "/";
         bestHeight = newBestHeight;
         this.relayTxesBeforeFilter = relayTxesBeforeFilter;
 
