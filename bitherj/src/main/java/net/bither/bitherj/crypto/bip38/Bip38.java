@@ -24,6 +24,7 @@ import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.ec.Parameters;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
+import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.Sha256Hash;
 
 import java.io.UnsupportedEncodingException;
@@ -338,7 +339,7 @@ public class Bip38 {
             System.arraycopy(bytes, 1, keyBytes, 0, bytes.length - 1);
         }
         ECKey ecKey = new ECKey(new BigInteger(1, keyBytes), null, bip38Key.compressed);
-
+        LogUtil.d("bip38","address:"+ecKey.toAddress());
 
         // Validate result
 

@@ -43,11 +43,11 @@ public class Bip38Test extends ApplicationTest {
 //    }
 
 
-    public void testDecryptNoCompressionWithBom() throws InterruptedException, AddressFormatException {
-        String decoded = Bip38.decrypt("\uFEFF6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg",
-                "TestingOneTwoThree");
-        assertEquals(decoded, "5KN7MzqK5wt2TP1fQCYyHBtDrXdJuXbUzm4A9rKAteGu3Qi5CVR");
-    }
+//    public void testDecryptNoCompressionWithBom() throws InterruptedException, AddressFormatException {
+//        String decoded = Bip38.decrypt("\uFEFF6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg",
+//                "TestingOneTwoThree");
+//        assertEquals(decoded, "5KN7MzqK5wt2TP1fQCYyHBtDrXdJuXbUzm4A9rKAteGu3Qi5CVR");
+//    }
 
 
 //    public void testEncryptCompression1() throws InterruptedException, AddressFormatException {
@@ -63,7 +63,7 @@ public class Bip38Test extends ApplicationTest {
 //                "TestingOneTwoThree");
 //        assertEquals(decoded, "L44B5gGEpqEDRS9vVPz7QT35jcBG2r3CZwSwQ4fCewXAhAhqGVpP");
 //    }
-//
+
 //
 //    public void testDecryptCompression1WithBom() throws InterruptedException, AddressFormatException {
 //        String decoded = Bip38.decrypt("\uFEFF6PYNKZ1EAgYgmQfmNVamxyXVWHzK5s6DGhwP4J5o44cvXdoY7sRzhtpUeo",
@@ -92,11 +92,11 @@ public class Bip38Test extends ApplicationTest {
 //    }
 //
 //
-//    public void testDecryptNoCompressionWithEcMultiplyNoLot1() throws InterruptedException, AddressFormatException {
-//        String decoded = Bip38.decrypt("6PfQu77ygVyJLZjfvMLyhLMQbYnu5uguoJJ4kMCLqWwPEdfpwANVS76gTX",
-//                "TestingOneTwoThree");
-//        assertEquals(decoded, "5K4caxezwjGCGfnoPTZ8tMcJBLB7Jvyjv4xxeacadhq8nLisLR2");
-//    }
+    public void testDecryptNoCompressionWithEcMultiplyNoLot1() throws InterruptedException, AddressFormatException {
+        String decoded = Bip38.decrypt("6PfQu77ygVyJLZjfvMLyhLMQbYnu5uguoJJ4kMCLqWwPEdfpwANVS76gTX",
+                "TestingOneTwoThree");
+        assertEquals(decoded, "5K4caxezwjGCGfnoPTZ8tMcJBLB7Jvyjv4xxeacadhq8nLisLR2");
+    }
 //
 //
 //    public void testDecryptNoCompressionWithEcMultiplyNoLot1WithBom() throws InterruptedException, AddressFormatException {
