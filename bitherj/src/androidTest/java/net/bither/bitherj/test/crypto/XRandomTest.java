@@ -19,6 +19,7 @@ package net.bither.bitherj.test.crypto;
 import junit.framework.TestCase;
 
 import net.bither.bitherj.crypto.XRandom;
+import net.bither.bitherj.exception.URandomNotFoundException;
 import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.Utils;
 
@@ -26,10 +27,12 @@ import java.util.Arrays;
 
 public class XRandomTest extends TestCase {
     public void testRandom() {
-        byte[] bytes = new byte[32];
-        XRandom xRandom = new XRandom(bytes);
-
-        LogUtil.d("random", Utils.bytesToHexString(xRandom.getRandomBytes()) + "," + Utils.bytesToHexString(xRandom.getRandomBytes()));
-        assertFalse(Arrays.equals(xRandom.getRandomBytes(), xRandom.getRandomBytes()));
+        try {
+            XRandom xRandom = new XRandom(null);
+            LogUtil.d("random", Utils.bytesToHexString(xRandom.getRandomBytes()) + "," + Utils.bytesToHexString(xRandom.getRandomBytes()));
+            assertFalse(Arrays.equals(xRandom.getRandomBytes(), xRandom.getRandomBytes()));
+        } catch (URandomNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }
