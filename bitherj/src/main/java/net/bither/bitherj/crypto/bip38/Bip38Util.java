@@ -1,5 +1,5 @@
-/**
- * Copyright 2011 Google Inc.
+/*
+ * Copyright 2014 http://Bither.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,34 +14,48 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.utils;
+/**
+ * Parts of this code was extracted from the BitcoinJ library from
+ * http://code.google.com/p/bitcoinj/.
+ */
+package net.bither.bitherj.crypto.bip38;
 
-import net.bither.bitherj.exception.AddressFormatException;
+import net.bither.bitherj.utils.Sha256Hash;
+import net.bither.bitherj.utils.Utils;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /**
- * <p>Base58 is a way to encode Bitcoin addresses as numbers and letters. Note that this is not the same base58 as used by
- * Flickr, which you may see reference to around the internet.</p>
- *
- * <p>You may instead wish to work with, which adds support for testing the prefix
- * and suffix bytes commonly found in addresses.</p>
- *
- * <p>Satoshi says: why base-58 instead of standard base-64 encoding?<p>
- *
+ * <p>
+ * Base58 is a way to encode Bitcoin addresses as numbers and letters. Note that
+ * this is not the same base58 as used by Flickr, which you may see reference to
+ * around the internet.
+ * </p>
+ * <p/>
+ * <p/>
+ * <p/>
+ * Satoshi says: why base-58 instead of standard base-64 encoding?
+ * <p/>
+ * <p/>
  * <ul>
- * <li>Don't want 0OIl characters that look the same in some fonts and
- *     could be used to create visually identical looking account numbers.</li>
- * <li>A string with non-alphanumeric characters is not as easily accepted as an account number.</li>
+ * <li>Don't want 0OIl characters that look the same in some fonts and could be
+ * used to create visually identical looking account numbers.</li>
+ * <li>A string with non-alphanumeric characters is not as easily accepted as an
+ * account number.</li>
  * <li>E-mail usually won't line-break if there's no punctuation to break at.</li>
- * <li>Doubleclicking selects the whole number as one word if it's all alphanumeric.</li>
+ * <li>Doubleclicking selects the whole number as one word if it's all
+ * alphanumeric.</li>
  * </ul>
  */
-public class Base58 {
+public class Bip38Util {
     public static final char[] ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray();
 
     private static final int[] INDEXES = new int[128];
+
     static {
         for (int i = 0; i < INDEXES.length; i++) {
             INDEXES[i] = -1;
@@ -51,11 +65,13 @@ public class Base58 {
         }
     }
 
-    /** Encodes the given bytes in base58. No checksum is appended. */
+    /**
+     * Encodes the given bytes in base58. No checksum is appended.
+     */
     public static String encode(byte[] input) {
         if (input.length == 0) {
             return "";
-        }       
+        }
         input = copyOfRange(input, 0, input.length);
         // Count leading zeroes.
         int zeroCount = 0;
@@ -88,22 +104,32 @@ public class Base58 {
         try {
             return new String(output, "US-ASCII");
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);  // Cannot happen.
+            throw new RuntimeException(e); // Cannot happen.
         }
     }
 
-    public static String encodeChecked(byte[] input) {
-        byte[] result = new byte[input.length + 4];
-        System.arraycopy(input, 0, result, 0, input.length);
-        byte[] check = Utils.doubleDigest(result, 0, input.length);
-        System.arraycopy(check, 0, result, input.length, 4);
-        return Base58.encode(result);
+    /**
+     * Encode an array of bytes as Base58 with an appended checksum as in Bitcoin
+     * address encoding
+     */
+    public static String encodeWithChecksum(byte[] input) {
+        byte[] b = new byte[input.length + 4];
+        System.arraycopy(input, 0, b, 0, input.length);
+        Sha256Hash checkSum = doubleSha256(b, 0, input.length);
+        System.arraycopy(checkSum.getBytes(), 0, b, input.length, 4);
+        return encode(b);
     }
 
-    public static byte[] decode(String input) throws AddressFormatException {
+    public static byte[] decode(String input) {
+
         if (input.length() == 0) {
             return new byte[0];
         }
+        // Get rid of any UTF-8 BOM marker. Those should not be present, but might have slipped in nonetheless,
+        // since Java does not automatically discard them when reading a stream. Only remove it, if at the beginning
+        // of the string. Otherwise, something is probably seriously wrong.
+        if (input.charAt(0) == '\uFEFF') input = input.substring(1);
+
         byte[] input58 = new byte[input.length()];
         // Transform the String to a base58 byte sequence
         for (int i = 0; i < input.length(); ++i) {
@@ -114,7 +140,7 @@ public class Base58 {
                 digit58 = INDEXES[c];
             }
             if (digit58 < 0) {
-                throw new AddressFormatException("Illegal character " + c + " at " + i);
+                return null;
             }
 
             input58[i] = (byte) digit58;
@@ -144,32 +170,53 @@ public class Base58 {
 
         return copyOfRange(temp, j - zeroCount, temp.length);
     }
-    
-//    public static BigInteger decodeToBigInteger(String input) throws AddressFormatException {
-//        return new BigInteger(1, decode(input));
-//    }
+
+    public static BigInteger decodeToBigInteger(String input) {
+        return new BigInteger(1, decode(input));
+    }
 
     /**
-     * Uses the checksum in the last 4 bytes of the decoded data to verify the rest are correct. The checksum is
-     * removed from the returned data.
-     *
-     * @throws AddressFormatException if the input is not base 58 or the checksum does not validate.
+     * Uses the checksum in the last 4 bytes of the decoded data to verify the
+     * rest are correct. The checksum is removed from the returned data.
      */
-    public static byte[] decodeChecked(String input) throws AddressFormatException {
-        byte tmp [] = decode(input);
-        if (tmp.length < 4)
-            throw new AddressFormatException("Input too short");
+    public static byte[] decodeChecked(String input) {
+        byte tmp[] = decode(input);
+        if (tmp == null || tmp.length < 4) {
+            return null;
+        }
         byte[] bytes = copyOfRange(tmp, 0, tmp.length - 4);
         byte[] checksum = copyOfRange(tmp, tmp.length - 4, tmp.length);
-        
-        tmp = Utils.doubleDigest(bytes);
-        byte[] hash = copyOfRange(tmp, 0, 4);
-        if (!Arrays.equals(checksum, hash)) 
-            throw new AddressFormatException("Checksum does not validate");
-        
+
+        Sha256Hash sha256Hash = doubleSha256(bytes);
+        byte[] hash = sha256Hash.firstFourBytes();
+        if (!Arrays.equals(checksum, hash)) {
+            return null;
+        }
+
         return bytes;
     }
-    
+
+    public static Sha256Hash doubleSha256(byte[] data) {
+        return doubleSha256(data, 0, data.length);
+    }
+
+    private static final String SHA256 = "SHA-256";
+
+    public static Sha256Hash doubleSha256(byte[] data, int offset, int length) {
+        MessageDigest digest;
+        digest = getSha256Digest();
+        digest.update(data, offset, length);
+        return new Sha256Hash(digest.digest(digest.digest()));
+    }
+
+    private static MessageDigest getSha256Digest() {
+        try {
+            return MessageDigest.getInstance(SHA256);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e); //cannot happen
+        }
+    }
+
     //
     // number -> number / 58, returns number % 58
     //
@@ -210,6 +257,4 @@ public class Base58 {
 
         return range;
     }
-
-
 }

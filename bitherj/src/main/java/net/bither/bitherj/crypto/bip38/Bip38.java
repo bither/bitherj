@@ -23,15 +23,12 @@ import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.ec.Parameters;
 import net.bither.bitherj.exception.AddressFormatException;
-import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.Sha256Hash;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 
@@ -132,12 +129,12 @@ public class Bip38 {
         index += encryptedHalf2.length;
 
         // Checksum
-        Sha256Hash checkSum = doubleSha256(encoded, 0, 39);
+        Sha256Hash checkSum = Bip38Util.doubleSha256(encoded, 0, 39);
         byte[] start = checkSum.firstFourBytes();
         System.arraycopy(start, 0, encoded, 39, checksumLength);
 
         // Base58 encode
-        String result = Base58.encode(encoded);
+        String result = Bip38Util.encode(encoded);
         return result;
     }
 
@@ -163,7 +160,7 @@ public class Bip38 {
 
     public static Bip38PrivateKey parseBip38PrivateKey(String bip38PrivateKey) throws AddressFormatException {
         // Decode Base 58
-        byte[] decoded = Base58.decodeChecked(bip38PrivateKey);
+        byte[] decoded = Bip38Util.decodeChecked(bip38PrivateKey);
         if (decoded == null) {
             return null;
         }
@@ -271,9 +268,10 @@ public class Bip38 {
             System.arraycopy(ownerEntropy, 0, tmp, 32, 8);
             //we convert to byte[] here since this can be a sha256 or Scrypt result.
             // might make sense to introduce a 32 byte scrypt type
-            passFactor = doubleSha256(tmp).getBytes();
+            passFactor = Bip38Util.doubleSha256(tmp).getBytes();
         }
-        ECKey key = new ECKey(new BigInteger(1, passFactor), null, bip38Key.compressed);
+        ECKey key = new ECKey(new BigInteger(1, passFactor), null, true);
+        LogUtil.d("bip38", "key address:" + key.toAddress());
 
         // Determine Pass Point
         byte[] passPoint = key.getPubKey();
@@ -325,7 +323,7 @@ public class Bip38 {
 
         // Generate factorB
         Sha256Hash factorB;
-        factorB = doubleSha256(seedB);
+        factorB = Bip38Util.doubleSha256(seedB);
 
         BigInteger privateKey = new BigInteger(1, passFactor).multiply(factorB.toPositiveBigInteger()).mod(Parameters.n);
         byte[] keyBytes = new byte[32];
@@ -339,7 +337,7 @@ public class Bip38 {
             System.arraycopy(bytes, 1, keyBytes, 0, bytes.length - 1);
         }
         ECKey ecKey = new ECKey(new BigInteger(1, keyBytes), null, bip38Key.compressed);
-        LogUtil.d("bip38","address:"+ecKey.toAddress());
+        LogUtil.d("bip38", "address:" + ecKey.toAddress());
 
         // Validate result
 
@@ -409,7 +407,7 @@ public class Bip38 {
      * takes a Bitcoin address and calculates the BIP38 salt.
      */
     public static byte[] calculateScryptSalt(String address) {
-        Sha256Hash hash = doubleSha256(address.getBytes());
+        Sha256Hash hash = Bip38Util.doubleSha256(address.getBytes());
         return hash.firstFourBytes();
     }
 
@@ -422,25 +420,5 @@ public class Bip38 {
         }
     }
 
-    public static Sha256Hash doubleSha256(byte[] data) {
-        return doubleSha256(data, 0, data.length);
-    }
-
-    private static final String SHA256 = "SHA-256";
-
-    public static Sha256Hash doubleSha256(byte[] data, int offset, int length) {
-        MessageDigest digest;
-        digest = getSha256Digest();
-        digest.update(data, offset, length);
-        return new Sha256Hash(digest.digest(digest.digest()));
-    }
-
-    private static MessageDigest getSha256Digest() {
-        try {
-            return MessageDigest.getInstance(SHA256);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e); //cannot happen
-        }
-    }
 
 }
