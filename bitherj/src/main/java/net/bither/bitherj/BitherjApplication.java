@@ -71,7 +71,7 @@ public abstract class BitherjApplication extends Application {
     public abstract void init();
 
     private void initLogging() {
-        final File logDir = Utils.getLogDir();
+        final File logDir = BitherjApplication.mContext.getDir("log", Context.MODE_WORLD_READABLE);
         final File logFile = new File(logDir, "bitherj.log");
         final LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         final PatternLayoutEncoder filePattern = new PatternLayoutEncoder();

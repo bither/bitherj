@@ -827,11 +827,6 @@ public class Utils {
             return address;
         }
     }
-    //add by jjz (bither)
-
-    public static File getLogDir() {
-        return BitherjApplication.mContext.getDir("log", Context.MODE_WORLD_READABLE);
-    }
 
     //Added by scw (bither)
     public static long parseLongFromAddress(InetAddress address) {
