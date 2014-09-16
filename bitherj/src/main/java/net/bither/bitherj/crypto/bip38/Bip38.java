@@ -23,13 +23,16 @@ import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.ec.Parameters;
 import net.bither.bitherj.exception.AddressFormatException;
-import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.Sha256Hash;
 
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 
 public class Bip38 {
@@ -49,7 +52,7 @@ public class Bip38 {
      *
      * @throws InterruptedException
      */
-    public static String encryptNoEcMultiply(String passphrase, String base58EncodedPrivateKey) throws InterruptedException, AddressFormatException {
+    public static String encryptNoEcMultiply(CharSequence passphrase, String base58EncodedPrivateKey) throws InterruptedException, AddressFormatException {
         DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(base58EncodedPrivateKey);
         ECKey key = dumpedPrivateKey.getKey();
         byte[] salt = Bip38.calculateScryptSalt(key.toAddress());
@@ -63,18 +66,37 @@ public class Bip38 {
      *
      * @throws InterruptedException
      */
-    public static byte[] bip38Stretch1(String passphrase, byte[] salt, int outputSize)
+    public static byte[] bip38Stretch1(CharSequence passphrase, byte[] salt, int outputSize)
             throws InterruptedException {
+        byte[] passwordBytes = null;
         byte[] derived;
         try {
-            derived = SCrypt.scrypt(passphrase.getBytes("UTF-8"), salt, SCRYPT_N, SCRYPT_R, SCRYPT_P, outputSize
+            passwordBytes = convertToByteArray(passphrase);
+            derived = SCrypt.scrypt(convertToByteArray(passphrase), salt, SCRYPT_N, SCRYPT_R, SCRYPT_P, outputSize
             );
             return derived;
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
+        } finally {
+            // Zero the password bytes.
+            if (passwordBytes != null) {
+                java.util.Arrays.fill(passwordBytes, (byte) 0);
+            }
         }
+    }
+
+    private static byte[] convertToByteArray(CharSequence charSequence) {
+        checkNotNull(charSequence);
+        ByteBuffer bb = Charset.forName("UTF-8").encode(CharBuffer.wrap(charSequence));
+        byte[] result = new byte[bb.remaining()];
+        bb.get(result);
+        bb.clear();
+        byte[] clearTest = new byte[bb.remaining()];
+        java.util.Arrays.fill(clearTest, (byte) 0);
+        bb.put(clearTest);
+        return result;
+
+
     }
 
     public static String encryptNoEcMultiply(byte[] stretcedKeyMaterial, ECKey key, byte[] salt) {
@@ -234,7 +256,7 @@ public class Bip38 {
      *
      * @throws InterruptedException
      */
-    public static String decrypt(String bip38PrivateKeyString, String passphrase) throws InterruptedException, AddressFormatException {
+    public static String decrypt(String bip38PrivateKeyString, CharSequence passphrase) throws InterruptedException, AddressFormatException {
         Bip38PrivateKey bip38Key = parseBip38PrivateKey(bip38PrivateKeyString);
         if (bip38Key == null) {
             return null;
@@ -247,7 +269,7 @@ public class Bip38 {
         }
     }
 
-    public static String decryptEcMultiply(Bip38PrivateKey bip38Key, String passphrase
+    public static String decryptEcMultiply(Bip38PrivateKey bip38Key, CharSequence passphrase
     ) throws InterruptedException, AddressFormatException {
         // Get 8 byte Owner Salt
         byte[] ownerEntropy = new byte[8];
@@ -271,7 +293,6 @@ public class Bip38 {
             passFactor = Bip38Util.doubleSha256(tmp).getBytes();
         }
         ECKey key = new ECKey(new BigInteger(1, passFactor), null, true);
-        LogUtil.d("bip38", "key address:" + key.toAddress());
 
         // Determine Pass Point
         byte[] passPoint = key.getPubKey();
@@ -337,7 +358,6 @@ public class Bip38 {
             System.arraycopy(bytes, 1, keyBytes, 0, bytes.length - 1);
         }
         ECKey ecKey = new ECKey(new BigInteger(1, keyBytes), null, bip38Key.compressed);
-        LogUtil.d("bip38", "address:" + ecKey.toAddress());
 
         // Validate result
 
