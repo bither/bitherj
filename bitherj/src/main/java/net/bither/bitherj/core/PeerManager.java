@@ -16,8 +16,6 @@
 
 package net.bither.bitherj.core;
 
-import android.content.Intent;
-
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.db.PeerProvider;
 import net.bither.bitherj.db.TxProvider;
@@ -763,10 +761,8 @@ public class PeerManager {
     }
 
     private void sendConnectedChangeBroadcast() {
-        Intent intent = new Intent(ConnectedChangeBroadcast);
-        intent.putExtra(ConnectedChangeBroadcast, isConnected());
+        BitherjApplication.sendConnectedChangeBroadcast(ConnectedChangeBroadcast, isConnected());
         log.info("peer manager connected changed to " + isConnected());
-        BitherjApplication.mContext.sendBroadcast(intent);
     }
 
     private void sendPeerCountChangeNotification() {

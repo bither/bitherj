@@ -18,6 +18,7 @@ package net.bither.bitherj;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import net.bither.bitherj.core.AddressManager;
@@ -127,4 +128,11 @@ public abstract class BitherjApplication extends Application {
             }
         }).start();
     }
+
+    public static void sendConnectedChangeBroadcast(String connectedChangeBroadcast, boolean isConnected) {
+        Intent intent = new Intent(connectedChangeBroadcast);
+        intent.putExtra(connectedChangeBroadcast, isConnected);
+        BitherjApplication.mContext.sendBroadcast(intent);
+    }
+
 }
