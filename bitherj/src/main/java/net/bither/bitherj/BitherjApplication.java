@@ -135,4 +135,11 @@ public abstract class BitherjApplication extends Application {
         BitherjApplication.mContext.sendBroadcast(intent);
     }
 
+    public static File getPrivateDir(String dirName) {
+        File file = BitherjApplication.mContext.getDir(dirName, Context.MODE_PRIVATE);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        return file;
+    }
 }
