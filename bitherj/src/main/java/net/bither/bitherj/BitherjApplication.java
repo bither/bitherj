@@ -18,6 +18,7 @@ package net.bither.bitherj;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import net.bither.bitherj.core.AddressManager;
@@ -71,7 +72,7 @@ public abstract class BitherjApplication extends Application {
     public abstract void init();
 
     private void initLogging() {
-        final File logDir = Utils.getLogDir();
+        final File logDir = BitherjApplication.mContext.getDir("log", Context.MODE_WORLD_READABLE);
         final File logFile = new File(logDir, "bitherj.log");
         final LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         final PatternLayoutEncoder filePattern = new PatternLayoutEncoder();
@@ -126,5 +127,19 @@ public abstract class BitherjApplication extends Application {
                 initLogging();
             }
         }).start();
+    }
+
+    public static void sendConnectedChangeBroadcast(String connectedChangeBroadcast, boolean isConnected) {
+        Intent intent = new Intent(connectedChangeBroadcast);
+        intent.putExtra(connectedChangeBroadcast, isConnected);
+        BitherjApplication.mContext.sendBroadcast(intent);
+    }
+
+    public static File getPrivateDir(String dirName) {
+        File file = BitherjApplication.mContext.getDir(dirName, Context.MODE_PRIVATE);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        return file;
     }
 }

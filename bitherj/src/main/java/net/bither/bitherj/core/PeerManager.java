@@ -16,20 +16,19 @@
 
 package net.bither.bitherj.core;
 
-import android.content.Intent;
-
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.db.PeerProvider;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.utils.DnsDiscovery;
-import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.NotificationUtil;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -128,7 +127,7 @@ public class PeerManager {
                 this.connectFailure = 0;
             reconnect();
         } else {
-            LogUtil.i(PeerManager.class.getSimpleName(), "peer manager call start, but it is connected already");
+            log.info("peer manager call start, but it is connected already");
         }
     }
 
@@ -152,7 +151,7 @@ public class PeerManager {
                 });
             }
         } else {
-            LogUtil.i(PeerManager.class.getSimpleName(), "peer manager call stop, but it does not running");
+            log.info("peer manager call stop, but it does not running");
         }
     }
 
@@ -215,7 +214,7 @@ public class PeerManager {
                         .MaxPeerConnections));
             }
         }
-        LogUtil.i(PeerManager.class.getSimpleName(), "peer manager got " + peers.size() + " best " +
+        log.info("peer manager got " + peers.size() + " best " +
                 "peers");
         return peers;
     }
@@ -282,7 +281,7 @@ public class PeerManager {
     public void peerConnected(final Peer peer) {
         if (running) {
             if (peer.getVersionLastBlockHeight() + 10 < getLastBlockHeight()) {
-                LogUtil.w(PeerManager.class.getSimpleName(), "Peer height low abandon : " + peer
+                log.warn("Peer height low abandon : " + peer
                         .getPeerAddress().getHostAddress());
                 executor.submit(new Runnable() {
                     @Override
@@ -762,10 +761,8 @@ public class PeerManager {
     }
 
     private void sendConnectedChangeBroadcast() {
-        Intent intent = new Intent(ConnectedChangeBroadcast);
-        intent.putExtra(ConnectedChangeBroadcast, isConnected());
+        BitherjApplication.sendConnectedChangeBroadcast(ConnectedChangeBroadcast, isConnected());
         log.info("peer manager connected changed to " + isConnected());
-        BitherjApplication.mContext.sendBroadcast(intent);
     }
 
     private void sendPeerCountChangeNotification() {
@@ -787,17 +784,19 @@ public class PeerManager {
             super(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
         }
 
+        private final static Marker marker = MarkerFactory.getMarker("PeerManagerExecutor");
+
         @Override
         public void execute(Runnable command) {
             int waiting = getQueue().size();
             if (getQueue().size() >= TaskCapacity) {
                 isWaiting = true;
                 try {
-                    LogUtil.i("PeerManagerExecutor", "PeerManager full capacity with " + waiting
+                    log.info(marker, "PeerManager full capacity with " + waiting
                             + " waiting");
                     executeLock.lockInterruptibly();
                     fullCondition.await();
-                    LogUtil.i("PeerManagerExecutor", "PeerManager execute again with " + getQueue
+                    log.info(marker, "PeerManager execute again with " + getQueue
                             ().size() + " waiting");
                 } catch (InterruptedException e) {
                     e.printStackTrace();

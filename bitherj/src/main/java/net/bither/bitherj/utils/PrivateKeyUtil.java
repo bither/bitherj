@@ -16,8 +16,6 @@
 
 package net.bither.bitherj.utils;
 
-import android.util.Log;
-
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
@@ -28,6 +26,8 @@ import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.KeyCrypterScrypt;
 import net.bither.bitherj.exception.URandomNotFoundException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import java.math.BigInteger;
@@ -36,6 +36,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class PrivateKeyUtil {
+    private static final Logger log = LoggerFactory.getLogger(PrivateKeyUtil.class);
+
     public static final String QR_CODE_SPLIT = ":";
 
     private static final String QR_CODE_LETTER = "*";
@@ -70,7 +72,7 @@ public class PrivateKeyUtil {
     public static ECKey getDecryptedECKeyFromSingleString(String str, CharSequence password) {
         String[] strs = str.split(QR_CODE_SPLIT);
         if (strs.length != 3) {
-            Log.e("Backup", "PrivateKeyFromString format error");
+            log.error("Backup: PrivateKeyFromString format error");
             return null;
         }
         EncryptedPrivateKey epk = new EncryptedPrivateKey(Utils.hexStringToByteArray
@@ -92,7 +94,7 @@ public class PrivateKeyUtil {
     public static ECKey getECKeyFromSingleString(String str, CharSequence password) {
         String[] strs = str.split(QR_CODE_SPLIT);
         if (strs.length != 3) {
-            Log.e("Backup", "PrivateKeyFromString format error");
+            log.error("Backup: PrivateKeyFromString format error");
             return null;
         }
         EncryptedPrivateKey epk = new EncryptedPrivateKey(Utils.hexStringToByteArray
@@ -113,7 +115,7 @@ public class PrivateKeyUtil {
     public static String changePassword(String str, CharSequence oldpassword, CharSequence newPassword) {
         String[] strs = str.split(QR_CODE_SPLIT);
         if (strs.length != 3) {
-            Log.e("Backup", "PrivateKeyFromString format error");
+            log.error("Backup: PrivateKeyFromString format error");
             return null;
         }
         EncryptedPrivateKey epk = new EncryptedPrivateKey(Utils.hexStringToByteArray
@@ -134,7 +136,7 @@ public class PrivateKeyUtil {
     public static String getPrivateKeyString(String str, CharSequence password) {
         String[] strs = str.split(QR_CODE_SPLIT);
         if (strs.length != 3) {
-            Log.e("Backup", "PrivateKeyFromString format error");
+            log.error("Backup: PrivateKeyFromString format error");
             return null;
         }
         EncryptedPrivateKey epk = new EncryptedPrivateKey(Utils.hexStringToByteArray
@@ -154,7 +156,7 @@ public class PrivateKeyUtil {
     public static List<Address> getECKeysFromString(String str, CharSequence password) {
         String[] strs = str.split(QR_CODE_SPLIT);
         if (strs.length % 3 != 0) {
-            Log.e("Backup", "PrivateKeyFromString format error");
+            log.error("Backup: PrivateKeyFromString format error");
             return null;
         }
         ArrayList<Address> list = new ArrayList<Address>();

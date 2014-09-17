@@ -21,9 +21,10 @@ import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.message.Message;
 import net.bither.bitherj.script.Script;
-import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,6 +34,8 @@ import javax.annotation.Nullable;
 
 
 public class In extends Message {
+    private static final Logger log = LoggerFactory.getLogger(In.class);
+
     public static final int OUTPOINT_MESSAGE_LENGTH = 36;
     public static final long NO_SEQUENCE = 0xFFFFFFFFL;
 
@@ -221,7 +224,7 @@ public class In extends Message {
                     return script.getFromAddress();
                 } catch (ScriptException ex) {
                     if (this.getInSignature() != null) {
-                        LogUtil.w(Out.class.getSimpleName(), "out script : " + Utils.bytesToHexString(this.getInSignature()));
+                        log.warn("out script : " + Utils.bytesToHexString(this.getInSignature()));
                     }
                 }
             }

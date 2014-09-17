@@ -19,7 +19,6 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.db.BlockProvider;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.VerificationException;
-import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -124,7 +123,7 @@ public class BlockChain {
         ArrayList<Block> blocksToAdd = new ArrayList<Block>();
         Block prev = getLastBlock();
         if(prev == null){
-            LogUtil.w(BlockChain.class.getSimpleName(), "pre block is null");
+            log.warn("pre block is null");
             return 0;
         }
         for(int i = 0; i < blocks.size(); i ++){
@@ -132,7 +131,7 @@ public class BlockChain {
             if(!Arrays.equals(prev.getBlockHash(), block.getBlockPrev())){
                 Block alreadyIn = getBlock(block.getBlockHash());
                 if(alreadyIn != null){
-                    LogUtil.d(BlockChain.class.getSimpleName(), "Block is already in, No." + alreadyIn.getBlockNo());
+                    log.debug("Block is already in, No." + alreadyIn.getBlockNo());
                     continue;
                 }else{
                     this.singleBlocks.put(block.getBlockHash(), block);
@@ -167,7 +166,7 @@ public class BlockChain {
 
         if (prev == null) {
 
-            LogUtil.d(this.getClass().getSimpleName(), "prev block is null, prev hash is : " + Utils.hashToString(block.getBlockPrev()));
+            log.debug("prev block is null, prev hash is : " + Utils.hashToString(block.getBlockPrev()));
 //            DDLogDebug(@"%@:%d relayed orphan block %@, previous %@, last block is %@, height %d", peer.host, peer.port,
 //                    block.blockHash, block.prevBlock, self.lastBlock.blockHash, self.lastBlock.height);
 
@@ -211,23 +210,23 @@ public class BlockChain {
             result = true;
         } else {
             if (block.getBlockNo() <= BitherjSettings.BITCOIN_REFERENCE_BLOCK_HEIGHT) {
-                LogUtil.d(this.getClass().getSimpleName(), "block is too old");
+                log.debug("block is too old");
                 return false;
             }
             if (block.getBlockNo() <= this.lastBlock.getBlockNo()) {
                 this.addOrphan(block);
-                LogUtil.d(this.getClass().getSimpleName(), "block is orphan");
+                log.debug("block is orphan");
                 return false;
             }
 
             if (block.getBlockNo() > this.lastBlock.getBlockNo()) {
                 Block b = this.getSameParent(block, this.lastBlock);
                 this.rollbackBlock(b.getBlockNo());
-                LogUtil.d(this.getClass().getSimpleName(), "roll back block from" + b.getBlockNo());
+                log.debug("roll back block from" + b.getBlockNo());
             }
         }
         if (!result)
-            LogUtil.d(this.getClass().getSimpleName(), "block is not in main chain");
+            log.debug("block is not in main chain");
         return result;
     }
 

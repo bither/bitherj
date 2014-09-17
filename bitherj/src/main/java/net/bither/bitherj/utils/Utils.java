@@ -16,8 +16,6 @@
 
 package net.bither.bitherj.utils;
 
-import android.content.Context;
-
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
@@ -726,11 +724,7 @@ public class Utils {
 
     //add by jjz (bither)
     public static File getWalletRomCache() {
-        File file = BitherjApplication.mContext.getDir(WALLET_ROM_CACHE, Context.MODE_PRIVATE);
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-        return file;
+        return BitherjApplication.getPrivateDir(WALLET_ROM_CACHE);
     }
 
     //add by jjz (bither)
@@ -826,11 +820,6 @@ public class Utils {
         } else {
             return address;
         }
-    }
-    //add by jjz (bither)
-
-    public static File getLogDir() {
-        return BitherjApplication.mContext.getDir("log", Context.MODE_WORLD_READABLE);
     }
 
     //Added by scw (bither)
