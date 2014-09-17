@@ -230,6 +230,48 @@ public class BlockChain {
         return result;
     }
 
+    public int relayedBlocks(List<Block> blocks) throws VerificationException {
+        if(blocks == null || blocks.size() == 0){
+            return 0;
+        }
+        Block prev = null;
+        Block first = blocks.get(0);
+        int rollbackBlockNo = 0;
+        if (Arrays.equals(first.getBlockPrev(), this.getLastBlock().getBlockHash())) {
+            prev = this.getLastBlock();
+        } else if (BlockProvider.getInstance().getMainChainBlock(first.getBlockHash()) != null) {
+            prev = this.getSameParent(this.getLastBlock(), first);
+            rollbackBlockNo = prev.getBlockNo();
+        }
+        if (prev == null) {
+            return 0;
+        }
+        for (Block block : blocks) {
+            if (!Arrays.equals(block.getBlockPrev(), prev.getBlockHash())) {
+                return 0;
+            }
+            block.setBlockNo(prev.getBlockNo() + 1);
+            try {
+                block.verifyDifficultyFromPreviousBlock(prev);
+            }catch (Exception e){
+                e.printStackTrace();
+                break;
+            }
+
+            block.setMain(true);
+            prev = block;
+        }
+        if (rollbackBlockNo > 0) {
+            this.rollbackBlock(rollbackBlockNo);
+        }
+        this.addBlocks(blocks);
+        for (Block block : blocks) {
+            TxProvider.getInstance().confirmTx(block.getBlockNo(), block.getTxHashes());
+        }
+        this.lastBlock = blocks.get(blocks.size() - 1);
+        return blocks.size();
+    }
+
     private void extendMainChain(Block block) {
         if (Arrays.equals(block.getBlockPrev(), this.lastBlock.getBlockHash())) {
             block.setMain(true);

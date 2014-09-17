@@ -357,7 +357,9 @@ public class PeerManager {
                             dp.sendGetHeadersMessage(BlockChain.getInstance()
                                     .getBlockLocatorArray(), null);
                         }
+                        downloadingPeer.setSynchronising(true);
                     } else { // we're already synced
+                        downloadingPeer.setSynchronising(false);
                         syncStopped();
                         dp.sendGetAddrMessage();
                         syncStartHeight = 0;
@@ -427,6 +429,7 @@ public class PeerManager {
 
                 if (downloadingPeer != null && downloadingPeer.equals(peer)) {
                     connected = false;
+                    downloadingPeer.setSynchronising(false);
                     downloadingPeer = null;
                     syncStopped();
                     if (connectFailure > MaxConnectFailure) {
@@ -552,6 +555,7 @@ public class PeerManager {
                     log.warn("Peer {} relay block Error. Drop it", fromPeer.getPeerAddress().getHostAddress());
                 }
                 if (getLastBlockHeight() == fromPeer.getVersionLastBlockHeight()) {
+                    downloadingPeer.setSynchronising(false);
                     syncStopped();
                     fromPeer.sendGetAddrMessage(); // request a list of other bitcoin peers
                     syncStartHeight = 0;
@@ -618,6 +622,7 @@ public class PeerManager {
 
                 if (block.getBlockNo() == fromPeer.getVersionLastBlockHeight() && block.getBlockNo() ==
                         getLastBlockHeight()) {
+                    downloadingPeer.setSynchronising(false);
                     syncStopped();
                     fromPeer.sendGetAddrMessage(); // request a list of other bitcoin peers
                     syncStartHeight = 0;
@@ -639,6 +644,59 @@ public class PeerManager {
                     Block lastBlock = BlockChain.getInstance().getLastBlock();
                     log.info("Peer {} relay new best block No.{}, hash: {}, txs: {}", fromPeer.getPeerAddress().getHostAddress(), lastBlock.getBlockNo(), Utils.hashToString(lastBlock.getBlockHash()), lastBlock.getTxHashes() == null ? 0 : lastBlock.getTxHashes().size());
                     NotificationUtil.sendLastBlockChange();
+                }
+            }
+        });
+    }
+
+    public void relayedBlocks(final Peer fromPeer, final List<Block> blocks) {
+        if (!isRunning()) {
+            return;
+        }
+        if (blocks == null || blocks.size() == 0) {
+            return;
+        }
+        final List<Block> blockList = new ArrayList<Block>();
+        blockList.addAll(blocks);
+
+        if (fromPeer == downloadingPeer) {
+            lastRelayTime = System.currentTimeMillis();
+        } else {
+            return;
+        }
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                // todo:
+                // track the observed bloom filter false positive rate using a low pass filter to smooth out variance
+
+                try {
+                    int relayedCnt = BlockChain.getInstance().relayedBlocks(blockList);
+                    if (relayedCnt > 0) {
+                        log.info("Peer {} relay {} block OK, last block No.{}, total block: {}", fromPeer.getPeerAddress().getHostAddress(), relayedCnt, BlockChain.getInstance().getLastBlock().getBlockNo(), BlockChain.getInstance().getBlockCount());
+
+                        if (BlockChain.getInstance().getLastBlock().getBlockNo() >= fromPeer.getVersionLastBlockHeight()) {
+                            fromPeer.setSynchronising(false);
+                            syncStopped();
+                            fromPeer.sendGetAddrMessage(); // request a list of other bitcoin peers
+                            syncStartHeight = 0;
+                        }
+
+                        if (BlockChain.getInstance().singleBlocks.get(BlockChain.getInstance().getLastBlock().getBlockHash()) != null) {
+                            Block b = BlockChain.getInstance().singleBlocks.get(BlockChain.getInstance().getLastBlock().getBlockHash());
+                            BlockChain.getInstance().singleBlocks.remove(BlockChain.getInstance().getLastBlock().getBlockHash());
+                            relayedBlock(fromPeer, b);
+                        }
+
+                        log.info("Peer {} relay new best block No.{}, hash: {}, txs: {}", fromPeer.getPeerAddress().getHostAddress(), BlockChain.getInstance().getLastBlock().getBlockNo(), Utils.hashToString(BlockChain.getInstance().getLastBlock().getBlockHash()), BlockChain.getInstance().getLastBlock().getTxHashes() == null ? 0 : BlockChain.getInstance().getLastBlock().getTxHashes().size());
+                        NotificationUtil.sendLastBlockChange();
+                    } else {
+                        abandonPeer(fromPeer);
+                        log.info("Peer {} relay {}/{} block. drop this peer", fromPeer.getPeerAddress().getHostAddress(), relayedCnt, blocks.size());
+                    }
+                } catch (Exception e) {
+                    abandonPeer(fromPeer);
+                    log.warn("Peer {} relay block Error. Drop it", fromPeer.getPeerAddress().getHostAddress());
                 }
             }
         });
@@ -853,12 +911,12 @@ public class PeerManager {
 
     }
 
-    private void syncTimeout(){
+    private void syncTimeout() {
         long now = System.currentTimeMillis();
         if (now - lastRelayTime < BitherjSettings.PROTOCOL_TIMEOUT) { // the download peer relayed something in time, so restart timer
             scheduleTimeoutTimer(BitherjSettings.PROTOCOL_TIMEOUT - (now - lastRelayTime));
         } else {
-            if(downloadingPeer != null){
+            if (downloadingPeer != null) {
                 log.warn("{} chain sync time out", downloadingPeer.getPeerAddress().getHostAddress());
                 synchronizing = false;
                 downloadingPeer.disconnect();
@@ -866,14 +924,14 @@ public class PeerManager {
         }
     }
 
-    private void cancelTimeoutTimer(){
-        if(syncTimeOutTimer != null) {
+    private void cancelTimeoutTimer() {
+        if (syncTimeOutTimer != null) {
             syncTimeOutTimer.cancel();
             syncTimeOutTimer = null;
         }
     }
 
-    private void scheduleTimeoutTimer(long delay){
+    private void scheduleTimeoutTimer(long delay) {
         cancelTimeoutTimer();
         syncTimeOutTimer = new Timer();
         syncTimeOutTimer.schedule(new TimerTask() {
