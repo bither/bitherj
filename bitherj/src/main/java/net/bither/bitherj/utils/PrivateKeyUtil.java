@@ -157,16 +157,18 @@ public class PrivateKeyUtil {
         KeyCrypterScrypt crypter = new KeyCrypterScrypt(salt);
         EncryptedPrivateKey epk = new EncryptedPrivateKey(Utils.hexStringToByteArray
                 (strs[1]), Utils.hexStringToByteArray(strs[0]));
-        try {
-            byte[] decrypted = crypter.decrypt(epk, crypter.deriveKey(oldpassword));
-            EncryptedPrivateKey encryptedPrivateKey = crypter.encrypt(decrypted, crypter.deriveKey(newPassword));
-            PrivateKeyUtil.wipeDecryptedPrivateKey(decrypted);
-            return Utils.bytesToHexString(encryptedPrivateKey.getEncryptedBytes())
-                    + QR_CODE_SPLIT + Utils.bytesToHexString(encryptedPrivateKey.getInitialisationVector()) + QR_CODE_SPLIT + strs[2];
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+
+        byte[] decrypted = crypter.decrypt(epk, crypter.deriveKey(oldpassword));
+        EncryptedPrivateKey encryptedPrivateKey = crypter.encrypt(decrypted, crypter.deriveKey(newPassword));
+        byte[] newDecrypted = crypter.decrypt(encryptedPrivateKey, crypter.deriveKey(newPassword));
+        if (!Arrays.equals(decrypted, newDecrypted)) {
+            throw new KeyCrypterException("changePassword, cannot be successfully decrypted after encryption so aborting wallet encryption.");
         }
+        PrivateKeyUtil.wipeDecryptedPrivateKey(decrypted);
+        PrivateKeyUtil.wipeDecryptedPrivateKey(newDecrypted);
+        return Utils.bytesToHexString(encryptedPrivateKey.getEncryptedBytes())
+                + QR_CODE_SPLIT + Utils.bytesToHexString(encryptedPrivateKey.getInitialisationVector()) + QR_CODE_SPLIT + strs[2];
+
     }
 
 
