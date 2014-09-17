@@ -16,6 +16,8 @@
 
 package net.bither.bitherj.utils;
 
+import android.util.Log;
+
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
@@ -37,6 +39,8 @@ import java.util.List;
 
 public class PrivateKeyUtil {
     private static final Logger log = LoggerFactory.getLogger(PrivateKeyUtil.class);
+    private static final int IS_COMPRESSED_FLAG = 1;
+    private static final int IS_FROMXRANDOM_FLAG = 2;
 
     public static final String QR_CODE_SPLIT = ":";
 
@@ -46,7 +50,17 @@ public class PrivateKeyUtil {
         String salt = "1";
         if (ecKey.getKeyCrypter() instanceof KeyCrypterScrypt) {
             KeyCrypterScrypt scrypt = (KeyCrypterScrypt) ecKey.getKeyCrypter();
-            salt = Utils.bytesToHexString(scrypt.getSalt());
+            byte[] saltBytes = new byte[KeyCrypterScrypt.SALT_LENGTH + 1];
+            int flag = 0;
+            if (ecKey.isCompressed()) {
+                flag += IS_COMPRESSED_FLAG;
+            }
+            if (ecKey.isFromXranmon()) {
+                flag += IS_FROMXRANDOM_FLAG;
+            }
+            saltBytes[0] = (byte) flag;
+            System.arraycopy(scrypt.getSalt(), 0, saltBytes, 1, scrypt.getSalt().length);
+            salt = Utils.bytesToHexString(saltBytes);
         }
         EncryptedPrivateKey key = ecKey.getEncryptedPrivateKey();
         return Utils.bytesToHexString(key.getEncryptedBytes()) + QR_CODE_SPLIT + Utils
@@ -54,20 +68,68 @@ public class PrivateKeyUtil {
     }
 
     public static ECKey getECKeyFromSingleString(String str, CharSequence password) {
-        String[] strs = str.split(QR_CODE_SPLIT);
-        if (strs.length != 3) {
-            log.error("Backup: PrivateKeyFromString format error");
+        try {
+            DecryptedECKey decryptedECKey = decryptionECKey(str, password, false);
+            if (decryptedECKey != null && decryptedECKey.ecKey != null) {
+                return decryptedECKey.ecKey;
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
+    }
+
+    private static DecryptedECKey decryptionECKey(String str, CharSequence password, boolean needPrivteKeyText) throws Exception {
+        String[] strs = str.split(QR_CODE_SPLIT);
+        if (strs.length != 3) {
+            log.error("decryption: PrivateKeyFromString format error");
+            return null;
+        }
+        byte[] temp = Utils.hexStringToByteArray(strs[2]);
+        if (temp.length != KeyCrypterScrypt.SALT_LENGTH + 1 && temp.length != KeyCrypterScrypt.SALT_LENGTH) {
+            log.error("decryption:  salt lenth is {} not {}", temp.length, KeyCrypterScrypt.SALT_LENGTH + 1);
+            return null;
+        }
+        byte[] salt = new byte[KeyCrypterScrypt.SALT_LENGTH];
+        boolean isCompressed = true;
+        boolean isFromXRandom = false;
+        if (temp.length == KeyCrypterScrypt.SALT_LENGTH) {
+            salt = temp;
+        } else {
+            System.arraycopy(temp, 1, salt, 0, salt.length);
+            isCompressed = (((int) temp[0]) & IS_COMPRESSED_FLAG) == IS_COMPRESSED_FLAG;
+            isFromXRandom = (((int) temp[0]) & IS_FROMXRANDOM_FLAG) == IS_FROMXRANDOM_FLAG;
+        }
+        KeyCrypterScrypt crypter = new KeyCrypterScrypt(salt);
         EncryptedPrivateKey epk = new EncryptedPrivateKey(Utils.hexStringToByteArray
                 (strs[1]), Utils.hexStringToByteArray(strs[0]));
-        byte[] salt = Utils.hexStringToByteArray(strs[2]);
-        KeyCrypterScrypt crypter = new KeyCrypterScrypt(salt);
+        byte[] decrypted = crypter.decrypt(epk, crypter.deriveKey(password));
+        ECKey ecKey = null;
+        String privateKeyText = null;
+        if (needPrivteKeyText) {
+            DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(decrypted, true);
+            privateKeyText = dumpedPrivateKey.toString();
+        } else {
+            byte[] pub = ECKey.publicKeyFromPrivate(new BigInteger(1, decrypted), isCompressed);
+            ecKey = new ECKey(epk, pub, crypter);
+            ecKey.setFromXranmon(isFromXRandom);
+        }
+        PrivateKeyUtil.wipeDecryptedPrivateKey(decrypted);
+        return new DecryptedECKey(ecKey, privateKeyText);
+
+    }
+
+    public static String getPrivateKeyString(String str, CharSequence password) {
         try {
-            byte[] decrypted = crypter.decrypt(epk, crypter.deriveKey(password));
-            byte[] pub = ECKey.publicKeyFromPrivate(new BigInteger(1, decrypted), true);
-            PrivateKeyUtil.wipeDecryptedPrivateKey(decrypted);
-            return new ECKey(epk, pub, crypter);
+
+            DecryptedECKey decryptedECKey = decryptionECKey(str, password, true);
+            if (decryptedECKey != null && decryptedECKey.privateKeyText != null) {
+                return decryptedECKey.privateKeyText;
+            } else {
+                return null;
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -77,13 +139,24 @@ public class PrivateKeyUtil {
     public static String changePassword(String str, CharSequence oldpassword, CharSequence newPassword) {
         String[] strs = str.split(QR_CODE_SPLIT);
         if (strs.length != 3) {
-            log.error("Backup: PrivateKeyFromString format error");
+            log.error("changePassword: PrivateKeyFromString format error");
             return null;
         }
+
+        byte[] temp = Utils.hexStringToByteArray(strs[2]);
+        if (temp.length != KeyCrypterScrypt.SALT_LENGTH + 1 && temp.length != KeyCrypterScrypt.SALT_LENGTH) {
+            log.error("decryption:  salt lenth is {} not {}", temp.length, KeyCrypterScrypt.SALT_LENGTH + 1);
+            return null;
+        }
+        byte[] salt = new byte[KeyCrypterScrypt.SALT_LENGTH];
+        if (temp.length == KeyCrypterScrypt.SALT_LENGTH) {
+            salt = temp;
+        } else {
+            System.arraycopy(temp, 1, salt, 0, salt.length);
+        }
+        KeyCrypterScrypt crypter = new KeyCrypterScrypt(salt);
         EncryptedPrivateKey epk = new EncryptedPrivateKey(Utils.hexStringToByteArray
                 (strs[1]), Utils.hexStringToByteArray(strs[0]));
-        byte[] salt = Utils.hexStringToByteArray(strs[2]);
-        KeyCrypterScrypt crypter = new KeyCrypterScrypt(salt);
         try {
             byte[] decrypted = crypter.decrypt(epk, crypter.deriveKey(oldpassword));
             EncryptedPrivateKey encryptedPrivateKey = crypter.encrypt(decrypted, crypter.deriveKey(newPassword));
@@ -96,25 +169,6 @@ public class PrivateKeyUtil {
         }
     }
 
-    public static String getPrivateKeyString(String str, CharSequence password) {
-        String[] strs = str.split(QR_CODE_SPLIT);
-        if (strs.length != 3) {
-            log.error("Backup: PrivateKeyFromString format error");
-            return null;
-        }
-        EncryptedPrivateKey epk = new EncryptedPrivateKey(Utils.hexStringToByteArray
-                (strs[1]), Utils.hexStringToByteArray(strs[0]));
-        byte[] salt = Utils.hexStringToByteArray(strs[2]);
-        KeyCrypterScrypt crypter = new KeyCrypterScrypt(salt);
-        try {
-            byte[] decrypted = crypter.decrypt(epk, crypter.deriveKey(password));
-            DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(decrypted, true);
-            return dumpedPrivateKey.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
     public static String getPrivateKeyStringFromAllPrivateAddresses() {
         String content = "";
@@ -179,5 +233,14 @@ public class PrivateKeyUtil {
         return encryptedKey;
     }
 
+    public static class DecryptedECKey {
+        public DecryptedECKey(ECKey ecKey, String privateKeyText) {
+            this.ecKey = ecKey;
+            this.privateKeyText = privateKeyText;
+        }
+
+        public ECKey ecKey;
+        public String privateKeyText;
+    }
 
 }
