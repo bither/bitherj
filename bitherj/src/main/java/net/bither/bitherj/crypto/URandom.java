@@ -23,7 +23,7 @@ import java.io.IOException;
 
 public class URandom {
 
-    public static synchronized void nextBytes(byte[] bytes) throws URandomNotFoundException {
+    public static synchronized void nextBytes(byte[] bytes){
         // On Android we use /dev/urandom for providing random data
         File file = new File("/dev/urandom");
         if (!file.exists()) {

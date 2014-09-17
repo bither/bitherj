@@ -18,8 +18,6 @@ package net.bither.bitherj.crypto;
 
 import net.bither.bitherj.crypto.ec.Parameters;
 import net.bither.bitherj.exception.URandomNotFoundException;
-import net.bither.bitherj.utils.LogUtil;
-import net.bither.bitherj.utils.Utils;
 
 import java.math.BigInteger;
 
