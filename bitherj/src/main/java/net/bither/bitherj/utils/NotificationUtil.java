@@ -21,8 +21,11 @@ import android.content.Intent;
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.Tx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NotificationUtil {
+    private static final Logger log = LoggerFactory.getLogger(NotificationUtil.class);
 
     private NotificationUtil() {
 
@@ -69,7 +72,7 @@ public class NotificationUtil {
         }
         broadcast.putExtra(MESSAGE_TX_NOTIFICATION_TYPE, txNotificationType.getValue());
         BitherjApplication.mContext.sendBroadcast(broadcast);
-        LogUtil.d("NotificationUtil", "address " + address.getAddress()
+        log.debug("address " + address.getAddress()
                 + " balance updated " + deltaBalance
                 + (tx != null ? " tx " + Utils.hashToString(tx.getTxHash()) : "")
                 + " type:" + txNotificationType.getValue());

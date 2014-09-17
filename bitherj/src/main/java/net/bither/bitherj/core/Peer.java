@@ -44,7 +44,6 @@ import net.bither.bitherj.net.NioClientManager;
 import net.bither.bitherj.net.PeerSocketHandler;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.InventoryItem;
-import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
@@ -684,7 +683,7 @@ public class Peer extends PeerSocketHandler {
                 }
                 pingStartTime = 0;
             }
-            LogUtil.i(Peer.class.getSimpleName(), "Peer " + getPeerAddress().getHostAddress() +" receive pong, ping time: " + pingTime);
+            log.info("Peer " + getPeerAddress().getHostAddress() +" receive pong, ping time: " + pingTime);
         }
     }
 

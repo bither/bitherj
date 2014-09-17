@@ -22,7 +22,6 @@ import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.message.Message;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
-import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
@@ -99,7 +98,7 @@ public class Out extends Message {
                 outAddress = pubKeyScript.getToAddress();
             } catch (ScriptException e) {
                 if (this.getOutScript() != null) {
-                    LogUtil.w(Out.class.getSimpleName(), "out script : " + Utils.bytesToHexString(this.getOutScript()));
+                    log.warn("out script : " + Utils.bytesToHexString(this.getOutScript()));
                 }
             }
         }
