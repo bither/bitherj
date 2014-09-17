@@ -469,11 +469,11 @@ public class PeerManager {
         executor.submit(new Runnable() {
             @Override
             public void run() {
-
-                boolean isAlreadyInDb = TxProvider.getInstance().isExist(tx.getTxHash());
                 boolean isRel = AddressManager.getInstance().registerTx(tx,
                         Tx.TxNotificationType.txReceive);
                 if (isRel) {
+                    boolean isAlreadyInDb = TxProvider.getInstance().isExist(tx.getTxHash());
+
                     if (publishedTx.get(new Sha256Hash(tx.getTxHash())) == null) {
                         publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
                     }
