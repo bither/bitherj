@@ -16,7 +16,9 @@
 
 package net.bither.bitherj;
 
+import android.app.ActivityManager;
 import android.app.Application;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -30,6 +32,7 @@ import net.bither.bitherj.utils.NotificationUtil;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.List;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -144,5 +147,21 @@ public abstract class BitherjApplication extends Application {
             file.mkdirs();
         }
         return file;
+    }
+
+    public static boolean isApplicationRunInForeground() {
+        if (mContext == null) {
+            return false;
+        }
+        ActivityManager am = (ActivityManager) mContext
+                .getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(1);
+        if (tasks != null && !tasks.isEmpty()) {
+            ComponentName topActivity = tasks.get(0).topActivity;
+            if (!topActivity.getPackageName().equals(mContext.getPackageName())) {
+                return false;
+            }
+        }
+        return true;
     }
 }
