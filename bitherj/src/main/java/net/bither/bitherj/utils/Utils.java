@@ -848,4 +848,8 @@ public class Utils {
     public static long currentTimeSeconds() {
         return currentTimeMillis() / 1000;
     }
+
+    public static long getFeeBase() {
+        return BITHERJ_APP.get().getTransactionFeeMode().getMinFeeSatoshi();
+    }
 }
