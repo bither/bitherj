@@ -173,12 +173,12 @@ public class PeerManager {
                         iterator.remove();
                     }
                 }
-                if (connectedPeers.size() >= BitherjSettings.MaxPeerConnections) {
+                if (connectedPeers.size() >= getMaxPeerConnect()) {
                     return;
                 }
                 HashSet<Peer> peers = bestPeers();
                 for (Peer p : peers) {
-                    if (connectedPeers.size() >= BitherjSettings.MaxPeerConnections) {
+                    if (connectedPeers.size() >= getMaxPeerConnect()) {
                         break;
                     }
                     if (!connectedPeers.contains(p)) {
@@ -205,13 +205,11 @@ public class PeerManager {
 
     private HashSet<Peer> bestPeers() {
         HashSet<Peer> peers = new HashSet<Peer>();
-        peers.addAll(PeerProvider.getInstance().getPeersWithLimit(BitherjSettings
-                .MaxPeerConnections));
-        if (peers.size() < BitherjSettings.MaxPeerConnections) {
+        peers.addAll(PeerProvider.getInstance().getPeersWithLimit(getMaxPeerConnect()));
+        if (peers.size() < getMaxPeerConnect()) {
             if (getPeersFromDns().size() > 0) {
                 peers.clear();
-                peers.addAll(PeerProvider.getInstance().getPeersWithLimit(BitherjSettings
-                        .MaxPeerConnections));
+                peers.addAll(PeerProvider.getInstance().getPeersWithLimit(getMaxPeerConnect()));
             }
         }
         log.info("peer manager got " + peers.size() + " best " +
@@ -940,5 +938,13 @@ public class PeerManager {
                 syncTimeout();
             }
         }, delay);
+    }
+
+    private int getMaxPeerConnect() {
+        if (BitherjApplication.isApplicationRunInForeground()) {
+            return BitherjSettings.MaxPeerConnections;
+        } else {
+            return BitherjSettings.MaxPeerBackgroundConnections;
+        }
     }
 }

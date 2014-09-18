@@ -101,6 +101,7 @@ public class BitherjSettings {
     public static final int BLOCK_DIFFICULTY_INTERVAL = 2016;
     public static final int BITCOIN_REFERENCE_BLOCK_HEIGHT = 250000;
     public static final int MaxPeerConnections = 6;
+    public static final int MaxPeerBackgroundConnections = 2;
 
     public static enum AppMode {
         COLD, HOT
