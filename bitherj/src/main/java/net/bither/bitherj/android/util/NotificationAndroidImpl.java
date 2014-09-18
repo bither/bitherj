@@ -97,4 +97,9 @@ public class NotificationAndroidImpl implements NotificationService {
         BitherjApplication.mContext.removeStickyBroadcast(new Intent(ACTION_ADDRESS_LOAD_COMPLETE_STATE));
     }
 
+    @Override public void sendConnectedChangeBroadcast(String connectedChangeBroadcast, boolean isConnected) {
+        Intent intent = new Intent(connectedChangeBroadcast);
+        intent.putExtra(connectedChangeBroadcast, isConnected);
+        BitherjApplication.mContext.sendBroadcast(intent);
+    }
 }

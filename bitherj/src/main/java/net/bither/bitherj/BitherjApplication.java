@@ -147,12 +147,6 @@ public abstract class BitherjApplication extends Application {
         }).start();
     }
 
-    public static void sendConnectedChangeBroadcast(String connectedChangeBroadcast, boolean isConnected) {
-        Intent intent = new Intent(connectedChangeBroadcast);
-        intent.putExtra(connectedChangeBroadcast, isConnected);
-        BitherjApplication.mContext.sendBroadcast(intent);
-    }
-
     public static File getPrivateDir(String dirName) {
         File file = BitherjApplication.mContext.getDir(dirName, Context.MODE_PRIVATE);
         if (!file.exists()) {

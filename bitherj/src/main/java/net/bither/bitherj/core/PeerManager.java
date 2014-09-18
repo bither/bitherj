@@ -822,7 +822,7 @@ public class PeerManager {
     }
 
     private void sendConnectedChangeBroadcast() {
-        BitherjApplication.sendConnectedChangeBroadcast(ConnectedChangeBroadcast, isConnected());
+        NOTIFICATION_SERVICE.sendConnectedChangeBroadcast(ConnectedChangeBroadcast, isConnected());
         log.info("peer manager connected changed to " + isConnected());
     }
 

@@ -19,4 +19,6 @@ public interface NotificationService {
     void sendBroadcastAddressLoadCompleteState();
 
     void removeAddressLoadCompleteState();
+
+    void sendConnectedChangeBroadcast(String connectedChangeBroadcast, boolean isConnected);
 }
