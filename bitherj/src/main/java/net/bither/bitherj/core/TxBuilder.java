@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.core;
 
+import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.utils.Utils;
@@ -169,18 +170,18 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 
         long fees = 0;
         if (needMinFee) {
-            fees = BitherjSettings.getFeeBase();
+            fees = BitherjApplication.getFeeBase();
         } else {
             // no fee logic
             int s = TxBuilder.estimationTxSize(outs.size(), tx.getOuts().size());
             if (TxBuilder.getCoinDepth(outs) <= TxBuilder.TX_FREE_MIN_PRIORITY * s){
-                fees = BitherjSettings.getFeeBase();
+                fees = BitherjApplication.getFeeBase();
             }
         }
 
         int size = TxBuilder.estimationTxSize(outs.size(), tx.getOuts().size());
         if (size > 1000) {
-            fees = (size / 1000 + 1) * BitherjSettings.getFeeBase();
+            fees = (size / 1000 + 1) * BitherjApplication.getFeeBase();
         }
 
         // note : like bitcoinj, empty wallet will not check min output
@@ -245,10 +246,10 @@ class TxBuilderDefault implements TxBuilderProtocol {
 
             if (lastCalculatedSize >= 1000) {
                 // If the size is exactly 1000 bytes then we'll over-pay, but this should be rare.
-                fees += (lastCalculatedSize / 1000 + 1) * BitherjSettings.getFeeBase();
+                fees += (lastCalculatedSize / 1000 + 1) * BitherjApplication.getFeeBase();
             }
-            if (needAtLeastReferenceFee && fees < BitherjSettings.getFeeBase())
-                fees = BitherjSettings.getFeeBase();
+            if (needAtLeastReferenceFee && fees < BitherjApplication.getFeeBase())
+                fees = BitherjApplication.getFeeBase();
 
             valueNeeded = value + fees;
 
@@ -265,7 +266,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
             // no fee logic
             if (!needAtLeastReferenceFee) {
                 long total = TxBuilder.getAmount(selectedOuts);
-                if (total - value < Utils.CENT && total - value >= BitherjSettings.getFeeBase()) {
+                if (total - value < Utils.CENT && total - value >= BitherjApplication.getFeeBase()) {
                     needAtLeastReferenceFee = true;
                     continue;
                 }
@@ -286,12 +287,12 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 change += additionalValueSelected;
 
             if (BitherjSettings.ensureMinRequiredFee && change != 0 && change < Utils.CENT
-                    && fees < BitherjSettings.getFeeBase()) {
+                    && fees < BitherjApplication.getFeeBase()) {
                 // This solution may fit into category 2, but it may also be category 3, we'll check that later
                 eitherCategory2Or3 = true;
                 additionalValueForNextCategory = Utils.CENT;
                 // If the change is smaller than the fee we want to add, this will be negative
-                change -= BitherjSettings.getFeeBase() - fees;
+                change -= BitherjApplication.getFeeBase() - fees;
             }
 
             int size = 0;
@@ -304,7 +305,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 if (BitherjSettings.ensureMinRequiredFee && Tx.MIN_NONDUST_OUTPUT >= change) {
                     // This solution definitely fits in category 3
                     isCategory3 = true;
-                    additionalValueForNextCategory = BitherjSettings.getFeeBase() + Tx.MIN_NONDUST_OUTPUT + 1;
+                    additionalValueForNextCategory = BitherjApplication.getFeeBase() + Tx.MIN_NONDUST_OUTPUT + 1;
                 } else {
                     size += 34;
                     // This solution is either category 1 or 2
@@ -315,12 +316,12 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 if (eitherCategory2Or3) {
                     // This solution definitely fits in category 3 (we threw away change because it was smaller than MIN_TX_FEE)
                     isCategory3 = true;
-                    additionalValueForNextCategory = BitherjSettings.getFeeBase() + 1;
+                    additionalValueForNextCategory = BitherjApplication.getFeeBase() + 1;
                 }
             }
 
             size += TxBuilder.estimationTxSize(selectedOuts.size(), tx.getOuts().size());
-            if (size / 1000 > lastCalculatedSize / 1000 && BitherjSettings.getFeeBase() > 0) {
+            if (size / 1000 > lastCalculatedSize / 1000 && BitherjApplication.getFeeBase() > 0) {
                 lastCalculatedSize = size;
                 // We need more fees anyway, just try again with the same additional value
                 additionalValueForNextCategory = additionalValueSelected;

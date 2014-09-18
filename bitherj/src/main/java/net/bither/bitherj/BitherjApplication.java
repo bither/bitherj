@@ -47,6 +47,10 @@ public abstract class BitherjApplication extends Application {
     protected static IBitherjApp mIinitialize;
     public static boolean addressIsReady = false;
 
+    public static long getFeeBase() {
+        return getInitialize().getTransactionFeeMode().getMinFeeSatoshi();
+    }
+
     @Override
     public void onCreate() {
         WireNotificationService.wire(new NotificationAndroidImpl());
