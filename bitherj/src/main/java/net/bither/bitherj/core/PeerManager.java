@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -883,10 +881,8 @@ public class PeerManager {
                     Thread.currentThread().interrupt(); // ignore/reset
                 }
             }
-            if (t != null) {
-                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                t.printStackTrace(new PrintStream(bout));
-                log.error("exception in PeerManager: " + new String(bout.toByteArray()));
+            if (t != null && t.getMessage() != null && t.getMessage().length() > 0) {
+                log.error("exception in PeerManager: " + t.getMessage());
             }
             if (isWaiting && waiting < TaskCapacity - TaskCapacityWaitForRoom) {
                 try {
