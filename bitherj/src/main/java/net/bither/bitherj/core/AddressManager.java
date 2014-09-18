@@ -16,7 +16,7 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.BitherjApplication;
+import net.bither.bitherj.BitherjAppEnv;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.utils.Utils;
 
@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 public class AddressManager {
+    public static BitherjAppEnv BITHERJ_APP_ENV;
     public static NotificationService NOTIFICATION_SERVICE;
     private static final Logger log = LoggerFactory.getLogger(AddressManager.class);
     private final byte[] lock = new byte[0];
@@ -45,7 +46,7 @@ public class AddressManager {
         synchronized (lock) {
             initPrivateKeyList();
             initWatchOnlyList();
-            BitherjApplication.addressIsReady = true;
+            BITHERJ_APP_ENV.addressIsReady();
             NOTIFICATION_SERVICE.sendBroadcastAddressLoadCompleteState();
         }
     }

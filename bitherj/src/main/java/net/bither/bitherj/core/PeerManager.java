@@ -16,7 +16,6 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.IBitherjApp;
 import net.bither.bitherj.db.PeerProvider;
 import net.bither.bitherj.db.TxProvider;

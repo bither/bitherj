@@ -18,7 +18,6 @@ package net.bither.bitherj;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import net.bither.bitherj.android.util.NotificationAndroidImpl;
@@ -51,6 +50,21 @@ public abstract class BitherjApplication extends Application {
 
     @Override
     public void onCreate() {
+        WireBitherjAppEnv.wire(new BitherjAppEnv() {
+            @Override
+            public void addressIsReady() {
+                addressIsReady = true;
+            }
+
+            @Override
+            public File getPrivateDir(String dirName) {
+                File file = BitherjApplication.mContext.getDir(dirName, Context.MODE_PRIVATE);
+                if (!file.exists()) {
+                    file.mkdirs();
+                }
+                return file;
+            }
+        });
         WireNotificationService.wire(new NotificationAndroidImpl());
         WireBitherjApp.wire(new DynamicWire<IBitherjApp>() {
             @Override
@@ -141,13 +155,5 @@ public abstract class BitherjApplication extends Application {
                 initLogging();
             }
         }).start();
-    }
-
-    public static File getPrivateDir(String dirName) {
-        File file = BitherjApplication.mContext.getDir(dirName, Context.MODE_PRIVATE);
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-        return file;
     }
 }
