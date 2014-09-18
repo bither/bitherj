@@ -22,7 +22,7 @@ import com.google.common.primitives.Longs;
 import com.google.common.primitives.UnsignedLongs;
 
 import net.bither.bitherj.BitherjAppEnv;
-import net.bither.bitherj.IBitherjApp;
+import net.bither.bitherj.ISetting;
 import net.bither.bitherj.core.BitherjSettings;
 import net.bither.bitherj.exception.AddressFormatException;
 
@@ -60,7 +60,7 @@ import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterrup
  */
 public class Utils {
     public static BitherjAppEnv BITHERJ_APP_ENV;
-    public static DynamicWire<IBitherjApp> BITHERJ_APP;
+    public static DynamicWire<ISetting> BITHERJ_APP;
     public static final BigInteger NEGATIVE_ONE = BigInteger.valueOf(-1);
     private static final MessageDigest digest;
 

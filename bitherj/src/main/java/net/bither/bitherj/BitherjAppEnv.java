@@ -8,4 +8,5 @@ import java.io.File;
 public interface BitherjAppEnv {
     void addressIsReady();
     File getPrivateDir(String dirName);
+    public boolean isApplicationRunInForeground();
 }

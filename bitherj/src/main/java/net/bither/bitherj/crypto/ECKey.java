@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import net.bither.bitherj.crypto.ec.EcTools;
 import net.bither.bitherj.crypto.ec.Parameters;
 import net.bither.bitherj.crypto.ec.Point;
-import net.bither.bitherj.exception.URandomNotFoundException;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
@@ -132,16 +131,17 @@ public class ECKey implements Serializable {
      * Generates an entirely new keypair. Point compression is used so the resulting public key will be 33 bytes
      * (32 for the co-ordinate and 1 byte to represent the y bit).
      */
-    public static ECKey generateECKey(XRandom xRandom) throws URandomNotFoundException {
+    public static ECKey generateECKey(IRandom random) {
 
         int nBitLength = Parameters.n.bitLength();
         BigInteger d;
+        byte[] bytes;
         do {
             // Make a BigInteger from bytes to ensure that Andriod and 'classic'
             // java make the same BigIntegers from the same random source with the
             // same seed. Using BigInteger(nBitLength, random)
             // produces different results on Android compared to 'classic' java.
-            byte[] bytes = xRandom.getRandomBytes();
+            bytes = random.nextBytes(nBitLength / 8);
             bytes[0] = (byte) (bytes[0] & 0x7F); // ensure positive number
             d = new BigInteger(bytes);
         } while (d.equals(BigInteger.ZERO) || (d.compareTo(Parameters.n) >= 0));

@@ -16,7 +16,8 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.IBitherjApp;
+import net.bither.bitherj.BitherjAppEnv;
+import net.bither.bitherj.ISetting;
 import net.bither.bitherj.db.PeerProvider;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.ProtocolException;
@@ -30,8 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,7 +50,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class PeerManager {
-    public static DynamicWire<IBitherjApp> BITHERJ_APP;
+    public static BitherjAppEnv BITHERJ_APP_ENV;
+    public static DynamicWire<ISetting> BITHERJ_APP;
     public static NotificationService NOTIFICATION_SERVICE;
     public static final String ConnectedChangeBroadcast = PeerManager.class.getPackage()
             .getName() + ".peer_manager_connected_change";
@@ -175,12 +175,12 @@ public class PeerManager {
                         iterator.remove();
                     }
                 }
-                if (connectedPeers.size() >= BitherjSettings.MaxPeerConnections) {
+                if (connectedPeers.size() >= getMaxPeerConnect()) {
                     return;
                 }
                 HashSet<Peer> peers = bestPeers();
                 for (Peer p : peers) {
-                    if (connectedPeers.size() >= BitherjSettings.MaxPeerConnections) {
+                    if (connectedPeers.size() >= getMaxPeerConnect()) {
                         break;
                     }
                     if (!connectedPeers.contains(p)) {
@@ -207,13 +207,11 @@ public class PeerManager {
 
     private HashSet<Peer> bestPeers() {
         HashSet<Peer> peers = new HashSet<Peer>();
-        peers.addAll(PeerProvider.getInstance().getPeersWithLimit(BitherjSettings
-                .MaxPeerConnections));
-        if (peers.size() < BitherjSettings.MaxPeerConnections) {
+        peers.addAll(PeerProvider.getInstance().getPeersWithLimit(getMaxPeerConnect()));
+        if (peers.size() < getMaxPeerConnect()) {
             if (getPeersFromDns().size() > 0) {
                 peers.clear();
-                peers.addAll(PeerProvider.getInstance().getPeersWithLimit(BitherjSettings
-                        .MaxPeerConnections));
+                peers.addAll(PeerProvider.getInstance().getPeersWithLimit(getMaxPeerConnect()));
             }
         }
         log.info("peer manager got " + peers.size() + " best " +
@@ -887,10 +885,8 @@ public class PeerManager {
                     Thread.currentThread().interrupt(); // ignore/reset
                 }
             }
-            if (t != null) {
-                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                t.printStackTrace(new PrintStream(bout));
-                log.error("exception in PeerManager: " + new String(bout.toByteArray()));
+            if (t != null && t.getMessage() != null && t.getMessage().length() > 0) {
+                log.error("exception in PeerManager: " + t.getMessage());
             }
             if (isWaiting && waiting < TaskCapacity - TaskCapacityWaitForRoom) {
                 try {
@@ -942,5 +938,13 @@ public class PeerManager {
                 syncTimeout();
             }
         }, delay);
+    }
+
+    private int getMaxPeerConnect() {
+        if (BITHERJ_APP_ENV.isApplicationRunInForeground()) {
+            return BitherjSettings.MaxPeerConnections;
+        } else {
+            return BitherjSettings.MaxPeerBackgroundConnections;
+        }
     }
 }
