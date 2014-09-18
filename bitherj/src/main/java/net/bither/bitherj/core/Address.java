@@ -22,7 +22,6 @@ import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.script.ScriptBuilder;
-import net.bither.bitherj.utils.NotificationUtil;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
 
@@ -43,6 +42,7 @@ import javax.annotation.Nonnull;
 
 
 public class Address implements Comparable<Address> {
+    public static NotificationService NOTIFICATION_SERVICE;
     private static final Logger log = LoggerFactory.getLogger(Address.class);
 
     public static final String KEY_SPLIT_STRING = ":";
@@ -165,7 +165,7 @@ public class Address implements Comparable<Address> {
 
     public void notificatTx(Tx tx, Tx.TxNotificationType txNotificationType) {
         long deltaBalance = getDeltaBalance();
-        NotificationUtil.notificatTx(this, tx, txNotificationType, deltaBalance);
+        NOTIFICATION_SERVICE.notificatTx(this, tx, txNotificationType, deltaBalance);
     }
 
     public void setBlockHeight(List<byte[]> txHashes, int height) {

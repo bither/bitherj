@@ -21,7 +21,6 @@ import net.bither.bitherj.db.PeerProvider;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.utils.DnsDiscovery;
-import net.bither.bitherj.utils.NotificationUtil;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
@@ -51,6 +50,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class PeerManager {
+    public static NotificationService NOTIFICATION_SERVICE;
     public static final String ConnectedChangeBroadcast = PeerManager.class.getPackage()
             .getName() + ".peer_manager_connected_change";
     private static final Logger log = LoggerFactory.getLogger(PeerManager.class);
@@ -136,7 +136,7 @@ public class PeerManager {
             log.info("peer manager stop");
             running = false;
             if (connected) {
-                NotificationUtil.removeBroadcastPeerState();
+                NOTIFICATION_SERVICE.removeBroadcastPeerState();
                 bloomFilter = null;
                 connected = false;
                 sendConnectedChangeBroadcast();
@@ -363,7 +363,7 @@ public class PeerManager {
                         syncStopped();
                         dp.sendGetAddrMessage();
                         syncStartHeight = 0;
-                        NotificationUtil.sendBroadcastSyncSPVFinished(true);
+                        NOTIFICATION_SERVICE.sendBroadcastSyncSPVFinished(true);
                     }
                 }
             });
@@ -561,13 +561,13 @@ public class PeerManager {
                     syncStartHeight = 0;
                     if (!doneSyncFromSPV()) {
                         log.info("Done sync from spv");
-                        NotificationUtil.sendBroadcastSyncSPVFinished(true);
+                        NOTIFICATION_SERVICE.sendBroadcastSyncSPVFinished(true);
                     }
                 }
                 if (oldLastBlock != null && BlockChain.getInstance().getLastBlock() != null &&
                         oldLastBlock.getBlockNo() != BlockChain.getInstance().getLastBlock()
                                 .getBlockNo()) {
-                    NotificationUtil.sendLastBlockChange();
+                    NOTIFICATION_SERVICE.sendLastBlockChange();
                 }
             }
         });
@@ -627,7 +627,7 @@ public class PeerManager {
                     fromPeer.sendGetAddrMessage(); // request a list of other bitcoin peers
                     syncStartHeight = 0;
                     if (!doneSyncFromSPV()) {
-                        NotificationUtil.sendBroadcastSyncSPVFinished(true);
+                        NOTIFICATION_SERVICE.sendBroadcastSyncSPVFinished(true);
                     }
                 }
 
@@ -643,7 +643,7 @@ public class PeerManager {
                                 .getBlockNo()) {
                     Block lastBlock = BlockChain.getInstance().getLastBlock();
                     log.info("Peer {} relay new best block No.{}, hash: {}, txs: {}", fromPeer.getPeerAddress().getHostAddress(), lastBlock.getBlockNo(), Utils.hashToString(lastBlock.getBlockHash()), lastBlock.getTxHashes() == null ? 0 : lastBlock.getTxHashes().size());
-                    NotificationUtil.sendLastBlockChange();
+                    NOTIFICATION_SERVICE.sendLastBlockChange();
                 }
             }
         });
@@ -689,7 +689,7 @@ public class PeerManager {
                         }
 
                         log.info("Peer {} relay new best block No.{}, hash: {}, txs: {}", fromPeer.getPeerAddress().getHostAddress(), BlockChain.getInstance().getLastBlock().getBlockNo(), Utils.hashToString(BlockChain.getInstance().getLastBlock().getBlockHash()), BlockChain.getInstance().getLastBlock().getTxHashes() == null ? 0 : BlockChain.getInstance().getLastBlock().getTxHashes().size());
-                        NotificationUtil.sendLastBlockChange();
+                        NOTIFICATION_SERVICE.sendLastBlockChange();
                     } else {
                         abandonPeer(fromPeer);
                         log.info("Peer {} relay {}/{} block. drop this peer", fromPeer.getPeerAddress().getHostAddress(), relayedCnt, blocks.size());
@@ -824,7 +824,7 @@ public class PeerManager {
     }
 
     private void sendPeerCountChangeNotification() {
-        NotificationUtil.sendBroadcastPeerState(connectedPeers.size());
+        NOTIFICATION_SERVICE.sendBroadcastPeerState(connectedPeers.size());
     }
 
     public Peer getDownloadingPeer() {

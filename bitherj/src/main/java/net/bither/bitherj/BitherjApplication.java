@@ -21,11 +21,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import net.bither.bitherj.android.util.NotificationAndroidImpl;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.crypto.URandom;
 import net.bither.bitherj.db.BitherjDatabaseHelper;
-import net.bither.bitherj.utils.NotificationUtil;
-import net.bither.bitherj.utils.Utils;
+import net.bither.bitherj.core.NotificationService;
 
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +41,7 @@ import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 
 public abstract class BitherjApplication extends Application {
+    public static NotificationService NOTIFICATION_SERVICE;
     public static Context mContext;
     public static SQLiteOpenHelper mDbHelper;
     protected static IBitherjApp mIinitialize;
@@ -48,14 +49,15 @@ public abstract class BitherjApplication extends Application {
 
     @Override
     public void onCreate() {
+        WireNotificationService.wire(new NotificationAndroidImpl());
+
         mContext = getApplicationContext();
         init();
         mDbHelper = new BitherjDatabaseHelper(mContext);
         super.onCreate();
         new URandom();
-        NotificationUtil.removeAddressLoadCompleteState();
+        NOTIFICATION_SERVICE.removeAddressLoadCompleteState();
         initApp();
-
     }
 
     @Override
