@@ -17,10 +17,12 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.BitherjApplication;
+import net.bither.bitherj.IBitherjApp;
 import net.bither.bitherj.db.PeerProvider;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.utils.DnsDiscovery;
+import net.bither.bitherj.utils.DynamicWire;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
@@ -50,6 +52,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class PeerManager {
+    public static DynamicWire<IBitherjApp> BITHERJ_APP;
     public static NotificationService NOTIFICATION_SERVICE;
     public static final String ConnectedChangeBroadcast = PeerManager.class.getPackage()
             .getName() + ".peer_manager_connected_change";
@@ -815,7 +818,7 @@ public class PeerManager {
     }
 
     public boolean doneSyncFromSPV() {
-        return BitherjApplication.getInitialize().getBitherjDoneSyncFromSpv();
+        return BITHERJ_APP.get().getBitherjDoneSyncFromSpv();
     }
 
     private void sendConnectedChangeBroadcast() {

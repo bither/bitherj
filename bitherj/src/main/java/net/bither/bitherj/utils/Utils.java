@@ -22,6 +22,7 @@ import com.google.common.primitives.Longs;
 import com.google.common.primitives.UnsignedLongs;
 
 import net.bither.bitherj.BitherjApplication;
+import net.bither.bitherj.IBitherjApp;
 import net.bither.bitherj.core.BitherjSettings;
 import net.bither.bitherj.exception.AddressFormatException;
 
@@ -58,6 +59,7 @@ import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterrup
  * To enable debug logging from the library, run with -Dbitcoinj.logging=true on your command line.
  */
 public class Utils {
+    public static DynamicWire<IBitherjApp> BITHERJ_APP;
     public static final BigInteger NEGATIVE_ONE = BigInteger.valueOf(-1);
     private static final MessageDigest digest;
 
@@ -741,7 +743,7 @@ public class Utils {
     public static File getPrivateDir() {
         File file = getWalletRomCache();
         String dirName = WALLET_HOT;
-        if (BitherjApplication.getInitialize().getAppMode() == BitherjSettings.AppMode.COLD) {
+        if (BITHERJ_APP.get().getAppMode() == BitherjSettings.AppMode.COLD) {
             dirName = WALLET_COLD;
         }
         file = new File(file, dirName);

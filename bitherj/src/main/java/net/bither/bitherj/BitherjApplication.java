@@ -27,6 +27,7 @@ import net.bither.bitherj.crypto.URandom;
 import net.bither.bitherj.db.BitherjDatabaseHelper;
 import net.bither.bitherj.core.NotificationService;
 
+import net.bither.bitherj.utils.DynamicWire;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
@@ -42,18 +43,25 @@ import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 
 public abstract class BitherjApplication extends Application {
     public static NotificationService NOTIFICATION_SERVICE;
+    public static DynamicWire<IBitherjApp> BITHERJ_APP;
     public static Context mContext;
     public static SQLiteOpenHelper mDbHelper;
     protected static IBitherjApp mIinitialize;
     public static boolean addressIsReady = false;
 
     public static long getFeeBase() {
-        return getInitialize().getTransactionFeeMode().getMinFeeSatoshi();
+        return BITHERJ_APP.get().getTransactionFeeMode().getMinFeeSatoshi();
     }
 
     @Override
     public void onCreate() {
         WireNotificationService.wire(new NotificationAndroidImpl());
+        WireBitherjApp.wire(new DynamicWire<IBitherjApp>() {
+            @Override
+            public IBitherjApp get() {
+                return getInitialize();
+            }
+        });
 
         mContext = getApplicationContext();
         init();
@@ -72,7 +80,6 @@ public abstract class BitherjApplication extends Application {
 
     public static IBitherjApp getInitialize() {
         return mIinitialize;
-
     }
 
     public abstract void init();
