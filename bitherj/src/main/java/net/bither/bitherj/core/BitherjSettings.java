@@ -113,7 +113,7 @@ public class BitherjSettings {
 
 
     public static long getFeeBase() {
-        return BitherjApplication.getInitialize().getTransactionFeeMode().getMinFeeSatoshi();
+        return BitherjApplication.setting.getTransactionFeeMode().getMinFeeSatoshi();
     }
 
     public enum TransactionFeeMode {

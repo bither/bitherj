@@ -741,7 +741,7 @@ public class Utils {
     public static File getPrivateDir() {
         File file = getWalletRomCache();
         String dirName = WALLET_HOT;
-        if (BitherjApplication.getInitialize().getAppMode() == BitherjSettings.AppMode.COLD) {
+        if (BitherjApplication.setting.getAppMode() == BitherjSettings.AppMode.COLD) {
             dirName = WALLET_COLD;
         }
         file = new File(file, dirName);

@@ -22,10 +22,10 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.crypto.URandom;
+import net.bither.bitherj.crypto.IRandom;
+
 import net.bither.bitherj.db.BitherjDatabaseHelper;
 import net.bither.bitherj.utils.NotificationUtil;
-import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.LoggerFactory;
 
@@ -43,16 +43,17 @@ import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 public abstract class BitherjApplication extends Application {
     public static Context mContext;
     public static SQLiteOpenHelper mDbHelper;
-    protected static IBitherjApp mIinitialize;
     public static boolean addressIsReady = false;
+    public static ISetting setting;
+    public static IRandom random;
 
     @Override
     public void onCreate() {
         mContext = getApplicationContext();
-        init();
+        setting = initSetting();
+        random = initRandom();
         mDbHelper = new BitherjDatabaseHelper(mContext);
         super.onCreate();
-        new URandom();
         NotificationUtil.removeAddressLoadCompleteState();
         initApp();
 
@@ -64,12 +65,9 @@ public abstract class BitherjApplication extends Application {
         mDbHelper.close();
     }
 
-    public static IBitherjApp getInitialize() {
-        return mIinitialize;
+    public abstract ISetting initSetting();
 
-    }
-
-    public abstract void init();
+    public abstract IRandom initRandom();
 
     public static File getLogDir() {
         final File logDir = BitherjApplication.mContext.getDir("log", Context.MODE_WORLD_READABLE);

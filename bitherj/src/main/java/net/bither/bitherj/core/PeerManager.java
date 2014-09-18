@@ -815,7 +815,7 @@ public class PeerManager {
     }
 
     public boolean doneSyncFromSPV() {
-        return BitherjApplication.getInitialize().getBitherjDoneSyncFromSpv();
+        return BitherjApplication.setting.getBitherjDoneSyncFromSpv();
     }
 
     private void sendConnectedChangeBroadcast() {

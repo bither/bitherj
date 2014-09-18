@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.exception;
+package net.bither.bitherj.crypto;
 
-public class URandomNotFoundException extends Exception {
-
-    public URandomNotFoundException() {
-        super();
-    }
-
-    public URandomNotFoundException(String message) {
-        super(message);
-    }
+public interface IRandom {
+    public byte[] nextBytes(int length);
 }
