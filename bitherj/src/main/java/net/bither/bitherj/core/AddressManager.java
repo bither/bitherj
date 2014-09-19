@@ -171,8 +171,9 @@ public class AddressManager {
                     String publicKey = strings[0];
                     int isSyncComplete = Integer.valueOf(strings[1]);
                     long createTime = Long.valueOf(strings[2]);
+                    int isFromXRandom = Integer.valueOf(strings[3]);
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
-                            , isSyncComplete == 1, true);
+                            , isSyncComplete == 1, isFromXRandom == 1, true);
                     this.privKeyAddresses.add(add);
                 }
             }
@@ -195,8 +196,9 @@ public class AddressManager {
                     String publicKey = strings[0];
                     int isSyncComplete = Integer.valueOf(strings[1]);
                     long createTime = Long.valueOf(strings[2]);
+                    int isFromXRandom = Integer.valueOf(strings[3]);
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
-                            , isSyncComplete == 1, false);
+                            , isSyncComplete == 1, isFromXRandom == 1, false);
                     this.watchOnlyAddresses.add(add);
                 }
             }

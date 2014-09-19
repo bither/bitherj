@@ -56,19 +56,21 @@ public class Address implements Comparable<Address> {
     protected boolean syncComplete = false;
     private long createTime;
     private long balance = 0;
+    private boolean isFromXRandom;
 
     public Address(String address, byte[] pubKey, long createTime,
-                   boolean isSyncComplete, boolean hasPrivKey) {
+                   boolean isSyncComplete, boolean isFromXRandom, boolean hasPrivKey) {
         this.hasPrivKey = hasPrivKey;
         this.encryptPrivKey = null;
         this.address = address;
         this.pubKey = pubKey;
         this.createTime = createTime;
         this.syncComplete = isSyncComplete;
+        this.isFromXRandom = isFromXRandom;
         this.updateBalance();
     }
 
-    public Address(String address, byte[] pubKey, String encryptString) {
+    public Address(String address, byte[] pubKey, String encryptString, boolean isFromXRandom) {
         this.encryptPrivKey = encryptString;
         this.address = address;
         this.pubKey = pubKey;
@@ -205,6 +207,14 @@ public class Address implements Comparable<Address> {
         this.syncComplete = isSyncComplete;
     }
 
+    public boolean isFromXRandom() {
+        return this.isFromXRandom;
+    }
+
+    public void setFromXRandom(boolean isFromXRAndom) {
+        this.isFromXRandom = isFromXRAndom;
+    }
+
 
     public void savePrivateKey() throws IOException {
         String privateKeyFullFileName = Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
@@ -224,14 +234,18 @@ public class Address implements Comparable<Address> {
     private void savePubKey(String dir) throws IOException {
         String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME
                 , dir, getAddress());
-        String watchOnlyContent = Utils.format("%s:%s:%s",
+        String watchOnlyContent = Utils.format("%s:%s:%s:%s",
                 Utils.bytesToHexString(this.pubKey), getSyncCompleteString(),
-                Long.toString(new Date().getTime()));
+                Long.toString(new Date().getTime()), getXRandomString());
         Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
     }
 
     private String getSyncCompleteString() {
         return isSyncComplete() ? "1" : "0";
+    }
+
+    private String getXRandomString() {
+        return isFromXRandom() ? "1" : "0";
     }
 
 

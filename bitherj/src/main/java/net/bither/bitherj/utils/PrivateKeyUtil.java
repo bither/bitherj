@@ -202,7 +202,8 @@ public class PrivateKeyUtil {
             if (key == null) {
                 return null;
             } else {
-                Address address = new Address(key.toAddress(), key.getPubKey(), encryptedString);
+                Address address = new Address(key.toAddress(), key.getPubKey(), encryptedString,
+                        key.isFromXRandom());
                 list.add(address);
             }
         }
