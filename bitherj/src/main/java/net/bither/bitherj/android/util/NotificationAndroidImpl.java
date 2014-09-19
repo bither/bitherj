@@ -20,9 +20,10 @@ import android.content.Intent;
 
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.core.Address;
-import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.core.NotificationService;
+import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.utils.Utils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,8 @@ public class NotificationAndroidImpl implements NotificationService {
     public static final String MESSAGE_TX = "tx";
     public static final String MESSAGE_TX_NOTIFICATION_TYPE = "tx_notification_type";
 
-    @Override public void sendBroadcastSyncSPVFinished(boolean isFinished) {
+    @Override
+    public void sendBroadcastSyncSPVFinished(boolean isFinished) {
         if (isFinished) {
             BitherjApplication.setting.setBitherjDoneSyncFromSpv(isFinished);
             final Intent broadcast = new Intent(ACTION_SYNC_FROM_SPV_FINISHED);
@@ -50,17 +52,20 @@ public class NotificationAndroidImpl implements NotificationService {
         }
     }
 
-    @Override public void removeBroadcastSyncSPVFinished() {
+    @Override
+    public void removeBroadcastSyncSPVFinished() {
         BitherjApplication.mContext.removeStickyBroadcast(new Intent(
                 ACTION_SYNC_FROM_SPV_FINISHED));
     }
 
-    @Override public void sendLastBlockChange() {
+    @Override
+    public void sendLastBlockChange() {
         Intent broadcast = new Intent(ACTION_SYNC_LAST_BLOCK_CHANGE);
         BitherjApplication.mContext.sendBroadcast(broadcast);
     }
 
-    @Override public void notificatTx(Address address, Tx tx, Tx.TxNotificationType txNotificationType, long deltaBalance) {
+    @Override
+    public void notificatTx(Address address, Tx tx, Tx.TxNotificationType txNotificationType, long deltaBalance) {
         final Intent broadcast = new Intent(ACTION_ADDRESS_BALANCE);
         broadcast.putExtra(MESSAGE_ADDRESS, address.getAddress());
         broadcast.putExtra(MESSAGE_DELTA_BALANCE, deltaBalance);
@@ -76,28 +81,33 @@ public class NotificationAndroidImpl implements NotificationService {
 
     }
 
-    @Override public void sendBroadcastPeerState(final int numPeers) {
+    @Override
+    public void sendBroadcastPeerState(final int numPeers) {
         final Intent broadcast = new Intent(ACTION_PEER_STATE);
 
         broadcast.putExtra(ACTION_PEER_STATE_NUM_PEERS, numPeers);
         BitherjApplication.mContext.sendStickyBroadcast(broadcast);
     }
 
-    @Override public void removeBroadcastPeerState() {
+    @Override
+    public void removeBroadcastPeerState() {
         BitherjApplication.mContext.removeStickyBroadcast(new Intent(
                 ACTION_PEER_STATE));
     }
 
-    @Override public void sendBroadcastAddressLoadCompleteState() {
+    @Override
+    public void sendBroadcastAddressLoadCompleteState() {
         final Intent broadcast = new Intent(ACTION_ADDRESS_LOAD_COMPLETE_STATE);
         BitherjApplication.mContext.sendStickyBroadcast(broadcast);
     }
 
-    @Override public void removeAddressLoadCompleteState() {
+    @Override
+    public void removeAddressLoadCompleteState() {
         BitherjApplication.mContext.removeStickyBroadcast(new Intent(ACTION_ADDRESS_LOAD_COMPLETE_STATE));
     }
 
-    @Override public void sendConnectedChangeBroadcast(String connectedChangeBroadcast, boolean isConnected) {
+    @Override
+    public void sendConnectedChangeBroadcast(String connectedChangeBroadcast, boolean isConnected) {
         Intent intent = new Intent(connectedChangeBroadcast);
         intent.putExtra(connectedChangeBroadcast, isConnected);
         BitherjApplication.mContext.sendBroadcast(intent);
