@@ -16,8 +16,6 @@
 
 package net.bither.bitherj.utils;
 
-import android.util.Log;
-
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
@@ -54,7 +52,7 @@ public class PrivateKeyUtil {
             if (ecKey.isCompressed()) {
                 flag += IS_COMPRESSED_FLAG;
             }
-            if (ecKey.isFromXranmon()) {
+            if (ecKey.isFromXRandom()) {
                 flag += IS_FROMXRANDOM_FLAG;
             }
             saltBytes[0] = (byte) flag;
@@ -113,7 +111,7 @@ public class PrivateKeyUtil {
         } else {
             byte[] pub = ECKey.publicKeyFromPrivate(new BigInteger(1, decrypted), isCompressed);
             ecKey = new ECKey(epk, pub, crypter);
-            ecKey.setFromXranmon(isFromXRandom);
+            ecKey.setFromXRandom(isFromXRandom);
         }
         PrivateKeyUtil.wipeDecryptedPrivateKey(decrypted);
         return new DecryptedECKey(ecKey, privateKeyText);

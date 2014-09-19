@@ -109,7 +109,7 @@ public class ECKey implements Serializable {
     // TODO: Redesign this class to use consistent internals and more efficient serialization.
     private BigInteger priv;
     private byte[] pub;
-    private boolean isFromXranmon;
+    private boolean isFromXRandom = false;
     // Creation time of the key in seconds since the epoch, or zero if the key was deserialized from a version that did
     // not have this field.
     private long creationTimeSeconds;
@@ -314,12 +314,12 @@ public class ECKey implements Serializable {
         return pub.length == 33;
     }
 
-    public boolean isFromXranmon() {
-        return isFromXranmon;
+    public boolean isFromXRandom() {
+        return isFromXRandom;
     }
 
-    public void setFromXranmon(boolean fromXranmon) {
-        isFromXranmon = fromXranmon;
+    public void setFromXRandom(boolean fromXRandom) {
+        isFromXRandom = fromXRandom;
     }
 
     public String toString() {
