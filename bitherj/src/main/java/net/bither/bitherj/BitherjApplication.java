@@ -30,6 +30,7 @@ import net.bither.bitherj.db.BitherjDatabaseHelper;
 import net.bither.bitherj.core.NotificationService;
 
 import net.bither.bitherj.utils.DynamicWire;
+
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
@@ -55,6 +56,15 @@ public abstract class BitherjApplication extends Application {
 
     @Override
     public void onCreate() {
+        mContext = getApplicationContext();
+        mDbHelper = new BitherjDatabaseHelper(mContext);
+        WireNotificationService.wire(new NotificationAndroidImpl());
+        WireBitherjApp.wire(new DynamicWire<ISetting>() {
+            @Override
+            public ISetting get() {
+                return getInitialize();
+            }
+        });
         WireBitherjAppEnv.wire(new BitherjAppEnv() {
             @Override
             public void addressIsReady() {
@@ -87,18 +97,10 @@ public abstract class BitherjApplication extends Application {
                 return true;
             }
         });
-        WireNotificationService.wire(new NotificationAndroidImpl());
-        WireBitherjApp.wire(new DynamicWire<ISetting>() {
-            @Override
-            public ISetting get() {
-                return getInitialize();
-            }
-        });
 
-        mContext = getApplicationContext();
         setting = initSetting();
         random = initRandom();
-        mDbHelper = new BitherjDatabaseHelper(mContext);
+
         super.onCreate();
         NOTIFICATION_SERVICE.removeAddressLoadCompleteState();
         initApp();
@@ -113,6 +115,7 @@ public abstract class BitherjApplication extends Application {
     public static ISetting getInitialize() {
         return setting;
     }
+
     public abstract ISetting initSetting();
 
     public abstract IRandom initRandom();
