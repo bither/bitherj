@@ -16,7 +16,6 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.utils.Utils;
 
 import org.spongycastle.util.encoders.Hex;
@@ -112,11 +111,6 @@ public class BitherjSettings {
 
     public static final boolean ensureMinRequiredFee = true;
 
-
-    public static long getFeeBase() {
-        return BitherjApplication.setting.getTransactionFeeMode().getMinFeeSatoshi();
-    }
-
     public enum TransactionFeeMode {
         Normal(10000), Low(1000);
 
@@ -131,4 +125,3 @@ public class BitherjSettings {
         }
     }
 }
-

@@ -20,15 +20,16 @@ import android.app.ActivityManager;
 import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import net.bither.bitherj.android.util.NotificationAndroidImpl;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.crypto.IRandom;
 
 import net.bither.bitherj.db.BitherjDatabaseHelper;
-import net.bither.bitherj.utils.NotificationUtil;
+import net.bither.bitherj.core.NotificationService;
 
+import net.bither.bitherj.utils.DynamicWire;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
@@ -44,6 +45,8 @@ import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 
 public abstract class BitherjApplication extends Application {
+    public static NotificationService NOTIFICATION_SERVICE;
+    public static DynamicWire<ISetting> BITHERJ_APP;
     public static Context mContext;
     public static SQLiteOpenHelper mDbHelper;
     public static boolean addressIsReady = false;
@@ -52,14 +55,53 @@ public abstract class BitherjApplication extends Application {
 
     @Override
     public void onCreate() {
+        WireBitherjAppEnv.wire(new BitherjAppEnv() {
+            @Override
+            public void addressIsReady() {
+                addressIsReady = true;
+            }
+
+            @Override
+            public File getPrivateDir(String dirName) {
+                File file = mContext.getDir(dirName, Context.MODE_PRIVATE);
+                if (!file.exists()) {
+                    file.mkdirs();
+                }
+                return file;
+            }
+
+            @Override
+            public boolean isApplicationRunInForeground() {
+                if (mContext == null) {
+                    return false;
+                }
+                ActivityManager am = (ActivityManager) mContext
+                        .getSystemService(Context.ACTIVITY_SERVICE);
+                List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(1);
+                if (tasks != null && !tasks.isEmpty()) {
+                    ComponentName topActivity = tasks.get(0).topActivity;
+                    if (!topActivity.getPackageName().equals(mContext.getPackageName())) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+        WireNotificationService.wire(new NotificationAndroidImpl());
+        WireBitherjApp.wire(new DynamicWire<ISetting>() {
+            @Override
+            public ISetting get() {
+                return getInitialize();
+            }
+        });
+
         mContext = getApplicationContext();
         setting = initSetting();
         random = initRandom();
         mDbHelper = new BitherjDatabaseHelper(mContext);
         super.onCreate();
-        NotificationUtil.removeAddressLoadCompleteState();
+        NOTIFICATION_SERVICE.removeAddressLoadCompleteState();
         initApp();
-
     }
 
     @Override
@@ -68,6 +110,9 @@ public abstract class BitherjApplication extends Application {
         mDbHelper.close();
     }
 
+    public static ISetting getInitialize() {
+        return setting;
+    }
     public abstract ISetting initSetting();
 
     public abstract IRandom initRandom();
@@ -133,35 +178,5 @@ public abstract class BitherjApplication extends Application {
                 initLogging();
             }
         }).start();
-    }
-
-    public static void sendConnectedChangeBroadcast(String connectedChangeBroadcast, boolean isConnected) {
-        Intent intent = new Intent(connectedChangeBroadcast);
-        intent.putExtra(connectedChangeBroadcast, isConnected);
-        BitherjApplication.mContext.sendBroadcast(intent);
-    }
-
-    public static File getPrivateDir(String dirName) {
-        File file = BitherjApplication.mContext.getDir(dirName, Context.MODE_PRIVATE);
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-        return file;
-    }
-
-    public static boolean isApplicationRunInForeground() {
-        if (mContext == null) {
-            return false;
-        }
-        ActivityManager am = (ActivityManager) mContext
-                .getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(1);
-        if (tasks != null && !tasks.isEmpty()) {
-            ComponentName topActivity = tasks.get(0).topActivity;
-            if (!topActivity.getPackageName().equals(mContext.getPackageName())) {
-                return false;
-            }
-        }
-        return true;
     }
 }
