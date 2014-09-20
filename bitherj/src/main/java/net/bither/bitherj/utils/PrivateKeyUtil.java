@@ -39,9 +39,6 @@ public class PrivateKeyUtil {
     private static final int IS_COMPRESSED_FLAG = 1;
     private static final int IS_FROMXRANDOM_FLAG = 2;
 
-    public static final String QR_CODE_SPLIT = ":";
-
-    private static final String QR_CODE_LETTER = "*";
 
     public static String getPrivateKeyString(ECKey ecKey) {
         String salt = "1";
@@ -60,8 +57,8 @@ public class PrivateKeyUtil {
             salt = Utils.bytesToHexString(saltBytes);
         }
         EncryptedPrivateKey key = ecKey.getEncryptedPrivateKey();
-        return Utils.bytesToHexString(key.getEncryptedBytes()) + QR_CODE_SPLIT + Utils
-                .bytesToHexString(key.getInitialisationVector()) + QR_CODE_SPLIT + salt;
+        return Utils.bytesToHexString(key.getEncryptedBytes()) + QRCodeUtil.QR_CODE_SPLIT + Utils
+                .bytesToHexString(key.getInitialisationVector()) + QRCodeUtil.QR_CODE_SPLIT + salt;
     }
 
     public static ECKey getECKeyFromSingleString(String str, CharSequence password) {
@@ -79,7 +76,7 @@ public class PrivateKeyUtil {
     }
 
     private static DecryptedECKey decryptionECKey(String str, CharSequence password, boolean needPrivteKeyText) throws Exception {
-        String[] strs = str.split(QR_CODE_SPLIT);
+        String[] strs = str.split(QRCodeUtil.QR_CODE_SPLIT);
         if (strs.length != 3) {
             log.error("decryption: PrivateKeyFromString format error");
             return null;
@@ -134,7 +131,7 @@ public class PrivateKeyUtil {
     }
 
     public static String changePassword(String str, CharSequence oldpassword, CharSequence newPassword) {
-        String[] strs = str.split(QR_CODE_SPLIT);
+        String[] strs = str.split(QRCodeUtil.QR_CODE_SPLIT);
         if (strs.length != 3) {
             log.error("changePassword: PrivateKeyFromString format error");
             return null;
@@ -164,7 +161,8 @@ public class PrivateKeyUtil {
         PrivateKeyUtil.wipeDecryptedPrivateKey(decrypted);
         PrivateKeyUtil.wipeDecryptedPrivateKey(newDecrypted);
         return Utils.bytesToHexString(encryptedPrivateKey.getEncryptedBytes())
-                + QR_CODE_SPLIT + Utils.bytesToHexString(encryptedPrivateKey.getInitialisationVector()) + QR_CODE_SPLIT + strs[2];
+                + QRCodeUtil.QR_CODE_SPLIT + Utils.bytesToHexString(encryptedPrivateKey.getInitialisationVector())
+                + QRCodeUtil.QR_CODE_SPLIT + strs[2];
 
     }
 
@@ -178,14 +176,14 @@ public class PrivateKeyUtil {
             Address address = privates.get(i);
             content += address.getEncryptPrivKey();
             if (i < privates.size() - 1) {
-                content += QR_CODE_SPLIT;
+                content += QRCodeUtil.QR_CODE_SPLIT;
             }
         }
         return content;
     }
 
     public static List<Address> getECKeysFromString(String str, CharSequence password) {
-        String[] strs = str.split(QR_CODE_SPLIT);
+        String[] strs = QRCodeUtil.splitString(str);
         if (strs.length % 3 != 0) {
             log.error("Backup: PrivateKeyFromString format error");
             return null;
@@ -195,8 +193,8 @@ public class PrivateKeyUtil {
              i < strs.length;
              i += 3) {
 
-            String encryptedString = strs[i] + QR_CODE_SPLIT + strs[i + 1]
-                    + QR_CODE_SPLIT + strs[i + 2];
+            String encryptedString = strs[i] + QRCodeUtil.QR_CODE_SPLIT + strs[i + 1]
+                    + QRCodeUtil.QR_CODE_SPLIT + strs[i + 2];
             ECKey key = getECKeyFromSingleString(encryptedString, password);
 
             if (key == null) {
