@@ -68,6 +68,14 @@ public class QRCodeUtil {
 
     }
 
+    public static String getNewVersionEncryptPrivKey(String encryptPrivKey) {
+        if (encryptPrivKey.contains(OLD_QR_CODE_SPLIT)) {
+            return encryptPrivKey.replace(OLD_QR_CODE_SPLIT, QR_CODE_SPLIT);
+        } else {
+            return encryptPrivKey;
+        }
+    }
+
     public static String encodeQrCodeString(String text) {
         return text.toUpperCase(Locale.US);
     }

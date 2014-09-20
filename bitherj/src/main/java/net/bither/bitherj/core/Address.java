@@ -239,7 +239,7 @@ public class Address implements Comparable<Address> {
         String watchOnlyContent = Utils.format("%s:%s:%s%s",
                 Utils.bytesToHexString(this.pubKey), getSyncCompleteString(),
                 Long.toString(new Date().getTime()), getXRandomString());
-        log.debug("address content "+watchOnlyContent);
+        log.debug("address content " + watchOnlyContent);
         Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
     }
 
@@ -278,12 +278,13 @@ public class Address implements Comparable<Address> {
                 String privateKeyFullFileName = Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
                         Utils.getPrivateDir(), getAddress());
                 this.encryptPrivKey = Utils.readFile(new File(privateKeyFullFileName));
-                return this.encryptPrivKey;
-
-            } else {
-                return this.encryptPrivKey;
+                if (this.encryptPrivKey == null) {
+                    //todo backup?
+                }
+                //dispaly new version qrcode
+                this.encryptPrivKey = QRCodeUtil.getNewVersionEncryptPrivKey(this.encryptPrivKey);
             }
-
+            return this.encryptPrivKey;
         } else {
             return null;
         }
