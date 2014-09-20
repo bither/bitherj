@@ -31,9 +31,9 @@ public class QRCodeUtil {
 
     public static String[] splitString(String str) {
         if (oldVerifyQrcodeTransport(str)) {
-            return oldSplitString(str);
-        } else {
             return str.split(OLD_QR_CODE_SPLIT);
+        } else {
+            return str.split(QR_CODE_SPLIT);
         }
     }
 
@@ -68,26 +68,7 @@ public class QRCodeUtil {
 
     }
 
-    public static int indexOfOfSplitChar(String str) {
-        int indexOfSplit;
-        if (oldVerifyQrcodeTransport(str)) {
-            indexOfSplit = str.indexOf(OLD_QR_CODE_SPLIT);
-        } else {
-            indexOfSplit = str.indexOf(QR_CODE_SPLIT);
-        }
-        return indexOfSplit;
-    }
-
     public static String encodeQrCodeString(String text) {
-//        Pattern pattern = Pattern.compile("[A-Z]");
-//        Matcher matcher = pattern.matcher(text);
-//        StringBuffer sb = new StringBuffer();
-//        while (matcher.find()) {
-//            String letter = matcher.group(0);
-//            matcher.appendReplacement(sb, OLD_QR_CODE_LETTER + letter);
-//        }
-//        matcher.appendTail(sb);
-
         return text.toUpperCase(Locale.US);
     }
 
@@ -154,13 +135,6 @@ public class QRCodeUtil {
         }
 
     }
-
-
-    private static String[] oldSplitString(String str) {
-        String[] stringArray = str.split(OLD_QR_CODE_SPLIT);
-        return stringArray;
-    }
-
 
     private static String oldDecodeQrCodeString(String formatString) {
         formatString = formatString.toLowerCase(Locale.US);
