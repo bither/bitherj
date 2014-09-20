@@ -19,6 +19,7 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.BitherjAppEnv;
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.db.TxProvider;
+import net.bither.bitherj.utils.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -171,9 +172,12 @@ public class AddressManager {
                     String publicKey = strings[0];
                     int isSyncComplete = Integer.valueOf(strings[1]);
                     long createTime = Long.valueOf(strings[2]);
-                    int isFromXRandom = Integer.valueOf(strings[3]);
+                    boolean isFromXRandom = false;
+                    if (strings.length == 4) {
+                        isFromXRandom = Utils.compareString(strings[3], QRCodeUtil.XRANDOM_FLAG);
+                    }
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
-                            , isSyncComplete == 1, isFromXRandom == 1, true);
+                            , isSyncComplete == 1, isFromXRandom, true);
                     this.privKeyAddresses.add(add);
                 }
             }
@@ -196,9 +200,12 @@ public class AddressManager {
                     String publicKey = strings[0];
                     int isSyncComplete = Integer.valueOf(strings[1]);
                     long createTime = Long.valueOf(strings[2]);
-                    int isFromXRandom = Integer.valueOf(strings[3]);
+                    boolean isFromXRandom = false;
+                    if (strings.length == 4) {
+                        isFromXRandom = Utils.compareString(strings[3], QRCodeUtil.XRANDOM_FLAG);
+                    }
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
-                            , isSyncComplete == 1, isFromXRandom == 1, false);
+                            , isSyncComplete == 1, isFromXRandom, false);
                     this.watchOnlyAddresses.add(add);
                 }
             }

@@ -37,8 +37,18 @@ public class QRCodeUtil {
         }
     }
 
+    public static int indexOfOfPasswordSeed(String str) {
+        int indexOfSplit;
+        if (str.indexOf(OLD_QR_CODE_SPLIT) >= 0) {
+            indexOfSplit = str.indexOf(OLD_QR_CODE_SPLIT);
+        } else {
+            indexOfSplit = str.indexOf(QR_CODE_SPLIT);
+        }
+        return indexOfSplit;
+    }
+
     public static int indexOfOfSplitChar(String str) {
-        int indexOfSplit = 0;
+        int indexOfSplit;
         if (oldVerifyQrcodeTransport(str)) {
             indexOfSplit = str.indexOf(OLD_QR_CODE_SPLIT);
         } else {
@@ -151,5 +161,4 @@ public class QRCodeUtil {
         }
         return true;
     }
-
 }

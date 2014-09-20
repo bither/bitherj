@@ -23,6 +23,7 @@ import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
+import net.bither.bitherj.utils.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -234,7 +235,7 @@ public class Address implements Comparable<Address> {
     private void savePubKey(String dir) throws IOException {
         String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME
                 , dir, getAddress());
-        String watchOnlyContent = Utils.format("%s:%s:%s:%s",
+        String watchOnlyContent = Utils.format("%s:%s:%s%s",
                 Utils.bytesToHexString(this.pubKey), getSyncCompleteString(),
                 Long.toString(new Date().getTime()), getXRandomString());
         Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
@@ -245,7 +246,7 @@ public class Address implements Comparable<Address> {
     }
 
     private String getXRandomString() {
-        return isFromXRandom() ? "1" : "0";
+        return isFromXRandom() ? ":" + QRCodeUtil.XRANDOM_FLAG : "";
     }
 
 
