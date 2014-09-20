@@ -239,7 +239,7 @@ public class BlockChain {
         int rollbackBlockNo = 0;
         if (Arrays.equals(first.getBlockPrev(), this.getLastBlock().getBlockHash())) {
             prev = this.getLastBlock();
-        } else if (BlockProvider.getInstance().getMainChainBlock(first.getBlockHash()) != null) {
+        } else if (BlockProvider.getInstance().getMainChainBlock(first.getBlockPrev()) != null) {
             prev = this.getSameParent(this.getLastBlock(), first);
             rollbackBlockNo = prev.getBlockNo();
         }
