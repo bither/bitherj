@@ -884,7 +884,9 @@ public class ECKey implements Serializable {
         final byte[] privKeyBytes = getPrivKeyBytes();
         checkState(privKeyBytes != null, "Private key is not available");
         EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(privKeyBytes, aesKey);
-        return new ECKey(encryptedPrivateKey, getPubKey(), keyCrypter);
+        ECKey ecKey = new ECKey(encryptedPrivateKey, getPubKey(), keyCrypter);
+        ecKey.setFromXRandom(this.isFromXRandom);
+        return ecKey;
     }
 
     /**

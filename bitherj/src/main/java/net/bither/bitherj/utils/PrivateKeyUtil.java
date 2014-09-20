@@ -76,7 +76,7 @@ public class PrivateKeyUtil {
     }
 
     private static DecryptedECKey decryptionECKey(String str, CharSequence password, boolean needPrivteKeyText) throws Exception {
-        String[] strs = str.split(QRCodeUtil.QR_CODE_SPLIT);
+        String[] strs = QRCodeUtil.splitOfPasswordSeed(str);
         if (strs.length != 3) {
             log.error("decryption: PrivateKeyFromString format error");
             return null;
@@ -131,7 +131,7 @@ public class PrivateKeyUtil {
     }
 
     public static String changePassword(String str, CharSequence oldpassword, CharSequence newPassword) {
-        String[] strs = str.split(QRCodeUtil.QR_CODE_SPLIT);
+        String[] strs = QRCodeUtil.splitOfPasswordSeed(str);
         if (strs.length != 3) {
             log.error("changePassword: PrivateKeyFromString format error");
             return null;
@@ -183,7 +183,7 @@ public class PrivateKeyUtil {
     }
 
     public static List<Address> getECKeysFromString(String str, CharSequence password) {
-        String[] strs = QRCodeUtil.splitString(str);
+        String[] strs = QRCodeUtil.splitOfPasswordSeed(str);
         if (strs.length % 3 != 0) {
             log.error("Backup: PrivateKeyFromString format error");
             return null;

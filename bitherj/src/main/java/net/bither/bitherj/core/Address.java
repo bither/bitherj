@@ -77,6 +77,7 @@ public class Address implements Comparable<Address> {
         this.pubKey = pubKey;
         this.hasPrivKey = !Utils.isEmpty(encryptString);
         this.updateBalance();
+        this.isFromXRandom = isFromXRandom;
     }
 
     public int txCount() {
@@ -238,6 +239,7 @@ public class Address implements Comparable<Address> {
         String watchOnlyContent = Utils.format("%s:%s:%s%s",
                 Utils.bytesToHexString(this.pubKey), getSyncCompleteString(),
                 Long.toString(new Date().getTime()), getXRandomString());
+        log.debug("address content "+watchOnlyContent);
         Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
     }
 
