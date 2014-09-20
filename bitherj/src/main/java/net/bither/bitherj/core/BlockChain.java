@@ -240,7 +240,7 @@ public class BlockChain {
         if (Arrays.equals(first.getBlockPrev(), this.getLastBlock().getBlockHash())) {
             prev = this.getLastBlock();
         } else if (BlockProvider.getInstance().getMainChainBlock(first.getBlockPrev()) != null) {
-            prev = this.getSameParent(this.getLastBlock(), first);
+            prev = this.getSameParent(first, this.getLastBlock());
             rollbackBlockNo = prev.getBlockNo();
         }
         if (prev == null) {
