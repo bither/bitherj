@@ -224,7 +224,11 @@ public class Base58 {
     //added by jjz (bither)
     public static String hexToBase58(String hex) {
         byte[] bytes = Utils.hexStringToByteArray(hex);
-        String address = encode(bytes);
+        byte[] checksum = copyOfRange(Utils.doubleDigest(bytes), 0, 4);
+        byte[] result = new byte[bytes.length + checksum.length];
+        System.arraycopy(bytes, 0, result, 0, bytes.length);
+        System.arraycopy(checksum, 0, result, bytes.length, 4);
+        String address = encode(result);
         return address;
     }
 
