@@ -47,6 +47,18 @@ public class QRCodeUtil {
         return indexOfSplit;
     }
 
+    public static String getAddressFromPasswordSeed(String str) {
+        if (str.indexOf(OLD_QR_CODE_SPLIT) >= 0) {
+            int index = str.indexOf(OLD_QR_CODE_SPLIT);
+            return str.substring(0, index);
+        } else {
+            int index = str.indexOf(QR_CODE_SPLIT);
+            return Base58.hexToBase58(str.substring(0, index));
+        }
+
+
+    }
+
     public static String[] splitOfPasswordSeed(String str) {
         if (str.indexOf(OLD_QR_CODE_SPLIT) >= 0) {
             return str.split(OLD_QR_CODE_SPLIT);
