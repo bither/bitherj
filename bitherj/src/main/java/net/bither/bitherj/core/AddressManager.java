@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -100,12 +101,27 @@ public class AddressManager {
     public boolean addAddress(Address address) {
         synchronized (lock) {
             try {
+                long sortTime = new Date().getTime();
                 if (address.hasPrivKey) {
                     address.savePrivateKey();
-                    address.savePubKey();
+                    if (getPrivKeyAddresses().size() > 0) {
+                        long firstSortTime = getPrivKeyAddresses().get(0).getmSortTime()
+                                + getPrivKeyAddresses().size();
+                        if (sortTime < firstSortTime) {
+                            sortTime = firstSortTime;
+                        }
+                    }
+                    address.savePubKey(sortTime);
                     privKeyAddresses.add(0, address);
                 } else {
-                    address.savePubKey();
+                    if (getWatchOnlyAddresses().size() > 0) {
+                        long firstSortTime = getWatchOnlyAddresses().get(0).getmSortTime()
+                                + getWatchOnlyAddresses().size();
+                        if (sortTime < firstSortTime) {
+                            sortTime = firstSortTime;
+                        }
+                    }
+                    address.savePubKey(sortTime);
                     watchOnlyAddresses.add(0, address);
                 }
 

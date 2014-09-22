@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,17 +54,17 @@ public class Address implements Comparable<Address> {
     protected boolean hasPrivKey;
 
     protected boolean syncComplete = false;
-    private long createTime;
+    private long mSortTime;
     private long balance = 0;
     private boolean isFromXRandom;
 
-    public Address(String address, byte[] pubKey, long createTime,
+    public Address(String address, byte[] pubKey, long sortTime,
                    boolean isSyncComplete, boolean isFromXRandom, boolean hasPrivKey) {
         this.hasPrivKey = hasPrivKey;
         this.encryptPrivKey = null;
         this.address = address;
         this.pubKey = pubKey;
-        this.createTime = createTime;
+        this.mSortTime = sortTime;
         this.syncComplete = isSyncComplete;
         this.isFromXRandom = isFromXRandom;
         this.updateBalance();
@@ -102,7 +101,7 @@ public class Address implements Comparable<Address> {
 
     @Override
     public int compareTo(@Nonnull Address address) {
-        return (int) (this.getCreateTime() - address.getCreateTime());
+        return -1 * Long.valueOf(getmSortTime()).compareTo(Long.valueOf(address.getmSortTime()));
     }
 
     public void updateBalance() {
@@ -224,24 +223,44 @@ public class Address implements Comparable<Address> {
         Utils.writeFile(this.encryptPrivKey, new File(privateKeyFullFileName));
     }
 
-    public void savePubKey() throws IOException {
+    public void savePubKey(long sortTime) throws IOException {
         if (hasPrivKey()) {
-            savePubKey(Utils.getPrivateDir().getAbsolutePath());
+            savePubKey(Utils.getPrivateDir().getAbsolutePath(), sortTime);
         } else {
-            savePubKey(Utils.getWatchOnlyDir().getAbsolutePath());
+            savePubKey(Utils.getWatchOnlyDir().getAbsolutePath(), sortTime);
         }
 
     }
 
-    private void savePubKey(String dir) throws IOException {
+    private void savePubKey(String dir, long sortTime) throws IOException {
+        this.mSortTime = sortTime;
         String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME
                 , dir, getAddress());
         String watchOnlyContent = Utils.format("%s:%s:%s%s",
                 Utils.bytesToHexString(this.pubKey), getSyncCompleteString(),
-                Long.toString(new Date().getTime()), getXRandomString());
+                Long.toString(this.mSortTime), getXRandomString());
         log.debug("address content " + watchOnlyContent);
         Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
     }
+
+    public void updatePubkey() throws IOException {
+        if (hasPrivKey()) {
+            updatePubKey(Utils.getPrivateDir().getAbsolutePath());
+        } else {
+            updatePubKey(Utils.getWatchOnlyDir().getAbsolutePath());
+        }
+    }
+
+    private void updatePubKey(String dir) throws IOException {
+        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME
+                , dir, getAddress());
+        String watchOnlyContent = Utils.format("%s:%s:%s%s",
+                Utils.bytesToHexString(this.pubKey), getSyncCompleteString(),
+                Long.toString(this.mSortTime), getXRandomString());
+        log.debug("address content " + watchOnlyContent);
+        Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
+    }
+
 
     private String getSyncCompleteString() {
         return isSyncComplete() ? "1" : "0";
@@ -268,8 +287,8 @@ public class Address implements Comparable<Address> {
         return false;
     }
 
-    public long getCreateTime() {
-        return createTime;
+    public long getmSortTime() {
+        return mSortTime;
     }
 
     public String getEncryptPrivKey() {
