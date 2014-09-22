@@ -328,6 +328,7 @@ public class Tx extends Message implements Comparable<Tx> {
                     return out.getOutAddress();
                 }
             }
+            return getOuts().get(0).getOutAddress();
         }
         return null;
     }
