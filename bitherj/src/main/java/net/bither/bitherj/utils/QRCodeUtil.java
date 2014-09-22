@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 public class QRCodeUtil {
     public static final String QR_CODE_SPLIT = "/";
     public static final String XRANDOM_FLAG = "+";
-    private static final String OLD_QR_CODE_SPLIT = ":";
+    public static final String OLD_QR_CODE_SPLIT = ":";
     private static final int MAX_QRCODE_SIZE = 328;
 
 
