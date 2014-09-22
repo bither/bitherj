@@ -70,7 +70,7 @@ public class Peer extends PeerSocketHandler {
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
     private static final int TimeOutDelay = 5000;
 
-    enum State {
+    public enum State {
         Disconnected, Connecting, Connected
     }
 
@@ -146,7 +146,7 @@ public class Peer extends PeerSocketHandler {
             log.info("peer[{}:{}] call connect", this.peerAddress.getHostAddress(), this.peerPort);
             state = State.Connecting;
             if (!NioClientManager.instance().isRunning()) {
-                if(NioClientManager.instance().startAndWait() != Service.State.RUNNING){
+                if (NioClientManager.instance().startAndWait() != Service.State.RUNNING) {
                     NioClientManager.instance().startUpError();
                 }
             }
@@ -359,7 +359,7 @@ public class Peer extends PeerSocketHandler {
                     "" + items.size() + " is too many items, max is " + MAX_GETDATA_HASHES);
             return;
         }
-        if(!bloomFilterSent){
+        if (!bloomFilterSent) {
             log.info("Peer {} received inv. But we didn't send bloomfilter. Ignore");
             return;
         }
@@ -373,18 +373,18 @@ public class Peer extends PeerSocketHandler {
             }
             switch (type) {
                 case Transaction:
-                        Sha256Hash big = new Sha256Hash(hash);
-                        if (!txHashSha256Hashs.contains(big)) {
-                            txHashSha256Hashs.add(big);
-                        }
+                    Sha256Hash big = new Sha256Hash(hash);
+                    if (!txHashSha256Hashs.contains(big)) {
+                        txHashSha256Hashs.add(big);
+                    }
                     break;
                 case Block:
                 case FilteredBlock:
 //                    if(PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) {
-                        Sha256Hash bigBlock = new Sha256Hash(hash);
-                        if (!blockHashSha256Hashs.contains(bigBlock)) {
-                            blockHashSha256Hashs.add(bigBlock);
-                        }
+                    Sha256Hash bigBlock = new Sha256Hash(hash);
+                    if (!blockHashSha256Hashs.contains(bigBlock)) {
+                        blockHashSha256Hashs.add(bigBlock);
+                    }
 //                    }
                     break;
             }
@@ -408,7 +408,7 @@ public class Peer extends PeerSocketHandler {
         knownTxHashes.addAll(txHashSha256Hashs);
 
         if (txHashSha256Hashs.size() + blockHashSha256Hashs.size() > 0) {
-            if(PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) {
+            if (PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) {
                 sendGetDataMessageWithTxHashesAndBlockHashes(txHashSha256Hashs, blockHashSha256Hashs);
 
                 // Each merkle block the remote peer sends us is followed by a set of tx messages for
@@ -501,7 +501,7 @@ public class Peer extends PeerSocketHandler {
                 PeerManager.instance().relayedBlock(this, block);
             }
         }
-        if(currentBlockHashes.size() == 0){
+        if (currentBlockHashes.size() == 0) {
             sendGetBlocksMessage(Arrays.asList(new byte[][]{block.getBlockHash(), BlockChain.getInstance().getBlockLocatorArray().get(0)}), null);
         }
     }
@@ -542,12 +542,12 @@ public class Peer extends PeerSocketHandler {
         } else {
             log.info("peer[{}:{}] receive tx {}", this.peerAddress.getHostAddress(),
                     this.peerPort, Utils.hashToString(tx.getTxHash()));
-            if(needToRequestDependencyDict.get(new Sha256Hash(tx.getTxHash())) == null || needToRequestDependencyDict.get(new Sha256Hash(tx.getTxHash())).size() == 0){
-                if(AddressManager.getInstance().isTxRelated(tx)){
+            if (needToRequestDependencyDict.get(new Sha256Hash(tx.getTxHash())) == null || needToRequestDependencyDict.get(new Sha256Hash(tx.getTxHash())).size() == 0) {
+                if (AddressManager.getInstance().isTxRelated(tx)) {
                     unrelatedTxRelayCount = 0;
                 } else {
                     unrelatedTxRelayCount++;
-                    if(unrelatedTxRelayCount > MAX_UNRELATED_TX_RELAY_COUNT){
+                    if (unrelatedTxRelayCount > MAX_UNRELATED_TX_RELAY_COUNT) {
                         exceptionCaught(new Exception("Peer " + getPeerAddress().getHostAddress() + " is junking us. Drop it."));
                         return;
                     }
@@ -619,11 +619,11 @@ public class Peer extends PeerSocketHandler {
                 if (tx != null) {
                     sendMessage(tx);
                     log.info("Peer {} asked for tx: {} , found {}", getPeerAddress()
-                            .getHostAddress(), Utils.hashToString(item.hash),
+                                    .getHostAddress(), Utils.hashToString(item.hash),
                             "hash: " + Utils.hashToString(tx.getTxHash()) + ", " +
                                     "content: " + Utils.bytesToHexString(tx.bitcoinSerialize()));
                     continue;
-                }else{
+                } else {
                     log.info("Peer {} asked for tx: {} , not found", getPeerAddress().getHostAddress(), Utils.hashToString(item.hash));
                 }
             }
@@ -729,14 +729,14 @@ public class Peer extends PeerSocketHandler {
         // Iterates over a snapshot of the list, so we can run unlocked here.
         if (m.getNonce() == nonce) {
             if (pingStartTime > 0) {
-                if(pingTime > 0){
+                if (pingTime > 0) {
                     pingTime = (long) (pingTime * 0.5f + (new Date().getTime() - pingStartTime) * 0.5f);
                 } else {
                     pingTime = new Date().getTime() - pingStartTime;
                 }
                 pingStartTime = 0;
             }
-            log.info("Peer " + getPeerAddress().getHostAddress() +" receive pong, ping time: " + pingTime);
+            log.info("Peer " + getPeerAddress().getHostAddress() + " receive pong, ping time: " + pingTime);
         }
     }
 
@@ -1007,15 +1007,15 @@ public class Peer extends PeerSocketHandler {
     }
 
     // This may be wrong. Do not rely on it.
-    public long getDisplayLastBlockHeight(){
+    public long getDisplayLastBlockHeight() {
         return versionLastBlockHeight + incrementalBlockHeight;
     }
 
-    public int getClientVersion(){
+    public int getClientVersion() {
         return version;
     }
 
-    public String getSubVersion(){
+    public String getSubVersion() {
         return userAgent;
     }
 
@@ -1033,7 +1033,7 @@ public class Peer extends PeerSocketHandler {
 
             this.synchronising = synchronising;
         } else if (!synchronising && this.synchronising) {
-            incrementalBlockHeight = BlockChain.getInstance().getLastBlock().getBlockNo() - (int)this.getVersionLastBlockHeight();
+            incrementalBlockHeight = BlockChain.getInstance().getLastBlock().getBlockNo() - (int) this.getVersionLastBlockHeight();
             synchronisingBlockCount = 0;
 
             this.synchronising = synchronising;
