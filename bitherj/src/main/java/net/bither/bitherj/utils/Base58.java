@@ -215,14 +215,14 @@ public class Base58 {
     }
 
     //added by jjz (bither)
-    public static String bas58ToHex(String address) throws AddressFormatException {
+    public static String bas58ToHexWithAddress(String address) throws AddressFormatException {
         byte[] bytes = Base58.decodeChecked(address);
         String hex = Utils.bytesToHexString(bytes);
         return hex;
     }
 
     //added by jjz (bither)
-    public static String hexToBase58(String hex) {
+    public static String hexToBase58WithAddress(String hex) {
         byte[] bytes = Utils.hexStringToByteArray(hex);
         byte[] checksum = copyOfRange(Utils.doubleDigest(bytes), 0, 4);
         byte[] result = new byte[bytes.length + checksum.length];

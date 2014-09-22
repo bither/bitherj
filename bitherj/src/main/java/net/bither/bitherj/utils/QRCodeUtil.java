@@ -53,7 +53,7 @@ public class QRCodeUtil {
             return str.substring(0, index);
         } else {
             int index = str.indexOf(QR_CODE_SPLIT);
-            return Base58.hexToBase58(str.substring(0, index));
+            return Base58.hexToBase58WithAddress(str.substring(0, index));
         }
 
 
