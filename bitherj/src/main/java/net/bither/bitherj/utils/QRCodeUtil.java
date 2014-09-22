@@ -30,7 +30,7 @@ public class QRCodeUtil {
 
 
     public static String[] splitString(String str) {
-        if (oldVerifyQrcodeTransport(str)) {
+        if (str.indexOf(OLD_QR_CODE_SPLIT) >= 0) {
             return str.split(OLD_QR_CODE_SPLIT);
         } else {
             return str.split(QR_CODE_SPLIT);
