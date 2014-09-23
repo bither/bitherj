@@ -196,12 +196,7 @@ public class PeerManager {
     }
 
     public List<Peer> getConnectedPeers() {
-        List<Peer> peerList = new ArrayList<Peer>();
-        for (Peer peer : connectedPeers) {
-            peerList.add(peer);
-
-        }
-        return peerList;
+        return new ArrayList<Peer>(connectedPeers);
     }
 
     private HashSet<Peer> bestPeers() {
