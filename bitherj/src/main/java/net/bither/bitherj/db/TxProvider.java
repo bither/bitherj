@@ -88,7 +88,8 @@ public class TxProvider {
             while (c.moveToNext()) {
                 In inItem = applyCursorIn(c);
                 Tx tx = txDict.get(new Sha256Hash(inItem.getTxHash()));
-                tx.getIns().add(inItem);
+                if (tx != null)
+                    tx.getIns().add(inItem);
             }
             c.close();
 
@@ -98,7 +99,8 @@ public class TxProvider {
             while (c.moveToNext()) {
                 Out out = applyCursorOut(c);
                 Tx tx = txDict.get(new Sha256Hash(out.getTxHash()));
-                tx.getOuts().add(out);
+                if (tx != null)
+                    tx.getOuts().add(out);
             }
             c.close();
 
