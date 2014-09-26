@@ -221,4 +221,8 @@ public class NioClientManager extends AbstractExecutionThreadService implements
             }
         }
     }
+
+    public void onDestroy(){
+        instance = null;
+    }
 }
