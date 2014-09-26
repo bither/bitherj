@@ -315,6 +315,75 @@ public class Block extends Message {
                     receivedDifficulty.toString(16) + " vs " + newDifficulty.toString(16));
     }
 
+    public void verifyDifficultyFromPreviousBlock(Block prev, int transitionTime) {
+        // checkState(lock.isHeldByCurrentThread());
+
+        // Is this supposed to be a difficulty transition point?
+        if ((prev.getBlockNo() + 1) % BitherjSettings.BLOCK_DIFFICULTY_INTERVAL != 0) {
+
+            // TODO: Refactor this hack after 0.5 is released and we stop supporting deserialization compatibility.
+            // This should be a method of the NetworkParameters, which should in turn be using singletons and a subclass
+            // for each network type. Then each network can define its own difficulty transition rules.
+//            if (Settings.params.getId().equals(NetworkParameters.ID_TESTNET) && nextBlock.getTime().after(testnetDiffDate)) {
+//                checkTestnetDifficulty(storedPrev, prev, nextBlock);
+//                return;
+//            }
+
+            // No ... so check the difficulty didn't actually change.
+            if (this.getBlockBits() != prev.getBlockBits())
+                throw new VerificationException("Unexpected change in difficulty at height " + prev.getBlockNo() +
+                        ": " + Long.toHexString(this.getBlockBits()) + " vs " +
+                        Long.toHexString(prev.getBlockBits()));
+            return;
+        }
+
+        // We need to find a block far back in the chain. It's OK that this is expensive because it only occurs every
+        // two weeks after the initial block chain download.
+//        long now = System.currentTimeMillis();
+//        Block cursor = get(prev.getBlockHash());
+//        for (int i = 0; i < BitherjSettings.BLOCK_DIFFICULTY_INTERVAL - 1; i++) {
+//            if (cursor == null) {
+//                // This should never happen. If it does, it means we are following an incorrect or busted chain.
+//                throw new VerificationException(
+//                        "Difficulty transition point but we did not find a way back to the genesis block.");
+//            }
+//            cursor = get(cursor.getBlockPrev());
+//        }
+//        long elapsed = System.currentTimeMillis() - now;
+//        if (elapsed > 50)
+//            log.info("Difficulty transition traversal took {}msec", elapsed);
+//
+//        Block blockIntervalAgo = cursor;
+//        int timespan = (int) (prev.getBlockTime() - blockIntervalAgo.getBlockTime());
+        int timespan = (int) (prev.getBlockTime() - transitionTime);
+        // Limit the adjustment step.
+        final int targetTimespan = BitherjSettings.TARGET_TIMESPAN;
+        if (timespan < targetTimespan / 4)
+            timespan = targetTimespan / 4;
+        if (timespan > targetTimespan * 4)
+            timespan = targetTimespan * 4;
+
+        BigInteger newDifficulty = Utils.decodeCompactBits(prev.getBlockBits());
+        newDifficulty = newDifficulty.multiply(BigInteger.valueOf(timespan));
+        newDifficulty = newDifficulty.divide(BigInteger.valueOf(targetTimespan));
+
+        if (newDifficulty.compareTo(BitherjSettings.proofOfWorkLimit) > 0) {
+            // log.info("Difficulty hit proof of work limit: {}", newDifficulty.toString(16));
+            newDifficulty = BitherjSettings.proofOfWorkLimit;
+        }
+
+        int accuracyBytes = (int) (this.getBlockBits() >>> 24) - 3;
+        BigInteger receivedDifficulty = this.getDifficultyTargetAsInteger();
+
+        // The calculated difficulty is to a higher precision than received, so reduce here.
+        BigInteger mask = BigInteger.valueOf(0xFFFFFFL).shiftLeft(accuracyBytes * 8);
+        newDifficulty = newDifficulty.and(mask);
+
+        if (newDifficulty.compareTo(receivedDifficulty) != 0)
+            throw new VerificationException("Network provided difficulty bits do not match what was calculated: " +
+                    receivedDifficulty.toString(16) + " vs " + newDifficulty.toString(16));
+    }
+
     @Nullable
     public Block get(byte[] hash) {
         return BlockProvider.getInstance().getBlock(hash);

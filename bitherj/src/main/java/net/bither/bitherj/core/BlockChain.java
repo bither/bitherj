@@ -252,10 +252,30 @@ public class BlockChain {
             }
             block.setBlockNo(prev.getBlockNo() + 1);
             try {
-                block.verifyDifficultyFromPreviousBlock(prev);
+                int transitionTime = 0;
+                if (block.getBlockNo() % BitherjSettings.BLOCK_DIFFICULTY_INTERVAL == 0) {
+                    // We need to find a block far back in the chain. It's OK that this is expensive because it only occurs every
+                    // two weeks after the initial block chain download.
+                    long now = System.currentTimeMillis();
+                    Block cursor = first;
+                    for (int i = 0; i < BitherjSettings.BLOCK_DIFFICULTY_INTERVAL - block.getBlockNo() + first.getBlockNo(); i++) {
+                        if (cursor == null) {
+                            // This should never happen. If it does, it means we are following an incorrect or busted chain.
+                            throw new VerificationException(
+                                    "Difficulty transition point but we did not find a way back to the genesis block.");
+                        }
+                        cursor = getBlock(cursor.getBlockPrev());
+                    }
+                    long elapsed = System.currentTimeMillis() - now;
+                    if (elapsed > 50)
+                        log.info("Difficulty transition traversal took {}msec", elapsed);
+
+                    transitionTime = cursor.getBlockTime();
+                }
+                block.verifyDifficultyFromPreviousBlock(prev, transitionTime);
             }catch (Exception e){
                 e.printStackTrace();
-                break;
+                return 0;
             }
 
             block.setMain(true);
