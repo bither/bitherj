@@ -22,6 +22,7 @@ import net.bither.bitherj.ISetting;
 import net.bither.bitherj.db.PeerProvider;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.ProtocolException;
+import net.bither.bitherj.net.NioClientManager;
 import net.bither.bitherj.utils.DnsDiscovery;
 import net.bither.bitherj.utils.DynamicWire;
 import net.bither.bitherj.utils.Sha256Hash;
@@ -60,7 +61,7 @@ public class PeerManager {
     private static final int MaxPeerCount = 100;
     private static final int MaxConnectFailure = 20;
 
-    private static PeerManager instance = new PeerManager();
+    private static PeerManager instance;
 
     private PeerManagerExecutorService executor;
     private boolean running;
@@ -86,6 +87,9 @@ public class PeerManager {
     private Timer syncTimeOutTimer;
 
     public static final PeerManager instance() {
+        if(instance == null){
+            instance = new PeerManager();
+        }
         return instance;
     }
 
@@ -940,5 +944,10 @@ public class PeerManager {
         } else {
             return BitherjSettings.MaxPeerBackgroundConnections;
         }
+    }
+
+    public void onDestroy(){
+        instance = null;
+        NioClientManager.instance().onDestroy();
     }
 }

@@ -103,7 +103,7 @@ public class PrivateKeyUtil {
         ECKey ecKey = null;
         String privateKeyText = null;
         if (needPrivteKeyText) {
-            DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(decrypted, true);
+            DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(decrypted, isCompressed);
             privateKeyText = dumpedPrivateKey.toString();
         } else {
             byte[] pub = ECKey.publicKeyFromPrivate(new BigInteger(1, decrypted), isCompressed);
