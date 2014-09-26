@@ -22,6 +22,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import net.bither.bitherj.BitherjApplication;
+import net.bither.bitherj.core.BitherjSettings;
 import net.bither.bitherj.core.Block;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
@@ -293,15 +294,7 @@ public class BlockProvider {
                 }
             }
             c.close();
-            int interval = 2016;
-            int minBlockCount = 100;
-            int left = maxBlockNo % interval;
-            int blockNo = 0;
-            if (left > minBlockCount) {
-                blockNo = maxBlockNo - left;
-            } else {
-                blockNo = maxBlockNo - left - interval;
-            }
+            int blockNo = (maxBlockNo - BitherjSettings.BLOCK_DIFFICULTY_INTERVAL) - maxBlockNo % BitherjSettings.BLOCK_DIFFICULTY_INTERVAL;
             db = this.mDb.getWritableDatabase();
             db.delete(BitherjDatabaseHelper.Tables.BLOCKS, "block_no<?", new String[]{Integer.toString(blockNo)});
         }
