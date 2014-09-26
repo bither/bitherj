@@ -300,7 +300,7 @@ public class BlockProvider {
             if (left > minBlockCount) {
                 blockNo = maxBlockNo - left;
             } else {
-                blockNo = maxBlockNo = left - interval;
+                blockNo = maxBlockNo - left - interval;
             }
             db = this.mDb.getWritableDatabase();
             db.delete(BitherjDatabaseHelper.Tables.BLOCKS, "block_no<?", new String[]{Integer.toString(blockNo)});
