@@ -168,12 +168,12 @@ class ConnectionHandler implements MessageWriteTarget {
             setWriteOps();
         } catch (IOException e) {
             lock.unlock();
-            log.error("Error writing message to connection, closing connection", e);
+            log.error("Error writing message to connection, closing connection. IOException");
             closeConnection();
             throw e;
         } catch (CancelledKeyException e) {
             lock.unlock();
-            log.error("Error writing message to connection, closing connection", e);
+            log.error("Error writing message to connection, closing connection. CancelledKeyException");
             closeConnection();
             throw new IOException(e);
         }

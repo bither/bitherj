@@ -16,9 +16,10 @@
 
 package net.bither.bitherj.core;
 
+import net.bither.bitherj.BitherjAppEnv;
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.db.TxProvider;
-import net.bither.bitherj.utils.NotificationUtil;
+import net.bither.bitherj.utils.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -28,11 +29,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class AddressManager {
+
     private static final Logger log = LoggerFactory.getLogger(AddressManager.class);
     private final byte[] lock = new byte[0];
     private static AddressManager uniqueInstance = new AddressManager();
@@ -45,8 +48,8 @@ public class AddressManager {
         synchronized (lock) {
             initPrivateKeyList();
             initWatchOnlyList();
-            BitherjApplication.addressIsReady = true;
-            NotificationUtil.sendBroadcastAddressLoadCompleteState();
+            Utils.BITHERJ_APP_ENV.addressIsReady();
+            BitherjApplication.NOTIFICATION_SERVICE.sendBroadcastAddressLoadCompleteState();
         }
     }
 
@@ -74,9 +77,9 @@ public class AddressManager {
         return needAdd;
     }
 
-    public boolean isTxRelated(Tx tx){
+    public boolean isTxRelated(Tx tx) {
         for (Address address : this.getAllAddresses()) {
-            if(isAddressContainsTx(address.getAddress(), tx)){
+            if (isAddressContainsTx(address.getAddress(), tx)) {
                 return true;
             }
         }
@@ -98,12 +101,27 @@ public class AddressManager {
     public boolean addAddress(Address address) {
         synchronized (lock) {
             try {
+                long sortTime = new Date().getTime();
                 if (address.hasPrivKey) {
                     address.savePrivateKey();
-                    address.savePubKey();
+                    if (getPrivKeyAddresses().size() > 0) {
+                        long firstSortTime = getPrivKeyAddresses().get(0).getmSortTime()
+                                + getPrivKeyAddresses().size();
+                        if (sortTime < firstSortTime) {
+                            sortTime = firstSortTime;
+                        }
+                    }
+                    address.savePubKey(sortTime);
                     privKeyAddresses.add(0, address);
                 } else {
-                    address.savePubKey();
+                    if (getWatchOnlyAddresses().size() > 0) {
+                        long firstSortTime = getWatchOnlyAddresses().get(0).getmSortTime()
+                                + getWatchOnlyAddresses().size();
+                        if (sortTime < firstSortTime) {
+                            sortTime = firstSortTime;
+                        }
+                    }
+                    address.savePubKey(sortTime);
                     watchOnlyAddresses.add(0, address);
                 }
 
@@ -170,8 +188,12 @@ public class AddressManager {
                     String publicKey = strings[0];
                     int isSyncComplete = Integer.valueOf(strings[1]);
                     long createTime = Long.valueOf(strings[2]);
+                    boolean isFromXRandom = false;
+                    if (strings.length == 4) {
+                        isFromXRandom = Utils.compareString(strings[3], QRCodeUtil.XRANDOM_FLAG);
+                    }
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
-                            , isSyncComplete == 1, true);
+                            , isSyncComplete == 1, isFromXRandom, true);
                     this.privKeyAddresses.add(add);
                 }
             }
@@ -194,8 +216,12 @@ public class AddressManager {
                     String publicKey = strings[0];
                     int isSyncComplete = Integer.valueOf(strings[1]);
                     long createTime = Long.valueOf(strings[2]);
+                    boolean isFromXRandom = false;
+                    if (strings.length == 4) {
+                        isFromXRandom = Utils.compareString(strings[3], QRCodeUtil.XRANDOM_FLAG);
+                    }
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
-                            , isSyncComplete == 1, false);
+                            , isSyncComplete == 1, isFromXRandom, false);
                     this.watchOnlyAddresses.add(add);
                 }
             }

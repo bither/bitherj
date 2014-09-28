@@ -19,10 +19,10 @@ package net.bither.bitherj.test.crypto;
 
 import junit.framework.Assert;
 
+import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.crypto.EncryptedPrivateKey;
 import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.KeyCrypterScrypt;
-import net.bither.bitherj.crypto.URandom;
 import net.bither.bitherj.test.ApplicationTest;
 import net.bither.bitherj.utils.Utils;
 
@@ -49,13 +49,12 @@ public class KeyCrypterScryptTest extends ApplicationTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        byte[] salt = new byte[KeyCrypterScrypt.SALT_LENGTH];
-        URandom.nextBytes(salt);
+        byte[] salt = BitherjApplication.random.nextBytes(KeyCrypterScrypt.SALT_LENGTH);
         this.salt = salt;
 //        Protos.ScryptParameters.Builder scryptParametersBuilder = Protos.ScryptParameters.newBuilder().setSalt(ByteString.copyFrom(salt));
 //        scryptParameters = scryptParametersBuilder.build();
 
-//        BriefLogFormatter.init();
+
     }
 
     public void testKeyCrypterGood1() throws KeyCrypterException {
@@ -82,7 +81,7 @@ public class KeyCrypterScryptTest extends ApplicationTest {
     public void testKeyCrypterGood2() throws Exception {
         KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt(salt);
 
-        System.out.print("EncrypterDecrypterTest: Trying random UUIDs for plainText and passwords :");
+        System.out.print("EncrypterDecrypterTest: Trying  UUIDs for plainText and passwords :");
         int numberOfTests = 16;
         for (int i = 0; i < numberOfTests; i++) {
             // Create a UUID as the plaintext and use another for the password.

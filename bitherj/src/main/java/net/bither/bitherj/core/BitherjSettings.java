@@ -16,7 +16,6 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.utils.Utils;
 
 import org.spongycastle.util.encoders.Hex;
@@ -101,6 +100,7 @@ public class BitherjSettings {
     public static final int BLOCK_DIFFICULTY_INTERVAL = 2016;
     public static final int BITCOIN_REFERENCE_BLOCK_HEIGHT = 250000;
     public static final int MaxPeerConnections = 6;
+    public static final int MaxPeerBackgroundConnections = 2;
 
     public static enum AppMode {
         COLD, HOT
@@ -110,11 +110,6 @@ public class BitherjSettings {
     public static final String WATCH_ONLY_FILE_NAME = "%s/%s.pub";
 
     public static final boolean ensureMinRequiredFee = true;
-
-
-    public static long getFeeBase() {
-        return BitherjApplication.getInitialize().getTransactionFeeMode().getMinFeeSatoshi();
-    }
 
     public enum TransactionFeeMode {
         Normal(10000), Low(1000);
@@ -130,4 +125,3 @@ public class BitherjSettings {
         }
     }
 }
-

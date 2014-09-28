@@ -129,6 +129,17 @@ public class Sha256Hash implements Serializable, Comparable {
         return new Sha256Hash(bytes);
     }
 
+    public byte[] firstFourBytes() {
+        byte[] ret = new byte[4];
+        System.arraycopy(bytes, 0, ret, 0, 4);
+        return ret;
+    }
+
+    public BigInteger toPositiveBigInteger() {
+        return new BigInteger(1, bytes);
+    }
+
+
     @Override
     public int compareTo(Object o) {
         checkArgument(o instanceof Sha256Hash);

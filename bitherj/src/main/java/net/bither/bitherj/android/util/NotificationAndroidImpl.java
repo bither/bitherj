@@ -14,29 +14,27 @@
 * limitations under the License.
 */
 
-package net.bither.bitherj.utils;
+package net.bither.bitherj.android.util;
 
 import android.content.Intent;
 
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.core.Address;
+import net.bither.bitherj.core.NotificationService;
 import net.bither.bitherj.core.Tx;
+import net.bither.bitherj.utils.Utils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NotificationUtil {
-    private static final Logger log = LoggerFactory.getLogger(NotificationUtil.class);
-
-    private NotificationUtil() {
-
-    }
+public class NotificationAndroidImpl implements NotificationService {
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     public static final String ACTION_SYNC_FROM_SPV_FINISHED = "net.bither.bitherj.SPVFinishedNotification";
     public static final String ACTION_SYNC_LAST_BLOCK_CHANGE = "net.bither.bitherj.LastBlockChangedNotification";
     public static final String ACTION_ADDRESS_BALANCE = "net.bither.bitherj.balance";
     public static final String ACTION_PEER_STATE = "net.bither.bitherj.peer_state";
     public static final String ACTION_ADDRESS_LOAD_COMPLETE_STATE = "net.bither.bitherj.load_complete";
-
 
     public static final String ACTION_PEER_STATE_NUM_PEERS = "num_peers";
 
@@ -45,25 +43,29 @@ public class NotificationUtil {
     public static final String MESSAGE_TX = "tx";
     public static final String MESSAGE_TX_NOTIFICATION_TYPE = "tx_notification_type";
 
-    public static void sendBroadcastSyncSPVFinished(boolean isFinished) {
+    @Override
+    public void sendBroadcastSyncSPVFinished(boolean isFinished) {
         if (isFinished) {
-            BitherjApplication.getInitialize().setBitherjDoneSyncFromSpv(isFinished);
+            BitherjApplication.setting.setBitherjDoneSyncFromSpv(isFinished);
             final Intent broadcast = new Intent(ACTION_SYNC_FROM_SPV_FINISHED);
             BitherjApplication.mContext.sendStickyBroadcast(broadcast);
         }
     }
 
-    public static void removeBroadcastSyncSPVFinished() {
+    @Override
+    public void removeBroadcastSyncSPVFinished() {
         BitherjApplication.mContext.removeStickyBroadcast(new Intent(
                 ACTION_SYNC_FROM_SPV_FINISHED));
     }
 
-    public static void sendLastBlockChange() {
+    @Override
+    public void sendLastBlockChange() {
         Intent broadcast = new Intent(ACTION_SYNC_LAST_BLOCK_CHANGE);
         BitherjApplication.mContext.sendBroadcast(broadcast);
     }
 
-    public static void notificatTx(Address address, Tx tx, Tx.TxNotificationType txNotificationType, long deltaBalance) {
+    @Override
+    public void notificatTx(Address address, Tx tx, Tx.TxNotificationType txNotificationType, long deltaBalance) {
         final Intent broadcast = new Intent(ACTION_ADDRESS_BALANCE);
         broadcast.putExtra(MESSAGE_ADDRESS, address.getAddress());
         broadcast.putExtra(MESSAGE_DELTA_BALANCE, deltaBalance);
@@ -79,25 +81,35 @@ public class NotificationUtil {
 
     }
 
-    public static void sendBroadcastPeerState(final int numPeers) {
+    @Override
+    public void sendBroadcastPeerState(final int numPeers) {
         final Intent broadcast = new Intent(ACTION_PEER_STATE);
 
         broadcast.putExtra(ACTION_PEER_STATE_NUM_PEERS, numPeers);
         BitherjApplication.mContext.sendStickyBroadcast(broadcast);
     }
 
-    public static void removeBroadcastPeerState() {
+    @Override
+    public void removeBroadcastPeerState() {
         BitherjApplication.mContext.removeStickyBroadcast(new Intent(
                 ACTION_PEER_STATE));
     }
 
-    public static void sendBroadcastAddressLoadCompleteState() {
+    @Override
+    public void sendBroadcastAddressLoadCompleteState() {
         final Intent broadcast = new Intent(ACTION_ADDRESS_LOAD_COMPLETE_STATE);
         BitherjApplication.mContext.sendStickyBroadcast(broadcast);
     }
 
-    public static void removeAddressLoadCompleteState() {
+    @Override
+    public void removeAddressLoadCompleteState() {
         BitherjApplication.mContext.removeStickyBroadcast(new Intent(ACTION_ADDRESS_LOAD_COMPLETE_STATE));
     }
 
+    @Override
+    public void sendConnectedChangeBroadcast(String connectedChangeBroadcast, boolean isConnected) {
+        Intent intent = new Intent(connectedChangeBroadcast);
+        intent.putExtra(connectedChangeBroadcast, isConnected);
+        BitherjApplication.mContext.sendBroadcast(intent);
+    }
 }

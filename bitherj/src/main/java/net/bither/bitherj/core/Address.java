@@ -22,8 +22,8 @@ import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.script.ScriptBuilder;
-import net.bither.bitherj.utils.NotificationUtil;
 import net.bither.bitherj.utils.PrivateKeyUtil;
+import net.bither.bitherj.utils.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,6 +42,7 @@ import javax.annotation.Nonnull;
 
 
 public class Address implements Comparable<Address> {
+    public static NotificationService NOTIFICATION_SERVICE;
     private static final Logger log = LoggerFactory.getLogger(Address.class);
 
     public static final String KEY_SPLIT_STRING = ":";
@@ -54,26 +54,29 @@ public class Address implements Comparable<Address> {
     protected boolean hasPrivKey;
 
     protected boolean syncComplete = false;
-    private long createTime;
+    private long mSortTime;
     private long balance = 0;
+    private boolean isFromXRandom;
 
-    public Address(String address, byte[] pubKey, long createTime,
-                   boolean isSyncComplete, boolean hasPrivKey) {
+    public Address(String address, byte[] pubKey, long sortTime,
+                   boolean isSyncComplete, boolean isFromXRandom, boolean hasPrivKey) {
         this.hasPrivKey = hasPrivKey;
         this.encryptPrivKey = null;
         this.address = address;
         this.pubKey = pubKey;
-        this.createTime = createTime;
+        this.mSortTime = sortTime;
         this.syncComplete = isSyncComplete;
+        this.isFromXRandom = isFromXRandom;
         this.updateBalance();
     }
 
-    public Address(String address, byte[] pubKey, String encryptString) {
+    public Address(String address, byte[] pubKey, String encryptString, boolean isFromXRandom) {
         this.encryptPrivKey = encryptString;
         this.address = address;
         this.pubKey = pubKey;
         this.hasPrivKey = !Utils.isEmpty(encryptString);
         this.updateBalance();
+        this.isFromXRandom = isFromXRandom;
     }
 
     public int txCount() {
@@ -98,7 +101,7 @@ public class Address implements Comparable<Address> {
 
     @Override
     public int compareTo(@Nonnull Address address) {
-        return (int) (this.getCreateTime() - address.getCreateTime());
+        return -1 * Long.valueOf(getmSortTime()).compareTo(Long.valueOf(address.getmSortTime()));
     }
 
     public void updateBalance() {
@@ -165,7 +168,7 @@ public class Address implements Comparable<Address> {
 
     public void notificatTx(Tx tx, Tx.TxNotificationType txNotificationType) {
         long deltaBalance = getDeltaBalance();
-        NotificationUtil.notificatTx(this, tx, txNotificationType, deltaBalance);
+        NOTIFICATION_SERVICE.notificatTx(this, tx, txNotificationType, deltaBalance);
     }
 
     public void setBlockHeight(List<byte[]> txHashes, int height) {
@@ -205,6 +208,14 @@ public class Address implements Comparable<Address> {
         this.syncComplete = isSyncComplete;
     }
 
+    public boolean isFromXRandom() {
+        return this.isFromXRandom;
+    }
+
+    public void setFromXRandom(boolean isFromXRAndom) {
+        this.isFromXRandom = isFromXRAndom;
+    }
+
 
     public void savePrivateKey() throws IOException {
         String privateKeyFullFileName = Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
@@ -212,26 +223,51 @@ public class Address implements Comparable<Address> {
         Utils.writeFile(this.encryptPrivKey, new File(privateKeyFullFileName));
     }
 
-    public void savePubKey() throws IOException {
+    public void savePubKey(long sortTime) throws IOException {
         if (hasPrivKey()) {
-            savePubKey(Utils.getPrivateDir().getAbsolutePath());
+            savePubKey(Utils.getPrivateDir().getAbsolutePath(), sortTime);
         } else {
-            savePubKey(Utils.getWatchOnlyDir().getAbsolutePath());
+            savePubKey(Utils.getWatchOnlyDir().getAbsolutePath(), sortTime);
         }
 
     }
 
-    private void savePubKey(String dir) throws IOException {
+    private void savePubKey(String dir, long sortTime) throws IOException {
+        this.mSortTime = sortTime;
         String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME
                 , dir, getAddress());
-        String watchOnlyContent = Utils.format("%s:%s:%s",
+        String watchOnlyContent = Utils.format("%s:%s:%s%s",
                 Utils.bytesToHexString(this.pubKey), getSyncCompleteString(),
-                Long.toString(new Date().getTime()));
+                Long.toString(this.mSortTime), getXRandomString());
+        log.debug("address content " + watchOnlyContent);
         Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
     }
 
+    public void updatePubkey() throws IOException {
+        if (hasPrivKey()) {
+            updatePubKey(Utils.getPrivateDir().getAbsolutePath());
+        } else {
+            updatePubKey(Utils.getWatchOnlyDir().getAbsolutePath());
+        }
+    }
+
+    private void updatePubKey(String dir) throws IOException {
+        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME
+                , dir, getAddress());
+        String watchOnlyContent = Utils.format("%s:%s:%s%s",
+                Utils.bytesToHexString(this.pubKey), getSyncCompleteString(),
+                Long.toString(this.mSortTime), getXRandomString());
+        log.debug("address content " + watchOnlyContent);
+        Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
+    }
+
+
     private String getSyncCompleteString() {
         return isSyncComplete() ? "1" : "0";
+    }
+
+    private String getXRandomString() {
+        return isFromXRandom() ? ":" + QRCodeUtil.XRANDOM_FLAG : "";
     }
 
 
@@ -251,8 +287,8 @@ public class Address implements Comparable<Address> {
         return false;
     }
 
-    public long getCreateTime() {
-        return createTime;
+    public long getmSortTime() {
+        return mSortTime;
     }
 
     public String getEncryptPrivKey() {
@@ -261,12 +297,13 @@ public class Address implements Comparable<Address> {
                 String privateKeyFullFileName = Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
                         Utils.getPrivateDir(), getAddress());
                 this.encryptPrivKey = Utils.readFile(new File(privateKeyFullFileName));
-                return this.encryptPrivKey;
-
-            } else {
-                return this.encryptPrivKey;
+                if (this.encryptPrivKey == null) {
+                    //todo backup?
+                }
+                //dispaly new version qrcode
+                this.encryptPrivKey = QRCodeUtil.getNewVersionEncryptPrivKey(this.encryptPrivKey);
             }
-
+            return this.encryptPrivKey;
         } else {
             return null;
         }

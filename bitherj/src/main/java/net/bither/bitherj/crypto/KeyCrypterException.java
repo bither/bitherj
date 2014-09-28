@@ -17,7 +17,7 @@
 package net.bither.bitherj.crypto;
 
 /**
- * <p>Exception to provide the following to {@link EncrypterDecrypterOpenSSL}:</p>
+ * <p>Exception to provide the following to {@link }:</p>
  * <ul>
  * <li>Provision of encryption / decryption exception</li>
  * </ul>

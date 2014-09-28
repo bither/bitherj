@@ -86,11 +86,11 @@ public class ScriptTest extends ApplicationTest {
     }
 
     public void testMultiSig() throws Exception {
-        XRandom xRandom = new XRandom(new byte[32]);
-        List<ECKey> keys = Lists.newArrayList(new ECKey(xRandom), new ECKey(xRandom), new ECKey(xRandom));
+        XRandom xRandom = new XRandom(null);
+        List<ECKey> keys = Lists.newArrayList(ECKey.generateECKey(xRandom), ECKey.generateECKey(xRandom), ECKey.generateECKey(xRandom));
         assertTrue(ScriptBuilder.createMultiSigOutputScript(2, keys).isSentToMultiSig());
         assertTrue(ScriptBuilder.createMultiSigOutputScript(3, keys).isSentToMultiSig());
-        assertFalse(ScriptBuilder.createOutputScript(new ECKey(xRandom)).isSentToMultiSig());
+        assertFalse(ScriptBuilder.createOutputScript(ECKey.generateECKey(xRandom)).isSentToMultiSig());
         try {
             // Fail if we ask for more signatures than keys.
             Script.createMultiSigOutputScript(4, keys);

@@ -14,17 +14,9 @@
 * limitations under the License.
 */
 
-package net.bither.bitherj;
 
-import net.bither.bitherj.core.BitherjSettings;
+package net.bither.bitherj.utils;
 
-public interface IBitherjApp {
-    public BitherjSettings.AppMode getAppMode();
-
-    public boolean getBitherjDoneSyncFromSpv();
-
-    public void setBitherjDoneSyncFromSpv(boolean isDone);
-
-    public BitherjSettings.TransactionFeeMode getTransactionFeeMode();
-
+public interface DynamicWire<V> {
+    V get();
 }

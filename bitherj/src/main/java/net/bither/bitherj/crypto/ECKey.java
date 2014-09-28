@@ -109,6 +109,7 @@ public class ECKey implements Serializable {
     // TODO: Redesign this class to use consistent internals and more efficient serialization.
     private BigInteger priv;
     private byte[] pub;
+    private boolean isFromXRandom = false;
     // Creation time of the key in seconds since the epoch, or zero if the key was deserialized from a version that did
     // not have this field.
     private long creationTimeSeconds;
@@ -130,19 +131,21 @@ public class ECKey implements Serializable {
      * Generates an entirely new keypair. Point compression is used so the resulting public key will be 33 bytes
      * (32 for the co-ordinate and 1 byte to represent the y bit).
      */
-    public ECKey(XRandom xRandom) {
+    public static ECKey generateECKey(IRandom random) {
+
         int nBitLength = Parameters.n.bitLength();
         BigInteger d;
+        byte[] bytes;
         do {
             // Make a BigInteger from bytes to ensure that Andriod and 'classic'
             // java make the same BigIntegers from the same random source with the
             // same seed. Using BigInteger(nBitLength, random)
             // produces different results on Android compared to 'classic' java.
-            byte[] bytes = xRandom.getRandomBytes();
+            bytes = random.nextBytes(nBitLength / 8);
             bytes[0] = (byte) (bytes[0] & 0x7F); // ensure positive number
             d = new BigInteger(bytes);
         } while (d.equals(BigInteger.ZERO) || (d.compareTo(Parameters.n) >= 0));
-        priv = d;
+        BigInteger priv = d;
         // Unfortunately Bouncy Castle does not let us explicitly change a point to be compressed, even though it
         // could easily do so. We must re-build it here so the ECPoints withCompression flag can be set to true.
         Point Q = EcTools.multiply(Parameters.G, d);
@@ -151,9 +154,12 @@ public class ECKey implements Serializable {
             // Convert Q to a compressed point on the curve
             Q = new Point(Q.getCurve(), Q.getX(), Q.getY(), true);
         }
-        pub = Q.getEncoded();
+        byte[] pub = Q.getEncoded();
 
-        creationTimeSeconds = Utils.currentTimeMillis() / 1000;
+        long creationTimeSeconds = Utils.currentTimeMillis() / 1000;
+        ECKey ecKey = new ECKey(priv, pub, compressed);
+        ecKey.setCreationTimeSeconds(creationTimeSeconds);
+        return ecKey;
     }
 
     private static ECPoint compressPoint(ECPoint uncompressed) {
@@ -306,6 +312,14 @@ public class ECKey implements Serializable {
      */
     public boolean isCompressed() {
         return pub.length == 33;
+    }
+
+    public boolean isFromXRandom() {
+        return isFromXRandom;
+    }
+
+    public void setFromXRandom(boolean fromXRandom) {
+        isFromXRandom = fromXRandom;
     }
 
     public String toString() {
@@ -870,7 +884,9 @@ public class ECKey implements Serializable {
         final byte[] privKeyBytes = getPrivKeyBytes();
         checkState(privKeyBytes != null, "Private key is not available");
         EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(privKeyBytes, aesKey);
-        return new ECKey(encryptedPrivateKey, getPubKey(), keyCrypter);
+        ECKey ecKey = new ECKey(encryptedPrivateKey, getPubKey(), keyCrypter);
+        ecKey.setFromXRandom(this.isFromXRandom);
+        return ecKey;
     }
 
     /**

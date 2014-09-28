@@ -17,15 +17,15 @@
 package net.bither.bitherj.test;
 
 import net.bither.bitherj.BitherjApplication;
-import net.bither.bitherj.IBitherjApp;
+import net.bither.bitherj.ISetting;
 import net.bither.bitherj.core.BitherjSettings;
 
 public class BitherjTestApplication extends BitherjApplication {
     private boolean doneSyncFromSpv;
 
     @Override
-    public void init() {
-        mIinitialize = new IBitherjApp() {
+    public void initSetting() {
+        setting = new ISetting() {
             @Override
             public BitherjSettings.AppMode getAppMode() {
                 return BitherjSettings.AppMode.HOT;
