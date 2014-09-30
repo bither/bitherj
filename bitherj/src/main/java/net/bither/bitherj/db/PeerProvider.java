@@ -220,7 +220,7 @@ public class PeerProvider {
     }
 
     public void cleanPeers() {
-        int maxPeerSaveCnt = 1000;
+        int maxPeerSaveCnt = 12;
         String disconnectingPeerCntSql = "select count(0) cnt from peers where " +
                 "peer_connected_cnt<>1";
         int disconnectingPeerCnt = 0;
