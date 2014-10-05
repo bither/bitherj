@@ -48,6 +48,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -61,11 +62,14 @@ public class PeerManager {
     private static final int MaxPeerCount = 100;
     private static final int MaxConnectFailure = 20;
 
+    private static Object newInstanceLock= new Object();
+
     private static PeerManager instance;
 
     private PeerManagerExecutorService executor;
-    private boolean running;
-    private boolean connected;
+
+    private AtomicBoolean running;
+    private AtomicBoolean connected;
 
     private long tweak, syncStartHeight, filterUpdateHeight;
     private long lastRelayTime;
@@ -88,14 +92,18 @@ public class PeerManager {
 
     public static final PeerManager instance() {
         if(instance == null){
-            instance = new PeerManager();
+            synchronized (newInstanceLock){
+                if(instance== null) {
+                    instance = new PeerManager();
+                }
+            }
         }
         return instance;
     }
 
     private PeerManager() {
-        running = false;
-        connected = false;
+        running = new AtomicBoolean(false);
+        connected = new AtomicBoolean(false);
         connectedPeers = new HashSet<Peer>();
         abandonPeers = new HashSet<Peer>();
         txRelays = new HashMap<Sha256Hash, HashSet<Peer>>();
@@ -116,17 +124,16 @@ public class PeerManager {
     }
 
     public boolean isConnected() {
-        return connected;
+        return connected.get();
     }
 
     public boolean isRunning() {
-        return running;
+        return running.get();
     }
 
     public void start() {
-        if (!running) {
+        if (!running.getAndSet(true)) {
             log.info("peer manager start");
-            running = true;
             bloomFilter = null;
             if (this.connectFailure >= MAX_CONNECT_FAILURE_COUNT)
                 this.connectFailure = 0;
@@ -137,13 +144,11 @@ public class PeerManager {
     }
 
     public void stop() {
-        if (running) {
+        if (running.getAndSet(false)) {
             log.info("peer manager stop");
-            running = false;
-            if (connected) {
+            if (connected.getAndSet(false)) {
                 BitherjApplication.NOTIFICATION_SERVICE.removeBroadcastPeerState();
                 bloomFilter = null;
-                connected = false;
                 sendConnectedChangeBroadcast();
                 executor.getQueue().clear();
                 executor.submit(new Runnable() {
@@ -166,7 +171,7 @@ public class PeerManager {
     }
 
     private void reconnect() {
-        if (!running) {
+        if (!running.get()) {
             return;
         }
         executor.submit(new Runnable() {
@@ -277,7 +282,7 @@ public class PeerManager {
     }
 
     public void peerConnected(final Peer peer) {
-        if (running) {
+        if (running.get()) {
             if (peer.getVersionLastBlockHeight() + 10 < getLastBlockHeight()) {
                 log.warn("Peer height low abandon : " + peer
                         .getPeerAddress().getHostAddress());
@@ -289,8 +294,7 @@ public class PeerManager {
                 });
                 return;
             }
-            if (!connected) {
-                connected = true;
+            if (!connected.getAndSet(true)) {
                 sendConnectedChangeBroadcast();
             }
             log.info("Peer {} connected", peer.getPeerAddress().getHostAddress());
@@ -300,7 +304,7 @@ public class PeerManager {
                 @Override
                 public void run() {
                     peer.connectSucceed();
-                    if (connected && ((downloadingPeer != null && downloadingPeer
+                    if (connected.get() && ((downloadingPeer != null && downloadingPeer
                             .getVersionLastBlockHeight() >= peer.getVersionLastBlockHeight()) ||
                             getLastBlockHeight() >= peer.getVersionLastBlockHeight())) {
                         if (downloadingPeer != null && getLastBlockHeight() < downloadingPeer
@@ -328,7 +332,7 @@ public class PeerManager {
                         downloadingPeer.disconnect();
                     }
                     downloadingPeer = dp;
-                    connected = true;
+                    connected.set(true);
 
                     // every time a new wallet address is added, the bloom filter has to be
                     // rebuilt, and each address is only used for
@@ -415,7 +419,7 @@ public class PeerManager {
                 log.info("Peer disconnected {} , remaining {} peers , reason: " + reason,
                         peer.getPeerAddress().getHostAddress(), connectedPeers.size());
                 if (previousConnectedCount > 0 && connectedPeers.size() == 0) {
-                    connected = false;
+                    connected.set(false);
                     sendConnectedChangeBroadcast();
                 }
 
@@ -426,7 +430,7 @@ public class PeerManager {
                 }
 
                 if (downloadingPeer != null && downloadingPeer.equals(peer)) {
-                    connected = false;
+                    connected.set(false);
                     downloadingPeer.setSynchronising(false);
                     downloadingPeer = null;
                     syncStopped();
@@ -435,7 +439,7 @@ public class PeerManager {
                     }
                 }
 
-                if (!connected && connectFailure == MaxConnectFailure) {
+                if (!connected.get() && connectFailure == MaxConnectFailure) {
                     syncStartHeight = 0;
                     //TODO notify sync fail
                     log.info("connect failed {} times, we give up", connectFailure);
