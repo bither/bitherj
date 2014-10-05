@@ -137,6 +137,14 @@ public class PeerManager {
             bloomFilter = null;
             if (this.connectFailure >= MAX_CONNECT_FAILURE_COUNT)
                 this.connectFailure = 0;
+            if(connectedPeers.size() > 0){
+                for(Peer peer : connectedPeers){
+                    peer.connectError();
+                    peer.disconnect();
+                    abandonPeers.add(peer);
+                }
+                connectedPeers.clear();
+            }
             reconnect();
         } else {
             log.info("peer manager call start, but it is connected already");
