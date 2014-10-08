@@ -23,8 +23,6 @@ import net.bither.bitherj.utils.Utils;
 
 public class WireBitherjApp {
     public static void wire(DynamicWire<ISetting> bitherjApp) {
-        Utils.BITHERJ_APP = bitherjApp;
-        PeerManager.BITHERJ_APP = bitherjApp;
         BitherjApplication.BITHERJ_APP =bitherjApp;
     }
 }

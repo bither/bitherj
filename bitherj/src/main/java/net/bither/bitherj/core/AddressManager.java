@@ -16,7 +16,6 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.BitherjAppEnv;
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.utils.QRCodeUtil;
@@ -48,7 +47,7 @@ public class AddressManager {
         synchronized (lock) {
             initPrivateKeyList();
             initWatchOnlyList();
-            Utils.BITHERJ_APP_ENV.addressIsReady();
+            BitherjApplication.BITHERJ_APP_ENV.addressIsReady();
             BitherjApplication.NOTIFICATION_SERVICE.sendBroadcastAddressLoadCompleteState();
         }
     }

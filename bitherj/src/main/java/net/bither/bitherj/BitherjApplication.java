@@ -48,6 +48,8 @@ import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 public abstract class BitherjApplication extends Application {
     public static NotificationService NOTIFICATION_SERVICE;
     public static DynamicWire<ISetting> BITHERJ_APP;
+    public static BitherjAppEnv BITHERJ_APP_ENV;
+
     public static Context mContext;
     public static SQLiteOpenHelper mDbHelper;
     public static boolean addressIsReady = false;

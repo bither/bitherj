@@ -22,6 +22,7 @@ import com.google.common.primitives.Longs;
 import com.google.common.primitives.UnsignedLongs;
 
 import net.bither.bitherj.BitherjAppEnv;
+import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.ISetting;
 import net.bither.bitherj.core.BitherjSettings;
 import net.bither.bitherj.exception.AddressFormatException;
@@ -59,8 +60,7 @@ import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterrup
  * To enable debug logging from the library, run with -Dbitcoinj.logging=true on your command line.
  */
 public class Utils {
-    public static BitherjAppEnv BITHERJ_APP_ENV;
-    public static DynamicWire<ISetting> BITHERJ_APP;
+
     public static final BigInteger NEGATIVE_ONE = BigInteger.valueOf(-1);
     private static final MessageDigest digest;
 
@@ -727,7 +727,7 @@ public class Utils {
 
     //add by jjz (bither)
     public static File getWalletRomCache() {
-        return BITHERJ_APP_ENV.getPrivateDir(WALLET_ROM_CACHE);
+        return BitherjApplication.BITHERJ_APP_ENV.getPrivateDir(WALLET_ROM_CACHE);
     }
 
     //add by jjz (bither)
@@ -744,7 +744,7 @@ public class Utils {
     public static File getPrivateDir() {
         File file = getWalletRomCache();
         String dirName = WALLET_HOT;
-        if (BITHERJ_APP.get().getAppMode() == BitherjSettings.AppMode.COLD) {
+        if (BitherjApplication.BITHERJ_APP.get().getAppMode() == BitherjSettings.AppMode.COLD) {
             dirName = WALLET_COLD;
         }
         file = new File(file, dirName);
@@ -851,6 +851,6 @@ public class Utils {
     }
 
     public static long getFeeBase() {
-        return BITHERJ_APP.get().getTransactionFeeMode().getMinFeeSatoshi();
+        return BitherjApplication.BITHERJ_APP.get().getTransactionFeeMode().getMinFeeSatoshi();
     }
 }

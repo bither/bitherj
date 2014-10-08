@@ -53,7 +53,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class PeerManager {
-    public static DynamicWire<ISetting> BITHERJ_APP;
+
     public static final String ConnectedChangeBroadcast = PeerManager.class.getPackage()
             .getName() + ".peer_manager_connected_change";
     private static final Logger log = LoggerFactory.getLogger(PeerManager.class);
@@ -62,7 +62,7 @@ public class PeerManager {
     private static final int MaxPeerCount = 100;
     private static final int MaxConnectFailure = 20;
 
-    private static Object newInstanceLock= new Object();
+    private static Object newInstanceLock = new Object();
 
     private static PeerManager instance;
 
@@ -91,9 +91,9 @@ public class PeerManager {
     private Timer syncTimeOutTimer;
 
     public static final PeerManager instance() {
-        if(instance == null){
-            synchronized (newInstanceLock){
-                if(instance== null) {
+        if (instance == null) {
+            synchronized (newInstanceLock) {
+                if (instance == null) {
                     instance = new PeerManager();
                 }
             }
@@ -137,8 +137,8 @@ public class PeerManager {
             bloomFilter = null;
             if (this.connectFailure >= MAX_CONNECT_FAILURE_COUNT)
                 this.connectFailure = 0;
-            if(connectedPeers.size() > 0){
-                for(Peer peer : connectedPeers){
+            if (connectedPeers.size() > 0) {
+                for (Peer peer : connectedPeers) {
                     peer.connectError();
                     peer.disconnect();
                     abandonPeers.add(peer);
@@ -825,7 +825,7 @@ public class PeerManager {
     }
 
     public boolean doneSyncFromSPV() {
-        return BITHERJ_APP.get().getBitherjDoneSyncFromSpv();
+        return BitherjApplication.BITHERJ_APP.get().getBitherjDoneSyncFromSpv();
     }
 
     private void sendConnectedChangeBroadcast() {
@@ -951,14 +951,14 @@ public class PeerManager {
     }
 
     private int getMaxPeerConnect() {
-        if (Utils.BITHERJ_APP_ENV.isApplicationRunInForeground()) {
+        if (BitherjApplication.BITHERJ_APP_ENV.isApplicationRunInForeground()) {
             return BitherjSettings.MaxPeerConnections;
         } else {
             return BitherjSettings.MaxPeerBackgroundConnections;
         }
     }
 
-    public void onDestroy(){
+    public void onDestroy() {
         instance = null;
         NioClientManager.instance().onDestroy();
     }
