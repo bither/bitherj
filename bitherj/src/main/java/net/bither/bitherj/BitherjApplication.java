@@ -16,22 +16,17 @@
 
 package net.bither.bitherj;
 
-import android.app.ActivityManager;
 import android.app.Application;
-import android.content.ComponentName;
 import android.content.Context;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import net.bither.bitherj.android.util.NotificationAndroidImpl;
 import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.core.NotificationService;
 import net.bither.bitherj.crypto.IRandom;
 import net.bither.bitherj.db.BitherjDatabaseHelper;
 
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.List;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -44,10 +39,6 @@ import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 
 public abstract class BitherjApplication extends Application {
 
-    public static NotificationService NOTIFICATION_SERVICE;
-    public static ISetting BITHERJ_APP;
-
-    public static IRandom random;
 
     public static Context mContext;
     public static SQLiteOpenHelper mDbHelper;
@@ -58,11 +49,8 @@ public abstract class BitherjApplication extends Application {
     public void onCreate() {
         mContext = getApplicationContext();
         mDbHelper = new BitherjDatabaseHelper(mContext);
-        NOTIFICATION_SERVICE = new NotificationAndroidImpl();
-        BITHERJ_APP = initSetting();
-        random = initRandom();
         super.onCreate();
-        NOTIFICATION_SERVICE.removeAddressLoadCompleteState();
+        App.notificationService.removeAddressLoadCompleteState();
         initApp();
     }
 

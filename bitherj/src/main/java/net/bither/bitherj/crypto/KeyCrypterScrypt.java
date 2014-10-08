@@ -17,6 +17,7 @@ package net.bither.bitherj.crypto;
 
 import com.lambdaworks.crypto.SCrypt;
 
+import net.bither.bitherj.App;
 import net.bither.bitherj.BitherjApplication;
 
 
@@ -67,7 +68,7 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
      * Encryption/ Decryption using default parameters and a random salt
      */
     public KeyCrypterScrypt() {
-        mSalt = BitherjApplication.random.nextBytes(SALT_LENGTH);
+        mSalt = App.random.nextBytes(SALT_LENGTH);
 
     }
 
@@ -118,7 +119,7 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
 
         try {
             // Generate iv - each encryption call has a different iv.
-            byte[] iv = BitherjApplication.random.nextBytes(BLOCK_LENGTH);
+            byte[] iv = App.random.nextBytes(BLOCK_LENGTH);
 
             ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, iv);
 

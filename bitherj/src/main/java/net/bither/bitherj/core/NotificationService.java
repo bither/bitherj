@@ -16,6 +16,7 @@
 package net.bither.bitherj.core;
 
 public interface NotificationService {
+
     void sendBroadcastSyncSPVFinished(boolean isFinished);
 
     void removeBroadcastSyncSPVFinished();

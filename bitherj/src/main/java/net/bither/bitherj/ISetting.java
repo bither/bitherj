@@ -21,6 +21,7 @@ import net.bither.bitherj.core.BitherjSettings;
 import java.io.File;
 
 public interface ISetting {
+
     public BitherjSettings.AppMode getAppMode();
 
     public boolean getBitherjDoneSyncFromSpv();
