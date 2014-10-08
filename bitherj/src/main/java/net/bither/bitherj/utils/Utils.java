@@ -21,9 +21,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.primitives.UnsignedLongs;
 
-import net.bither.bitherj.BitherjAppEnv;
 import net.bither.bitherj.BitherjApplication;
-import net.bither.bitherj.ISetting;
 import net.bither.bitherj.core.BitherjSettings;
 import net.bither.bitherj.exception.AddressFormatException;
 
@@ -727,7 +725,7 @@ public class Utils {
 
     //add by jjz (bither)
     public static File getWalletRomCache() {
-        return BitherjApplication.BITHERJ_APP_ENV.getPrivateDir(WALLET_ROM_CACHE);
+        return BitherjApplication.BITHERJ_APP.getPrivateDir(WALLET_ROM_CACHE);
     }
 
     //add by jjz (bither)

@@ -46,7 +46,7 @@ public class NotificationAndroidImpl implements NotificationService {
     @Override
     public void sendBroadcastSyncSPVFinished(boolean isFinished) {
         if (isFinished) {
-            BitherjApplication.setting.setBitherjDoneSyncFromSpv(isFinished);
+            BitherjApplication.BITHERJ_APP.setBitherjDoneSyncFromSpv(isFinished);
             final Intent broadcast = new Intent(ACTION_SYNC_FROM_SPV_FINISHED);
             BitherjApplication.mContext.sendStickyBroadcast(broadcast);
         }

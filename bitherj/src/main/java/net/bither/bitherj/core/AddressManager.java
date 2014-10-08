@@ -47,7 +47,7 @@ public class AddressManager {
         synchronized (lock) {
             initPrivateKeyList();
             initWatchOnlyList();
-            BitherjApplication.BITHERJ_APP_ENV.addressIsReady();
+            BitherjApplication.addressIsReady = true;
             BitherjApplication.NOTIFICATION_SERVICE.sendBroadcastAddressLoadCompleteState();
         }
     }

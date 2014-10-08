@@ -16,15 +16,12 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.BitherjAppEnv;
 import net.bither.bitherj.BitherjApplication;
-import net.bither.bitherj.ISetting;
 import net.bither.bitherj.db.PeerProvider;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.net.NioClientManager;
 import net.bither.bitherj.utils.DnsDiscovery;
-import net.bither.bitherj.utils.DynamicWire;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
@@ -951,7 +948,7 @@ public class PeerManager {
     }
 
     private int getMaxPeerConnect() {
-        if (BitherjApplication.BITHERJ_APP_ENV.isApplicationRunInForeground()) {
+        if (BitherjApplication.BITHERJ_APP.isApplicationRunInForeground()) {
             return BitherjSettings.MaxPeerConnections;
         } else {
             return BitherjSettings.MaxPeerBackgroundConnections;

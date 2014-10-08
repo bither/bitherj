@@ -24,12 +24,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import net.bither.bitherj.android.util.NotificationAndroidImpl;
 import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.crypto.IRandom;
-
-import net.bither.bitherj.db.BitherjDatabaseHelper;
 import net.bither.bitherj.core.NotificationService;
-
-import net.bither.bitherj.utils.DynamicWire;
+import net.bither.bitherj.crypto.IRandom;
+import net.bither.bitherj.db.BitherjDatabaseHelper;
 
 import org.slf4j.LoggerFactory;
 
@@ -46,15 +43,16 @@ import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 
 public abstract class BitherjApplication extends Application {
+
     public static NotificationService NOTIFICATION_SERVICE;
     public static ISetting BITHERJ_APP;
-    public static BitherjAppEnv BITHERJ_APP_ENV;
+
+    public static IRandom random;
 
     public static Context mContext;
     public static SQLiteOpenHelper mDbHelper;
     public static boolean addressIsReady = false;
-    public static ISetting setting;
-    public static IRandom random;
+
 
     @Override
     public void onCreate() {
@@ -62,38 +60,6 @@ public abstract class BitherjApplication extends Application {
         mDbHelper = new BitherjDatabaseHelper(mContext);
         NOTIFICATION_SERVICE = new NotificationAndroidImpl();
         BITHERJ_APP = initSetting();
-        BITHERJ_APP_ENV = new BitherjAppEnv() {
-            @Override
-            public void addressIsReady() {
-                addressIsReady = true;
-            }
-
-            @Override
-            public File getPrivateDir(String dirName) {
-                File file = mContext.getDir(dirName, Context.MODE_PRIVATE);
-                if (!file.exists()) {
-                    file.mkdirs();
-                }
-                return file;
-            }
-
-            @Override
-            public boolean isApplicationRunInForeground() {
-                if (mContext == null) {
-                    return false;
-                }
-                ActivityManager am = (ActivityManager) mContext
-                        .getSystemService(Context.ACTIVITY_SERVICE);
-                List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(1);
-                if (tasks != null && !tasks.isEmpty()) {
-                    ComponentName topActivity = tasks.get(0).topActivity;
-                    if (!topActivity.getPackageName().equals(mContext.getPackageName())) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        };
         random = initRandom();
         super.onCreate();
         NOTIFICATION_SERVICE.removeAddressLoadCompleteState();
@@ -106,9 +72,6 @@ public abstract class BitherjApplication extends Application {
         mDbHelper.close();
     }
 
-    public static ISetting getInitialize() {
-        return setting;
-    }
 
     public abstract ISetting initSetting();
 
