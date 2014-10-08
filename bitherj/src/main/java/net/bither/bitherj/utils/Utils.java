@@ -744,7 +744,7 @@ public class Utils {
     public static File getPrivateDir() {
         File file = getWalletRomCache();
         String dirName = WALLET_HOT;
-        if (BitherjApplication.BITHERJ_APP.get().getAppMode() == BitherjSettings.AppMode.COLD) {
+        if (BitherjApplication.BITHERJ_APP.getAppMode() == BitherjSettings.AppMode.COLD) {
             dirName = WALLET_COLD;
         }
         file = new File(file, dirName);
@@ -851,6 +851,6 @@ public class Utils {
     }
 
     public static long getFeeBase() {
-        return BitherjApplication.BITHERJ_APP.get().getTransactionFeeMode().getMinFeeSatoshi();
+        return BitherjApplication.BITHERJ_APP.getTransactionFeeMode().getMinFeeSatoshi();
     }
 }

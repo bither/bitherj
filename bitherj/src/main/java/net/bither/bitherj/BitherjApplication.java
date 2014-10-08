@@ -47,7 +47,7 @@ import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 
 public abstract class BitherjApplication extends Application {
     public static NotificationService NOTIFICATION_SERVICE;
-    public static DynamicWire<ISetting> BITHERJ_APP;
+    public static ISetting BITHERJ_APP;
     public static BitherjAppEnv BITHERJ_APP_ENV;
 
     public static Context mContext;
@@ -60,14 +60,9 @@ public abstract class BitherjApplication extends Application {
     public void onCreate() {
         mContext = getApplicationContext();
         mDbHelper = new BitherjDatabaseHelper(mContext);
-        WireNotificationService.wire(new NotificationAndroidImpl());
-        WireBitherjApp.wire(new DynamicWire<ISetting>() {
-            @Override
-            public ISetting get() {
-                return getInitialize();
-            }
-        });
-        WireBitherjAppEnv.wire(new BitherjAppEnv() {
+        NOTIFICATION_SERVICE = new NotificationAndroidImpl();
+        BITHERJ_APP = initSetting();
+        BITHERJ_APP_ENV = new BitherjAppEnv() {
             @Override
             public void addressIsReady() {
                 addressIsReady = true;
@@ -98,11 +93,8 @@ public abstract class BitherjApplication extends Application {
                 }
                 return true;
             }
-        });
-
-        setting = initSetting();
+        };
         random = initRandom();
-
         super.onCreate();
         NOTIFICATION_SERVICE.removeAddressLoadCompleteState();
         initApp();
