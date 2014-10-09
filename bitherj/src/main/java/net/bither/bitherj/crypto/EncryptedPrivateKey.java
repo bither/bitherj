@@ -19,7 +19,7 @@ import java.util.Arrays;
 
 /**
  * <p>An EncryptedPrivateKey contains the information produced after encrypting the private key bytes of an ECKey.</p>
- *
+ * <p/>
  * <p>It contains two member variables - initialisationVector and encryptedPrivateBytes. The initialisationVector is
  * a randomly chosen list of bytes that were used to initialise the AES block cipher when the private key bytes were encrypted.
  * You need these for decryption. The encryptedPrivateBytes are the result of AES encrypting the private keys using
@@ -33,6 +33,7 @@ public class EncryptedPrivateKey {
 
     /**
      * Cloning constructor.
+     *
      * @param encryptedPrivateKey EncryptedPrivateKey to clone.
      */
     public EncryptedPrivateKey(EncryptedPrivateKey encryptedPrivateKey) {
@@ -123,10 +124,10 @@ public class EncryptedPrivateKey {
      */
     public void clear() {
         if (encryptedPrivateBytes != null) {
-            Arrays.fill(encryptedPrivateBytes, (byte)0);
+            Arrays.fill(encryptedPrivateBytes, (byte) 0);
         }
         if (initialisationVector != null) {
-            Arrays.fill(initialisationVector, (byte)0);
+            Arrays.fill(initialisationVector, (byte) 0);
         }
     }
 }

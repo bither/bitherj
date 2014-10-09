@@ -18,8 +18,6 @@ package net.bither.bitherj.crypto;
 import com.lambdaworks.crypto.SCrypt;
 
 import net.bither.bitherj.AbstractApp;
-import net.bither.bitherj.AbstractApp;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -21,7 +21,6 @@
 package net.bither.bitherj.crypto.bip38;
 
 import net.bither.bitherj.utils.Sha256Hash;
-import net.bither.bitherj.utils.Utils;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;

@@ -25,11 +25,11 @@ import java.io.OutputStream;
 public class PingMessage extends Message {
     private long nonce;
     private boolean hasNonce;
-    
+
     public PingMessage(byte[] payloadBytes) throws ProtocolException {
         super(payloadBytes, 0);
     }
-    
+
     /**
      * Create a Ping with a nonce value.
      * Only use this if the remote node has a protocol version > 60000
@@ -38,7 +38,7 @@ public class PingMessage extends Message {
         this.nonce = nonce;
         this.hasNonce = true;
     }
-    
+
     /**
      * Create a Ping without a nonce value.
      * Only use this if the remote node has a protocol version <= 60000
@@ -46,7 +46,7 @@ public class PingMessage extends Message {
     public PingMessage() {
         this.hasNonce = false;
     }
-    
+
     public void bitcoinSerializeToStream(OutputStream stream) throws IOException {
         if (hasNonce)
             Utils.int64ToByteStreamLE(nonce, stream);
@@ -57,7 +57,7 @@ public class PingMessage extends Message {
         try {
             nonce = readInt64();
             hasNonce = true;
-        } catch(ProtocolException e) {
+        } catch (ProtocolException e) {
             hasNonce = false;
         }
         length = hasNonce ? 8 : 0;
@@ -66,7 +66,7 @@ public class PingMessage extends Message {
     public boolean hasNonce() {
         return hasNonce;
     }
-    
+
     public long getNonce() {
         return nonce;
     }

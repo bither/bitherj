@@ -18,7 +18,6 @@ package net.bither.bitherj.core;
 
 
 import net.bither.bitherj.db.AbstractDb;
-import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.VerificationException;
 import net.bither.bitherj.utils.Utils;
 

@@ -78,6 +78,7 @@ public class Sha256Hash implements Serializable, Comparable {
     /**
      * Returns a hash of the given files contents. Reads the file fully into memory before hashing so only use with
      * small files.
+     *
      * @throws IOException
      */
     public static Sha256Hash hashFileContents(File f) throws IOException {
@@ -144,7 +145,7 @@ public class Sha256Hash implements Serializable, Comparable {
     public int compareTo(Object o) {
         checkArgument(o instanceof Sha256Hash);
         int thisCode = this.hashCode();
-        int oCode = ((Sha256Hash)o).hashCode();
+        int oCode = ((Sha256Hash) o).hashCode();
         return thisCode > oCode ? 1 : (thisCode == oCode ? 0 : -1);
     }
 }

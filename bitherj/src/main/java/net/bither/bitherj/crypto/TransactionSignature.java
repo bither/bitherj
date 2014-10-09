@@ -32,6 +32,7 @@ public class TransactionSignature extends ECKey.ECDSASignature {
         NONE,        // 2
         SINGLE,      // 3
     }
+
     public static final byte SIGHASH_ANYONECANPAY_VALUE = (byte) 0x80;
 
     /**
@@ -42,12 +43,16 @@ public class TransactionSignature extends ECKey.ECDSASignature {
      */
     public int sighashFlags = SigHash.ALL.ordinal() + 1;
 
-    /** Constructs a signature with the given components and SIGHASH_ALL. */
+    /**
+     * Constructs a signature with the given components and SIGHASH_ALL.
+     */
     public TransactionSignature(BigInteger r, BigInteger s) {
         super(r, s);
     }
 
-    /** Constructs a transaction signature based on the ECDSA signature. */
+    /**
+     * Constructs a transaction signature based on the ECDSA signature.
+     */
     public TransactionSignature(ECKey.ECDSASignature signature, SigHash mode, boolean anyoneCanPay) {
         super(signature.r, signature.s);
         setSigHash(mode, anyoneCanPay);
@@ -64,7 +69,9 @@ public class TransactionSignature extends ECKey.ECDSASignature {
         return new TransactionSignature(val, val);
     }
 
-    /** Calculates the byte used in the protocol to represent the combination of mode and anyoneCanPay. */
+    /**
+     * Calculates the byte used in the protocol to represent the combination of mode and anyoneCanPay.
+     */
     public static int calcSigHashValue(SigHash mode, boolean anyoneCanPay) {
         int sighashFlags = mode.ordinal() + 1;
         if (anyoneCanPay)
@@ -89,25 +96,25 @@ public class TransactionSignature extends ECKey.ECDSASignature {
         if (signature.length < 9 || signature.length > 73)
             return false;
 
-        int hashType = signature[signature.length-1] & ((int)(~SIGHASH_ANYONECANPAY_VALUE));
+        int hashType = signature[signature.length - 1] & ((int) (~SIGHASH_ANYONECANPAY_VALUE));
         if (hashType < (SigHash.ALL.ordinal() + 1) || hashType > (SigHash.SINGLE.ordinal() + 1))
             return false;
 
         //                   "wrong type"                  "wrong length marker"
-        if ((signature[0] & 0xff) != 0x30 || (signature[1] & 0xff) != signature.length-3)
+        if ((signature[0] & 0xff) != 0x30 || (signature[1] & 0xff) != signature.length - 3)
             return false;
 
         int lenR = signature[3] & 0xff;
         if (5 + lenR >= signature.length || lenR == 0)
             return false;
-        int lenS = signature[5+lenR] & 0xff;
+        int lenS = signature[5 + lenR] & 0xff;
         if (lenR + lenS + 7 != signature.length || lenS == 0)
             return false;
 
         //    R value type mismatch          R value negative
-        if (signature[4-2] != 0x02 || (signature[4] & 0x80) == 0x80)
+        if (signature[4 - 2] != 0x02 || (signature[4] & 0x80) == 0x80)
             return false;
-        if (lenR > 1 && signature[4] == 0x00 && (signature[4+1] & 0x80) != 0x80)
+        if (lenR > 1 && signature[4] == 0x00 && (signature[4 + 1] & 0x80) != 0x80)
             return false; // R value excessively padded
 
         //       S value type mismatch                    S value negative
@@ -119,7 +126,9 @@ public class TransactionSignature extends ECKey.ECDSASignature {
         return true;
     }
 
-    /** Configures the sighashFlags field as appropriate. */
+    /**
+     * Configures the sighashFlags field as appropriate.
+     */
     public void setSigHash(SigHash mode, boolean anyoneCanPay) {
         sighashFlags = calcSigHashValue(mode, anyoneCanPay);
     }
@@ -155,6 +164,7 @@ public class TransactionSignature extends ECKey.ECDSASignature {
 
     /**
      * Returns a decoded signature.
+     *
      * @throws RuntimeException if the signature is invalid or unparseable in some way.
      */
     public static TransactionSignature decodeFromBitcoin(byte[] bytes, boolean requireCanonical) throws VerificationException {

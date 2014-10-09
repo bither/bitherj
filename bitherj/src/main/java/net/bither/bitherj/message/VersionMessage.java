@@ -16,7 +16,6 @@
 
 package net.bither.bitherj.message;
 
-import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.core.BitherjSettings;
 import net.bither.bitherj.core.Version;
 import net.bither.bitherj.exception.ProtocolException;

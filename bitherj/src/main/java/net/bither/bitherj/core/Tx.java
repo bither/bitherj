@@ -19,7 +19,6 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.db.AbstractDb;
-import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.exception.VerificationException;

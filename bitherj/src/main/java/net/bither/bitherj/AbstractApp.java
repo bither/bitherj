@@ -20,6 +20,7 @@ public abstract class AbstractApp {
     public static NotificationService notificationService;
     public static ISetting bitherjApp;
     public static IRandom random;
+    public static boolean addressIsReady = false;
 
     public void construct() {
         bitherjApp = initSetting();

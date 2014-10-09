@@ -40,7 +40,7 @@ public class FilteredBlockMessage extends Message {
      * The protocol version at which Bloom filtering started to be supported.
      */
     public static final int MIN_PROTOCOL_VERSION = 70000;
-//    private BlockMessage header;
+    //    private BlockMessage header;
     private Block block;
 
     // The PartialMerkleTree of transactions
@@ -102,6 +102,7 @@ public class FilteredBlockMessage extends Message {
 
     /**
      * Provide this FilteredBlock with a transaction which is in its merkle tree
+     *
      * @returns false if the tx is not relevant to this FilteredBlock
      */
     public boolean provideTransaction(Tx tx) throws VerificationException {
@@ -120,7 +121,9 @@ public class FilteredBlockMessage extends Message {
         return Collections.unmodifiableMap(associatedTransactions);
     }
 
-    /** Number of transactions in this block, before it was filtered */
+    /**
+     * Number of transactions in this block, before it was filtered
+     */
     public int getTransactionCount() {
         return merkleTree.transactionCount;
     }
