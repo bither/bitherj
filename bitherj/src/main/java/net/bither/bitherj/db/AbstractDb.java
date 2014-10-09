@@ -23,6 +23,8 @@ public abstract class AbstractDb {
 
     public void construct() {
         blockProvider = initBlockProvider();
+        peerProvider = initPeerProvider();
+        txProvider = initTxProvider();
 
     }
 
