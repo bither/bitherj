@@ -14,8 +14,22 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.crypto;
+package net.bither.bitherj;
 
-public interface IRandom {
-    public byte[] nextBytes(int length);
+public abstract class AbstractApp {
+    public static NotificationService notificationService;
+    public static ISetting BITHERJ_APP;
+    public static IRandom random;
+
+    public void construct() {
+        BITHERJ_APP = initSetting();
+        notificationService = initNotification();
+        random = initRandom();
+    }
+
+    public abstract ISetting initSetting();
+
+    public abstract IRandom initRandom();
+
+    public abstract NotificationService initNotification();
 }

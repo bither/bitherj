@@ -20,22 +20,7 @@ import android.app.Application;
 import android.content.Context;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.crypto.IRandom;
 import net.bither.bitherj.db.BitherjDatabaseHelper;
-
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.android.LogcatAppender;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.rolling.RollingFileAppender;
-import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 
 public abstract class BitherjApplication extends Application {
 
@@ -50,7 +35,6 @@ public abstract class BitherjApplication extends Application {
         mContext = getApplicationContext();
         mDbHelper = new BitherjDatabaseHelper(mContext);
         super.onCreate();
-        App.notificationService.removeAddressLoadCompleteState();
     }
 
     @Override

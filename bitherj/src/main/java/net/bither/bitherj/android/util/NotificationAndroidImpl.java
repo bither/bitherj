@@ -18,10 +18,11 @@ package net.bither.bitherj.android.util;
 
 import android.content.Intent;
 
-import net.bither.bitherj.App;
+import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.core.Address;
-import net.bither.bitherj.core.NotificationService;
+import net.bither.bitherj.NotificationService;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.utils.Utils;
 
@@ -47,7 +48,7 @@ public class NotificationAndroidImpl implements NotificationService {
     @Override
     public void sendBroadcastSyncSPVFinished(boolean isFinished) {
         if (isFinished) {
-            App.BITHERJ_APP.setBitherjDoneSyncFromSpv(isFinished);
+            AbstractApp.BITHERJ_APP.setBitherjDoneSyncFromSpv(isFinished);
             final Intent broadcast = new Intent(ACTION_SYNC_FROM_SPV_FINISHED);
             BitherjApplication.mContext.sendStickyBroadcast(broadcast);
         }

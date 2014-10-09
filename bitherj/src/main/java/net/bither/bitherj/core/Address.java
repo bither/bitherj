@@ -16,7 +16,8 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.App;
+import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.db.TxProvider;
@@ -168,7 +169,7 @@ public class Address implements Comparable<Address> {
 
     public void notificatTx(Tx tx, Tx.TxNotificationType txNotificationType) {
         long deltaBalance = getDeltaBalance();
-        App.notificationService.notificatTx(this, tx, txNotificationType, deltaBalance);
+        AbstractApp.notificationService.notificatTx(this, tx, txNotificationType, deltaBalance);
     }
 
     public void setBlockHeight(List<byte[]> txHashes, int height) {

@@ -19,7 +19,7 @@ package net.bither.bitherj.test;
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.ISetting;
 import net.bither.bitherj.core.BitherjSettings;
-import net.bither.bitherj.crypto.IRandom;
+import net.bither.bitherj.IRandom;
 
 public class BitherjTestApplication extends BitherjApplication {
     private boolean doneSyncFromSpv;

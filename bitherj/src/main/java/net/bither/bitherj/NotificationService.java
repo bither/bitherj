@@ -13,7 +13,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package net.bither.bitherj.core;
+package net.bither.bitherj;
+
+import net.bither.bitherj.core.Address;
+import net.bither.bitherj.core.Tx;
 
 public interface NotificationService {
 

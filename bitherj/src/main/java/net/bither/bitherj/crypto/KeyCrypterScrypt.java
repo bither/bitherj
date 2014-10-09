@@ -17,8 +17,8 @@ package net.bither.bitherj.crypto;
 
 import com.lambdaworks.crypto.SCrypt;
 
-import net.bither.bitherj.App;
-import net.bither.bitherj.BitherjApplication;
+import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.AbstractApp;
 
 
 import org.slf4j.Logger;
@@ -31,7 +31,6 @@ import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
 
 import java.io.Serializable;
-import java.security.SecureRandom;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -68,7 +67,7 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
      * Encryption/ Decryption using default parameters and a random salt
      */
     public KeyCrypterScrypt() {
-        mSalt = App.random.nextBytes(SALT_LENGTH);
+        mSalt = AbstractApp.random.nextBytes(SALT_LENGTH);
 
     }
 
@@ -119,7 +118,7 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
 
         try {
             // Generate iv - each encryption call has a different iv.
-            byte[] iv = App.random.nextBytes(BLOCK_LENGTH);
+            byte[] iv = AbstractApp.random.nextBytes(BLOCK_LENGTH);
 
             ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, iv);
 

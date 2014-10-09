@@ -16,23 +16,6 @@
 
 package net.bither.bitherj;
 
-import net.bither.bitherj.core.NotificationService;
-import net.bither.bitherj.crypto.IRandom;
-
-public abstract class App {
-    public static NotificationService notificationService;
-    public static ISetting BITHERJ_APP;
-    public static IRandom random;
-
-    public void construct() {
-        BITHERJ_APP = initSetting();
-        notificationService = initNotification();
-        random = initRandom();
-    }
-
-    public abstract ISetting initSetting();
-
-    public abstract IRandom initRandom();
-
-    public abstract NotificationService initNotification();
+public interface IRandom {
+    public byte[] nextBytes(int length);
 }
