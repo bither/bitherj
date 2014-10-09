@@ -107,8 +107,8 @@ public class Block extends Message {
      * Contruct a block object from the Bitcoin wire format.
      * //     * @param params NetworkParameters object.
      *
-     * @param length      The length of message if known.  Usually this is provided when deserializing of the wire
-     *                    as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
+     * @param length The length of message if known.  Usually this is provided when deserializing of the wire
+     *               as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
      * @throws net.bither.bitherj.exception.ProtocolException
      */
     public Block(byte[] payloadBytes, int length)
@@ -386,7 +386,7 @@ public class Block extends Message {
 
     @Nullable
     public Block get(byte[] hash) {
-        return BlockProvider.getInstance().getBlock(hash);
+        return BlockChain.getInstance().getBlock(hash);
     }
 
     @Override

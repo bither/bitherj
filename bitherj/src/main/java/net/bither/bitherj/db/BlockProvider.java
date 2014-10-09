@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BlockProvider {
+public class BlockProvider implements IBlockProvider{
 
     private static BlockProvider blockProvider = new BlockProvider(BitherjApplication.mDbHelper);
 
@@ -236,9 +236,9 @@ public class BlockProvider {
     }
 
     public void addBlock(Block item) {
-        SQLiteDatabase db = this.mDb.getWritableDatabase();
-        boolean blockExists = blockExists(db, item.getBlockHash());
+        boolean blockExists = blockExists(item.getBlockHash());
         if (!blockExists) {
+            SQLiteDatabase db = this.mDb.getWritableDatabase();
             ContentValues cv = new ContentValues();
             applyContentValues(item, cv);
             db.insert(BitherjDatabaseHelper.Tables.BLOCKS, null, cv);
@@ -246,7 +246,8 @@ public class BlockProvider {
 
     }
 
-    public boolean blockExists(SQLiteDatabase db, byte[] blockHash) {
+    public boolean blockExists(byte[] blockHash) {
+        SQLiteDatabase db = this.mDb.getReadableDatabase();
         String sql = "select count(0) cnt from blocks where block_hash='" + Base58.encode(blockHash) + "'";
         Cursor c = db.rawQuery(sql, null);
         int cnt = 0;

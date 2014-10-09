@@ -19,6 +19,7 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjApplication;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.utils.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
@@ -59,7 +60,7 @@ public class AddressManager {
     }
 
     public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {
-        if (TxProvider.getInstance().isExist(tx.getTxHash())) {
+        if (AbstractDb.txProvider.isExist(tx.getTxHash())) {
             // already in db
             return true;
         }
@@ -68,7 +69,7 @@ public class AddressManager {
             boolean isRel = this.isAddressContainsTx(address.getAddress(), tx);
             if (!needAdd && isRel) {
                 needAdd = true;
-                TxProvider.getInstance().add(tx);
+                AbstractDb.txProvider.add(tx);
                 log.info("add tx {} into db", Utils.hashToString(tx.getTxHash()));
             }
             if (isRel) {
@@ -95,7 +96,7 @@ public class AddressManager {
         if (outAddress.contains(address)) {
             return true;
         } else {
-            return TxProvider.getInstance().isAddress(address, tx);
+            return AbstractDb.txProvider.isAddress(address, tx);
         }
     }
 

@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class PeerProvider {
+public class PeerProvider implements IPeerProvider {
     private static PeerProvider peerProvider = new PeerProvider(BitherjApplication.mDbHelper);
 
     public static PeerProvider getInstance() {

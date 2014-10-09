@@ -20,6 +20,7 @@ import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.exception.TxBuilderException;
@@ -81,13 +82,13 @@ public class Address implements Comparable<Address> {
     }
 
     public int txCount() {
-        return TxProvider.getInstance().txCount(this.address);
+        return AbstractDb.txProvider.txCount(this.address);
     }
 
     public List<Tx> getRecentlyTxsWithConfirmationCntLessThan(int confirmationCnt, int limit) {
         List<Tx> txList = new ArrayList<Tx>();
         int blockNo = BlockChain.getInstance().getLastBlock().getBlockNo() - confirmationCnt + 1;
-        for (Tx tx : TxProvider.getInstance().getRecentlyTxsByAddress(this.address, blockNo, limit)) {
+        for (Tx tx : AbstractDb.txProvider.getRecentlyTxsByAddress(this.address, blockNo, limit)) {
             txList.add(tx);
         }
         return txList;
@@ -95,7 +96,7 @@ public class Address implements Comparable<Address> {
 
 
     public List<Tx> getTxs() {
-        List<Tx> txs = TxProvider.getInstance().getTxAndDetailByAddress(this.address);
+        List<Tx> txs = AbstractDb.txProvider.getTxAndDetailByAddress(this.address);
         Collections.sort(txs);
         return txs;
     }
@@ -142,7 +143,7 @@ public class Address implements Comparable<Address> {
 
             for (OutPoint o : spent) {
 
-                Tx tx1 = TxProvider.getInstance().getTxDetailByTxHash(o.getTxHash());
+                Tx tx1 = AbstractDb.txProvider.getTxDetailByTxHash(o.getTxHash());
                 unspendOut.remove(o);
                 balance -= tx1.getOuts().get(o.getOutSn()).getOutValue();
             }
@@ -177,11 +178,11 @@ public class Address implements Comparable<Address> {
     }
 
     public void removeTx(byte[] txHash) {
-        TxProvider.getInstance().remove(txHash);
+        AbstractDb.txProvider.remove(txHash);
     }
 
     public boolean initTxs(List<Tx> txs) {
-        TxProvider.getInstance().addTxs(txs);
+        AbstractDb.txProvider.addTxs(txs);
         if (txs.size() > 0) {
             notificatTx(null, Tx.TxNotificationType.txFromApi);
         }
@@ -329,7 +330,7 @@ public class Address implements Comparable<Address> {
 
     public List<Tx> getRecentlyTxs(int confirmationCnt, int limit) {
         int blockNo = BlockChain.getInstance().lastBlock.getBlockNo() - confirmationCnt + 1;
-        return TxProvider.getInstance().getRecentlyTxsByAddress(this.address, blockNo, limit);
+        return AbstractDb.txProvider.getRecentlyTxsByAddress(this.address, blockNo, limit);
     }
 
     public String getShortAddress() {

@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class TxProvider {
+public class TxProvider implements ITxProvider {
 
     private static TxProvider txProvider = new TxProvider(BitherjApplication.mDbHelper);
 

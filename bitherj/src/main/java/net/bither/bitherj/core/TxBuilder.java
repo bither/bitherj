@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.core;
 
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.utils.Utils;
@@ -41,12 +42,12 @@ public class TxBuilder {
         return uniqueInstance;
     }
 
-    public Tx buildTx(Address address, List<Long> amounts, List<String> addresses) throws TxBuilderException{
+    public Tx buildTx(Address address, List<Long> amounts, List<String> addresses) throws TxBuilderException {
         long value = 0;
         for (long amount : amounts) {
             value += amount;
         }
-        List<Tx> unspendTxs = TxProvider.getInstance().getUnspendTxWithAddress(address.getAddress());
+        List<Tx> unspendTxs = AbstractDb.txProvider.getUnspendTxWithAddress(address.getAddress());
         List<Out> unspendOuts = getUnspendOuts(unspendTxs);
         List<Out> canSpendOuts = getCanSpendOuts(unspendTxs);
         List<Out> canNotSpendOuts = getCanNotSpendOuts(unspendTxs);
@@ -118,7 +119,7 @@ public class TxBuilder {
         return coinDepth;
     }
 
-    static List<Out>getUnspendOuts(List<Tx> txs) {
+    static List<Out> getUnspendOuts(List<Tx> txs) {
         List<Out> result = new ArrayList<Out>();
         for (Tx tx : txs) {
             result.add(tx.getOuts().get(0));
@@ -126,7 +127,7 @@ public class TxBuilder {
         return result;
     }
 
-    static List<Out>getCanSpendOuts(List<Tx> txs) {
+    static List<Out> getCanSpendOuts(List<Tx> txs) {
         List<Out> result = new ArrayList<Out>();
         for (Tx tx : txs) {
             if (tx.getBlockNo() != Tx.TX_UNCONFIRMED || tx.getSource() == Tx.SourceType.self.getValue()) {
@@ -173,7 +174,7 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
         } else {
             // no fee logic
             int s = TxBuilder.estimationTxSize(outs.size(), tx.getOuts().size());
-            if (TxBuilder.getCoinDepth(outs) <= TxBuilder.TX_FREE_MIN_PRIORITY * s){
+            if (TxBuilder.getCoinDepth(outs) <= TxBuilder.TX_FREE_MIN_PRIORITY * s) {
                 fees = Utils.getFeeBase();
             }
         }
@@ -213,7 +214,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
                     BigInteger hash1 = new BigInteger(1, out1.getTxHash());
                     BigInteger hash2 = new BigInteger(1, out2.getTxHash());
                     int result = hash1.compareTo(hash2);
-                    if (result != 0){
+                    if (result != 0) {
                         return result;
                     } else {
                         return out1.getOutSn() - out2.getOutSn();
@@ -272,7 +273,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 int s = TxBuilder.estimationTxSize(selectedOuts.size(), tx.getOuts().size());
                 if (total - value > Utils.CENT)
                     s += 34;
-                if (TxBuilder.getCoinDepth(selectedOuts) <=  TxBuilder.TX_FREE_MIN_PRIORITY * s) {
+                if (TxBuilder.getCoinDepth(selectedOuts) <= TxBuilder.TX_FREE_MIN_PRIORITY * s) {
                     needAtLeastReferenceFee = true;
                     continue;
                 }

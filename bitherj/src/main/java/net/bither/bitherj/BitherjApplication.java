@@ -20,6 +20,7 @@ import android.app.Application;
 import android.content.Context;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import net.bither.bitherj.db.AndroidDbImpl;
 import net.bither.bitherj.db.BitherjDatabaseHelper;
 
 public abstract class BitherjApplication extends Application {
@@ -33,6 +34,8 @@ public abstract class BitherjApplication extends Application {
     public void onCreate() {
         mContext = getApplicationContext();
         mDbHelper = new BitherjDatabaseHelper(mContext);
+        AndroidDbImpl androidDb = new AndroidDbImpl();
+        androidDb.construct();
         super.onCreate();
     }
 
@@ -41,9 +44,6 @@ public abstract class BitherjApplication extends Application {
         super.onTerminate();
         mDbHelper.close();
     }
-
-
-
 
 
 }

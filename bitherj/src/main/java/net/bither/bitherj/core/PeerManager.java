@@ -17,6 +17,7 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.db.PeerProvider;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.ProtocolException;
@@ -112,7 +113,7 @@ public class PeerManager {
     }
 
     private void initPublishedTx() {
-        for (Tx tx : TxProvider.getInstance().getPublishedTxs()) {
+        for (Tx tx : AbstractDb.txProvider.getPublishedTxs()) {
             if (tx.getBlockNo() == Tx.TX_UNCONFIRMED) {
                 publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
             }
@@ -215,11 +216,11 @@ public class PeerManager {
 
     private HashSet<Peer> bestPeers() {
         HashSet<Peer> peers = new HashSet<Peer>();
-        peers.addAll(PeerProvider.getInstance().getPeersWithLimit(getMaxPeerConnect()));
+        peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect()));
         if (peers.size() < getMaxPeerConnect()) {
             if (getPeersFromDns().size() > 0) {
                 peers.clear();
-                peers.addAll(PeerProvider.getInstance().getPeersWithLimit(getMaxPeerConnect()));
+                peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect()));
             }
         }
         log.info("peer manager got " + peers.size() + " best " +
@@ -231,7 +232,7 @@ public class PeerManager {
         HashSet<Peer> peers = new HashSet<Peer>();
         Peer[] ps = DnsDiscovery.instance().getPeers(5, TimeUnit.SECONDS);
         Collections.addAll(peers, ps);
-        PeerProvider.getInstance().addPeers(new ArrayList<Peer>(peers));
+        AbstractDb.peerProvider.addPeers(new ArrayList<Peer>(peers));
         return peers;
     }
 
@@ -259,8 +260,8 @@ public class PeerManager {
                         result.add(peer);
                     }
                 }
-                PeerProvider.getInstance().addPeers(result);
-                PeerProvider.getInstance().cleanPeers();
+                AbstractDb.peerProvider.addPeers(result);
+                AbstractDb.peerProvider.cleanPeers();
             }
         });
     }
@@ -272,7 +273,7 @@ public class PeerManager {
         if (height != BitherjSettings.TX_UNCONFIRMED) {
             // update all tx in db
             log.info("update {} txs confirmation", txHashes.size());
-            TxProvider.getInstance().confirmTx(height, txHashes);
+            AbstractDb.txProvider.confirmTx(height, txHashes);
             // update all address 's tx and balance
             for (Address address : AddressManager.getInstance().getAllAddresses()) {
                 address.setBlockHeight(txHashes, height);
@@ -482,7 +483,7 @@ public class PeerManager {
                 boolean isRel = AddressManager.getInstance().registerTx(tx,
                         Tx.TxNotificationType.txReceive);
                 if (isRel) {
-                    boolean isAlreadyInDb = TxProvider.getInstance().isExist(tx.getTxHash());
+                    boolean isAlreadyInDb = AbstractDb.txProvider.isExist(tx.getTxHash());
 
                     if (publishedTx.get(new Sha256Hash(tx.getTxHash())) == null) {
                         publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
@@ -789,7 +790,7 @@ public class PeerManager {
                 filterFpRate -= (BloomFilter.DEFAULT_BLOOM_FILTER_FP_RATE - BloomFilter
                         .BLOOM_REDUCED_FALSEPOSITIVE_RATE) * (downloadingPeer.getVersionLastBlockHeight() - filterUpdateHeight) / BitherjSettings.BLOCK_DIFFICULTY_INTERVAL;
             }
-            List<Out> outs = TxProvider.getInstance().getOuts();
+            List<Out> outs = AbstractDb.txProvider.getOuts();
             List<Address> addresses = AddressManager.getInstance().getAllAddresses();
             bloomFilterElementCount = addresses.size() * 2 + outs.size() + 100;
 

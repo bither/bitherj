@@ -18,6 +18,7 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
@@ -249,7 +250,7 @@ public class Tx extends Message implements Comparable<Tx> {
     }
 
     public void sawByPeer() {
-        TxProvider.getInstance().txSentBySelfHasSaw(getTxHash());
+        AbstractDb.txProvider.txSentBySelfHasSaw(getTxHash());
         setSawByPeerCnt(getSawByPeerCnt() + 1);
     }
 
@@ -342,7 +343,7 @@ public class Tx extends Message implements Comparable<Tx> {
         if (address != null) {
             return address;
         } else {
-            Tx preTx = TxProvider.getInstance().getTxDetailByTxHash(in.getPrevTxHash());
+            Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             if (preTx == null) {
                 return null;
             }
@@ -366,7 +367,7 @@ public class Tx extends Message implements Comparable<Tx> {
     public long getFee() {
         long amount = 0;
         for (In in : getIns()) {
-            Tx preTx = TxProvider.getInstance().getTxDetailByTxHash(in.getPrevTxHash());
+            Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             if (in.getPrevOutSn() >= 0 && in.getPrevOutSn() < preTx.getOuts().size()) {
                 amount += preTx.getOuts().get(in.getPrevOutSn()).getOutValue();
             } else {
@@ -1116,7 +1117,7 @@ public class Tx extends Message implements Comparable<Tx> {
     public long feeForTx() {
         long amount = 0;
         for (In in : this.ins) {
-            Tx tx = TxProvider.getInstance().getTxDetailByTxHash(in.getPrevTxHash());
+            Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             int n = in.getPrevOutSn();
             if (n > tx.outs.size()) {
                 return Integer.MAX_VALUE;
@@ -1143,7 +1144,7 @@ public class Tx extends Message implements Comparable<Tx> {
     public long amountSentFrom(Address address) {
         long amount = 0;
         for (In in : this.ins) {
-            Tx tx = TxProvider.getInstance().getTxDetailByTxHash(in.getPrevTxHash());
+            Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             int n = in.getPrevOutSn();
 
             if (n < tx.ins.size() && Utils.compareString(address.getAddress(),
@@ -1173,7 +1174,7 @@ public class Tx extends Message implements Comparable<Tx> {
             }
         }
         for (In in : this.ins) {
-            Tx tx = TxProvider.getInstance().getTxDetailByTxHash(in.getPrevTxHash());
+            Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             if (tx != null) {
                 int n = in.getPrevOutSn();
                 if (n < tx.outs.size() && Utils.compareString(address.getAddress(),
