@@ -18,8 +18,7 @@ package net.bither.bitherj.core;
 
 import com.google.common.util.concurrent.Service;
 
-import net.bither.bitherj.db.PeerProvider;
-import net.bither.bitherj.db.TxProvider;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.exception.VerificationException;
@@ -555,7 +554,7 @@ public class Peer extends PeerSocketHandler {
             }
 
             // check dependency
-            HashMap<Sha256Hash, Tx> dependency = TxProvider.getInstance().getTxDependencies(tx);
+            HashMap<Sha256Hash, Tx> dependency = AbstractDb.txProvider.getTxDependencies(tx);
             HashSet<Sha256Hash> needToRequest = new HashSet<Sha256Hash>();
             boolean valid = true;
             for (int i = 0;
@@ -806,7 +805,7 @@ public class Peer extends PeerSocketHandler {
             return;
         }
         InventoryMessage m = new InventoryMessage();
-        m.addTransaction(TxProvider.getInstance().getTxDetailByTxHash(txHash.getBytes()));
+        m.addTransaction(AbstractDb.txProvider.getTxDetailByTxHash(txHash.getBytes()));
         log.info("Peer {} send inv with tx {}", getPeerAddress().getHostAddress(),
                 Utils.hashToString(txHash.getBytes()));
         sendMessage(m);
@@ -901,18 +900,18 @@ public class Peer extends PeerSocketHandler {
 
 
     public void connectFail() {
-        PeerProvider.getInstance().conncetFail(getPeerAddress());
+        AbstractDb.peerProvider.conncetFail(getPeerAddress());
     }
 
     public void connectError() {
-        PeerProvider.getInstance().removePeer(getPeerAddress());
+        AbstractDb.peerProvider.removePeer(getPeerAddress());
     }
 
 
     public void connectSucceed() {
         peerConnectedCnt = 1;
         peerTimestamp = (int) (new Date().getTime() / 1000);
-        PeerProvider.getInstance().connectSucceed(getPeerAddress());
+        AbstractDb.peerProvider.connectSucceed(getPeerAddress());
         sendFilterLoadMessage(PeerManager.instance().bloomFilterForPeer(this));
     }
 

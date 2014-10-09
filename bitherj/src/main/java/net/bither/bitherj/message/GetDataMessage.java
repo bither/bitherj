@@ -32,12 +32,13 @@ public class GetDataMessage extends ListMessage {
 
     /**
      * Deserializes a 'getdata' message.
-//     * @param params NetworkParameters object.
-     * @param msg Bitcoin protocol formatted byte array containing message content.
-     * If true and the backing byte array is invalidated due to modification of a field then 
-     * the cached bytes may be repopulated and retained if the message is serialized again in the future.
+     * //     * @param params NetworkParameters object.
+     *
+     * @param msg    Bitcoin protocol formatted byte array containing message content.
+     *               If true and the backing byte array is invalidated due to modification of a field then
+     *               the cached bytes may be repopulated and retained if the message is serialized again in the future.
      * @param length The length of message if known.  Usually this is provided when deserializing of the wire
-     * as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
+     *               as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
      * @throws net.bither.bitherj.exception.ProtocolException
      */
     public GetDataMessage(byte[] msg, int length)

@@ -16,13 +16,14 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.db.TxProvider;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.message.Message;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -203,7 +204,7 @@ public class In extends Message {
 
     public Out getConnectedOut() {
         if (connectedOut == null) {
-            Tx preTx = TxProvider.getInstance().getTxDetailByTxHash(getPrevTxHash());
+            Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(getPrevTxHash());
             if (preTx == null) {
                 return null;
             }

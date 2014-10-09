@@ -55,11 +55,11 @@ import static net.bither.bitherj.script.ScriptOpCodes.*;
 
 /**
  * <p>Programs embedded inside transactions that control redemption of payments.</p>
- *
+ * <p/>
  * <p>Bitcoin transactions don't specify what they do directly. Instead <a href="https://en.bitcoin.it/wiki/Script">a
  * small binary stack language</a> is used to define programs that when evaluated return whether the transaction
  * "accepts" or rejects the other transactions connected to it.</p>
- *
+ * <p/>
  * <p>In SPV mode, scripts are not run, because that would require all transactions to be available and lightweight
  * clients don't have that data. In full mode, this class is used to run the interpreted language. It also has
  * static methods for building scripts.</p>
@@ -78,7 +78,9 @@ public class Script {
     // Creation time of the associated keys in seconds since the epoch.
     private long creationTimeSeconds;
 
-    /** Creates an empty script that serializes to nothing. */
+    /**
+     * Creates an empty script that serializes to nothing.
+     */
     private Script() {
         chunks = Lists.newArrayList();
     }
@@ -92,6 +94,7 @@ public class Script {
     /**
      * Construct a Script that copies and wraps the programBytes array. The array is parsed and checked for syntactic
      * validity.
+     *
      * @param programBytes Array of program bytes from a transaction.
      */
     public Script(byte[] programBytes) throws ScriptException {
@@ -127,7 +130,9 @@ public class Script {
         return buf.toString();
     }
 
-    /** Returns the serialized program as a newly created byte array. */
+    /**
+     * Returns the serialized program as a newly created byte array.
+     */
     public byte[] getProgram() {
         try {
             // Don't round-trip as Satoshi's code doesn't and it would introduce a mismatch.
@@ -144,7 +149,9 @@ public class Script {
         }
     }
 
-    /** Returns an immutable list of the scripts parsed form. */
+    /**
+     * Returns an immutable list of the scripts parsed form.
+     */
     public List<ScriptChunk> getChunks() {
         return Collections.unmodifiableList(chunks);
     }
@@ -152,7 +159,7 @@ public class Script {
     private static final ScriptChunk STANDARD_TRANSACTION_SCRIPT_CHUNKS[];
 
     static {
-        STANDARD_TRANSACTION_SCRIPT_CHUNKS = new ScriptChunk[] {
+        STANDARD_TRANSACTION_SCRIPT_CHUNKS = new ScriptChunk[]{
                 new ScriptChunk(ScriptOpCodes.OP_DUP, null, 0),
                 new ScriptChunk(ScriptOpCodes.OP_HASH160, null, 1),
                 new ScriptChunk(ScriptOpCodes.OP_EQUALVERIFY, null, 23),
@@ -163,7 +170,7 @@ public class Script {
     /**
      * <p>To run a script, first we parse it which breaks it up into chunks representing pushes of data or logical
      * opcodes. Then we can run the parsed chunks.</p>
-     *
+     * <p/>
      * <p>The reason for this split, instead of just interpreting directly, is to make it easier
      * to reach into a programs structure and pull out bits of data without having to run it.
      * This is necessary to render the to/from addresses of transactions in a user interface.
@@ -192,7 +199,7 @@ public class Script {
                 // Read a uint32, then read that many bytes of data.
                 // Though this is allowed, because its value cannot be > 520, it should never actually be used
                 if (bis.available() < 4) throw new ScriptException("Unexpected end of script");
-                dataToRead = ((long)bis.read()) | (((long)bis.read()) << 8) | (((long)bis.read()) << 16) | (((long)bis.read()) << 24);
+                dataToRead = ((long) bis.read()) | (((long) bis.read()) << 8) | (((long) bis.read()) << 16) | (((long) bis.read()) << 24);
             }
 
             ScriptChunk chunk;
@@ -201,8 +208,8 @@ public class Script {
             } else {
                 if (dataToRead > bis.available())
                     throw new ScriptException("Push of data element that is larger than remaining data");
-                byte[] data = new byte[(int)dataToRead];
-                checkState(dataToRead == 0 || bis.read(data, 0, (int)dataToRead) == dataToRead);
+                byte[] data = new byte[(int) dataToRead];
+                checkState(dataToRead == 0 || bis.read(data, 0, (int) dataToRead) == dataToRead);
                 chunk = new ScriptChunk(opcode, data, startLocationInProgram);
             }
             // Save some memory by eliminating redundant copies of the same chunk objects.
@@ -250,7 +257,7 @@ public class Script {
     /**
      * If a program matches the standard template DUP HASH160 <pubkey hash> EQUALVERIFY CHECKSIG
      * then this function retrieves the third element, otherwise it throws a ScriptException.<p>
-     *
+     * <p/>
      * This is useful for fetching the destination address of a transaction.
      */
     public byte[] getPubKeyHash() throws ScriptException {
@@ -335,7 +342,9 @@ public class Script {
         }
     }
 
-    /** Creates a program that requires at least N of the given keys to sign, using OP_CHECKMULTISIG. */
+    /**
+     * Creates a program that requires at least N of the given keys to sign, using OP_CHECKMULTISIG.
+     */
     public static byte[] createMultiSigOutputScript(int threshold, List<ECKey> pubkeys) {
         checkArgument(threshold > 0);
         checkArgument(threshold <= pubkeys.size());
@@ -453,7 +462,7 @@ public class Script {
         }
         for (int i = script.chunks.size() - 1; i >= 0; i--)
             if (!script.chunks.get(i).isOpCode()) {
-                Script subScript =  new Script();
+                Script subScript = new Script();
                 subScript.parse(script.chunks.get(i).data);
                 return getSigOpCount(subScript.chunks, true);
             }
@@ -497,7 +506,7 @@ public class Script {
      * not exist in Satoshis original implementation. It means blocks containing P2SH transactions that don't match
      * correctly are considered valid, but won't be mined upon, so they'll be rapidly re-orgd out of the chain. This
      * logic is defined by <a href="https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki">BIP 16</a>.</p>
-     *
+     * <p/>
      * <p>bitcoinj does not support creation of P2SH transactions today. The goal of P2SH is to allow short addresses
      * even for complex scripts (eg, multi-sig outputs) so they are convenient to work with in things like QRcodes or
      * with copy/paste, and also to minimize the size of the unspent output set (which improves performance of the
@@ -522,7 +531,8 @@ public class Script {
         ScriptChunk chunk = chunks.get(chunks.size() - 1);
         // Must end in OP_CHECKMULTISIG[VERIFY].
         if (!chunk.isOpCode()) return false;
-        if (!(chunk.equalsOpCode(OP_CHECKMULTISIG) || chunk.equalsOpCode(OP_CHECKMULTISIGVERIFY))) return false;
+        if (!(chunk.equalsOpCode(OP_CHECKMULTISIG) || chunk.equalsOpCode(OP_CHECKMULTISIGVERIFY)))
+            return false;
         try {
             // Second to last chunk must be an OP_N opcode and there should be that many data chunks (keys).
             ScriptChunk m = chunks.get(chunks.size() - 2);
@@ -568,12 +578,12 @@ public class Script {
                 additionalBytes = (0xFF & inputScript[cursor]) + 1;
             } else if (opcode == OP_PUSHDATA2) {
                 additionalBytes = ((0xFF & inputScript[cursor]) |
-                        ((0xFF & inputScript[cursor+1]) << 8)) + 2;
+                        ((0xFF & inputScript[cursor + 1]) << 8)) + 2;
             } else if (opcode == OP_PUSHDATA4) {
                 additionalBytes = ((0xFF & inputScript[cursor]) |
-                        ((0xFF & inputScript[cursor+1]) << 8) |
-                        ((0xFF & inputScript[cursor+1]) << 16) |
-                        ((0xFF & inputScript[cursor+1]) << 24)) + 4;
+                        ((0xFF & inputScript[cursor + 1]) << 8) |
+                        ((0xFF & inputScript[cursor + 1]) << 16) |
+                        ((0xFF & inputScript[cursor + 1]) << 24)) + 4;
             }
             if (!skip) {
                 try {
@@ -592,14 +602,13 @@ public class Script {
      * Returns the script bytes of inputScript with all instances of the given op code removed
      */
     public static byte[] removeAllInstancesOfOp(byte[] inputScript, int opCode) {
-        return removeAllInstancesOf(inputScript, new byte[] {(byte)opCode});
+        return removeAllInstancesOf(inputScript, new byte[]{(byte) opCode});
     }
 
     ////////////////////// Script verification and helpers ////////////////////////////////
 
     private static boolean castToBool(byte[] data) {
-        for (int i = 0; i < data.length; i++)
-        {
+        for (int i = 0; i < data.length; i++) {
             // "Can be negative zero" -reference client (see OpenSSL's BN_bn2mpi)
             if (data[i] != 0)
                 return !(i == data.length - 1 && (data[i] & 0xFF) == 0x80);
@@ -683,7 +692,7 @@ public class Script {
                 if (!shouldExecute)
                     continue;
 
-                switch(opcode) {
+                switch (opcode) {
                     // OP_0 is no opcode
                     case OP_1NEGATE:
                         stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.ONE.negate(), false)));
@@ -875,7 +884,7 @@ public class Script {
                     case OP_EQUAL:
                         if (stack.size() < 2)
                             throw new ScriptException("Attempted OP_EQUALVERIFY on a stack with size < 2");
-                        stack.add(Arrays.equals(stack.pollLast(), stack.pollLast()) ? new byte[] {1} : new byte[] {0});
+                        stack.add(Arrays.equals(stack.pollLast(), stack.pollLast()) ? new byte[]{1} : new byte[]{0});
                         break;
                     case OP_EQUALVERIFY:
                         if (stack.size() < 2)
@@ -1140,7 +1149,7 @@ public class Script {
         // TODO: Use int for indexes everywhere, we can't have that many inputs/outputs
         boolean sigValid = false;
         try {
-            TransactionSignature sig  = TransactionSignature.decodeFromBitcoin(sigBytes, false);
+            TransactionSignature sig = TransactionSignature.decodeFromBitcoin(sigBytes, false);
             byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
             sigValid = ECKey.verify(hash, sig, pubKey);
         } catch (Exception e1) {
@@ -1150,7 +1159,7 @@ public class Script {
         }
 
         if (opcode == OP_CHECKSIG)
-            stack.add(sigValid ? new byte[] {1} : new byte[] {0});
+            stack.add(sigValid ? new byte[]{1} : new byte[]{0});
         else if (opcode == OP_CHECKSIGVERIFY)
             if (!sigValid)
                 throw new ScriptException("Script failed OP_CHECKSIGVERIFY");
@@ -1225,7 +1234,7 @@ public class Script {
         stack.pollLast();
 
         if (opcode == OP_CHECKMULTISIG) {
-            stack.add(valid ? new byte[] {1} : new byte[] {0});
+            stack.add(valid ? new byte[]{1} : new byte[]{0});
         } else if (opcode == OP_CHECKMULTISIGVERIFY) {
             if (!valid)
                 throw new ScriptException("Script failed OP_CHECKMULTISIGVERIFY");
@@ -1235,11 +1244,12 @@ public class Script {
 
     /**
      * Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey.
+     *
      * @param txContainingThis The transaction in which this input scriptSig resides.
      *                         Accessing txContainingThis from another thread while this method runs results in undefined behavior.
-     * @param scriptSigIndex The index in txContainingThis of the scriptSig (note: NOT the index of the scriptPubKey).
-     * @param scriptPubKey The connected scriptPubKey containing the conditions needed to claim the value.
-     * @param enforceP2SH Whether "pay to script hash" rules should be enforced. If in doubt, set to true.
+     * @param scriptSigIndex   The index in txContainingThis of the scriptSig (note: NOT the index of the scriptPubKey).
+     * @param scriptPubKey     The connected scriptPubKey containing the conditions needed to claim the value.
+     * @param enforceP2SH      Whether "pay to script hash" rules should be enforced. If in doubt, set to true.
      */
     public void correctlySpends(Tx txContainingThis, long scriptSigIndex, Script scriptPubKey,
                                 boolean enforceP2SH) throws ScriptException {

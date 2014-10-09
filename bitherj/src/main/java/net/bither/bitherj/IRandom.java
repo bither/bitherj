@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.crypto;
+package net.bither.bitherj;
 
 public interface IRandom {
     public byte[] nextBytes(int length);

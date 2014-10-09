@@ -30,8 +30,10 @@ import java.io.OutputStream;
  */
 public class MemoryPoolMessage extends Message {
     @Override
-    protected void parse() throws ProtocolException {}
+    protected void parse() throws ProtocolException {
+    }
 
     @Override
-    protected void bitcoinSerializeToStream(OutputStream stream) throws IOException {}
+    protected void bitcoinSerializeToStream(OutputStream stream) throws IOException {
+    }
 }

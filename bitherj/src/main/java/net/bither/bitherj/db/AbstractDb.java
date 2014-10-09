@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Google Inc.
+ * Copyright 2014 http://Bither.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.net;
+package net.bither.bitherj.db;
 
-import java.io.IOException;
+public abstract class AbstractDb {
+    public static IBlockProvider blockProvider;
+    public static IPeerProvider peerProvider;
+    public static ITxProvider txProvider;
 
-/**
- * A target to which messages can be written/connection can be closed
- */
-public interface MessageWriteTarget {
-    /**
-     * Writes the given bytes to the remote server.
-     */
-    void writeBytes(byte[] message) throws IOException;
+    public void construct() {
+        blockProvider = initBlockProvider();
+        peerProvider = initPeerProvider();
+        txProvider = initTxProvider();
 
-    /**
-     * Closes the connection to the server, triggering the {@link StreamParser#connectionClosed()}
-     * event on the network-handling thread where all callbacks occur.
-     */
-    void closeConnection();
+    }
+
+    public abstract IBlockProvider initBlockProvider();
+
+    public abstract IPeerProvider initPeerProvider();
+
+    public abstract ITxProvider initTxProvider();
+
 }

@@ -19,13 +19,14 @@ package net.bither.bitherj.test;
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.ISetting;
 import net.bither.bitherj.core.BitherjSettings;
+import net.bither.bitherj.IRandom;
 
 public class BitherjTestApplication extends BitherjApplication {
     private boolean doneSyncFromSpv;
 
     @Override
-    public void initSetting() {
-        setting = new ISetting() {
+    public ISetting initSetting() {
+        return new ISetting() {
             @Override
             public BitherjSettings.AppMode getAppMode() {
                 return BitherjSettings.AppMode.HOT;
@@ -48,11 +49,16 @@ public class BitherjTestApplication extends BitherjApplication {
         };
     }
 
-    public void setDoneSyncFromSpv(boolean done){
+    @Override
+    public IRandom initRandom() {
+        return null;
+    }
+
+    public void setDoneSyncFromSpv(boolean done) {
         doneSyncFromSpv = done;
     }
 
-    public boolean isDoneSyncFromSpv(){
+    public boolean isDoneSyncFromSpv() {
         return doneSyncFromSpv;
     }
 }

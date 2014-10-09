@@ -77,15 +77,15 @@ public abstract class Message {
 //    }
 
     /**
+     * //     * @param params NetworkParameters object.
      *
-     //     * @param params NetworkParameters object.
-     * @param msg Bitcoin protocol formatted byte array containing message content.
-     * @param offset The location of the first msg byte within the array.
+     * @param msg             Bitcoin protocol formatted byte array containing message content.
+     * @param offset          The location of the first msg byte within the array.
      * @param protocolVersion Bitcoin protocol version.
-     * If true and the backing byte array is invalidated due to modification of a field then
-     * the cached bytes may be repopulated and retained if the message is serialized again in the future.
-     * @param length The length of message if known.  Usually this is provided when deserializing of the wire
-     * as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
+     *                        If true and the backing byte array is invalidated due to modification of a field then
+     *                        the cached bytes may be repopulated and retained if the message is serialized again in the future.
+     * @param length          The length of message if known.  Usually this is provided when deserializing of the wire
+     *                        as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
      * @throws ProtocolException
      */
     protected Message(byte[] msg, int offset, int protocolVersion, int length) throws ProtocolException {
@@ -183,7 +183,7 @@ public abstract class Message {
      * <li>2) The message has not been modified</li>
      * <li>3) The array had an offset of 0 and no surplus bytes</li>
      * </ol>
-     *
+     * <p/>
      * If condition 3 is not met then an copy of the relevant portion of the array will be returned.
      * Otherwise a full serialize will occur. For this reason you should only use this API if you can guarantee you
      * will treat the resulting array as read only.
@@ -245,7 +245,7 @@ public abstract class Message {
     /**
      * This should be overridden to extract correct message size in the case of lazy parsing.  Until this method is
      * implemented in a subclass of ChildMessage lazy parsing may have no effect.
-     *
+     * <p/>
      * This default implementation is a safe fall back that will ensure it returns a correct value by parsing the message.
      */
     public int getMessageSize() {
@@ -331,7 +331,7 @@ public abstract class Message {
 
     protected byte[] readByteArray() throws ProtocolException {
         long len = readVarInt();
-        return readBytes((int)len);
+        return readBytes((int) len);
     }
 
     protected String readStr() throws ProtocolException {

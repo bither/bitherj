@@ -19,6 +19,7 @@ package net.bither.bitherj.crypto;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
+import net.bither.bitherj.IRandom;
 import net.bither.bitherj.crypto.ec.EcTools;
 import net.bither.bitherj.crypto.ec.Parameters;
 import net.bither.bitherj.crypto.ec.Point;

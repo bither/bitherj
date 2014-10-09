@@ -16,14 +16,11 @@
 
 package net.bither.bitherj.net;
 
-import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.AbstractExecutionThreadService;
 
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.SocketAddress;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
@@ -69,8 +66,8 @@ public class NioClientManager extends AbstractExecutionThreadService implements
     private final Set<ConnectionHandler> connectedHandlers = Collections.synchronizedSet(new
             HashSet<ConnectionHandler>());
 
-    public static final NioClientManager instance(){
-        if(instance == null){
+    public static final NioClientManager instance() {
+        if (instance == null) {
             instance = new NioClientManager();
         }
         return instance;
@@ -102,7 +99,7 @@ public class NioClientManager extends AbstractExecutionThreadService implements
                 // so we can only log the error itself
                 handler.closeConnection();
             }
-        } else if(key.isValid()) // Process bytes read
+        } else if (key.isValid()) // Process bytes read
         {
             ConnectionHandler.handleKey(key);
         }
@@ -187,10 +184,10 @@ public class NioClientManager extends AbstractExecutionThreadService implements
         }
     }
 
-    public void startUpError(){
+    public void startUpError() {
         State state = state();
         log.warn("NioClientManager start up error, state is {}, retry.", state.name());
-        if(state == State.RUNNING || state == State.STARTING){
+        if (state == State.RUNNING || state == State.STARTING) {
             closeConnections(getConnectedClientCount());
             triggerShutdown();
         }
@@ -222,7 +219,7 @@ public class NioClientManager extends AbstractExecutionThreadService implements
         }
     }
 
-    public void onDestroy(){
+    public void onDestroy() {
         instance = null;
     }
 }
