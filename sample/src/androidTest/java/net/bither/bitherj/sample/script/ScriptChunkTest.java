@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.test.script;
+package net.bither.bitherj.sample.script;
 
+import net.bither.bitherj.sample.ApplicationTest;
 import net.bither.bitherj.script.Script;
 import static net.bither.bitherj.script.ScriptOpCodes.*;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.script.ScriptChunk;
-import net.bither.bitherj.test.ApplicationTest;
 
 public class ScriptChunkTest extends ApplicationTest {
 

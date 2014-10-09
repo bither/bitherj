@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.test.core;
+package net.bither.bitherj.sample.core;
 
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.exception.AddressFormatException;
-import net.bither.bitherj.test.ApplicationTest;
+import net.bither.bitherj.sample.ApplicationTest;
 
 public class AddressTest extends ApplicationTest {
     public void testAddress() {

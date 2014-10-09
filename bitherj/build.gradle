@@ -1,8 +1,9 @@
-apply plugin: 'android-library'
+apply plugin: 'java'
 
 repositories {
     mavenLocal()
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
@@ -16,66 +17,3 @@ dependencies {
 
 }
 
-android {
-    compileSdkVersion 19
-    buildToolsVersion '19.1'
-
-    defaultConfig {
-        applicationId "net.bither.bitherj"
-        minSdkVersion 9
-        targetSdkVersion 19
-        versionCode 1
-        versionName "1.0"
-
-        testPackageName "net.bither.bitherj.test"
-        testInstrumentationRunner "android.test.InstrumentationTestRunner"
-        testHandleProfiling true
-        testFunctionalTest true
-    }
-
-    buildTypes {
-        release {
-            runProguard false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    sourceSets {
-        main {
-            java.srcDirs = ['src/main/java']
-            jniLibs.srcDirs = ['native-libs']
-            manifest.srcFile 'AndroidManifest.xml'
-        }
-        androidTest.setRoot('src/androidTest')
-
-        // Move the build types to build-types/<type>
-        // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
-        // This moves them out of them default location under src/<type>/... which would
-        // conflict with src/ being used by the main source set.
-        // Adding new build types or product flavors should be accompanied
-        // by a similar customization.
-        debug.setRoot('build-types/debug')
-        release.setRoot('build-types/release')
-    }
-
-    packagingOptions {
-        exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'lib/x86_64/darwin/libscrypt.dylib'
-        exclude 'lib/x86_64/freebsd/libscrypt.so'
-        exclude 'lib/x86_64/linux/libscrypt.so'
-    }
-
-    lintOptions {
-        abortOnError false
-    }
-
-    testBuildType "debug"
-
-    testOptions {
-        resultsDir = "$project.buildDir/foo/results"
-    }
-}

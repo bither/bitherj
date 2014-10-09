@@ -16,43 +16,14 @@
 
 package net.bither.bitherj.sample;
 
-import net.bither.bitherj.BitherjApplication;
-import net.bither.bitherj.IBitherjApp;
-import net.bither.bitherj.core.BitherjSettings;
 
-public class App extends BitherjApplication {
+import android.app.Application;
+
+public class App extends Application {
     private boolean doneSyncFromSpv;
 
     @Override
-    public void init() {
-        mIinitialize = new IBitherjApp() {
-            @Override
-            public BitherjSettings.AppMode getAppMode() {
-                return BitherjSettings.AppMode.HOT;
-            }
-
-            @Override
-            public boolean getBitherjDoneSyncFromSpv() {
-                return isDoneSyncFromSpv();
-            }
-
-            @Override
-            public void setBitherjDoneSyncFromSpv(boolean isDone) {
-                doneSyncFromSpv = isDone;
-            }
-
-            @Override
-            public BitherjSettings.TransactionFeeMode getTransactionFeeMode() {
-                return BitherjSettings.TransactionFeeMode.Low;
-            }
-        };
-    }
-
-    public void setDoneSyncFromSpv(boolean done) {
-        doneSyncFromSpv = done;
-    }
-
-    public boolean isDoneSyncFromSpv() {
-        return doneSyncFromSpv;
+    public void onCreate() {
+        super.onCreate();
     }
 }

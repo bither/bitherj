@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.test;
+package net.bither.bitherj.sample;
 
 import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.ISetting;

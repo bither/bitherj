@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.test.crypto;
+package net.bither.bitherj.sample.crypto;
 
 import junit.framework.Assert;
 
-import net.bither.bitherj.BitherjApplication;
+import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.crypto.EncryptedPrivateKey;
 import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.KeyCrypterScrypt;
-import net.bither.bitherj.test.ApplicationTest;
+import net.bither.bitherj.sample.ApplicationTest;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -49,7 +49,7 @@ public class KeyCrypterScryptTest extends ApplicationTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        byte[] salt = BitherjApplication.random.nextBytes(KeyCrypterScrypt.SALT_LENGTH);
+        byte[] salt = AbstractApp.random.nextBytes(KeyCrypterScrypt.SALT_LENGTH);
         this.salt = salt;
 //        Protos.ScryptParameters.Builder scryptParametersBuilder = Protos.ScryptParameters.newBuilder().setSalt(ByteString.copyFrom(salt));
 //        scryptParameters = scryptParametersBuilder.build();

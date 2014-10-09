@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.test.crypto;
+package net.bither.bitherj.sample.crypto;
 
 import net.bither.bitherj.crypto.bip38.Bip38;
 import net.bither.bitherj.exception.AddressFormatException;
-import net.bither.bitherj.test.ApplicationTest;
+import net.bither.bitherj.sample.ApplicationTest;
 import net.bither.bitherj.utils.Utils;
 
 import java.io.UnsupportedEncodingException;
