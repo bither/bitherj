@@ -13,10 +13,7 @@ dependencies {
     compile 'net.jcip:jcip-annotations:1.0@jar'
     compile 'com.lambdaworks:scrypt:1.4.0@jar'
     compile 'org.slf4j:slf4j-api:1.7.7'
-    compile ('com.github.tony19:logback-android-classic:1.0.10-2@jar'){
-        // Work around for gradle 0.9 and 0.10
-        transitive = true
-    }
+
 }
 
 android {
