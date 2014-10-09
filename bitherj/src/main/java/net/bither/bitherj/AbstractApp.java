@@ -18,11 +18,11 @@ package net.bither.bitherj;
 
 public abstract class AbstractApp {
     public static NotificationService notificationService;
-    public static ISetting BITHERJ_APP;
+    public static ISetting bitherjApp;
     public static IRandom random;
 
     public void construct() {
-        BITHERJ_APP = initSetting();
+        bitherjApp = initSetting();
         notificationService = initNotification();
         random = initRandom();
     }

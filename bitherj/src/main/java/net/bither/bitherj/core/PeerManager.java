@@ -17,7 +17,6 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
-import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.db.PeerProvider;
 import net.bither.bitherj.db.TxProvider;
 import net.bither.bitherj.exception.ProtocolException;
@@ -823,7 +822,7 @@ public class PeerManager {
     }
 
     public boolean doneSyncFromSPV() {
-        return AbstractApp.BITHERJ_APP.getBitherjDoneSyncFromSpv();
+        return AbstractApp.bitherjApp.getBitherjDoneSyncFromSpv();
     }
 
     private void sendConnectedChangeBroadcast() {
@@ -949,7 +948,7 @@ public class PeerManager {
     }
 
     private int getMaxPeerConnect() {
-        if (AbstractApp.BITHERJ_APP.isApplicationRunInForeground()) {
+        if (AbstractApp.bitherjApp.isApplicationRunInForeground()) {
             return BitherjSettings.MaxPeerConnections;
         } else {
             return BitherjSettings.MaxPeerBackgroundConnections;

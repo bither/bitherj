@@ -29,7 +29,6 @@ public abstract class BitherjApplication extends Application {
     public static SQLiteOpenHelper mDbHelper;
     public static boolean addressIsReady = false;
 
-
     @Override
     public void onCreate() {
         mContext = getApplicationContext();

@@ -22,7 +22,6 @@ import com.google.common.primitives.Longs;
 import com.google.common.primitives.UnsignedLongs;
 
 import net.bither.bitherj.AbstractApp;
-import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.core.BitherjSettings;
 import net.bither.bitherj.exception.AddressFormatException;
 
@@ -726,7 +725,7 @@ public class Utils {
 
     //add by jjz (bither)
     public static File getWalletRomCache() {
-        return AbstractApp.BITHERJ_APP.getPrivateDir(WALLET_ROM_CACHE);
+        return AbstractApp.bitherjApp.getPrivateDir(WALLET_ROM_CACHE);
     }
 
     //add by jjz (bither)
@@ -743,7 +742,7 @@ public class Utils {
     public static File getPrivateDir() {
         File file = getWalletRomCache();
         String dirName = WALLET_HOT;
-        if (AbstractApp.BITHERJ_APP.getAppMode() == BitherjSettings.AppMode.COLD) {
+        if (AbstractApp.bitherjApp.getAppMode() == BitherjSettings.AppMode.COLD) {
             dirName = WALLET_COLD;
         }
         file = new File(file, dirName);
@@ -850,6 +849,6 @@ public class Utils {
     }
 
     public static long getFeeBase() {
-        return AbstractApp.BITHERJ_APP.getTransactionFeeMode().getMinFeeSatoshi();
+        return AbstractApp.bitherjApp.getTransactionFeeMode().getMinFeeSatoshi();
     }
 }
