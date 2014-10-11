@@ -45,8 +45,8 @@ public class AddressManager {
 
     private AddressManager() {
         synchronized (lock) {
-            initPrivateKeyList();
-            initWatchOnlyList();
+            initPrivateKeyListByDesc();
+            initWatchOnlyListByDesc();
             AbstractApp.addressIsReady = true;
             AbstractApp.notificationService.sendBroadcastAddressLoadCompleteState();
         }
@@ -175,7 +175,7 @@ public class AddressManager {
         return true;
     }
 
-    private void initPrivateKeyList() {
+    private void initPrivateKeyListByDesc() {
         File[] files = Utils.getPrivateDir().listFiles();
         if (files != null) {
             for (File file : files) {
@@ -203,7 +203,7 @@ public class AddressManager {
 
     }
 
-    private void initWatchOnlyList() {
+    private void initWatchOnlyListByDesc() {
         File[] files = Utils.getWatchOnlyDir().listFiles();
         if (files != null) {
             for (File file : files) {
