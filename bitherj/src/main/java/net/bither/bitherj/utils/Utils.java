@@ -23,6 +23,7 @@ import com.google.common.primitives.UnsignedLongs;
 
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.core.BitherjSettings;
+import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.exception.AddressFormatException;
 
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
@@ -47,6 +48,8 @@ import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
@@ -851,4 +854,63 @@ public class Utils {
     public static long getFeeBase() {
         return AbstractApp.bitherjApp.getTransactionFeeMode().getMinFeeSatoshi();
     }
+
+    public static boolean validPassword(CharSequence password) {
+        String pattern = "[0-9,a-z,A-Z]+";
+        Pattern p = Pattern.compile(pattern);
+        Matcher m = p.matcher(password);
+        return m.matches();
+    }
+
+    public static boolean validBitcoinPrivateKey(String str) {
+        try {
+            DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(str);
+            return true;
+        } catch (AddressFormatException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static boolean validBicoinAddress(String str) {
+        final Pattern PATTERN_BITCOIN_ADDRESS = Pattern.compile("["
+                + new String(Base58.ALPHABET) + "]{20,40}");
+        if (PATTERN_BITCOIN_ADDRESS.matcher(str).matches()) {
+            try {
+                Base58.decodeChecked(str);
+                return true;
+            } catch (final AddressFormatException x) {
+                x.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    public static boolean isNubmer(Object obj) {
+        try {
+            Double.parseDouble(obj.toString());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static boolean isInteger(Object obj) {
+        try {
+            Integer.parseInt(obj.toString());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static boolean isLong(Object obj) {
+        try {
+            Long.parseLong(obj.toString());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }
