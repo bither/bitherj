@@ -541,6 +541,30 @@ public class Peer extends PeerSocketHandler {
         } else {
             log.info("peer[{}:{}] receive tx {}", this.peerAddress.getHostAddress(),
                     this.peerPort, Utils.hashToString(tx.getTxHash()));
+            if (AddressManager.getInstance().isTxRelated(tx)) {
+                unrelatedTxRelayCount = 0;
+            } else {
+                unrelatedTxRelayCount++;
+                if (unrelatedTxRelayCount > MAX_UNRELATED_TX_RELAY_COUNT) {
+                    exceptionCaught(new Exception("Peer " + getPeerAddress().getHostAddress() + " is junking us. Drop it."));
+                    return;
+                }
+            }
+
+
+            boolean valid = true;
+            try {
+                tx.verify();
+                valid = true;
+            } catch (VerificationException e) {
+                valid = false;
+            }
+            if (valid) {
+                PeerManager.instance().relayedTransaction(this, tx);
+            }
+            /*
+            log.info("peer[{}:{}] receive tx {}", this.peerAddress.getHostAddress(),
+                    this.peerPort, Utils.hashToString(tx.getTxHash()));
             if (needToRequestDependencyDict.get(new Sha256Hash(tx.getTxHash())) == null || needToRequestDependencyDict.get(new Sha256Hash(tx.getTxHash())).size() == 0) {
                 if (AddressManager.getInstance().isTxRelated(tx)) {
                     unrelatedTxRelayCount = 0;
@@ -606,6 +630,7 @@ public class Peer extends PeerSocketHandler {
                 sendGetDataMessageWithTxHashesAndBlockHashes(new ArrayList<Sha256Hash>
                         (needToRequest), null);
             }
+            */
         }
     }
 
