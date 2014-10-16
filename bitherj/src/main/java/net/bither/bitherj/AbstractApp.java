@@ -16,6 +16,8 @@
 
 package net.bither.bitherj;
 
+import net.bither.bitherj.crypto.random.LinuxSecureRandom;
+
 public abstract class AbstractApp {
     public static NotificationService notificationService;
     public static ISetting bitherjApp;
@@ -23,6 +25,7 @@ public abstract class AbstractApp {
     public static boolean addressIsReady = false;
 
     public void construct() {
+        new LinuxSecureRandom();
         bitherjApp = initSetting();
         notificationService = initNotification();
         random = initRandom();
