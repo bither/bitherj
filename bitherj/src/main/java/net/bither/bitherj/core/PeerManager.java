@@ -53,7 +53,7 @@ public class PeerManager {
     public static final String ConnectedChangeBroadcast = PeerManager.class.getPackage()
             .getName() + ".peer_manager_connected_change";
     private static final Logger log = LoggerFactory.getLogger(PeerManager.class);
-    private static final int MAX_CONNECT_FAILURE_COUNT = 12;
+    private static final int MAX_CONNECT_FAILURE_COUNT = 6;
 
     private static final int MaxPeerCount = 100;
     private static final int MaxConnectFailure = 20;
