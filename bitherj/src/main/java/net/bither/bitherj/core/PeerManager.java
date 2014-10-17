@@ -781,10 +781,10 @@ public class PeerManager {
         executor.submit(new Runnable() {
             @Override
             public void run() {
-                bloomFilter = null;
-                for (Peer p : connectedPeers) {
-                    p.sendFilterLoadMessage(getBloomFilter());
-                }
+//                bloomFilter = null;
+//                for (Peer p : connectedPeers) {
+//                    p.sendFilterLoadMessage(getBloomFilter());
+//                }
                 if (connectedPeers.size() > 0) {
                     Iterator<Peer> iterator = connectedPeers.iterator();
                     Sha256Hash hash = new Sha256Hash(tx.getTxHash());
