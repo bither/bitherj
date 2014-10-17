@@ -788,7 +788,7 @@ public class PeerManager {
                 filterFpRate -= (BloomFilter.DEFAULT_BLOOM_FILTER_FP_RATE - BloomFilter
                         .BLOOM_REDUCED_FALSEPOSITIVE_RATE) * (downloadingPeer.getVersionLastBlockHeight() - filterUpdateHeight) / BitherjSettings.BLOCK_DIFFICULTY_INTERVAL;
             }
-            List<Out> outs = AbstractDb.txProvider.getUnSpentOuts();
+            List<Out> outs = AbstractDb.txProvider.getOuts();
             List<Address> addresses = AddressManager.getInstance().getAllAddresses();
             bloomFilterElementCount = addresses.size() * 2 + outs.size() + 100;
 
