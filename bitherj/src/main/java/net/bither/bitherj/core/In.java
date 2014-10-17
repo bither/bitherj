@@ -224,9 +224,9 @@ public class In extends Message {
                 try {
                     return script.getFromAddress();
                 } catch (ScriptException ex) {
-                    if (this.getInSignature() != null) {
-                        log.warn("out script : " + Utils.bytesToHexString(this.getInSignature()));
-                    }
+//                    if (this.getInSignature() != null) {
+//                        log.warn("out script : " + Utils.bytesToHexString(this.getInSignature()));
+//                    }
                 }
             }
         }
