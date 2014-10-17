@@ -41,6 +41,7 @@ public class AddressManager {
 
     protected List<Address> privKeyAddresses = new ArrayList<Address>();
     protected List<Address> watchOnlyAddresses = new ArrayList<Address>();
+    protected HashSet<String> addressHashSet = new HashSet<String>();
 
 
     private AddressManager() {
@@ -112,6 +113,7 @@ public class AddressManager {
                     }
                     address.savePubKey(sortTime);
                     privKeyAddresses.add(0, address);
+                    addressHashSet.add(address.address);
                 } else {
                     if (getWatchOnlyAddresses().size() > 0) {
                         long firstSortTime = getWatchOnlyAddresses().get(0).getmSortTime()
@@ -122,6 +124,7 @@ public class AddressManager {
                     }
                     address.savePubKey(sortTime);
                     watchOnlyAddresses.add(0, address);
+                    addressHashSet.add(address.address);
                 }
 
             } catch (IOException e) {
@@ -138,6 +141,7 @@ public class AddressManager {
             if (!address.hasPrivKey) {
                 address.removeWatchOnly();
                 watchOnlyAddresses.remove(address);
+                addressHashSet.remove(address.address);
             } else {
                 return false;
             }
@@ -163,6 +167,12 @@ public class AddressManager {
             result.addAll(this.privKeyAddresses);
             result.addAll(this.watchOnlyAddresses);
             return result;
+        }
+    }
+
+    public HashSet<String> getAddressHashSet() {
+        synchronized (lock) {
+            return this.addressHashSet;
         }
     }
 
@@ -194,6 +204,7 @@ public class AddressManager {
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
                             , isSyncComplete == 1, isFromXRandom, true);
                     this.privKeyAddresses.add(add);
+                    addressHashSet.add(add.address);
                 }
             }
             if (this.privKeyAddresses.size() > 0) {
@@ -222,6 +233,7 @@ public class AddressManager {
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
                             , isSyncComplete == 1, isFromXRandom, false);
                     this.watchOnlyAddresses.add(add);
+                    addressHashSet.add(add.address);
                 }
             }
             if (this.watchOnlyAddresses.size() > 0) {

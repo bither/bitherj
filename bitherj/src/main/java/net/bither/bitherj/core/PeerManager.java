@@ -795,7 +795,6 @@ public class PeerManager {
             BloomFilter filter = new BloomFilter(bloomFilterElementCount, filterFpRate, tweak,
                     BloomFilter.BloomUpdate.UPDATE_ALL);
 
-
             for (Address address : addresses) { // add addresses to watch for any tx receiveing
                 // money to the wallet
                 byte[] pub = address.getPubKey();
@@ -809,10 +808,13 @@ public class PeerManager {
                     }
                 }
             }
+
             for (Out out : outs) {
-                byte[] outpoint = out.getOutpointData();
-                if (!filter.contains(outpoint)) {
-                    filter.insert(outpoint);
+                if (AddressManager.getInstance().getAddressHashSet().contains(out.getOutAddress())) {
+                    byte[] outpoint = out.getOutpointData();
+                    if (!filter.contains(outpoint)) {
+                        filter.insert(outpoint);
+                    }
                 }
             }
             bloomFilter = filter;
