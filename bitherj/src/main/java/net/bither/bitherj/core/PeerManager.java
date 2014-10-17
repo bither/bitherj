@@ -788,7 +788,13 @@ public class PeerManager {
                 filterFpRate -= (BloomFilter.DEFAULT_BLOOM_FILTER_FP_RATE - BloomFilter
                         .BLOOM_REDUCED_FALSEPOSITIVE_RATE) * (downloadingPeer.getVersionLastBlockHeight() - filterUpdateHeight) / BitherjSettings.BLOCK_DIFFICULTY_INTERVAL;
             }
-            List<Out> outs = AbstractDb.txProvider.getOuts();
+
+            List<Out> outs = new ArrayList<Out>();
+            for (Out out : AbstractDb.txProvider.getOuts()) {
+                if (AddressManager.getInstance().getAddressHashSet().contains(out.getOutAddress())) {
+                    outs.add(out);
+                }
+            }
             List<Address> addresses = AddressManager.getInstance().getAllAddresses();
             bloomFilterElementCount = addresses.size() * 2 + outs.size() + 100;
 
@@ -810,11 +816,9 @@ public class PeerManager {
             }
 
             for (Out out : outs) {
-                if (AddressManager.getInstance().getAddressHashSet().contains(out.getOutAddress())) {
-                    byte[] outpoint = out.getOutpointData();
-                    if (!filter.contains(outpoint)) {
-                        filter.insert(outpoint);
-                    }
+                byte[] outpoint = out.getOutpointData();
+                if (!filter.contains(outpoint)) {
+                    filter.insert(outpoint);
                 }
             }
             bloomFilter = filter;
