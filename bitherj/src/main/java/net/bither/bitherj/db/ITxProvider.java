@@ -61,6 +61,8 @@ public interface ITxProvider {
 
     public List<Out> getOuts();
 
+    public List<Out> getUnSpentOuts();
+
     public List<Tx> getRecentlyTxsByAddress(String address, int greateThanBlockNo, int limit);
 
     public List<Long> txInValues(byte[] txHash);
