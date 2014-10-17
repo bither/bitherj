@@ -14,16 +14,23 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.sample;
+package net.bither.bitherj;
 
+public abstract class AbstractApp {
+    public static NotificationService notificationService;
+    public static ISetting bitherjApp;
+    public static IRandom random;
+    public static boolean addressIsReady = false;
 
-import android.app.Application;
-
-public class App extends Application {
-    private boolean doneSyncFromSpv;
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
+    public void construct() {
+        bitherjApp = initSetting();
+        notificationService = initNotification();
+        random = initRandom();
     }
+
+    public abstract ISetting initSetting();
+
+    public abstract IRandom initRandom();
+
+    public abstract NotificationService initNotification();
 }

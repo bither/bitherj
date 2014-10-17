@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.test.core;
+package net.bither.bitherj.sample.core;
 
 import net.bither.bitherj.core.Block;
-import net.bither.bitherj.db.BlockProvider;
-import net.bither.bitherj.test.ApplicationTest;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.Utils;
 
 import java.util.Arrays;
@@ -36,8 +35,8 @@ public class BlockTest extends ApplicationTest {
         String str = Utils.bytesToHexString(Utils.reverseBytes(block.getBlockHash()));
         assertEquals("000000000000000030e597a72386c512d830b08ecc70b254f46033fd06f2bf93", str);
 
-        BlockProvider.getInstance().addBlock(block);
-        Block testBlock = BlockProvider.getInstance().
+        AbstractDb.blockProvider.addBlock(block);
+        Block testBlock = AbstractDb.blockProvider.
                 getBlock(Utils.reverseBytes(Utils.hexStringToByteArray(
                         "000000000000000030e597a72386c512d830b08ecc70b254f46033fd06f2bf93")));
 

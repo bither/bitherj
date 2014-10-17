@@ -42,7 +42,7 @@ public class DnsDiscovery {
     private final String[] hostNames = BitherjSettings.dnsSeeds;
 
     private static DnsDiscovery instance;
-    
+
     // added by scw (bither)
     public static final DnsDiscovery instance() {
         if (instance == null) {

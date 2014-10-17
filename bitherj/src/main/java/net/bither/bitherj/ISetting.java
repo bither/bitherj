@@ -18,7 +18,10 @@ package net.bither.bitherj;
 
 import net.bither.bitherj.core.BitherjSettings;
 
+import java.io.File;
+
 public interface ISetting {
+
     public BitherjSettings.AppMode getAppMode();
 
     public boolean getBitherjDoneSyncFromSpv();
@@ -26,5 +29,9 @@ public interface ISetting {
     public void setBitherjDoneSyncFromSpv(boolean isDone);
 
     public BitherjSettings.TransactionFeeMode getTransactionFeeMode();
+
+    public File getPrivateDir(String dirName);
+
+    public boolean isApplicationRunInForeground();
 
 }

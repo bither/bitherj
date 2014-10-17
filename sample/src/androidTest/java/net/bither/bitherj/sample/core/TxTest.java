@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.test.core;
+package net.bither.bitherj.sample.core;
 
 import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.Out;
 import net.bither.bitherj.core.Tx;
-import net.bither.bitherj.db.TxProvider;
-import net.bither.bitherj.test.ApplicationTest;
+import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.sample.ApplicationTest;
 import net.bither.bitherj.utils.Utils;
 
 import java.util.Arrays;
@@ -58,8 +58,8 @@ public class TxTest extends ApplicationTest {
         out.setOutStatus(Out.OutStatus.spent);
         out.setOutAddress("test");
         tx.addOutput(out);
-        TxProvider.getInstance().add(tx);
-        Tx testTx = TxProvider.getInstance().getTxDetailByTxHash(txHash);
+        AbstractDb.txProvider.add(tx);
+        Tx testTx = AbstractDb.txProvider.getTxDetailByTxHash(txHash);
         assertEquals(Utils.bytesToHexString(tx.getTxHash()), Utils.bytesToHexString(testTx.getTxHash()));
     }
 

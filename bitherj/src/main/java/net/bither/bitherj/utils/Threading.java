@@ -73,7 +73,8 @@ public class Threading {
     public static void waitForUserCode() {
         final CountDownLatch latch = new CountDownLatch(1);
         USER_THREAD.execute(new Runnable() {
-            @Override public void run() {
+            @Override
+            public void run() {
                 latch.countDown();
             }
         });
@@ -102,7 +103,8 @@ public class Threading {
             start();
         }
 
-        @SuppressWarnings("InfiniteLoopStatement") @Override
+        @SuppressWarnings("InfiniteLoopStatement")
+        @Override
         public void run() {
             while (true) {
                 Runnable task = Uninterruptibles.takeUninterruptibly(tasks);
@@ -183,7 +185,9 @@ public class Threading {
     //
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /** A caching thread pool that creates daemon threads, which won't keep the JVM alive waiting for more work. */
+    /**
+     * A caching thread pool that creates daemon threads, which won't keep the JVM alive waiting for more work.
+     */
     public static ListeningExecutorService THREAD_POOL = MoreExecutors.listeningDecorator(
             Executors.newCachedThreadPool(new ThreadFactory() {
                 @Override

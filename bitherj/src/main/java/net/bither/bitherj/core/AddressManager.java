@@ -16,9 +16,8 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.BitherjAppEnv;
-import net.bither.bitherj.BitherjApplication;
-import net.bither.bitherj.db.TxProvider;
+import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
@@ -42,14 +41,15 @@ public class AddressManager {
 
     protected List<Address> privKeyAddresses = new ArrayList<Address>();
     protected List<Address> watchOnlyAddresses = new ArrayList<Address>();
+    protected HashSet<String> addressHashSet = new HashSet<String>();
 
 
     private AddressManager() {
         synchronized (lock) {
-            initPrivateKeyList();
-            initWatchOnlyList();
-            Utils.BITHERJ_APP_ENV.addressIsReady();
-            BitherjApplication.NOTIFICATION_SERVICE.sendBroadcastAddressLoadCompleteState();
+            initPrivateKeyListByDesc();
+            initWatchOnlyListByDesc();
+            AbstractApp.addressIsReady = true;
+            AbstractApp.notificationService.sendBroadcastAddressLoadCompleteState();
         }
     }
 
@@ -58,23 +58,37 @@ public class AddressManager {
     }
 
     public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {
-        if (TxProvider.getInstance().isExist(tx.getTxHash())) {
+        if (AbstractDb.txProvider.isExist(tx.getTxHash())) {
             // already in db
             return true;
         }
-        boolean needAdd = false;
-        for (Address address : this.getAllAddresses()) {
-            boolean isRel = this.isAddressContainsTx(address.getAddress(), tx);
-            if (!needAdd && isRel) {
-                needAdd = true;
-                TxProvider.getInstance().add(tx);
-                log.info("add tx {} into db", Utils.hashToString(tx.getTxHash()));
-            }
-            if (isRel) {
-                address.notificatTx(tx, txNotificationType);
+
+        if (AbstractDb.txProvider.isTxDoubleSpendWithConfirmedTx(tx)) {
+            // double spend with confirmed tx
+            return false;
+        }
+
+        HashSet<String> needNotifyAddressHashSet = new HashSet<String>();
+        for (Out out : tx.getOuts()) {
+            if (addressHashSet.contains(out.getOutAddress()))
+                needNotifyAddressHashSet.add(out.getOutAddress());
+        }
+
+        List<String> inAddresses = AbstractDb.txProvider.getInAddresses(tx);
+        for (String address : inAddresses) {
+            if (addressHashSet.contains(address))
+                needNotifyAddressHashSet.add(address);
+        }
+        if (needNotifyAddressHashSet.size() > 0) {
+            AbstractDb.txProvider.add(tx);
+            log.info("add tx {} into db", Utils.hashToString(tx.getTxHash()));
+        }
+        for (Address addr : AddressManager.getInstance().getAllAddresses()) {
+            if(needNotifyAddressHashSet.contains(addr.getAddress())){
+                addr.notificatTx(tx, txNotificationType);
             }
         }
-        return needAdd;
+        return needNotifyAddressHashSet.size() > 0;
     }
 
     public boolean isTxRelated(Tx tx) {
@@ -94,7 +108,7 @@ public class AddressManager {
         if (outAddress.contains(address)) {
             return true;
         } else {
-            return TxProvider.getInstance().isAddress(address, tx);
+            return AbstractDb.txProvider.isAddressContainsTx(address, tx);
         }
     }
 
@@ -113,6 +127,7 @@ public class AddressManager {
                     }
                     address.savePubKey(sortTime);
                     privKeyAddresses.add(0, address);
+                    addressHashSet.add(address.address);
                 } else {
                     if (getWatchOnlyAddresses().size() > 0) {
                         long firstSortTime = getWatchOnlyAddresses().get(0).getmSortTime()
@@ -123,6 +138,7 @@ public class AddressManager {
                     }
                     address.savePubKey(sortTime);
                     watchOnlyAddresses.add(0, address);
+                    addressHashSet.add(address.address);
                 }
 
             } catch (IOException e) {
@@ -139,6 +155,7 @@ public class AddressManager {
             if (!address.hasPrivKey) {
                 address.removeWatchOnly();
                 watchOnlyAddresses.remove(address);
+                addressHashSet.remove(address.address);
             } else {
                 return false;
             }
@@ -167,6 +184,12 @@ public class AddressManager {
         }
     }
 
+    public HashSet<String> getAddressHashSet() {
+        synchronized (lock) {
+            return this.addressHashSet;
+        }
+    }
+
     public boolean addressIsSyncComplete() {
         for (Address address : AddressManager.getInstance().getAllAddresses()) {
             if (!address.isSyncComplete()) {
@@ -176,7 +199,7 @@ public class AddressManager {
         return true;
     }
 
-    private void initPrivateKeyList() {
+    private void initPrivateKeyListByDesc() {
         File[] files = Utils.getPrivateDir().listFiles();
         if (files != null) {
             for (File file : files) {
@@ -195,6 +218,7 @@ public class AddressManager {
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
                             , isSyncComplete == 1, isFromXRandom, true);
                     this.privKeyAddresses.add(add);
+                    addressHashSet.add(add.address);
                 }
             }
             if (this.privKeyAddresses.size() > 0) {
@@ -204,7 +228,7 @@ public class AddressManager {
 
     }
 
-    private void initWatchOnlyList() {
+    private void initWatchOnlyListByDesc() {
         File[] files = Utils.getWatchOnlyDir().listFiles();
         if (files != null) {
             for (File file : files) {
@@ -223,6 +247,7 @@ public class AddressManager {
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
                             , isSyncComplete == 1, isFromXRandom, false);
                     this.watchOnlyAddresses.add(add);
+                    addressHashSet.add(add.address);
                 }
             }
             if (this.watchOnlyAddresses.size() > 0) {

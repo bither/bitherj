@@ -71,13 +71,13 @@ public class HeadersMessage extends Message {
             cursor = saveCursor;
 
             // Each header has 80 bytes and one more byte for transactions number which is 00.
-            length = 81 * (int)numHeaders;
+            length = 81 * (int) numHeaders;
         }
 
         long numHeaders = readVarInt();
         if (numHeaders > MAX_HEADERS)
             throw new ProtocolException("Too many headers: got " + numHeaders + " which is larger than " +
-                                         MAX_HEADERS);
+                    MAX_HEADERS);
 
         blockHeaders = new ArrayList<Block>();
 

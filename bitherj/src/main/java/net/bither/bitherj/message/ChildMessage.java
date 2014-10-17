@@ -28,7 +28,8 @@ import javax.annotation.Nullable;
 public abstract class ChildMessage extends Message {
     private static final long serialVersionUID = -7657113383624517931L;
 
-    @Nullable private Message parent;
+    @Nullable
+    private Message parent;
 
     protected ChildMessage() {
     }
@@ -69,7 +70,7 @@ public abstract class ChildMessage extends Message {
         }
         this.parent = parent;
     }
-    
+
     protected void adjustLength(int adjustment) {
         adjustLength(0, adjustment);
     }

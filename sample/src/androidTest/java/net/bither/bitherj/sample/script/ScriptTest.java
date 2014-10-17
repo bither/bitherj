@@ -15,11 +15,12 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.test.script;
+package net.bither.bitherj.sample.script;
 
 import com.google.common.collect.Lists;
 
 import net.bither.bitherj.crypto.XRandom;
+import net.bither.bitherj.sample.ApplicationTest;
 import net.bither.bitherj.test.R;
 import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.OutPoint;
@@ -30,7 +31,6 @@ import net.bither.bitherj.exception.VerificationException;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.script.ScriptOpCodes;
-import net.bither.bitherj.test.ApplicationTest;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;

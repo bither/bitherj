@@ -68,9 +68,11 @@ public class BlockMessage extends Message {
     public static final long EASIEST_DIFFICULTY_TARGET = 0x207fFFFFL;
 
     protected Block block;
+
     public void setBlock(Block block) {
         this.block = block;
     }
+
     public Block getBlock() {
         return this.block;
     }
@@ -136,8 +138,8 @@ public class BlockMessage extends Message {
      * Contruct a block object from the Bitcoin wire format.
      * //     * @param params NetworkParameters object.
      *
-     * @param length      The length of message if known.  Usually this is provided when deserializing of the wire
-     *                    as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
+     * @param length The length of message if known.  Usually this is provided when deserializing of the wire
+     *               as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
      * @throws net.bither.bitherj.exception.ProtocolException
      */
     public BlockMessage(byte[] payloadBytes, int length)

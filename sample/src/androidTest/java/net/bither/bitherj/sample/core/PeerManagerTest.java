@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.test.core;
+package net.bither.bitherj.sample.core;
 
 import net.bither.bitherj.core.Block;
 import net.bither.bitherj.core.BlockChain;
 import net.bither.bitherj.core.PeerManager;
-import net.bither.bitherj.test.ApplicationTest;
+import net.bither.bitherj.sample.ApplicationTest;
 
 public class PeerManagerTest extends ApplicationTest {
     @Override
