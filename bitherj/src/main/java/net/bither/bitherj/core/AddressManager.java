@@ -83,11 +83,9 @@ public class AddressManager {
             AbstractDb.txProvider.add(tx);
             log.info("add tx {} into db", Utils.hashToString(tx.getTxHash()));
         }
-        for (String address : needNotifyAddressHashSet) {
-            for (Address addr : AddressManager.getInstance().getAllAddresses()) {
-                if (addr.address.equals(address)) {
-                    addr.notificatTx(tx, txNotificationType);
-                }
+        for (Address addr : AddressManager.getInstance().getAllAddresses()) {
+            if(needNotifyAddressHashSet.contains(addr.getAddress())){
+                addr.notificatTx(tx, txNotificationType);
             }
         }
         return needNotifyAddressHashSet.size() > 0;
