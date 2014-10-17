@@ -62,19 +62,34 @@ public class AddressManager {
             // already in db
             return true;
         }
-        boolean needAdd = false;
-        for (Address address : this.getAllAddresses()) {
-            boolean isRel = this.isAddressContainsTx(address.getAddress(), tx);
-            if (!needAdd && isRel) {
-                needAdd = true;
-                AbstractDb.txProvider.add(tx);
-                log.info("add tx {} into db", Utils.hashToString(tx.getTxHash()));
-            }
-            if (isRel) {
-                address.notificatTx(tx, txNotificationType);
+        HashSet<String> needNotifyAddressHashSet = new HashSet<String>();
+        for (Out out : tx.getOuts()) {
+            if (addressHashSet.contains(out.getOutAddress()))
+                needNotifyAddressHashSet.add(out.getOutAddress());
+        }
+
+        if (AbstractDb.txProvider.isTxDoubleSpendWithConfirmedTx(tx)) {
+            // double spend with confirmed tx
+            return false;
+        }
+
+        List<String> inAddresses = AbstractDb.txProvider.getInAddresses(tx);
+        for (String address : inAddresses) {
+            if (addressHashSet.contains(address))
+                needNotifyAddressHashSet.add(address);
+        }
+        if (needNotifyAddressHashSet.size() > 0) {
+            AbstractDb.txProvider.add(tx);
+            log.info("add tx {} into db", Utils.hashToString(tx.getTxHash()));
+        }
+        for (String address : needNotifyAddressHashSet) {
+            for (Address addr : AddressManager.getInstance().getAllAddresses()) {
+                if (addr.address.equals(address)) {
+                    addr.notificatTx(tx, txNotificationType);
+                }
             }
         }
-        return needAdd;
+        return needNotifyAddressHashSet.size() > 0;
     }
 
     public boolean isTxRelated(Tx tx) {
@@ -94,7 +109,7 @@ public class AddressManager {
         if (outAddress.contains(address)) {
             return true;
         } else {
-            return AbstractDb.txProvider.isAddress(address, tx);
+            return AbstractDb.txProvider.isAddressContainsTx(address, tx);
         }
     }
 

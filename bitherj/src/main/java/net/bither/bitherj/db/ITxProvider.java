@@ -41,7 +41,10 @@ public interface ITxProvider {
     public void remove(byte[] txHash);
 
 
-    public boolean isAddress(String address, Tx txItem);
+    public boolean isAddressContainsTx(String address, Tx txItem);
+    public boolean isTxDoubleSpendWithConfirmedTx(Tx tx);
+    public List<String> getInAddresses(Tx tx);
+
 
     public void confirmTx(int blockNo, List<byte[]> txHashes);
 
