@@ -62,15 +62,16 @@ public class AddressManager {
             // already in db
             return true;
         }
-        HashSet<String> needNotifyAddressHashSet = new HashSet<String>();
-        for (Out out : tx.getOuts()) {
-            if (addressHashSet.contains(out.getOutAddress()))
-                needNotifyAddressHashSet.add(out.getOutAddress());
-        }
 
         if (AbstractDb.txProvider.isTxDoubleSpendWithConfirmedTx(tx)) {
             // double spend with confirmed tx
             return false;
+        }
+
+        HashSet<String> needNotifyAddressHashSet = new HashSet<String>();
+        for (Out out : tx.getOuts()) {
+            if (addressHashSet.contains(out.getOutAddress()))
+                needNotifyAddressHashSet.add(out.getOutAddress());
         }
 
         List<String> inAddresses = AbstractDb.txProvider.getInAddresses(tx);
