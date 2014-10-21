@@ -22,7 +22,9 @@ import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.exception.TxBuilderException;
+import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
+import net.bither.bitherj.script.ScriptChunk;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
@@ -37,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -58,8 +61,8 @@ public class Address implements Comparable<Address> {
     private long balance = 0;
     private boolean isFromXRandom;
 
-    public Address(String address, byte[] pubKey, long sortTime,
-                   boolean isSyncComplete, boolean isFromXRandom, boolean hasPrivKey) {
+    public Address(String address, byte[] pubKey, long sortTime, boolean isSyncComplete,
+                   boolean isFromXRandom, boolean hasPrivKey) {
         this.hasPrivKey = hasPrivKey;
         this.encryptPrivKey = null;
         this.address = address;
@@ -112,7 +115,9 @@ public class Address implements Comparable<Address> {
         Set<OutPoint> spentOut = new HashSet<OutPoint>();
         Set<OutPoint> unspendOut = new HashSet<OutPoint>();
 
-        for (int i = txs.size() - 1; i >= 0; i--) {
+        for (int i = txs.size() - 1;
+             i >= 0;
+             i--) {
             Set<OutPoint> spent = new HashSet<OutPoint>();
             Tx tx = txs.get(i);
 
@@ -122,8 +127,8 @@ public class Address implements Comparable<Address> {
                 inHashes.add(in.getPrevTxHash());
             }
 
-            if (tx.getBlockNo() == Tx.TX_UNCONFIRMED
-                    && (this.isIntersects(spent, spentOut) || this.isIntersects(inHashes, invalidTx))) {
+            if (tx.getBlockNo() == Tx.TX_UNCONFIRMED && (this.isIntersects(spent,
+                    spentOut) || this.isIntersects(inHashes, invalidTx))) {
                 invalidTx.add(tx.getTxHash());
                 continue;
             }
@@ -234,11 +239,10 @@ public class Address implements Comparable<Address> {
 
     private void savePubKey(String dir, long sortTime) throws IOException {
         this.mSortTime = sortTime;
-        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME
-                , dir, getAddress());
-        String watchOnlyContent = Utils.format("%s:%s:%s%s",
-                Utils.bytesToHexString(this.pubKey), getSyncCompleteString(),
-                Long.toString(this.mSortTime), getXRandomString());
+        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME, dir,
+                getAddress());
+        String watchOnlyContent = Utils.format("%s:%s:%s%s", Utils.bytesToHexString(this.pubKey),
+                getSyncCompleteString(), Long.toString(this.mSortTime), getXRandomString());
         log.debug("address content " + watchOnlyContent);
         Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
     }
@@ -252,11 +256,10 @@ public class Address implements Comparable<Address> {
     }
 
     private void updatePubKey(String dir) throws IOException {
-        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME
-                , dir, getAddress());
-        String watchOnlyContent = Utils.format("%s:%s:%s%s",
-                Utils.bytesToHexString(this.pubKey), getSyncCompleteString(),
-                Long.toString(this.mSortTime), getXRandomString());
+        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME, dir,
+                getAddress());
+        String watchOnlyContent = Utils.format("%s:%s:%s%s", Utils.bytesToHexString(this.pubKey),
+                getSyncCompleteString(), Long.toString(this.mSortTime), getXRandomString());
         log.debug("address content " + watchOnlyContent);
         Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
     }
@@ -272,8 +275,8 @@ public class Address implements Comparable<Address> {
 
 
     public void removeWatchOnly() {
-        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME
-                , Utils.getWatchOnlyDir(), getAddress());
+        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
+                Utils.getWatchOnlyDir(), getAddress());
         Utils.removeFile(new File(watchOnlyFullFileName));
 
     }
@@ -294,8 +297,8 @@ public class Address implements Comparable<Address> {
     public String getEncryptPrivKey() {
         if (this.hasPrivKey) {
             if (Utils.isEmpty(this.encryptPrivKey)) {
-                String privateKeyFullFileName = Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                        Utils.getPrivateDir(), getAddress());
+                String privateKeyFullFileName = Utils.format(BitherjSettings
+                        .PRIVATE_KEY_FILE_NAME, Utils.getPrivateDir(), getAddress());
                 this.encryptPrivKey = Utils.readFile(new File(privateKeyFullFileName));
                 if (this.encryptPrivKey == null) {
                     //todo backup?
@@ -348,7 +351,8 @@ public class Address implements Comparable<Address> {
         return resultStrs;
     }
 
-    public List<byte[]> signHashes(List<byte[]> unsignedInHashes, CharSequence passphrase) throws PasswordException {
+    public List<byte[]> signHashes(List<byte[]> unsignedInHashes, CharSequence passphrase) throws
+            PasswordException {
         ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getEncryptPrivKey(), passphrase);
         if (key == null) {
             throw new PasswordException("do not decrypt eckey");
@@ -356,8 +360,8 @@ public class Address implements Comparable<Address> {
         KeyParameter assKey = key.getKeyCrypter().deriveKey(passphrase);
         List<byte[]> result = new ArrayList<byte[]>();
         for (byte[] unsignedInHash : unsignedInHashes) {
-            TransactionSignature signature = new TransactionSignature(key.sign(unsignedInHash, assKey)
-                    , TransactionSignature.SigHash.ALL, false);
+            TransactionSignature signature = new TransactionSignature(key.sign(unsignedInHash,
+                    assKey), TransactionSignature.SigHash.ALL, false);
             result.add(ScriptBuilder.createInputScript(signature, key).getProgram());
         }
         return result;
@@ -365,5 +369,27 @@ public class Address implements Comparable<Address> {
 
     public void signTx(Tx tx, CharSequence passphrase) {
         tx.signWithSignatures(this.signHashes(tx.getUnsignedInHashes(), passphrase));
+    }
+
+    public boolean checkRValues() {
+        //TODO checkRValueForAddress
+        return new Random().nextInt() % 2 == 0;
+    }
+
+    public boolean checkRValuesForTx(Tx tx) {
+       HashSet<byte[]> rs = new HashSet<byte[]>();
+        for (In in : tx.getIns()) {
+            Script script = new Script(in.getInSignature());
+            for (ScriptChunk chunk : script.getChunks()) {
+                if (chunk.isPushData() && chunk.opcode == 71) {
+                    TransactionSignature signature = TransactionSignature.decodeFromBitcoin(chunk
+                            .data, false);
+                    rs.add(signature.r.toByteArray());
+                }
+            }
+        }
+
+        //TODO checkRValueForTx
+        return new Random().nextInt() % 2 == 0;
     }
 }
