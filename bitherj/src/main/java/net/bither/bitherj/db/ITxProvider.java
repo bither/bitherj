@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.db;
 
+import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.Out;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.utils.Sha256Hash;
@@ -72,7 +73,7 @@ public interface ITxProvider {
 
     public HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem);
 
-    public void completeInSignature(List<byte[]> txHashes, List<Integer> inSns, List<byte[]> inSignature);
+    public void completeInSignature(List<In> ins);
     public int needCompleteInSignature(String address);
 
 }
