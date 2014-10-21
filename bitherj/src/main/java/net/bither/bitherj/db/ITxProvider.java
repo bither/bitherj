@@ -72,5 +72,7 @@ public interface ITxProvider {
 
     public HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem);
 
+    public void completeInSignature(List<byte[]> txHashes, List<Integer> inSns, List<byte[]> inSignature);
+    public int needCompleteInSignature(String address);
 
 }
