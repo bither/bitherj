@@ -21,6 +21,7 @@ import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.PasswordException;
+import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
@@ -35,6 +36,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -380,24 +382,44 @@ public class Address implements Comparable<Address> {
     }
 
     public boolean checkRValues() {
-        //TODO checkRValueForAddress
-        return new Random().nextInt() % 2 == 0;
+        HashSet<BigInteger> rs = new HashSet<BigInteger>();
+        for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
+            Script script = new Script(in.getInSignature());
+            try {
+                if (script.getFromAddress().equals(this.address)) {
+                    TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
+                    BigInteger i = new BigInteger(signature.r.toByteArray());
+                    if (rs.contains(i))
+                        return false;
+                    rs.add(i);
+                }
+            } catch (ScriptException ex) {
+
+            }
+        }
+        return true;
     }
 
     public boolean checkRValuesForTx(Tx tx) {
-       HashSet<byte[]> rs = new HashSet<byte[]>();
-        for (In in : tx.getIns()) {
+        HashSet<BigInteger> rs = new HashSet<BigInteger>();
+        for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
             Script script = new Script(in.getInSignature());
-            for (ScriptChunk chunk : script.getChunks()) {
-                if (chunk.isPushData() && chunk.opcode == 71) {
-                    TransactionSignature signature = TransactionSignature.decodeFromBitcoin(chunk
-                            .data, false);
-                    rs.add(signature.r.toByteArray());
+            try {
+                if (script.getFromAddress().equals(this.address)) {
+                    TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
+                    rs.add(new BigInteger(signature.r.toByteArray()));
                 }
+            } catch (ScriptException ex) {
+
             }
         }
-
-        //TODO checkRValueForTx
-        return new Random().nextInt() % 2 == 0;
+        for (In in : tx.getIns()) {
+            Script script = new Script(in.getInSignature());
+            TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
+            BigInteger i = new BigInteger(signature.r.toByteArray());
+            if (rs.contains(i))
+                return false;
+        }
+        return true;
     }
 }

@@ -64,8 +64,9 @@ public interface ITxProvider {
     public void txSentBySelfHasSaw(byte[] txHash);
 
     public List<Out> getOuts();
-
     public List<Out> getUnSpentOuts();
+
+    public List<In> getRelatedIn(String address);
 
     public List<Tx> getRecentlyTxsByAddress(String address, int greateThanBlockNo, int limit);
 
