@@ -371,6 +371,14 @@ public class Address implements Comparable<Address> {
         tx.signWithSignatures(this.signHashes(tx.getUnsignedInHashes(), passphrase));
     }
 
+    public void completeInSignature(List<In> ins) {
+        AbstractDb.txProvider.completeInSignature(ins);
+    }
+
+    public int needCompleteInSignature() {
+        return AbstractDb.txProvider.needCompleteInSignature(this.address);
+    }
+
     public boolean checkRValues() {
         //TODO checkRValueForAddress
         return new Random().nextInt() % 2 == 0;
