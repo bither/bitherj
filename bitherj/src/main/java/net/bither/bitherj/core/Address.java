@@ -384,17 +384,19 @@ public class Address implements Comparable<Address> {
     public boolean checkRValues() {
         HashSet<BigInteger> rs = new HashSet<BigInteger>();
         for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
-            Script script = new Script(in.getInSignature());
-            try {
-                if (script.getFromAddress().equals(this.address)) {
-                    TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
-                    BigInteger i = new BigInteger(signature.r.toByteArray());
-                    if (rs.contains(i))
-                        return false;
-                    rs.add(i);
-                }
-            } catch (ScriptException ex) {
+            if (in.getInSignature() != null) {
+                Script script = new Script(in.getInSignature());
+                try {
+                    if (script.getFromAddress().equals(this.address)) {
+                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
+                        BigInteger i = new BigInteger(signature.r.toByteArray());
+                        if (rs.contains(i))
+                            return false;
+                        rs.add(i);
+                    }
+                } catch (ScriptException ex) {
 
+                }
             }
         }
         return true;
@@ -403,14 +405,16 @@ public class Address implements Comparable<Address> {
     public boolean checkRValuesForTx(Tx tx) {
         HashSet<BigInteger> rs = new HashSet<BigInteger>();
         for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
-            Script script = new Script(in.getInSignature());
-            try {
-                if (script.getFromAddress().equals(this.address)) {
-                    TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
-                    rs.add(new BigInteger(signature.r.toByteArray()));
-                }
-            } catch (ScriptException ex) {
+            if (in.getInSignature() != null) {
+                Script script = new Script(in.getInSignature());
+                try {
+                    if (script.getFromAddress().equals(this.address)) {
+                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
+                        rs.add(new BigInteger(signature.r.toByteArray()));
+                    }
+                } catch (ScriptException ex) {
 
+                }
             }
         }
         for (In in : tx.getIns()) {
