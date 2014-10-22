@@ -169,6 +169,12 @@ public class PeerManager {
         }
     }
 
+    public void notifyMaxConnectedPeerCountChange(){
+        if(running.get()) {
+            reconnect();
+        }
+    }
+
     public long getLastBlockHeight() {
         Block lastBlock = BlockChain.getInstance().lastBlock;
         return lastBlock == null ? 0 : lastBlock.getBlockNo();
