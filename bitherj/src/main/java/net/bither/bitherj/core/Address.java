@@ -423,6 +423,7 @@ public class Address implements Comparable<Address> {
             BigInteger i = new BigInteger(signature.r.toByteArray());
             if (rs.contains(i))
                 return false;
+            rs.add(i);
         }
         return true;
     }
