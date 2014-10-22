@@ -297,10 +297,10 @@ public class Script {
     }
 
     public byte[] getSig() throws ScriptException {
-        if (chunks.size() == 1 && chunks.get(0).equalsOpCode(OP_PUSHDATA4)) {
+        if (chunks.size() == 1 && chunks.get(0).isPushData()) {
             return chunks.get(0).data;
-        } else if (chunks.size() == 2 && chunks.get(0).equalsOpCode(OP_PUSHDATA4)
-                && chunks.get(1).equalsOpCode(OP_PUSHDATA4)) {
+        } else if (chunks.size() == 2 && chunks.get(0).isPushData()
+                && chunks.get(1).isPushData()) {
             return chunks.get(0).data;
         }else {
             throw new ScriptException("Script did not match expected form: " + toString());
