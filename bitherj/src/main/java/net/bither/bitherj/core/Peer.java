@@ -975,7 +975,7 @@ public class Peer extends PeerSocketHandler {
     public boolean equals(Object o) {
         if (o instanceof Peer) {
             Peer item = (Peer) o;
-            return Arrays.equals(getPeerAddress().getAddress(), item.getPeerAddress().getAddress());
+            return Utils.parseLongFromAddress(getPeerAddress())==Utils.parseLongFromAddress(item.getPeerAddress());
         } else {
             return false;
         }
