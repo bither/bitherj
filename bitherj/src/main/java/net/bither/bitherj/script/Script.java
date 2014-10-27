@@ -300,7 +300,11 @@ public class Script {
         if (chunks.size() == 1 && chunks.get(0).isPushData()) {
             return chunks.get(0).data;
         } else if (chunks.size() == 2 && chunks.get(0).isPushData()
-                && chunks.get(1).isPushData()) {
+                && chunks.get(1).isPushData()
+                && chunks.get(0).data != null
+                && chunks.get(0).data.length > 2
+                && chunks.get(1).data != null
+                && chunks.get(1).data.length > 2) {
             return chunks.get(0).data;
         }else {
             throw new ScriptException("Script did not match expected form: " + toString());
