@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.db;
 
+import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.Out;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.utils.Sha256Hash;
@@ -63,8 +64,9 @@ public interface ITxProvider {
     public void txSentBySelfHasSaw(byte[] txHash);
 
     public List<Out> getOuts();
-
     public List<Out> getUnSpentOuts();
+
+    public List<In> getRelatedIn(String address);
 
     public List<Tx> getRecentlyTxsByAddress(String address, int greateThanBlockNo, int limit);
 
@@ -72,5 +74,7 @@ public interface ITxProvider {
 
     public HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem);
 
+    public void completeInSignature(List<In> ins);
+    public int needCompleteInSignature(String address);
 
 }

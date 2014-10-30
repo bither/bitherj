@@ -296,6 +296,21 @@ public class Script {
         }
     }
 
+    public byte[] getSig() throws ScriptException {
+        if (chunks.size() == 1 && chunks.get(0).isPushData()) {
+            return chunks.get(0).data;
+        } else if (chunks.size() == 2 && chunks.get(0).isPushData()
+                && chunks.get(1).isPushData()
+                && chunks.get(0).data != null
+                && chunks.get(0).data.length > 2
+                && chunks.get(1).data != null
+                && chunks.get(1).data.length > 2) {
+            return chunks.get(0).data;
+        }else {
+            throw new ScriptException("Script did not match expected form: " + toString());
+        }
+    }
+
     /**
      * For 2-element [input] scripts assumes that the paid-to-address can be derived from the public key.
      * The concept of a "from address" isn't well defined in Bitcoin and you should not assume the sender of a
