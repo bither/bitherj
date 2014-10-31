@@ -41,6 +41,7 @@ public class AddressManager {
 
     protected List<Address> privKeyAddresses = new ArrayList<Address>();
     protected List<Address> watchOnlyAddresses = new ArrayList<Address>();
+    protected List<Address> trashAddresses = new ArrayList<Address>();
     protected HashSet<String> addressHashSet = new HashSet<String>();
 
 
@@ -48,6 +49,7 @@ public class AddressManager {
         synchronized (lock) {
             initPrivateKeyListByDesc();
             initWatchOnlyListByDesc();
+            initTrashListByDesc();
             AbstractApp.addressIsReady = true;
             AbstractApp.notificationService.sendBroadcastAddressLoadCompleteState();
         }
@@ -115,28 +117,13 @@ public class AddressManager {
     public boolean addAddress(Address address) {
         synchronized (lock) {
             try {
-                long sortTime = new Date().getTime();
                 if (address.hasPrivKey) {
                     address.savePrivateKey();
-                    if (getPrivKeyAddresses().size() > 0) {
-                        long firstSortTime = getPrivKeyAddresses().get(0).getmSortTime()
-                                + getPrivKeyAddresses().size();
-                        if (sortTime < firstSortTime) {
-                            sortTime = firstSortTime;
-                        }
-                    }
-                    address.savePubKey(sortTime);
+                    address.savePubKey(getPrivKeySortTime());
                     privKeyAddresses.add(0, address);
                     addressHashSet.add(address.address);
                 } else {
-                    if (getWatchOnlyAddresses().size() > 0) {
-                        long firstSortTime = getWatchOnlyAddresses().get(0).getmSortTime()
-                                + getWatchOnlyAddresses().size();
-                        if (sortTime < firstSortTime) {
-                            sortTime = firstSortTime;
-                        }
-                    }
-                    address.savePubKey(sortTime);
+                    address.savePubKey(getWatchOnlySortTime());
                     watchOnlyAddresses.add(0, address);
                     addressHashSet.add(address.address);
                 }
@@ -149,6 +136,29 @@ public class AddressManager {
         }
     }
 
+    private long getWatchOnlySortTime() {
+        long sortTime = new Date().getTime();
+        if (getWatchOnlyAddresses().size() > 0) {
+            long firstSortTime = getWatchOnlyAddresses().get(0).getmSortTime()
+                    + getWatchOnlyAddresses().size();
+            if (sortTime < firstSortTime) {
+                sortTime = firstSortTime;
+            }
+        }
+        return sortTime;
+    }
+
+    private long getPrivKeySortTime() {
+        long sortTime = new Date().getTime();
+        if (getPrivKeyAddresses().size() > 0) {
+            long firstSortTime = getPrivKeyAddresses().get(0).getmSortTime()
+                    + getPrivKeyAddresses().size();
+            if (sortTime < firstSortTime) {
+                sortTime = firstSortTime;
+            }
+        }
+        return sortTime;
+    }
 
     public boolean stopMonitor(Address address) {
         synchronized (lock) {
@@ -163,6 +173,39 @@ public class AddressManager {
         }
     }
 
+    public boolean trashPrivKey(Address address) {
+        synchronized (lock) {
+            if (address.hasPrivKey) {
+                address.trashPrivKey();
+                privKeyAddresses.remove(address);
+                addressHashSet.remove(address.address);
+            } else {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public boolean restorePrivKey(Address address) {
+        synchronized (lock) {
+            try {
+                if (address.hasPrivKey) {
+                    address.restorePrivKey();
+                    long sortTime = getPrivKeySortTime();
+                    address.savePubKey(sortTime);
+                    privKeyAddresses.add(0, address);
+                    addressHashSet.add(address.address);
+                } else {
+                    return false;
+                }
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
     public List<Address> getPrivKeyAddresses() {
         synchronized (lock) {
             return this.privKeyAddresses;
@@ -172,6 +215,12 @@ public class AddressManager {
     public List<Address> getWatchOnlyAddresses() {
         synchronized (lock) {
             return this.watchOnlyAddresses;
+        }
+    }
+
+    public List<Address> getTrashAddresses() {
+        synchronized (lock) {
+            return this.trashAddresses;
         }
     }
 
@@ -225,7 +274,6 @@ public class AddressManager {
                 Collections.sort(this.privKeyAddresses);
             }
         }
-
     }
 
     private void initWatchOnlyListByDesc() {
@@ -252,6 +300,33 @@ public class AddressManager {
             }
             if (this.watchOnlyAddresses.size() > 0) {
                 Collections.sort(this.watchOnlyAddresses);
+            }
+        }
+    }
+
+    private void initTrashListByDesc() {
+        File[] files = Utils.getTrashDir().listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.getName().contains(Address.PUBLIC_KEY_FILE_NAME_SUFFIX)) {
+                    String content = Utils.readFile(file);
+                    String[] strings = content.split(Address.KEY_SPLIT_STRING);
+                    String address = file.getName().substring(0,
+                            file.getName().length() - Address.PUBLIC_KEY_FILE_NAME_SUFFIX.length());
+                    String publicKey = strings[0];
+                    int isSyncComplete = Integer.valueOf(strings[1]);
+                    long createTime = Long.valueOf(strings[2]);
+                    boolean isFromXRandom = false;
+                    if (strings.length == 4) {
+                        isFromXRandom = Utils.compareString(strings[3], QRCodeUtil.XRANDOM_FLAG);
+                    }
+                    Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
+                            , isSyncComplete == 1, isFromXRandom, true);
+                    this.trashAddresses.add(add);
+                }
+            }
+            if (this.trashAddresses.size() > 0) {
+                Collections.sort(this.trashAddresses);
             }
         }
     }

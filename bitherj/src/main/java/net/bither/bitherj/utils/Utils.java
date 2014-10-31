@@ -725,6 +725,7 @@ public class Utils {
     private static final String WALLET_WATCH_ONLY = "watch";
     private static final String WALLET_HOT = "hot";
     private static final String WALLET_COLD = "cold";
+    private static final String WALLET_TRASH = "trash";
 
     //add by jjz (bither)
     public static File getWalletRomCache() {
@@ -748,6 +749,16 @@ public class Utils {
         if (AbstractApp.bitherjApp.getAppMode() == BitherjSettings.AppMode.COLD) {
             dirName = WALLET_COLD;
         }
+        file = new File(file, dirName);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        return file;
+    }
+
+    public static File getTrashDir() {
+        File file = getWalletRomCache();
+        String dirName = WALLET_TRASH;
         file = new File(file, dirName);
         if (!file.exists()) {
             file.mkdirs();
@@ -809,6 +820,12 @@ public class Utils {
     public static void removeFile(File file) {
         if (file.exists()) {
             file.delete();
+        }
+    }
+
+    public static void moveFile(File oldFile, File newFile) {
+        if (oldFile.exists()) {
+            oldFile.renameTo(newFile);
         }
     }
 
