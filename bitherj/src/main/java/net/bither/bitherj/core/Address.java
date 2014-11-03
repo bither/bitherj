@@ -297,7 +297,7 @@ public class Address implements Comparable<Address> {
         Utils.moveFile(oldWatchOnlyFile, newWatchOnlyFile);
     }
 
-    public void restorePrivKey() {
+    public void restorePrivKey() throws IOException {
         File oldPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
                 Utils.getTrashDir(), getAddress()));
         File newPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
@@ -310,6 +310,9 @@ public class Address implements Comparable<Address> {
 
         Utils.moveFile(oldPrivKeyFile, newPrivKeyFile);
         Utils.moveFile(oldWatchOnlyFile, newWatchOnlyFile);
+
+        this.syncComplete = false;
+        this.updatePubkey();
     }
 
     @Override

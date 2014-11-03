@@ -179,6 +179,7 @@ public class AddressManager {
                 address.trashPrivKey();
                 privKeyAddresses.remove(address);
                 addressHashSet.remove(address.address);
+                trashAddresses.add(address);
             } else {
                 return false;
             }
@@ -193,6 +194,7 @@ public class AddressManager {
                     address.restorePrivKey();
                     long sortTime = getPrivKeySortTime();
                     address.savePubKey(sortTime);
+                    trashAddresses.remove(address);
                     privKeyAddresses.add(0, address);
                     addressHashSet.add(address.address);
                 } else {
