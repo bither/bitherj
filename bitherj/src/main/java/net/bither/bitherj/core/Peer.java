@@ -559,7 +559,7 @@ public class Peer extends PeerSocketHandler {
             } catch (VerificationException e) {
                 valid = false;
             }
-            if (valid) {
+            if (valid && !tx.hasDustOut()) {
                 PeerManager.instance().relayedTransaction(this, tx);
             }
             /*

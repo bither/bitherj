@@ -713,7 +713,7 @@ public class Tx extends Message implements Comparable<Tx> {
                 // execution)
                 // todo:
 //                input.getScriptSig().correctlySpends(this, i,
-// input.getOutpoint().getConnectedOutput().getScriptPubKey(), true);
+//  input.getOutpoint().getConnectedOutput().getScriptPubKey(), true);
                 log.warn("Input {} already correctly spends output, " +
                         "" + "assuming SIGHASH type used will be safe and skipping signing.", i);
                 // all need to sign
@@ -769,7 +769,7 @@ public class Tx extends Message implements Comparable<Tx> {
             In input = ins.get(i);
 //            final TransactionOutput connectedOutput = input.getOutpoint().getConnectedOutput();
 //            checkNotNull(connectedOutput);  // Quiet static analysis: is never null here but
-// cannot be statically proven
+//            cannot be statically proven
             Script scriptPubKey = new Script(input.getPrevOutScript()); //connectedOutput
             // .getScriptPubKey();
             if (scriptPubKey.isSentToAddress()) {
@@ -1250,5 +1250,14 @@ public class Tx extends Message implements Comparable<Tx> {
         } else {
             return false;
         }
+    }
+
+    public boolean hasDustOut() {
+        for (Out out : this.getOuts()) {
+            if (out.getOutValue() <= Tx.MIN_NONDUST_OUTPUT) {
+                return true;
+            }
+        }
+        return false;
     }
 }
