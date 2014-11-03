@@ -177,6 +177,7 @@ public class AddressManager {
         synchronized (lock) {
             if (address.hasPrivKey) {
                 address.trashPrivKey();
+                trashAddresses.add(address);
                 privKeyAddresses.remove(address);
                 addressHashSet.remove(address.address);
                 trashAddresses.add(address);
@@ -192,6 +193,7 @@ public class AddressManager {
             try {
                 if (address.hasPrivKey) {
                     address.restorePrivKey();
+                    trashAddresses.remove(address);
                     long sortTime = getPrivKeySortTime();
                     address.savePubKey(sortTime);
                     trashAddresses.remove(address);
