@@ -175,7 +175,7 @@ public class AddressManager {
 
     public boolean trashPrivKey(Address address) {
         synchronized (lock) {
-            if (address.hasPrivKey) {
+            if (address.hasPrivKey && address.getBalance() == 0) {
                 address.trashPrivKey();
                 trashAddresses.add(address);
                 privKeyAddresses.remove(address);
