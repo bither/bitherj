@@ -972,6 +972,7 @@ public class PeerManager {
                 log.warn("{} chain sync time out", downloadingPeer.getPeerAddress()
                         .getHostAddress());
                 synchronizing = false;
+                syncStartHeight = 0;
                 downloadingPeer.disconnect();
             }
         }
