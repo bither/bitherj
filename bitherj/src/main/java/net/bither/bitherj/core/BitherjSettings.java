@@ -30,6 +30,8 @@ public class BitherjSettings {
     public static final int PROTOCOL_VERSION = 70001;
     public static final int MIN_PROTO_VERSION = 70001;
 
+    public static final int MAX_TX_SIZE = 100000;
+
     /**
      * The alert signing key originally owned by Satoshi, and now passed on to Gavin along with a few others.
      */

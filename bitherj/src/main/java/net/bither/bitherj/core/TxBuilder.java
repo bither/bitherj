@@ -73,7 +73,7 @@ public class TxBuilder {
         List<Tx> txs = new ArrayList<Tx>();
         for (TxBuilderProtocol builder : this.txBuilders) {
             Tx tx = builder.buildTx(address, unspendTxs, prepareTx(amounts, addresses));
-            if (tx != null) {
+            if (tx != null && estimationTxSize(tx.getIns().size(), tx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
                 txs.add(tx);
             }
         }
