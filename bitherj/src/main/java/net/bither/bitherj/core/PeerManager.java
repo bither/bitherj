@@ -336,6 +336,7 @@ public class PeerManager {
                                 .getVersionLastBlockHeight()) || p.getVersionLastBlockHeight() >
                                 dp.getVersionLastBlockHeight()) {
                             dp = p;
+                            syncStartHeight = getLastBlockHeight();
                         }
                     }
                     if (downloadingPeer != null) {
@@ -358,9 +359,8 @@ public class PeerManager {
 
                     if (getLastBlockHeight() < dp.getVersionLastBlockHeight()) {
 
-                        lastRelayTime = 0;
+                        lastRelayTime = System.currentTimeMillis();
                         synchronizing = true;
-                        syncStartHeight = getLastBlockHeight();
 
                         scheduleTimeoutTimer(BitherjSettings.PROTOCOL_TIMEOUT);
                         if (doneSyncFromSPV()) {
