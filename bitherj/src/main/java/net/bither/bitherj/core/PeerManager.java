@@ -972,6 +972,7 @@ public class PeerManager {
                 log.warn("{} chain sync time out", downloadingPeer.getPeerAddress()
                         .getHostAddress());
                 synchronizing = false;
+                syncStartHeight = 0;
                 downloadingPeer.disconnect();
             }
         }
@@ -1001,7 +1002,7 @@ public class PeerManager {
         if (synchronizing && syncStartHeight > 0 && downloadingPeer != null && lastBlockHeight >=
                 syncStartHeight && lastBlockHeight <= downloadingPeer.getVersionLastBlockHeight()) {
             AbstractApp.notificationService.sendBroadcastProgressState((double) (lastBlockHeight
-                    - syncStartHeight) / (downloadingPeer.getVersionLastBlockHeight() -
+                    - syncStartHeight) / (double) (downloadingPeer.getVersionLastBlockHeight() -
                     syncStartHeight));
         } else {
             AbstractApp.notificationService.sendBroadcastProgressState(-1);
