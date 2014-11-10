@@ -152,8 +152,12 @@ public class Peer extends PeerSocketHandler {
             setTimeoutEnabled(true);
             setSocketTimeout(TimeOutDelay);
             bloomFilterSent = false;
-            NioClientManager.instance().openConnection(new InetSocketAddress(getPeerAddress(),
-                    BitherjSettings.port), this);
+            try {
+                NioClientManager.instance().openConnection(new InetSocketAddress(getPeerAddress(),
+                        BitherjSettings.port), this);
+            } catch (Exception ex) {
+                exceptionCaught(ex);
+            }
         }
     }
 
