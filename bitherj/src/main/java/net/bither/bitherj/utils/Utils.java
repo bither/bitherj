@@ -42,6 +42,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
@@ -854,6 +855,10 @@ public class Utils {
         }
     }
 
+    public static String formatDoubleToMoneyString(double num) {
+        java.text.DecimalFormat formate = new DecimalFormat("0.00");
+        return formate.format(num);
+    }
     //Added by scw (bither)
     public static InetAddress parseAddressFromLong(long value) throws UnknownHostException {
         byte[] bytes;
