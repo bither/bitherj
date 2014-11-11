@@ -94,6 +94,16 @@ public class GenericUtils {
             } else {
                 return String.format(Locale.US, "%s%d.%05d", sign, coins, satoshis);
             }
+        } else if (shift == 6) {
+            if (precision != 2) {
+                throw new IllegalArgumentException("cannot handle precision/shift: " + precision
+                        + "/" + shift);
+            }
+            int coin = (ONE_BTC_INT / (int)Math.floor(Math.pow(10, shift)));
+            final long absValue = Math.abs(value);
+            final long coins = absValue / coin;
+            final int satoshis = (int) (absValue % coin);
+            return String.format(Locale.US, "%s%d.%02d", sign, coins, satoshis);
         } else {
             throw new IllegalArgumentException("cannot handle shift: " + shift);
         }
@@ -110,17 +120,5 @@ public class GenericUtils {
         return nanoCoins;
     }
 
-    public static String formatValue(final long value) {
-        String sign = value < 0 ? "-" : "";
-        long absValue = Math.abs(value);
-        long coins = absValue / ONE_BTC_INT;
-        int satoshis = (int) (absValue % ONE_BTC_INT);
-        String strCoins = Long.toString(coins);
-        String strSatoshis = "";
-        strSatoshis = Integer.toString(satoshis + ONE_BTC_INT);
-        strSatoshis = strSatoshis.substring(1, strSatoshis.length());
-        strSatoshis = strSatoshis.replaceFirst("[0]{1," + (8 - 2) + "}$", "");
-        return sign + strCoins + (strSatoshis.length() > 0 ? "." : "") + strSatoshis;
-    }
 
 }
