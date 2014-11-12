@@ -315,6 +315,12 @@ public class Address implements Comparable<Address> {
         this.updatePubkey();
     }
 
+    public void saveTrashKey() throws IOException {
+        String privateKeyFullFileName = Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
+                Utils.getTrashDir(), getAddress());
+        Utils.writeFile(this.encryptPrivKey, new File(privateKeyFullFileName));
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof Address) {
