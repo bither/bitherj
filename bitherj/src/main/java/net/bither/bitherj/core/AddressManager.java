@@ -17,7 +17,9 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
@@ -333,5 +335,37 @@ public class AddressManager {
                 Collections.sort(this.trashAddresses);
             }
         }
+    }
+
+    public boolean changePassword(SecureCharSequence oldPassword, SecureCharSequence newPassword) throws IOException {
+        List<Address> privKeyAddresses = AddressManager.getInstance().getPrivKeyAddresses();
+        List<Address> trashAddresses = AddressManager.getInstance().getTrashAddresses();
+        if (privKeyAddresses.size() + trashAddresses.size() == 0) {
+            return true;
+        }
+        for (Address a : privKeyAddresses) {
+            String encryptedStr = a.getEncryptPrivKey();
+            String newEncryptedStr = PrivateKeyUtil.changePassword(encryptedStr, oldPassword, newPassword);
+            if (newEncryptedStr == null) {
+                return false;
+            }
+            a.setEncryptPrivKey(newEncryptedStr);
+        }
+        for (Address a : trashAddresses) {
+            String encryptedStr = a.getEncryptPrivKey();
+            String newEncryptedStr = PrivateKeyUtil.changePassword(encryptedStr, oldPassword, newPassword);
+            if (newEncryptedStr == null) {
+                return false;
+            }
+            a.setEncryptPrivKey(newEncryptedStr);
+        }
+
+        for (Address address : privKeyAddresses) {
+            address.savePrivateKey();
+        }
+        for (Address address : trashAddresses) {
+            address.saveTrashKey();
+        }
+        return true;
     }
 }
