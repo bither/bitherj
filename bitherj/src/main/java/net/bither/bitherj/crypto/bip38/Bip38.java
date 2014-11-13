@@ -21,9 +21,9 @@ import com.lambdaworks.crypto.SCrypt;
 
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
-import net.bither.bitherj.crypto.ec.Parameters;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Sha256Hash;
+import net.bither.bitherj.utils.Utils;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -43,6 +43,8 @@ public class Bip38 {
     public static final int SCRYPT_R = 8;
     public static final int SCRYPT_P = 8;
     public static final int SCRYPT_LENGTH = 64;
+
+    public static final BigInteger n=new BigInteger(1, Utils.hexStringToByteArray("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"));
 
     /**
      * Encrypt a SIPA formatted private key with a passphrase using BIP38.
@@ -346,7 +348,7 @@ public class Bip38 {
         Sha256Hash factorB;
         factorB = Bip38Util.doubleSha256(seedB);
 
-        BigInteger privateKey = new BigInteger(1, passFactor).multiply(factorB.toPositiveBigInteger()).mod(Parameters.n);
+        BigInteger privateKey = new BigInteger(1, passFactor).multiply(factorB.toPositiveBigInteger()).mod(n);
         byte[] keyBytes = new byte[32];
         byte[] bytes = privateKey.toByteArray();
         if (bytes.length <= keyBytes.length) {

@@ -19,10 +19,6 @@ package net.bither.bitherj.crypto;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
-import net.bither.bitherj.IRandom;
-import net.bither.bitherj.crypto.ec.EcTools;
-import net.bither.bitherj.crypto.ec.Parameters;
-import net.bither.bitherj.crypto.ec.Point;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
@@ -40,7 +36,10 @@ import org.spongycastle.asn1.DLSequence;
 import org.spongycastle.asn1.sec.SECNamedCurves;
 import org.spongycastle.asn1.x9.X9ECParameters;
 import org.spongycastle.asn1.x9.X9IntegerConverter;
+import org.spongycastle.crypto.AsymmetricCipherKeyPair;
+import org.spongycastle.crypto.generators.ECKeyPairGenerator;
 import org.spongycastle.crypto.params.ECDomainParameters;
+import org.spongycastle.crypto.params.ECKeyGenerationParameters;
 import org.spongycastle.crypto.params.ECPrivateKeyParameters;
 import org.spongycastle.crypto.params.ECPublicKeyParameters;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -48,6 +47,8 @@ import org.spongycastle.crypto.signers.ECDSASigner;
 import org.spongycastle.math.ec.ECAlgorithms;
 import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
+import org.spongycastle.crypto.ec.CustomNamedCurves;
+import org.spongycastle.math.ec.FixedPointUtil;
 import org.spongycastle.util.encoders.Base64;
 
 import java.io.ByteArrayOutputStream;
@@ -55,6 +56,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.util.Arrays;
 
@@ -87,6 +89,7 @@ public class ECKey implements Serializable {
      * The parameters of the secp256k1 curve that Bitcoin uses.
      */
     public static final ECDomainParameters CURVE;
+    public static final X9ECParameters CURVE_PARAMS = CustomNamedCurves.getByName("secp256k1");
 
     /**
      * Equal to CURVE.getN().shiftRight(1), used for canonicalising the S value of a signature. If you aren't
@@ -94,14 +97,19 @@ public class ECKey implements Serializable {
      */
     public static final BigInteger HALF_CURVE_ORDER;
 
+    private static final SecureRandom secureRandom;
 
     private static final long serialVersionUID = -728224901792295832L;
 
     static {
-        // All clients must agree on the curve to use by agreement. Bitcoin uses secp256k1.
-        X9ECParameters params = SECNamedCurves.getByName("secp256k1");
-        CURVE = new ECDomainParameters(params.getCurve(), params.getG(), params.getN(), params.getH());
-        HALF_CURVE_ORDER = params.getN().shiftRight(1);
+        // Tell Bouncy Castle to precompute data that's needed during secp256k1 calculations. Increasing the width
+        // number makes calculations faster, but at a cost of extra memory usage and with decreasing returns. 12 was
+        // picked after consulting with the BC team.
+        FixedPointUtil.precompute(CURVE_PARAMS.getG(), 12);
+        CURVE = new ECDomainParameters(CURVE_PARAMS.getCurve(), CURVE_PARAMS.getG(), CURVE_PARAMS.getN(),
+                CURVE_PARAMS.getH());
+        HALF_CURVE_ORDER = CURVE_PARAMS.getN().shiftRight(1);
+        secureRandom = new SecureRandom();
 
     }
 
@@ -132,34 +140,18 @@ public class ECKey implements Serializable {
      * Generates an entirely new keypair. Point compression is used so the resulting public key will be 33 bytes
      * (32 for the co-ordinate and 1 byte to represent the y bit).
      */
-    public static ECKey generateECKey(IRandom random) {
+    public static ECKey generateECKey(SecureRandom secureRandom) {
 
-        int nBitLength = Parameters.n.bitLength();
-        BigInteger d;
-        byte[] bytes;
-        do {
-            // Make a BigInteger from bytes to ensure that Andriod and 'classic'
-            // java make the same BigIntegers from the same random source with the
-            // same seed. Using BigInteger(nBitLength, random)
-            // produces different results on Android compared to 'classic' java.
-            bytes = random.nextBytes(nBitLength / 8);
-            bytes[0] = (byte) (bytes[0] & 0x7F); // ensure positive number
-            d = new BigInteger(bytes);
-        } while (d.equals(BigInteger.ZERO) || (d.compareTo(Parameters.n) >= 0));
-        BigInteger priv = d;
-        // Unfortunately Bouncy Castle does not let us explicitly change a point to be compressed, even though it
-        // could easily do so. We must re-build it here so the ECPoints withCompression flag can be set to true.
-        Point Q = EcTools.multiply(Parameters.G, d);
+        ECKeyPairGenerator generator = new ECKeyPairGenerator();
+        ECKeyGenerationParameters keygenParams = new ECKeyGenerationParameters(CURVE, secureRandom);
+        generator.init(keygenParams);
+        AsymmetricCipherKeyPair keypair = generator.generateKeyPair();
+        ECPrivateKeyParameters privParams = (ECPrivateKeyParameters) keypair.getPrivate();
+        ECPublicKeyParameters pubParams = (ECPublicKeyParameters) keypair.getPublic();
+        BigInteger priv = privParams.getD();
         boolean compressed = true;
-        if (compressed) {
-            // Convert Q to a compressed point on the curve
-            Q = new Point(Q.getCurve(), Q.getX(), Q.getY(), true);
-        }
-        byte[] pub = Q.getEncoded();
-
-        long creationTimeSeconds = Utils.currentTimeMillis() / 1000;
-        ECKey ecKey = new ECKey(priv, pub, compressed);
-        ecKey.setCreationTimeSeconds(creationTimeSeconds);
+        ECKey ecKey = new ECKey(priv, pubParams.getQ().getEncoded(compressed));
+        ecKey.setCreationTimeSeconds(Utils.currentTimeSeconds());
         return ecKey;
     }
 
