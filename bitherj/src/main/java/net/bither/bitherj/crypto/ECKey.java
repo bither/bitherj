@@ -97,8 +97,6 @@ public class ECKey implements Serializable {
      */
     public static final BigInteger HALF_CURVE_ORDER;
 
-    private static final SecureRandom secureRandom;
-
     private static final long serialVersionUID = -728224901792295832L;
 
     static {
@@ -109,7 +107,6 @@ public class ECKey implements Serializable {
         CURVE = new ECDomainParameters(CURVE_PARAMS.getCurve(), CURVE_PARAMS.getG(), CURVE_PARAMS.getN(),
                 CURVE_PARAMS.getH());
         HALF_CURVE_ORDER = CURVE_PARAMS.getN().shiftRight(1);
-        secureRandom = new SecureRandom();
 
     }
 
