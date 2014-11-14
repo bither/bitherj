@@ -126,7 +126,12 @@ public class AddressManager {
                         privKeyAddresses.add(0, address);
                         addressHashSet.add(address.address);
                     } else {
-                        this.restorePrivKey(address);
+                        address.restorePrivKey();
+                        trashAddresses.remove(address);
+                        long sortTime = getPrivKeySortTime();
+                        address.savePubKey(sortTime);
+                        privKeyAddresses.add(0, address);
+                        addressHashSet.add(address.address);
                     }
                 } else {
                     address.savePubKey(getWatchOnlySortTime());
