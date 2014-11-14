@@ -120,10 +120,14 @@ public class AddressManager {
         synchronized (lock) {
             try {
                 if (address.hasPrivKey) {
-                    address.savePrivateKey();
-                    address.savePubKey(getPrivKeySortTime());
-                    privKeyAddresses.add(0, address);
-                    addressHashSet.add(address.address);
+                    if (!this.getTrashAddresses().contains(address)) {
+                        address.savePrivateKey();
+                        address.savePubKey(getPrivKeySortTime());
+                        privKeyAddresses.add(0, address);
+                        addressHashSet.add(address.address);
+                    } else {
+                        this.restorePrivKey(address);
+                    }
                 } else {
                     address.savePubKey(getWatchOnlySortTime());
                     watchOnlyAddresses.add(0, address);
