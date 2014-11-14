@@ -152,7 +152,8 @@ public class ECKey implements Serializable {
     }
 
     private static ECPoint compressPoint(ECPoint uncompressed) {
-        return new ECPoint.Fp(CURVE.getCurve(), uncompressed.getX(), uncompressed.getY(), true);
+
+        return CURVE.getCurve().decodePoint(uncompressed.getEncoded(true));
     }
 
     /**
