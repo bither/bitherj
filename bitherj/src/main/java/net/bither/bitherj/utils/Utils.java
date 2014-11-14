@@ -859,10 +859,11 @@ public class Utils {
         java.text.DecimalFormat formate = new DecimalFormat("0.00");
         return formate.format(num);
     }
+
     //Added by scw (bither)
     public static InetAddress parseAddressFromLong(long value) throws UnknownHostException {
         byte[] bytes;
-        if (value >= Integer.MIN_VALUE || value <= Integer.MAX_VALUE) {
+        if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
             bytes = Ints.toByteArray((int) value);
         } else {
             bytes = Longs.toByteArray(value);
