@@ -17,6 +17,7 @@
 package net.bither.bitherj.crypto;
 
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 public class SecureCharSequence implements CharSequence {
@@ -45,6 +46,20 @@ public class SecureCharSequence implements CharSequence {
 
     public void wipe() {
         if (chars != null) {
+            Arrays.fill(chars, ' ');
+            SecureRandom r = new SecureRandom();
+            int index = 0;
+            while (index < chars.length) {
+                char[] cs = Character.toChars(Math.abs(r.nextInt()) % Character.MAX_CODE_POINT);
+                if (cs != null) {
+                    for (int i = 0;
+                         i < cs.length && i + index < chars.length;
+                         i++) {
+                        chars[index + i] = cs[i];
+                    }
+                    index += cs.length;
+                }
+            }
             Arrays.fill(chars, ' ');
         }
     }
