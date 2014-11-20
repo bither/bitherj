@@ -929,7 +929,7 @@ public class Peer extends PeerSocketHandler {
 
 
     public void connectFail() {
-        AbstractDb.peerProvider.conncetFail(getPeerAddress());
+        AbstractDb.peerProvider.removePeer(getPeerAddress());
     }
 
     public void connectError() {
