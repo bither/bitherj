@@ -192,7 +192,7 @@ public class PeerManager {
                         iterator.remove();
                     }
                 }
-                log.info("reconnectting connectedPeers {}, max Peer Count {}", connectedPeers.size(), getMaxPeerConnect());
+                log.info("reconnect {},{}", connectedPeers.size(), getMaxPeerConnect());
                 if (connectedPeers.size() >= getMaxPeerConnect()) {
                     return;
                 }
@@ -221,14 +221,14 @@ public class PeerManager {
     private HashSet<Peer> bestPeers() {
         HashSet<Peer> peers = new HashSet<Peer>();
         peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect()));
-        log.info("peer manager got " + peers.size() + " best peers from db");
+        log.info("{} dbpeers", peers.size());
         if (peers.size() < getMaxPeerConnect()) {
             if (getPeersFromDns().size() > 0) {
                 peers.clear();
                 peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect()));
             }
         }
-        log.info("peer manager got " + peers.size() + " best peers total");
+        log.info("{} totalpeers", peers.size() );
         return peers;
     }
 
