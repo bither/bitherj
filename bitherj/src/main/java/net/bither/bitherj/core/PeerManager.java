@@ -226,6 +226,8 @@ public class PeerManager {
         peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect()));
         log.info("peer manager got " + peers.size() + " best peers from db");
         if (peers.size() < getMaxPeerConnect()) {
+            AbstractDb.peerProvider.recreate();
+            AbstractDb.peerProvider.addPeers(new ArrayList<Peer>(peers));
             if (getPeersFromDns().size() > 0) {
                 peers.clear();
                 peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect()));
