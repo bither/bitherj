@@ -26,8 +26,6 @@ import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -188,14 +186,13 @@ public class PeerManager {
         executor.submit(new Runnable() {
             @Override
             public void run() {
-                log.info("begin reconnect");
                 Iterator<Peer> iterator = connectedPeers.iterator();
                 while (iterator.hasNext()) {
                     if (iterator.next().state == Peer.State.Disconnected) {
                         iterator.remove();
                     }
                 }
-                log.info("reconnectting connectedPeers {}, max Peer Count {}", connectedPeers.size(), getMaxPeerConnect());
+                log.info("reconnect {},{}", connectedPeers.size(), getMaxPeerConnect());
                 if (connectedPeers.size() >= getMaxPeerConnect()) {
                     return;
                 }
@@ -224,7 +221,7 @@ public class PeerManager {
     private HashSet<Peer> bestPeers() {
         HashSet<Peer> peers = new HashSet<Peer>();
         peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect()));
-        log.info("peer manager got " + peers.size() + " best peers from db");
+        log.info("{} dbpeers", peers.size());
         if (peers.size() < getMaxPeerConnect()) {
             AbstractDb.peerProvider.recreate();
             AbstractDb.peerProvider.addPeers(new ArrayList<Peer>(peers));
@@ -233,7 +230,7 @@ public class PeerManager {
                 peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect()));
             }
         }
-        log.info("peer manager got " + peers.size() + " best peers total");
+        log.info("{} totalpeers", peers.size() );
         return peers;
     }
 
@@ -903,7 +900,6 @@ public class PeerManager {
         @Override
         public void execute(Runnable command) {
             int waiting = getQueue().size();
-            log.info("PeerManagerExecutor waiting " + waiting + " tasks");
             if (getQueue().size() >= TaskCapacity) {
                 isWaiting = true;
                 try {
@@ -918,7 +914,6 @@ public class PeerManager {
                     executeLock.unlock();
                 }
             }
-            log.info("PeerManagerExecutor before execute task");
             super.execute(command);
         }
 
@@ -926,8 +921,8 @@ public class PeerManager {
             super.afterExecute(r, t);
             long completed = getCompletedTaskCount();
             int waiting = getQueue().size();
-            log.info("PeerManagerExecutor finished " + completed + " " +
-                    "tasks, " + waiting + " tasks remaining");
+//            log.info("PeerManagerExecutor finished " + completed + " " +
+//                    "tasks, " + waiting + " tasks remaining");
             if (t == null && r instanceof Future<?>) {
                 try {
                     Future<?> future = (Future<?>) r;
