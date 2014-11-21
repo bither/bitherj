@@ -372,6 +372,7 @@ public class PeerManager {
                                     .getBlockLocatorArray(), null);
                         }
                         downloadingPeer.setSynchronising(true);
+                        sendSyncProgress();
                     } else { // we're already synced
                         downloadingPeer.setSynchronising(false);
                         syncStopped();
