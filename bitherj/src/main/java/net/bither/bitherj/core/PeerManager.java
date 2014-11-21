@@ -337,7 +337,6 @@ public class PeerManager {
                                 .getVersionLastBlockHeight()) || p.getVersionLastBlockHeight() >
                                 dp.getVersionLastBlockHeight()) {
                             dp = p;
-                            syncStartHeight = getLastBlockHeight();
                         }
                     }
                     if (downloadingPeer != null) {
@@ -372,6 +371,7 @@ public class PeerManager {
                                     .getBlockLocatorArray(), null);
                         }
                         downloadingPeer.setSynchronising(true);
+                        syncStartHeight = getLastBlockHeight();
                         sendSyncProgress();
                     } else { // we're already synced
                         downloadingPeer.setSynchronising(false);
@@ -1001,9 +1001,9 @@ public class PeerManager {
         long lastBlockHeight = getLastBlockHeight();
         if (synchronizing && syncStartHeight > 0 && downloadingPeer != null && lastBlockHeight >=
                 syncStartHeight && lastBlockHeight <= downloadingPeer.getVersionLastBlockHeight()) {
-            AbstractApp.notificationService.sendBroadcastProgressState((double) (lastBlockHeight
-                    - syncStartHeight) / (double) (downloadingPeer.getVersionLastBlockHeight() -
-                    syncStartHeight));
+            double progress = (double) (lastBlockHeight - syncStartHeight) / (double) (downloadingPeer.getVersionLastBlockHeight() -
+                    syncStartHeight);
+            AbstractApp.notificationService.sendBroadcastProgressState(progress);
         } else {
             AbstractApp.notificationService.sendBroadcastProgressState(-1);
         }
