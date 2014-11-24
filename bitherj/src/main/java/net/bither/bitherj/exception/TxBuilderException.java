@@ -23,9 +23,10 @@ public class TxBuilderException extends Exception {
     public static final int ERR_TX_NOT_ENOUGH_MONEY_CODE = 2002;
     public static final int ERR_TX_WAIT_CONFIRM_CODE = 2003;
     public static final int ERR_TX_CAN_NOT_CALCULATE_CODE = 2004;
+    public static final int ERR_REACH_MAX_TX_SIZE_LIMIT_CODE = 2005;
 
     public static enum TxBuilderErrorType {
-        TxCannotCalculate, TxDustOut, TxNotEnoughMoney, TxWaitConfirm;
+        TxCannotCalculate, TxDustOut, TxNotEnoughMoney, TxWaitConfirm, TxMaxSize;
 
         private String format;
 
@@ -37,6 +38,8 @@ public class TxBuilderException extends Exception {
                     return TxNotEnoughMoney;
                 case ERR_TX_WAIT_CONFIRM_CODE:
                     return TxWaitConfirm;
+                case ERR_REACH_MAX_TX_SIZE_LIMIT_CODE:
+                    return TxMaxSize;
                 default:
                     return TxCannotCalculate;
             }

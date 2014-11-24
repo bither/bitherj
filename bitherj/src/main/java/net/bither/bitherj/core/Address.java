@@ -280,7 +280,45 @@ public class Address implements Comparable<Address> {
         String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
                 Utils.getWatchOnlyDir(), getAddress());
         Utils.removeFile(new File(watchOnlyFullFileName));
+    }
 
+    public void trashPrivKey() {
+        File oldPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
+                Utils.getPrivateDir(), getAddress()));
+        File newPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
+                Utils.getTrashDir(), getAddress()));
+
+        File oldWatchOnlyFile = new File(Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
+                Utils.getPrivateDir(), getAddress()));
+        File newWatchOnlyFile = new File(Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
+                Utils.getTrashDir(), getAddress()));
+
+        Utils.moveFile(oldPrivKeyFile, newPrivKeyFile);
+        Utils.moveFile(oldWatchOnlyFile, newWatchOnlyFile);
+    }
+
+    public void restorePrivKey() throws IOException {
+        File oldPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
+                Utils.getTrashDir(), getAddress()));
+        File newPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
+                Utils.getPrivateDir(), getAddress()));
+
+        File oldWatchOnlyFile = new File(Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
+                Utils.getTrashDir(), getAddress()));
+        File newWatchOnlyFile = new File(Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
+                Utils.getPrivateDir(), getAddress()));
+
+        Utils.moveFile(oldPrivKeyFile, newPrivKeyFile);
+        Utils.moveFile(oldWatchOnlyFile, newWatchOnlyFile);
+
+        this.syncComplete = false;
+        this.updatePubkey();
+    }
+
+    public void saveTrashKey() throws IOException {
+        String privateKeyFullFileName = Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
+                Utils.getTrashDir(), getAddress());
+        Utils.writeFile(this.encryptPrivKey, new File(privateKeyFullFileName));
     }
 
     @Override

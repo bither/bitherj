@@ -40,4 +40,6 @@ public interface IPeerProvider {
     public List<Peer> getPeersWithLimit(int limit);
 
     public void cleanPeers();
+
+    public void recreate();
 }

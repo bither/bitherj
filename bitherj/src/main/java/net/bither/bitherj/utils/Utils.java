@@ -42,6 +42,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
@@ -61,6 +62,7 @@ import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterrup
  * To enable debug logging from the library, run with -Dbitcoinj.logging=true on your command line.
  */
 public class Utils {
+
 
     public static final BigInteger NEGATIVE_ONE = BigInteger.valueOf(-1);
     private static final MessageDigest digest;
@@ -725,6 +727,7 @@ public class Utils {
     private static final String WALLET_WATCH_ONLY = "watch";
     private static final String WALLET_HOT = "hot";
     private static final String WALLET_COLD = "cold";
+    private static final String WALLET_TRASH = "trash";
 
     //add by jjz (bither)
     public static File getWalletRomCache() {
@@ -748,6 +751,16 @@ public class Utils {
         if (AbstractApp.bitherjApp.getAppMode() == BitherjSettings.AppMode.COLD) {
             dirName = WALLET_COLD;
         }
+        file = new File(file, dirName);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        return file;
+    }
+
+    public static File getTrashDir() {
+        File file = getWalletRomCache();
+        String dirName = WALLET_TRASH;
         file = new File(file, dirName);
         if (!file.exists()) {
             file.mkdirs();
@@ -812,6 +825,12 @@ public class Utils {
         }
     }
 
+    public static void moveFile(File oldFile, File newFile) {
+        if (oldFile.exists()) {
+            oldFile.renameTo(newFile);
+        }
+    }
+
     //add by jjz (bither)
     public static String format(String format, Object... args) {
         return String.format(Locale.US, format, args);
@@ -836,10 +855,15 @@ public class Utils {
         }
     }
 
+    public static String formatDoubleToMoneyString(double num) {
+        java.text.DecimalFormat formate = new DecimalFormat("0.00");
+        return formate.format(num);
+    }
+
     //Added by scw (bither)
     public static InetAddress parseAddressFromLong(long value) throws UnknownHostException {
         byte[] bytes;
-        if (value <= Integer.MAX_VALUE) {
+        if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
             bytes = Ints.toByteArray((int) value);
         } else {
             bytes = Longs.toByteArray(value);
@@ -912,5 +936,6 @@ public class Utils {
             return false;
         }
     }
+
 
 }

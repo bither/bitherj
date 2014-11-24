@@ -29,6 +29,7 @@ import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
 
 import java.io.Serializable;
+import java.security.SecureRandom;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -38,6 +39,8 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
     private static final int BITCOINJ_SCRYPT_N = 16384;
     private static final int BITCOINJ_SCRYPT_R = 8;
     private static final int BITCOINJ_SCRYPT_P = 1;
+
+    private static final SecureRandom secureRandom;
 
     /**
      * Key length in bytes.
@@ -61,11 +64,16 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
 
     private byte[] mSalt;
 
+    static {
+        secureRandom = new SecureRandom();
+    }
+
     /**
      * Encryption/ Decryption using default parameters and a random salt
      */
     public KeyCrypterScrypt() {
-        mSalt = AbstractApp.random.nextBytes(SALT_LENGTH);
+        mSalt = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(mSalt);
 
     }
 
@@ -116,7 +124,8 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
 
         try {
             // Generate iv - each encryption call has a different iv.
-            byte[] iv = AbstractApp.random.nextBytes(BLOCK_LENGTH);
+            byte[] iv=new byte[BLOCK_LENGTH];
+            secureRandom.nextBytes(iv);
 
             ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, iv);
 

@@ -60,8 +60,10 @@ public class TxBuilder {
         }
 
         Tx emptyWalletTx = emptyWallet.buildTx(address, unspendTxs, prepareTx(amounts, addresses));
-        if (emptyWalletTx != null) {
+        if (emptyWalletTx != null && estimationTxSize(emptyWalletTx.getIns().size(), emptyWalletTx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
             return emptyWalletTx;
+        } else if (emptyWalletTx != null) {
+            throw new TxBuilderException(TxBuilderException.ERR_REACH_MAX_TX_SIZE_LIMIT_CODE);
         }
 
         for (long amount : amounts) {
@@ -70,16 +72,21 @@ public class TxBuilder {
             }
         }
 
+        boolean mayMaxTxSize = false;
         List<Tx> txs = new ArrayList<Tx>();
         for (TxBuilderProtocol builder : this.txBuilders) {
             Tx tx = builder.buildTx(address, unspendTxs, prepareTx(amounts, addresses));
-            if (tx != null) {
+            if (tx != null && estimationTxSize(tx.getIns().size(), tx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
                 txs.add(tx);
+            } else if (tx != null) {
+                mayMaxTxSize = true;
             }
         }
 
         if (txs.size() > 0) {
             return txs.get(0);
+        } else if (mayMaxTxSize) {
+            throw new TxBuilderException(TxBuilderException.ERR_REACH_MAX_TX_SIZE_LIMIT_CODE);
         } else {
             throw new TxBuilderException();
         }

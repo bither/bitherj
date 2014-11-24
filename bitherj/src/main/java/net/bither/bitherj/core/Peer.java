@@ -152,8 +152,12 @@ public class Peer extends PeerSocketHandler {
             setTimeoutEnabled(true);
             setSocketTimeout(TimeOutDelay);
             bloomFilterSent = false;
-            NioClientManager.instance().openConnection(new InetSocketAddress(getPeerAddress(),
-                    BitherjSettings.port), this);
+            try {
+                NioClientManager.instance().openConnection(new InetSocketAddress(getPeerAddress(),
+                        BitherjSettings.port), this);
+            } catch (Exception ex) {
+                exceptionCaught(ex);
+            }
         }
     }
 
@@ -559,7 +563,7 @@ public class Peer extends PeerSocketHandler {
             } catch (VerificationException e) {
                 valid = false;
             }
-            if (valid) {
+            if (valid && !tx.hasDustOut()) {
                 PeerManager.instance().relayedTransaction(this, tx);
             }
             /*
@@ -925,7 +929,7 @@ public class Peer extends PeerSocketHandler {
 
 
     public void connectFail() {
-        AbstractDb.peerProvider.conncetFail(getPeerAddress());
+        AbstractDb.peerProvider.removePeer(getPeerAddress());
     }
 
     public void connectError() {
