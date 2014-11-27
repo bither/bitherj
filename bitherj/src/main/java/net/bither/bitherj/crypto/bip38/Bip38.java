@@ -21,6 +21,7 @@ import com.lambdaworks.crypto.SCrypt;
 
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
+import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
@@ -258,7 +259,7 @@ public class Bip38 {
      *
      * @throws InterruptedException
      */
-    public static String decrypt(String bip38PrivateKeyString, CharSequence passphrase) throws InterruptedException, AddressFormatException {
+    public static SecureCharSequence decrypt(String bip38PrivateKeyString, CharSequence passphrase) throws InterruptedException, AddressFormatException {
         Bip38PrivateKey bip38Key = parseBip38PrivateKey(bip38PrivateKeyString);
         if (bip38Key == null) {
             return null;
@@ -271,7 +272,7 @@ public class Bip38 {
         }
     }
 
-    public static String decryptEcMultiply(Bip38PrivateKey bip38Key, CharSequence passphrase
+    public static SecureCharSequence decryptEcMultiply(Bip38PrivateKey bip38Key, CharSequence passphrase
     ) throws InterruptedException, AddressFormatException {
         // Get 8 byte Owner Salt
         byte[] ownerEntropy = new byte[8];
@@ -370,10 +371,10 @@ public class Bip38 {
         }
         DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(ecKey.getPrivKeyBytes(), ecKey.isCompressed());
         // The result is returned in SIPA format
-        return dumpedPrivateKey.toString();
+        return dumpedPrivateKey.toSecureCharSequence();
     }
 
-    public static String decryptNoEcMultiply(Bip38PrivateKey bip38Key, byte[] stretcedKeyMaterial) throws AddressFormatException {
+    public static SecureCharSequence decryptNoEcMultiply(Bip38PrivateKey bip38Key, byte[] stretcedKeyMaterial) throws AddressFormatException {
         // Derive Keys
         byte[] derivedHalf1 = new byte[32];
         System.arraycopy(stretcedKeyMaterial, 0, derivedHalf1, 0, 32);
@@ -418,7 +419,7 @@ public class Bip38 {
         // Get SIPA format
         DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(key.getPrivKeyBytes(), key.isCompressed());
 
-        return dumpedPrivateKey.toString();
+        return dumpedPrivateKey.toSecureCharSequence();
     }
 
 

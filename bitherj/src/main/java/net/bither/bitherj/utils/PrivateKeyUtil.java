@@ -24,6 +24,7 @@ import net.bither.bitherj.crypto.EncryptedPrivateKey;
 import net.bither.bitherj.crypto.KeyCrypter;
 import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.KeyCrypterScrypt;
+import net.bither.bitherj.crypto.SecureCharSequence;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,10 +102,10 @@ public class PrivateKeyUtil {
                 (strs[1]), Utils.hexStringToByteArray(strs[0]));
         byte[] decrypted = crypter.decrypt(epk, crypter.deriveKey(password));
         ECKey ecKey = null;
-        String privateKeyText = null;
+        SecureCharSequence privateKeyText = null;
         if (needPrivteKeyText) {
             DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(decrypted, isCompressed);
-            privateKeyText = dumpedPrivateKey.toString();
+            privateKeyText = dumpedPrivateKey.toSecureCharSequence();
         } else {
             byte[] pub = ECKey.publicKeyFromPrivate(new BigInteger(1, decrypted), isCompressed);
             ecKey = new ECKey(epk, pub, crypter);
@@ -115,7 +116,7 @@ public class PrivateKeyUtil {
 
     }
 
-    public static String getPrivateKeyString(String str, CharSequence password) {
+    public static SecureCharSequence getPrivateKeyString(String str, CharSequence password) {
         try {
 
             DecryptedECKey decryptedECKey = decryptionECKey(str, password, true);
@@ -232,13 +233,13 @@ public class PrivateKeyUtil {
     }
 
     public static class DecryptedECKey {
-        public DecryptedECKey(ECKey ecKey, String privateKeyText) {
+        public DecryptedECKey(ECKey ecKey, SecureCharSequence privateKeyText) {
             this.ecKey = ecKey;
             this.privateKeyText = privateKeyText;
         }
 
         public ECKey ecKey;
-        public String privateKeyText;
+        public SecureCharSequence privateKeyText;
     }
 
 }

@@ -116,16 +116,13 @@ public class DumpedPrivateKey {
         return Objects.hashCode(bytes, version, compressed);
     }
 
-    @Override
-    public String toString() {
-        // A stringified buffer is:
-        //   1 byte version + data bytes + 4 bytes check code (a truncated hash)
+    public SecureCharSequence toSecureCharSequence(){
         byte[] addressBytes = new byte[1 + bytes.length + 4];
         addressBytes[0] = (byte) version;
         System.arraycopy(bytes, 0, addressBytes, 1, bytes.length);
         byte[] check = Utils.doubleDigest(addressBytes, 0, bytes.length + 1);
         System.arraycopy(check, 0, addressBytes, bytes.length + 1, 4);
-        return Base58.encode(addressBytes);
+        return Base58.encodeSecure(addressBytes);
     }
 
     /**

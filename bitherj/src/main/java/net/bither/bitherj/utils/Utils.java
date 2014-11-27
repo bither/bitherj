@@ -937,5 +937,15 @@ public class Utils {
         }
     }
 
+    public static char[] charsFromBytes(byte[] bytes) {
+        char[] chars = new char[bytes.length];
+        for (int i = 0;
+             i < bytes.length;
+             i++) {
+            chars[i] = (char) bytes[i];
+        }
+        return chars;
+    }
+
 
 }
