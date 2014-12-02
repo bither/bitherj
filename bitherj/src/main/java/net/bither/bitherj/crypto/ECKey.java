@@ -351,8 +351,7 @@ public class ECKey implements Serializable {
      * It turns the ECKEy into a watch only key.
      */
     public void clearPrivateKey() {
-        priv = BigInteger.ZERO;
-
+        Utils.wipeBiginteger(priv);
         if (encryptedPrivateKey != null) {
             encryptedPrivateKey.clear();
         }
@@ -812,27 +811,7 @@ public class ECKey implements Serializable {
         return Utils.bigIntegerToBytes(priv, 32);
     }
 
-    /**
-     * Exports the private key in the form used by the Satoshi client "dumpprivkey" and "importprivkey" commands. Use
-     * the {@link net.bither.bitherj.crypto.DumpedPrivateKey#toString()} method to get the string.
-     *
-     * @return Private key bytes as a {@link DumpedPrivateKey}.
-     * @throws IllegalStateException if the private key is not available.
-     */
-    public DumpedPrivateKey getPrivateKeyEncoded() {
-        final byte[] privKeyBytes = getPrivKeyBytes();
-        checkState(privKeyBytes != null, "Private key is not available");
-        return new DumpedPrivateKey(privKeyBytes, isCompressed());
-    }
-
-    /**
-     * Returns the creation time of this key or zero if the key was deserialized from a version that did not store
-     * that data.
-     */
-    public long getCreationTimeSeconds() {
-        return creationTimeSeconds;
-    }
-
+  
     /**
      * Sets the creation time of this key. Zero is a convention to mean "unavailable". This method can be useful when
      * you have a raw key you are importing from somewhere else.

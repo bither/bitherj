@@ -42,6 +42,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -889,6 +890,7 @@ public class Utils {
     public static boolean validBitcoinPrivateKey(String str) {
         try {
             DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(str);
+            dumpedPrivateKey.clearPrivateKey();
             return true;
         } catch (AddressFormatException e) {
             e.printStackTrace();
@@ -945,6 +947,34 @@ public class Utils {
             chars[i] = (char) bytes[i];
         }
         return chars;
+    }
+
+    public static void wipeBytes(byte[] bytes) {
+        if (bytes == null) {
+            return;
+        }
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = 0;
+        }
+        SecureRandom r = new SecureRandom();
+        r.nextBytes(bytes);
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = 0;
+        }
+
+    }
+
+    public static void wipeBiginteger(BigInteger b) {
+        int bitCount = b.bitCount();
+        byte[] bytes = new byte[bitCount];
+        for (int i = 0; i < bitCount; i++) {
+            bytes[i] = 0;
+        }
+        b = new BigInteger(bytes);
+        SecureRandom r = new SecureRandom();
+        b = new BigInteger(bitCount, r);
+        b = new BigInteger(bytes);
+        b = null;
     }
 
 

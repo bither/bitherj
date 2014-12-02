@@ -45,7 +45,7 @@ public class Bip38 {
     public static final int SCRYPT_P = 8;
     public static final int SCRYPT_LENGTH = 64;
 
-    public static final BigInteger n=new BigInteger(1, Utils.hexStringToByteArray("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"));
+    public static final BigInteger n = new BigInteger(1, Utils.hexStringToByteArray("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"));
 
     /**
      * Encrypt a SIPA formatted private key with a passphrase using BIP38.
@@ -57,6 +57,7 @@ public class Bip38 {
      */
     public static String encryptNoEcMultiply(CharSequence passphrase, String base58EncodedPrivateKey) throws InterruptedException, AddressFormatException {
         DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(base58EncodedPrivateKey);
+        dumpedPrivateKey.clearPrivateKey();
         ECKey key = dumpedPrivateKey.getKey();
         byte[] salt = Bip38.calculateScryptSalt(key.toAddress());
         byte[] stretchedKeyMaterial = bip38Stretch1(passphrase, salt, SCRYPT_LENGTH);
@@ -371,7 +372,9 @@ public class Bip38 {
         }
         DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(ecKey.getPrivKeyBytes(), ecKey.isCompressed());
         // The result is returned in SIPA format
-        return dumpedPrivateKey.toSecureCharSequence();
+        SecureCharSequence secureCharSequence = dumpedPrivateKey.toSecureCharSequence();
+        dumpedPrivateKey.clearPrivateKey();
+        return secureCharSequence;
     }
 
     public static SecureCharSequence decryptNoEcMultiply(Bip38PrivateKey bip38Key, byte[] stretcedKeyMaterial) throws AddressFormatException {
@@ -419,7 +422,9 @@ public class Bip38 {
         // Get SIPA format
         DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(key.getPrivKeyBytes(), key.isCompressed());
 
-        return dumpedPrivateKey.toSecureCharSequence();
+        SecureCharSequence secureCharSequence = dumpedPrivateKey.toSecureCharSequence();
+        dumpedPrivateKey.clearPrivateKey();
+        return secureCharSequence;
     }
 
 

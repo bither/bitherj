@@ -45,8 +45,6 @@ public class DumpedPrivateKey {
         version = BitherjSettings.dumpedPrivateKeyHeader;
         bytes = encode(keyBytes, compressed);
         checkArgument(version < 256 && version >= 0);
-        this.version = version;
-        this.bytes = bytes;
         this.compressed = compressed;
     }
 
@@ -59,6 +57,7 @@ public class DumpedPrivateKey {
             byte[] bytes = new byte[33];
             System.arraycopy(keyBytes, 0, bytes, 0, 32);
             bytes[32] = 1;
+            Utils.wipeBytes(keyBytes);
             return bytes;
         }
     }
@@ -70,6 +69,7 @@ public class DumpedPrivateKey {
      * @throws net.bither.bitherj.exception.AddressFormatException If the string is invalid or the header byte doesn't match the network params.
      */
     public DumpedPrivateKey(String encoded) throws AddressFormatException {
+        //todo string encoded
         byte[] tmp = Base58.decodeChecked(encoded);
         version = tmp[0] & 0xFF;
         bytes = new byte[tmp.length - 1];
@@ -86,6 +86,10 @@ public class DumpedPrivateKey {
         } else {
             throw new AddressFormatException("Wrong number of bytes for a private key, not 32 or 33");
         }
+    }
+
+    public void clearPrivateKey() {
+        Utils.wipeBytes(bytes);
     }
 
     /**
@@ -116,7 +120,7 @@ public class DumpedPrivateKey {
         return Objects.hashCode(bytes, version, compressed);
     }
 
-    public SecureCharSequence toSecureCharSequence(){
+    public SecureCharSequence toSecureCharSequence() {
         byte[] addressBytes = new byte[1 + bytes.length + 4];
         addressBytes[0] = (byte) version;
         System.arraycopy(bytes, 0, addressBytes, 1, bytes.length);
