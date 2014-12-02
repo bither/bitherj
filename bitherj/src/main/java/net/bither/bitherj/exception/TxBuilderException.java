@@ -23,9 +23,10 @@ public class TxBuilderException extends Exception {
     public static final int ERR_TX_NOT_ENOUGH_MONEY_CODE = 2002;
     public static final int ERR_TX_WAIT_CONFIRM_CODE = 2003;
     public static final int ERR_TX_CAN_NOT_CALCULATE_CODE = 2004;
+    public static final int ERR_REACH_MAX_TX_SIZE_LIMIT_CODE = 2005;
 
     public static enum TxBuilderErrorType {
-        TxCannotCalculate, TxDustOut, TxNotEnoughMoney, TxWaitConfirm;
+        TxCannotCalculate, TxDustOut, TxNotEnoughMoney, TxWaitConfirm, TxMaxSize;
 
         private String format;
 
@@ -37,16 +38,18 @@ public class TxBuilderException extends Exception {
                     return TxNotEnoughMoney;
                 case ERR_TX_WAIT_CONFIRM_CODE:
                     return TxWaitConfirm;
+                case ERR_REACH_MAX_TX_SIZE_LIMIT_CODE:
+                    return TxMaxSize;
                 default:
                     return TxCannotCalculate;
             }
         }
 
-        public void registerFormatString(String format){
+        public void registerFormatString(String format) {
             this.format = format;
         }
 
-        public String getFormatString(){
+        public String getFormatString() {
             return format;
         }
     }
@@ -61,7 +64,7 @@ public class TxBuilderException extends Exception {
         this(TxBuilderErrorType.fromErrorCode(errorCode));
     }
 
-    public TxBuilderException(TxBuilderErrorType type){
+    public TxBuilderException(TxBuilderErrorType type) {
         super();
         this.type = type;
     }
@@ -69,29 +72,29 @@ public class TxBuilderException extends Exception {
     @Override
     public String getMessage() {
         String format = getFormatString();
-        if(Utils.isEmpty(format)){
+        if (Utils.isEmpty(format)) {
             return type.name();
-        }else{
+        } else {
             return formatMessage(format);
         }
     }
 
-    protected String formatMessage(String format){
+    protected String formatMessage(String format) {
         return format;
     }
 
-    private String getFormatString(){
+    private String getFormatString() {
         return type.getFormatString();
     }
 
-    public static final void registerFormatString(TxBuilderErrorType type, String format){
+    public static final void registerFormatString(TxBuilderErrorType type, String format) {
         type.registerFormatString(format);
     }
 
-    public static class TxBuilderNotEnoughMoneyException extends TxBuilderException{
+    public static class TxBuilderNotEnoughMoneyException extends TxBuilderException {
         public long lackOf;
 
-        public TxBuilderNotEnoughMoneyException(long lackOfMoney){
+        public TxBuilderNotEnoughMoneyException(long lackOfMoney) {
             super(TxBuilderErrorType.TxNotEnoughMoney);
             this.lackOf = lackOfMoney;
         }
@@ -102,10 +105,10 @@ public class TxBuilderException extends Exception {
         }
     }
 
-    public static class TxBuilderWaitConfirmException extends TxBuilderException{
+    public static class TxBuilderWaitConfirmException extends TxBuilderException {
         public long toWait;
 
-        public TxBuilderWaitConfirmException(long amountToWait){
+        public TxBuilderWaitConfirmException(long amountToWait) {
             super(TxBuilderErrorType.TxWaitConfirm);
             this.toWait = amountToWait;
         }

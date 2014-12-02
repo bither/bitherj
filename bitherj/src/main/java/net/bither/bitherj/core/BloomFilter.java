@@ -48,6 +48,7 @@ public class BloomFilter extends Message {
 
     public static final double DEFAULT_BLOOM_FILTER_FP_RATE = 0.0005;
     public static final double BLOOM_REDUCED_FALSEPOSITIVE_RATE = 0.0001;
+
     /**
      * The BLOOM_UPDATE_* constants control when the bloom filter is auto-updated by the peer using
      * it as a filter, either never, for all outputs or only for pay-2-pubkey outputs (default)

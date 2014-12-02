@@ -16,14 +16,14 @@
 
 package net.bither.bitherj.script;
 
+import com.google.common.collect.Lists;
+import com.google.common.primitives.UnsignedBytes;
+
 import net.bither.bitherj.core.BitherjSettings;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Utils;
-
-import com.google.common.collect.Lists;
-import com.google.common.primitives.UnsignedBytes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,14 +33,17 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static net.bither.bitherj.script.ScriptOpCodes.OP_0;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_CHECKMULTISIG;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_CHECKSIG;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_DUP;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_EQUAL;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_EQUALVERIFY;
 import static net.bither.bitherj.script.ScriptOpCodes.OP_HASH160;
-import static net.bither.bitherj.script.ScriptOpCodes.*;
-import static com.google.common.base.Preconditions.checkArgument;
+import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA1;
+import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA2;
+import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA4;
 
 /**
  * <p>Tools for the construction of commonly used script types. You don't normally need this as it's hidden behind
@@ -98,7 +101,9 @@ public class ScriptBuilder {
         return new Script(chunks);
     }
 
-    /** Creates a scriptPubKey that encodes payment to the given address. */
+    /**
+     * Creates a scriptPubKey that encodes payment to the given address.
+     */
     public static Script createOutputScript(String to) {
         try {
             if (Utils.getAddressHeader(to) == BitherjSettings.p2shHeader) {
@@ -123,23 +128,31 @@ public class ScriptBuilder {
         }
     }
 
-    /** Creates a scriptPubKey that encodes payment to the given raw public key. */
+    /**
+     * Creates a scriptPubKey that encodes payment to the given raw public key.
+     */
     public static Script createOutputScript(ECKey key) {
         return new ScriptBuilder().data(key.getPubKey()).op(OP_CHECKSIG).build();
     }
 
-    /** Creates a scriptSig that can redeem a pay-to-address output. */
+    /**
+     * Creates a scriptSig that can redeem a pay-to-address output.
+     */
     public static Script createInputScript(TransactionSignature signature, ECKey pubKey) {
         byte[] pubkeyBytes = pubKey.getPubKey();
         return new ScriptBuilder().data(signature.encodeToBitcoin()).data(pubkeyBytes).build();
     }
 
-    /** Creates a scriptSig that can redeem a pay-to-pubkey output. */
+    /**
+     * Creates a scriptSig that can redeem a pay-to-pubkey output.
+     */
     public static Script createInputScript(TransactionSignature signature) {
         return new ScriptBuilder().data(signature.encodeToBitcoin()).build();
     }
 
-    /** Creates a program that requires at least N of the given keys to sign, using OP_CHECKMULTISIG. */
+    /**
+     * Creates a program that requires at least N of the given keys to sign, using OP_CHECKMULTISIG.
+     */
     public static Script createMultiSigOutputScript(int threshold, List<ECKey> pubkeys) {
         checkArgument(threshold > 0);
         checkArgument(threshold <= pubkeys.size());
@@ -154,22 +167,30 @@ public class ScriptBuilder {
         return builder.build();
     }
 
-    /** Create a program that satisfies an OP_CHECKMULTISIG program. */
+    /**
+     * Create a program that satisfies an OP_CHECKMULTISIG program.
+     */
     public static Script createMultiSigInputScript(List<TransactionSignature> signatures) {
         return createP2SHMultiSigInputScript(signatures, null);
     }
 
-    /** Create a program that satisfies an OP_CHECKMULTISIG program. */
+    /**
+     * Create a program that satisfies an OP_CHECKMULTISIG program.
+     */
     public static Script createMultiSigInputScript(TransactionSignature... signatures) {
         return createMultiSigInputScript(Arrays.asList(signatures));
     }
 
-    /** Create a program that satisfies an OP_CHECKMULTISIG program, using pre-encoded signatures. */
+    /**
+     * Create a program that satisfies an OP_CHECKMULTISIG program, using pre-encoded signatures.
+     */
     public static Script createMultiSigInputScriptBytes(List<byte[]> signatures) {
         return createMultiSigInputScriptBytes(signatures, null);
     }
 
-    /** Create a program that satisfies a pay-to-script hashed OP_CHECKMULTISIG program. */
+    /**
+     * Create a program that satisfies a pay-to-script hashed OP_CHECKMULTISIG program.
+     */
     public static Script createP2SHMultiSigInputScript(List<TransactionSignature> signatures,
                                                        byte[] multisigProgramBytes) {
         List<byte[]> sigs = new ArrayList<byte[]>(signatures.size());
@@ -188,7 +209,7 @@ public class ScriptBuilder {
         builder.smallNum(0);  // Work around a bug in CHECKMULTISIG that is now a required part of the protocol.
         for (byte[] signature : signatures)
             builder.data(signature);
-        if (multisigProgramBytes!= null)
+        if (multisigProgramBytes != null)
             builder.data(multisigProgramBytes);
         return builder.build();
     }

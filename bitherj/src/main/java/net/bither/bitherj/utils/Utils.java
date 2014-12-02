@@ -16,15 +16,14 @@
 
 package net.bither.bitherj.utils;
 
-import android.content.Context;
-
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.primitives.UnsignedLongs;
 
-import net.bither.bitherj.BitherjApplication;
+import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.core.BitherjSettings;
+import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.exception.AddressFormatException;
 
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
@@ -43,12 +42,15 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
@@ -60,6 +62,8 @@ import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterrup
  * To enable debug logging from the library, run with -Dbitcoinj.logging=true on your command line.
  */
 public class Utils {
+
+
     public static final BigInteger NEGATIVE_ONE = BigInteger.valueOf(-1);
     private static final MessageDigest digest;
 
@@ -250,7 +254,7 @@ public class Utils {
         return bytesToHexString(reverseBytes(bytes));
     }
 
-    final protected static char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    final protected static char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     /**
      * Returns the given byte array hex encoded.
@@ -723,14 +727,11 @@ public class Utils {
     private static final String WALLET_WATCH_ONLY = "watch";
     private static final String WALLET_HOT = "hot";
     private static final String WALLET_COLD = "cold";
+    private static final String WALLET_TRASH = "trash";
 
     //add by jjz (bither)
     public static File getWalletRomCache() {
-        File file = BitherjApplication.mContext.getDir(WALLET_ROM_CACHE, Context.MODE_PRIVATE);
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-        return file;
+        return AbstractApp.bitherjApp.getPrivateDir(WALLET_ROM_CACHE);
     }
 
     //add by jjz (bither)
@@ -747,9 +748,19 @@ public class Utils {
     public static File getPrivateDir() {
         File file = getWalletRomCache();
         String dirName = WALLET_HOT;
-        if (BitherjApplication.getInitialize().getAppMode() == BitherjSettings.AppMode.COLD) {
+        if (AbstractApp.bitherjApp.getAppMode() == BitherjSettings.AppMode.COLD) {
             dirName = WALLET_COLD;
         }
+        file = new File(file, dirName);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        return file;
+    }
+
+    public static File getTrashDir() {
+        File file = getWalletRomCache();
+        String dirName = WALLET_TRASH;
         file = new File(file, dirName);
         if (!file.exists()) {
             file.mkdirs();
@@ -814,6 +825,12 @@ public class Utils {
         }
     }
 
+    public static void moveFile(File oldFile, File newFile) {
+        if (oldFile.exists()) {
+            oldFile.renameTo(newFile);
+        }
+    }
+
     //add by jjz (bither)
     public static String format(String format, Object... args) {
         return String.format(Locale.US, format, args);
@@ -827,11 +844,6 @@ public class Utils {
             return address;
         }
     }
-    //add by jjz (bither)
-
-    public static File getLogDir() {
-        return BitherjApplication.mContext.getDir("log", Context.MODE_WORLD_READABLE);
-    }
 
     //Added by scw (bither)
     public static long parseLongFromAddress(InetAddress address) {
@@ -843,10 +855,15 @@ public class Utils {
         }
     }
 
+    public static String formatDoubleToMoneyString(double num) {
+        java.text.DecimalFormat formate = new DecimalFormat("0.00");
+        return formate.format(num);
+    }
+
     //Added by scw (bither)
     public static InetAddress parseAddressFromLong(long value) throws UnknownHostException {
         byte[] bytes;
-        if (value <= Integer.MAX_VALUE) {
+        if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
             bytes = Ints.toByteArray((int) value);
         } else {
             bytes = Longs.toByteArray(value);
@@ -857,4 +874,68 @@ public class Utils {
     public static long currentTimeSeconds() {
         return currentTimeMillis() / 1000;
     }
+
+    public static long getFeeBase() {
+        return AbstractApp.bitherjApp.getTransactionFeeMode().getMinFeeSatoshi();
+    }
+
+    public static boolean validPassword(CharSequence password) {
+        String pattern = "[0-9,a-z,A-Z]+";
+        Pattern p = Pattern.compile(pattern);
+        Matcher m = p.matcher(password);
+        return m.matches();
+    }
+
+    public static boolean validBitcoinPrivateKey(String str) {
+        try {
+            DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(str);
+            return true;
+        } catch (AddressFormatException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static boolean validBicoinAddress(String str) {
+        final Pattern PATTERN_BITCOIN_ADDRESS = Pattern.compile("["
+                + new String(Base58.ALPHABET) + "]{20,40}");
+        if (PATTERN_BITCOIN_ADDRESS.matcher(str).matches()) {
+            try {
+                Base58.decodeChecked(str);
+                return true;
+            } catch (final AddressFormatException x) {
+                x.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    public static boolean isNubmer(Object obj) {
+        try {
+            Double.parseDouble(obj.toString());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static boolean isInteger(Object obj) {
+        try {
+            Integer.parseInt(obj.toString());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static boolean isLong(Object obj) {
+        try {
+            Long.parseLong(obj.toString());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+
 }

@@ -16,8 +16,6 @@
 
 package net.bither.bitherj.exception;
 
-import net.bither.bitherj.exception.VerificationException;
-
 @SuppressWarnings("serial")
 public class ScriptException extends VerificationException {
 

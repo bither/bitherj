@@ -16,8 +16,8 @@
 
 package net.bither.bitherj.message;
 
-import net.bither.bitherj.utils.InventoryItem;
 import net.bither.bitherj.exception.ProtocolException;
+import net.bither.bitherj.utils.InventoryItem;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
 
@@ -124,6 +124,6 @@ public abstract class ListMessage extends Message {
     @Override
     public boolean equals(Object o) {
         return o.getClass() == this.getClass() &&
-                ((ListMessage)o).items.equals(this.items);
+                ((ListMessage) o).items.equals(this.items);
     }
 }

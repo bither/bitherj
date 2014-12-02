@@ -24,15 +24,15 @@ import java.util.Arrays;
 /**
  * <p>Base58 is a way to encode Bitcoin addresses as numbers and letters. Note that this is not the same base58 as used by
  * Flickr, which you may see reference to around the internet.</p>
- *
+ * <p/>
  * <p>You may instead wish to work with, which adds support for testing the prefix
  * and suffix bytes commonly found in addresses.</p>
- *
+ * <p/>
  * <p>Satoshi says: why base-58 instead of standard base-64 encoding?<p>
- *
+ * <p/>
  * <ul>
  * <li>Don't want 0OIl characters that look the same in some fonts and
- *     could be used to create visually identical looking account numbers.</li>
+ * could be used to create visually identical looking account numbers.</li>
  * <li>A string with non-alphanumeric characters is not as easily accepted as an account number.</li>
  * <li>E-mail usually won't line-break if there's no punctuation to break at.</li>
  * <li>Doubleclicking selects the whole number as one word if it's all alphanumeric.</li>
@@ -42,6 +42,7 @@ public class Base58 {
     public static final char[] ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray();
 
     private static final int[] INDEXES = new int[128];
+
     static {
         for (int i = 0; i < INDEXES.length; i++) {
             INDEXES[i] = -1;
@@ -51,11 +52,13 @@ public class Base58 {
         }
     }
 
-    /** Encodes the given bytes in base58. No checksum is appended. */
+    /**
+     * Encodes the given bytes in base58. No checksum is appended.
+     */
     public static String encode(byte[] input) {
         if (input.length == 0) {
             return "";
-        }       
+        }
         input = copyOfRange(input, 0, input.length);
         // Count leading zeroes.
         int zeroCount = 0;
@@ -144,7 +147,7 @@ public class Base58 {
 
         return copyOfRange(temp, j - zeroCount, temp.length);
     }
-    
+
 //    public static BigInteger decodeToBigInteger(String input) throws AddressFormatException {
 //        return new BigInteger(1, decode(input));
 //    }
@@ -156,20 +159,20 @@ public class Base58 {
      * @throws AddressFormatException if the input is not base 58 or the checksum does not validate.
      */
     public static byte[] decodeChecked(String input) throws AddressFormatException {
-        byte tmp [] = decode(input);
+        byte tmp[] = decode(input);
         if (tmp.length < 4)
             throw new AddressFormatException("Input too short");
         byte[] bytes = copyOfRange(tmp, 0, tmp.length - 4);
         byte[] checksum = copyOfRange(tmp, tmp.length - 4, tmp.length);
-        
+
         tmp = Utils.doubleDigest(bytes);
         byte[] hash = copyOfRange(tmp, 0, 4);
-        if (!Arrays.equals(checksum, hash)) 
+        if (!Arrays.equals(checksum, hash))
             throw new AddressFormatException("Checksum does not validate");
-        
+
         return bytes;
     }
-    
+
     //
     // number -> number / 58, returns number % 58
     //
@@ -210,4 +213,23 @@ public class Base58 {
 
         return range;
     }
+
+    //added by jjz (bither)
+    public static String bas58ToHexWithAddress(String address) throws AddressFormatException {
+        byte[] bytes = Base58.decodeChecked(address);
+        String hex = Utils.bytesToHexString(bytes);
+        return hex;
+    }
+
+    //added by jjz (bither)
+    public static String hexToBase58WithAddress(String hex) {
+        byte[] bytes = Utils.hexStringToByteArray(hex);
+        byte[] checksum = copyOfRange(Utils.doubleDigest(bytes), 0, 4);
+        byte[] result = new byte[bytes.length + checksum.length];
+        System.arraycopy(bytes, 0, result, 0, bytes.length);
+        System.arraycopy(checksum, 0, result, bytes.length, 4);
+        String address = encode(result);
+        return address;
+    }
+
 }

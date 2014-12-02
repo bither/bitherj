@@ -20,13 +20,20 @@ import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.locks.ReentrantLock;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Various threading related utilities. Provides a wrapper around explicit lock creation that lets you control whether
@@ -66,7 +73,8 @@ public class Threading {
     public static void waitForUserCode() {
         final CountDownLatch latch = new CountDownLatch(1);
         USER_THREAD.execute(new Runnable() {
-            @Override public void run() {
+            @Override
+            public void run() {
                 latch.countDown();
             }
         });
@@ -95,7 +103,8 @@ public class Threading {
             start();
         }
 
-        @SuppressWarnings("InfiniteLoopStatement") @Override
+        @SuppressWarnings("InfiniteLoopStatement")
+        @Override
         public void run() {
             while (true) {
                 Runnable task = Uninterruptibles.takeUninterruptibly(tasks);
@@ -176,7 +185,9 @@ public class Threading {
     //
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /** A caching thread pool that creates daemon threads, which won't keep the JVM alive waiting for more work. */
+    /**
+     * A caching thread pool that creates daemon threads, which won't keep the JVM alive waiting for more work.
+     */
     public static ListeningExecutorService THREAD_POOL = MoreExecutors.listeningDecorator(
             Executors.newCachedThreadPool(new ThreadFactory() {
                 @Override

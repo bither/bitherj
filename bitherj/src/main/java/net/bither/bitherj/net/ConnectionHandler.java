@@ -168,12 +168,12 @@ class ConnectionHandler implements MessageWriteTarget {
             setWriteOps();
         } catch (IOException e) {
             lock.unlock();
-            log.error("Error writing message to connection, closing connection", e);
+            log.error("Error writing message to connection, closing connection. IOException");
             closeConnection();
             throw e;
         } catch (CancelledKeyException e) {
             lock.unlock();
-            log.error("Error writing message to connection, closing connection", e);
+            log.error("Error writing message to connection, closing connection. CancelledKeyException");
             closeConnection();
             throw new IOException(e);
         }
@@ -249,7 +249,7 @@ class ConnectionHandler implements MessageWriteTarget {
         } catch (Exception e) {
             // This can happen eg if the channel closes while the thread is about to get killed
             // (ClosedByInterruptException), or if handler.parser.receiveBytes throws something
-            if(!(e instanceof CancelledKeyException)) {
+            if (!(e instanceof CancelledKeyException)) {
                 log.error("Error handling SelectionKey: {}", Throwables.getRootCause(e).getMessage());
             }
             handler.closeConnection();

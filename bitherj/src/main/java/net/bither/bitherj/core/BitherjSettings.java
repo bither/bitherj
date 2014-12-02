@@ -16,7 +16,6 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.BitherjApplication;
 import net.bither.bitherj.utils.Utils;
 
 import org.spongycastle.util.encoders.Hex;
@@ -30,6 +29,8 @@ public class BitherjSettings {
     public static final boolean DEV_DEBUG = false;
     public static final int PROTOCOL_VERSION = 70001;
     public static final int MIN_PROTO_VERSION = 70001;
+
+    public static final int MAX_TX_SIZE = 100000;
 
     /**
      * The alert signing key originally owned by Satoshi, and now passed on to Gavin along with a few others.
@@ -75,6 +76,8 @@ public class BitherjSettings {
 
     public static final long TX_UNCONFIRMED = Long.MAX_VALUE;
 
+    public static final int PROTOCOL_TIMEOUT = 30000;
+
     public static final String id = ID_MAINNET;
 
     /**
@@ -99,6 +102,7 @@ public class BitherjSettings {
     public static final int BLOCK_DIFFICULTY_INTERVAL = 2016;
     public static final int BITCOIN_REFERENCE_BLOCK_HEIGHT = 250000;
     public static final int MaxPeerConnections = 6;
+    public static final int MaxPeerBackgroundConnections = 2;
 
     public static enum AppMode {
         COLD, HOT
@@ -108,11 +112,6 @@ public class BitherjSettings {
     public static final String WATCH_ONLY_FILE_NAME = "%s/%s.pub";
 
     public static final boolean ensureMinRequiredFee = true;
-
-
-    public static long getFeeBase() {
-        return BitherjApplication.getInitialize().getTransactionFeeMode().getMinFeeSatoshi();
-    }
 
     public enum TransactionFeeMode {
         Normal(10000), Low(1000);
@@ -128,4 +127,3 @@ public class BitherjSettings {
         }
     }
 }
-

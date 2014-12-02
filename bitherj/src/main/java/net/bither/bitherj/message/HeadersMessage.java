@@ -16,8 +16,9 @@
 
 package net.bither.bitherj.message;
 
-import net.bither.bitherj.utils.VarInt;
+import net.bither.bitherj.core.Block;
 import net.bither.bitherj.exception.ProtocolException;
+import net.bither.bitherj.utils.VarInt;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,13 +40,13 @@ public class HeadersMessage extends Message {
     // The main client will never send us more than this number of headers.
     public static final int MAX_HEADERS = 2000;
 
-    private List<BlockMessage> blockHeaders;
+    private List<Block> blockHeaders;
 
     public HeadersMessage(byte[] payload) throws ProtocolException {
         super(payload, 0);
     }
 
-    public HeadersMessage(BlockMessage... headers) throws ProtocolException {
+    public HeadersMessage(Block... headers) throws ProtocolException {
         super();
         blockHeaders = Arrays.asList(headers);
     }
@@ -53,8 +54,8 @@ public class HeadersMessage extends Message {
     @Override
     public void bitcoinSerializeToStream(OutputStream stream) throws IOException {
         stream.write(new VarInt(blockHeaders.size()).encode());
-        for (BlockMessage header : blockHeaders) {
-            if (header.block.getTransactions() == null)
+        for (Block header : blockHeaders) {
+            if (header.getTransactions() == null)
                 header.bitcoinSerializeToStream(stream);
             else
                 header.cloneAsHeader().bitcoinSerializeToStream(stream);
@@ -70,15 +71,15 @@ public class HeadersMessage extends Message {
             cursor = saveCursor;
 
             // Each header has 80 bytes and one more byte for transactions number which is 00.
-            length = 81 * (int)numHeaders;
+            length = 81 * (int) numHeaders;
         }
 
         long numHeaders = readVarInt();
         if (numHeaders > MAX_HEADERS)
             throw new ProtocolException("Too many headers: got " + numHeaders + " which is larger than " +
-                                         MAX_HEADERS);
+                    MAX_HEADERS);
 
-        blockHeaders = new ArrayList<BlockMessage>();
+        blockHeaders = new ArrayList<Block>();
 
         for (int i = 0; i < numHeaders; ++i) {
             // Read 80 bytes of the header and one more byte for the transaction list, which is always a 00 because the
@@ -86,7 +87,7 @@ public class HeadersMessage extends Message {
             byte[] blockHeader = readBytes(81);
             if (blockHeader[80] != 0)
                 throw new ProtocolException("Block header does not end with a null byte");
-            BlockMessage newBlockHeader = new BlockMessage(blockHeader, 81);
+            Block newBlockHeader = new Block(blockHeader, 81);
             blockHeaders.add(newBlockHeader);
         }
 
@@ -98,7 +99,7 @@ public class HeadersMessage extends Message {
     }
 
 
-    public List<BlockMessage> getBlockHeaders() {
+    public List<Block> getBlockHeaders() {
         return blockHeaders;
     }
 }

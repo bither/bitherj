@@ -1,7 +1,7 @@
 package net.bither.bitherj.message;
 
-import net.bither.bitherj.utils.VarInt;
 import net.bither.bitherj.exception.ProtocolException;
+import net.bither.bitherj.utils.VarInt;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -22,10 +22,11 @@ public class AddressMessage extends Message {
 
     /**
      * Contruct a new 'addr' message.
-//     * @param params NetworkParameters object.
+     * //     * @param params NetworkParameters object.
+     *
      * @param offset The location of the first msg byte within the array.
      * @param length The length of message if known.  Usually this is provided when deserializing of the wire
-     * as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
+     *               as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
      * @throws net.bither.bitherj.exception.ProtocolException
      */
     AddressMessage(byte[] payload, int offset, int length) throws ProtocolException {
@@ -34,9 +35,10 @@ public class AddressMessage extends Message {
 
     /**
      * Contruct a new 'addr' message.
-//     * @param params NetworkParameters object.
+     * //     * @param params NetworkParameters object.
+     *
      * @param length The length of message if known.  Usually this is provided when deserializing of the wire
-     * as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
+     *               as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
      * @throws ProtocolException
      */
     public AddressMessage(byte[] payload, int length) throws ProtocolException {
@@ -100,7 +102,7 @@ public class AddressMessage extends Message {
     @Override
     public void setChecksum(byte[] checksum) {
 //        if (parseRetain)
-            super.setChecksum(checksum);
+        super.setChecksum(checksum);
 //        else
 //            this.checksum = null;
     }

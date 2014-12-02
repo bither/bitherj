@@ -17,6 +17,8 @@ package net.bither.bitherj.crypto;
 
 import com.lambdaworks.crypto.SCrypt;
 
+import net.bither.bitherj.AbstractApp;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.BufferedBlockCipher;
@@ -38,6 +40,8 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
     private static final int BITCOINJ_SCRYPT_R = 8;
     private static final int BITCOINJ_SCRYPT_P = 1;
 
+    private static final SecureRandom secureRandom;
+
     /**
      * Key length in bytes.
      */
@@ -54,13 +58,15 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
      */
     public static final int SALT_LENGTH = 8;
 
-    private static final transient SecureRandom secureRandom = new SecureRandom();
-
 
     // Scrypt parameters.
 
 
     private byte[] mSalt;
+
+    static {
+        secureRandom = new SecureRandom();
+    }
 
     /**
      * Encryption/ Decryption using default parameters and a random salt
@@ -68,6 +74,7 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
     public KeyCrypterScrypt() {
         mSalt = new byte[SALT_LENGTH];
         secureRandom.nextBytes(mSalt);
+
     }
 
 
@@ -117,7 +124,7 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
 
         try {
             // Generate iv - each encryption call has a different iv.
-            byte[] iv = new byte[BLOCK_LENGTH];
+            byte[] iv=new byte[BLOCK_LENGTH];
             secureRandom.nextBytes(iv);
 
             ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, iv);

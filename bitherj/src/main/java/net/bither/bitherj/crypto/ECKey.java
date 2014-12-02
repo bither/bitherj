@@ -16,13 +16,11 @@
 
 package net.bither.bitherj.crypto;
 
-import net.bither.bitherj.core.BitherjSettings;
-import net.bither.bitherj.utils.Base58;
-import net.bither.bitherj.utils.Sha256Hash;
-import net.bither.bitherj.utils.Utils;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+
+import net.bither.bitherj.utils.Sha256Hash;
+import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +28,6 @@ import org.spongycastle.asn1.ASN1InputStream;
 import org.spongycastle.asn1.ASN1Integer;
 import org.spongycastle.asn1.ASN1OctetString;
 import org.spongycastle.asn1.DERBitString;
-import org.spongycastle.asn1.DERInteger;
 import org.spongycastle.asn1.DEROctetString;
 import org.spongycastle.asn1.DERSequenceGenerator;
 import org.spongycastle.asn1.DERTaggedObject;
@@ -39,6 +36,7 @@ import org.spongycastle.asn1.sec.SECNamedCurves;
 import org.spongycastle.asn1.x9.X9ECParameters;
 import org.spongycastle.asn1.x9.X9IntegerConverter;
 import org.spongycastle.crypto.AsymmetricCipherKeyPair;
+import org.spongycastle.crypto.ec.CustomNamedCurves;
 import org.spongycastle.crypto.generators.ECKeyPairGenerator;
 import org.spongycastle.crypto.params.ECDomainParameters;
 import org.spongycastle.crypto.params.ECKeyGenerationParameters;
@@ -49,6 +47,7 @@ import org.spongycastle.crypto.signers.ECDSASigner;
 import org.spongycastle.math.ec.ECAlgorithms;
 import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
+import org.spongycastle.math.ec.FixedPointUtil;
 import org.spongycastle.util.encoders.Base64;
 
 import java.io.ByteArrayOutputStream;
@@ -89,6 +88,7 @@ public class ECKey implements Serializable {
      * The parameters of the secp256k1 curve that Bitcoin uses.
      */
     public static final ECDomainParameters CURVE;
+    public static final X9ECParameters CURVE_PARAMS = CustomNamedCurves.getByName("secp256k1");
 
     /**
      * Equal to CURVE.getN().shiftRight(1), used for canonicalising the S value of a signature. If you aren't
@@ -96,15 +96,17 @@ public class ECKey implements Serializable {
      */
     public static final BigInteger HALF_CURVE_ORDER;
 
-    private static final SecureRandom secureRandom;
     private static final long serialVersionUID = -728224901792295832L;
 
     static {
-        // All clients must agree on the curve to use by agreement. Bitcoin uses secp256k1.
-        X9ECParameters params = SECNamedCurves.getByName("secp256k1");
-        CURVE = new ECDomainParameters(params.getCurve(), params.getG(), params.getN(), params.getH());
-        HALF_CURVE_ORDER = params.getN().shiftRight(1);
-        secureRandom = new SecureRandom();
+        // Tell Bouncy Castle to precompute data that's needed during secp256k1 calculations. Increasing the width
+        // number makes calculations faster, but at a cost of extra memory usage and with decreasing returns. 12 was
+        // picked after consulting with the BC team.
+        FixedPointUtil.precompute(CURVE_PARAMS.getG(), 12);
+        CURVE = new ECDomainParameters(CURVE_PARAMS.getCurve(), CURVE_PARAMS.getG(), CURVE_PARAMS.getN(),
+                CURVE_PARAMS.getH());
+        HALF_CURVE_ORDER = CURVE_PARAMS.getN().shiftRight(1);
+
     }
 
     // The two parts of the key. If "priv" is set, "pub" can always be calculated. If "pub" is set but not "priv", we
@@ -112,6 +114,7 @@ public class ECKey implements Serializable {
     // TODO: Redesign this class to use consistent internals and more efficient serialization.
     private BigInteger priv;
     private byte[] pub;
+    private boolean isFromXRandom = false;
     // Creation time of the key in seconds since the epoch, or zero if the key was deserialized from a version that did
     // not have this field.
     private long creationTimeSeconds;
@@ -133,25 +136,24 @@ public class ECKey implements Serializable {
      * Generates an entirely new keypair. Point compression is used so the resulting public key will be 33 bytes
      * (32 for the co-ordinate and 1 byte to represent the y bit).
      */
-    public ECKey() {
+    public static ECKey generateECKey(SecureRandom secureRandom) {
+
         ECKeyPairGenerator generator = new ECKeyPairGenerator();
         ECKeyGenerationParameters keygenParams = new ECKeyGenerationParameters(CURVE, secureRandom);
         generator.init(keygenParams);
         AsymmetricCipherKeyPair keypair = generator.generateKeyPair();
         ECPrivateKeyParameters privParams = (ECPrivateKeyParameters) keypair.getPrivate();
         ECPublicKeyParameters pubParams = (ECPublicKeyParameters) keypair.getPublic();
-        priv = privParams.getD();
-        // Unfortunately Bouncy Castle does not let us explicitly change a point to be compressed, even though it
-        // could easily do so. We must re-build it here so the ECPoints withCompression flag can be set to true.
-        ECPoint uncompressed = pubParams.getQ();
-        ECPoint compressed = compressPoint(uncompressed);
-        pub = compressed.getEncoded();
-
-        creationTimeSeconds = Utils.currentTimeMillis() / 1000;
+        BigInteger priv = privParams.getD();
+        boolean compressed = true;
+        ECKey ecKey = new ECKey(priv, pubParams.getQ().getEncoded(compressed));
+        ecKey.setCreationTimeSeconds(Utils.currentTimeSeconds());
+        return ecKey;
     }
 
     private static ECPoint compressPoint(ECPoint uncompressed) {
-        return new ECPoint.Fp(CURVE.getCurve(), uncompressed.getX(), uncompressed.getY(), true);
+
+        return CURVE.getCurve().decodePoint(uncompressed.getEncoded(true));
     }
 
     /**
@@ -302,6 +304,14 @@ public class ECKey implements Serializable {
         return pub.length == 33;
     }
 
+    public boolean isFromXRandom() {
+        return isFromXRandom;
+    }
+
+    public void setFromXRandom(boolean fromXRandom) {
+        isFromXRandom = fromXRandom;
+    }
+
     public String toString() {
         StringBuilder b = new StringBuilder();
         b.append("pub:").append(Utils.bytesToHexString(pub));
@@ -402,10 +412,10 @@ public class ECKey implements Serializable {
             try {
                 ASN1InputStream decoder = new ASN1InputStream(bytes);
                 DLSequence seq = (DLSequence) decoder.readObject();
-                DERInteger r, s;
+                ASN1Integer r, s;
                 try {
-                    r = (DERInteger) seq.getObjectAt(0);
-                    s = (DERInteger) seq.getObjectAt(1);
+                    r = (ASN1Integer) seq.getObjectAt(0);
+                    s = (ASN1Integer) seq.getObjectAt(1);
                 } catch (ClassCastException e) {
                     throw new IllegalArgumentException(e);
                 }
@@ -422,8 +432,8 @@ public class ECKey implements Serializable {
             // Usually 70-72 bytes.
             ByteArrayOutputStream bos = new ByteArrayOutputStream(72);
             DERSequenceGenerator seq = new DERSequenceGenerator(bos);
-            seq.addObject(new DERInteger(r));
-            seq.addObject(new DERInteger(s));
+            seq.addObject(new ASN1Integer(r));
+            seq.addObject(new ASN1Integer(s));
             seq.close();
             return bos;
         }
@@ -599,7 +609,7 @@ public class ECKey implements Serializable {
             ASN1InputStream decoder = new ASN1InputStream(asn1privkey);
             DLSequence seq = (DLSequence) decoder.readObject();
             checkArgument(seq.size() == 4, "Input does not appear to be an ASN.1 OpenSSL EC private key");
-            checkArgument(((DERInteger) seq.getObjectAt(0)).getValue().equals(BigInteger.ONE),
+            checkArgument(((ASN1Integer) seq.getObjectAt(0)).getValue().equals(BigInteger.ONE),
                     "Input is of wrong version");
             Object obj = seq.getObjectAt(1);
             byte[] bits = ((ASN1OctetString) obj).getOctets();
@@ -741,9 +751,9 @@ public class ECKey implements Serializable {
         BigInteger i = BigInteger.valueOf((long) recId / 2);
         BigInteger x = sig.r.add(i.multiply(n));
         //   1.2. Convert the integer x to an octet string X of length mlen using the conversion routine
-        //        specified in Section 2.3.7, where mlen = ⌈(log2 p)/8⌉ or mlen = ⌈m/8⌉.
+        //        specified in Section 2.3.7, where mlen = [(log2 p)/8] or mlen = [m/8].
         //   1.3. Convert the octet string (16 set binary digits)||X to an elliptic curve point R using the
-        //        conversion routine specified in Section 2.3.4. If this conversion routine outputs “invalid”, then
+        //        conversion routine specified in Section 2.3.4. If this conversion routine outputs "invalid", then
         //        do another iteration of Step 1.
         //
         // More concisely, what these points mean is to use X as a compressed public key.
@@ -864,7 +874,9 @@ public class ECKey implements Serializable {
         final byte[] privKeyBytes = getPrivKeyBytes();
         checkState(privKeyBytes != null, "Private key is not available");
         EncryptedPrivateKey encryptedPrivateKey = keyCrypter.encrypt(privKeyBytes, aesKey);
-        return new ECKey(encryptedPrivateKey, getPubKey(), keyCrypter);
+        ECKey ecKey = new ECKey(encryptedPrivateKey, getPubKey(), keyCrypter);
+        ecKey.setFromXRandom(this.isFromXRandom);
+        return ecKey;
     }
 
     /**

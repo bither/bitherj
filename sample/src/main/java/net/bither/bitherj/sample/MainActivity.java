@@ -27,12 +27,6 @@ import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.core.Block;
 import net.bither.bitherj.core.BlockChain;
 import net.bither.bitherj.core.PeerManager;
-import net.bither.bitherj.crypto.DumpedPrivateKey;
-import net.bither.bitherj.crypto.ECKey;
-import net.bither.bitherj.net.StreamParser;
-import net.bither.bitherj.script.Script;
-import net.bither.bitherj.utils.LogUtil;
-import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
 
 public class MainActivity extends ActionBarActivity {
@@ -50,8 +44,8 @@ public class MainActivity extends ActionBarActivity {
                         , 419465580, 952935459, 298368);
                 BlockChain.getInstance().addSPVBlock(block);
                 if (AddressManager.getInstance().getAllAddresses().size() < 1) {
-                    Address address1 = new Address("1C6FiRktL3UPd4sywhyU5CYSeLdKhvHxhR", Utils.hexStringToByteArray("034285edc746e4c8b4e9f022ee0a561f0b9d5a29e1e44e87e77b2156ecf2c45265"), null);
-                    AddressManager.getInstance().addAddress(address1);
+//                    Address address1 = new Address("1C6FiRktL3UPd4sywhyU5CYSeLdKhvHxhR", Utils.hexStringToByteArray("034285edc746e4c8b4e9f022ee0a561f0b9d5a29e1e44e87e77b2156ecf2c45265"), null);
+//                    AddressManager.getInstance().addAddress(address1);
                 }
 
 
@@ -104,13 +98,13 @@ public class MainActivity extends ActionBarActivity {
                                 button.setText(name + "  running");
                             }
                         });
-                        LogUtil.i("test", "start testing " + name);
+//                        LogUtil.i("test", "start testing " + name);
                         try {
                             task.run();
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        LogUtil.i("test", "end testing " + name);
+//                        LogUtil.i("test", "end testing " + name);
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {

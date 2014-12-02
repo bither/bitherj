@@ -17,9 +17,9 @@
 package net.bither.bitherj.message;
 
 import net.bither.bitherj.core.Block;
-import net.bither.bitherj.utils.InventoryItem;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.exception.ProtocolException;
+import net.bither.bitherj.utils.InventoryItem;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -38,12 +38,13 @@ public class InventoryMessage extends ListMessage {
 
     /**
      * Deserializes an 'inv' message.
-//     * @param params NetworkParameters object.
-     * @param msg Bitcoin protocol formatted byte array containing message content.
-     * If true and the backing byte array is invalidated due to modification of a field then 
-     * the cached bytes may be repopulated and retained if the message is serialized again in the future.
+     * //     * @param params NetworkParameters object.
+     *
+     * @param msg    Bitcoin protocol formatted byte array containing message content.
+     *               If true and the backing byte array is invalidated due to modification of a field then
+     *               the cached bytes may be repopulated and retained if the message is serialized again in the future.
      * @param length The length of message if known.  Usually this is provided when deserializing of the wire
-     * as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
+     *               as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
      * @throws ProtocolException
      */
     public InventoryMessage(byte[] msg, int length)
@@ -63,7 +64,9 @@ public class InventoryMessage extends ListMessage {
         addItem(new InventoryItem(InventoryItem.Type.Transaction, tx.getTxHash()));
     }
 
-    /** Creates a new inv message for the given transactions. */
+    /**
+     * Creates a new inv message for the given transactions.
+     */
     public static InventoryMessage with(Tx... txns) {
         checkArgument(txns.length > 0);
         InventoryMessage result = new InventoryMessage();

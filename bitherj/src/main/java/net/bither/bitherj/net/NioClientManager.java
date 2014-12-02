@@ -16,7 +16,6 @@
 
 package net.bither.bitherj.net;
 
-import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.AbstractExecutionThreadService;
 
 import org.slf4j.LoggerFactory;
@@ -67,8 +66,8 @@ public class NioClientManager extends AbstractExecutionThreadService implements
     private final Set<ConnectionHandler> connectedHandlers = Collections.synchronizedSet(new
             HashSet<ConnectionHandler>());
 
-    public static final NioClientManager instance(){
-        if(instance == null){
+    public static final NioClientManager instance() {
+        if (instance == null) {
             instance = new NioClientManager();
         }
         return instance;
@@ -98,11 +97,9 @@ public class NioClientManager extends AbstractExecutionThreadService implements
                 // may cause this. Otherwise it may be any arbitrary kind of connection failure.
                 // Calling sc.socket().getRemoteSocketAddress() here throws an exception,
                 // so we can only log the error itself
-                log.error("Failed to connect with exception: {}",
-                        Throwables.getRootCause(e).getMessage());
                 handler.closeConnection();
             }
-        } else if(key.isValid()) // Process bytes read
+        } else if (key.isValid()) // Process bytes read
         {
             ConnectionHandler.handleKey(key);
         }
@@ -187,6 +184,17 @@ public class NioClientManager extends AbstractExecutionThreadService implements
         }
     }
 
+    public void startUpError() {
+        State state = state();
+        log.warn("NioClientManager start up error, state is {}, retry.", state.name());
+        if (state == State.RUNNING || state == State.STARTING) {
+            closeConnections(getConnectedClientCount());
+            triggerShutdown();
+        }
+        instance = new NioClientManager();
+        instance.startAndWait();
+    }
+
     @Override
     public void triggerShutdown() {
         selector.wakeup();
@@ -209,5 +217,9 @@ public class NioClientManager extends AbstractExecutionThreadService implements
                 // returning
             }
         }
+    }
+
+    public void onDestroy() {
+        instance = null;
     }
 }

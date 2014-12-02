@@ -18,7 +18,7 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
-import net.bither.bitherj.db.TxProvider;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.exception.VerificationException;
@@ -27,7 +27,6 @@ import net.bither.bitherj.message.Message;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.script.ScriptOpCodes;
-import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
 import net.bither.bitherj.utils.Utils;
@@ -53,7 +52,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static net.bither.bitherj.utils.Utils.doubleDigest;
-import static net.bither.bitherj.utils.Utils.format;
 import static net.bither.bitherj.utils.Utils.uint32ToByteStreamLE;
 
 public class Tx extends Message implements Comparable<Tx> {
@@ -251,7 +249,7 @@ public class Tx extends Message implements Comparable<Tx> {
     }
 
     public void sawByPeer() {
-        TxProvider.getInstance().txSentBySelfHasSaw(getTxHash());
+        AbstractDb.txProvider.txSentBySelfHasSaw(getTxHash());
         setSawByPeerCnt(getSawByPeerCnt() + 1);
     }
 
@@ -330,6 +328,7 @@ public class Tx extends Message implements Comparable<Tx> {
                     return out.getOutAddress();
                 }
             }
+            return getOuts().get(0).getOutAddress();
         }
         return null;
     }
@@ -343,7 +342,7 @@ public class Tx extends Message implements Comparable<Tx> {
         if (address != null) {
             return address;
         } else {
-            Tx preTx = TxProvider.getInstance().getTxDetailByTxHash(in.getPrevTxHash());
+            Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             if (preTx == null) {
                 return null;
             }
@@ -367,7 +366,7 @@ public class Tx extends Message implements Comparable<Tx> {
     public long getFee() {
         long amount = 0;
         for (In in : getIns()) {
-            Tx preTx = TxProvider.getInstance().getTxDetailByTxHash(in.getPrevTxHash());
+            Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             if (in.getPrevOutSn() >= 0 && in.getPrevOutSn() < preTx.getOuts().size()) {
                 amount += preTx.getOuts().get(in.getPrevOutSn()).getOutValue();
             } else {
@@ -714,7 +713,7 @@ public class Tx extends Message implements Comparable<Tx> {
                 // execution)
                 // todo:
 //                input.getScriptSig().correctlySpends(this, i,
-// input.getOutpoint().getConnectedOutput().getScriptPubKey(), true);
+//  input.getOutpoint().getConnectedOutput().getScriptPubKey(), true);
                 log.warn("Input {} already correctly spends output, " +
                         "" + "assuming SIGHASH type used will be safe and skipping signing.", i);
                 // all need to sign
@@ -770,7 +769,7 @@ public class Tx extends Message implements Comparable<Tx> {
             In input = ins.get(i);
 //            final TransactionOutput connectedOutput = input.getOutpoint().getConnectedOutput();
 //            checkNotNull(connectedOutput);  // Quiet static analysis: is never null here but
-// cannot be statically proven
+//            cannot be statically proven
             Script scriptPubKey = new Script(input.getPrevOutScript()); //connectedOutput
             // .getScriptPubKey();
             if (scriptPubKey.isSentToAddress()) {
@@ -1117,7 +1116,7 @@ public class Tx extends Message implements Comparable<Tx> {
     public long feeForTx() {
         long amount = 0;
         for (In in : this.ins) {
-            Tx tx = TxProvider.getInstance().getTxDetailByTxHash(in.getPrevTxHash());
+            Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             int n = in.getPrevOutSn();
             if (n > tx.outs.size()) {
                 return Integer.MAX_VALUE;
@@ -1144,7 +1143,7 @@ public class Tx extends Message implements Comparable<Tx> {
     public long amountSentFrom(Address address) {
         long amount = 0;
         for (In in : this.ins) {
-            Tx tx = TxProvider.getInstance().getTxDetailByTxHash(in.getPrevTxHash());
+            Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             int n = in.getPrevOutSn();
 
             if (n < tx.ins.size() && Utils.compareString(address.getAddress(),
@@ -1174,7 +1173,7 @@ public class Tx extends Message implements Comparable<Tx> {
             }
         }
         for (In in : this.ins) {
-            Tx tx = TxProvider.getInstance().getTxDetailByTxHash(in.getPrevTxHash());
+            Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             if (tx != null) {
                 int n = in.getPrevOutSn();
                 if (n < tx.outs.size() && Utils.compareString(address.getAddress(),
@@ -1251,5 +1250,14 @@ public class Tx extends Message implements Comparable<Tx> {
         } else {
             return false;
         }
+    }
+
+    public boolean hasDustOut() {
+        for (Out out : this.getOuts()) {
+            if (out.getOutValue() <= Tx.MIN_NONDUST_OUTPUT) {
+                return true;
+            }
+        }
+        return false;
     }
 }

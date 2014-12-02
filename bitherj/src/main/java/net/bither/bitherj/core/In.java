@@ -16,13 +16,16 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.db.TxProvider;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.message.Message;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,6 +35,8 @@ import javax.annotation.Nullable;
 
 
 public class In extends Message {
+    private static final Logger log = LoggerFactory.getLogger(In.class);
+
     public static final int OUTPOINT_MESSAGE_LENGTH = 36;
     public static final long NO_SEQUENCE = 0xFFFFFFFFL;
 
@@ -101,7 +106,7 @@ public class In extends Message {
         this.inSequence = inSequence;
     }
 
-    public OutPoint getOutpoint(){
+    public OutPoint getOutpoint() {
         return new OutPoint(this.prevTxHash, this.prevOutSn);
     }
 
@@ -149,7 +154,7 @@ public class In extends Message {
     }
 
     public In(@Nullable Tx parentTransaction, byte[] scriptBytes,
-                            Out outpoint) {
+              Out outpoint) {
         super();
         this.inSignature = scriptBytes;
         this.prevTxHash = outpoint.getTxHash();
@@ -197,37 +202,39 @@ public class In extends Message {
         return inSequence != NO_SEQUENCE;
     }
 
-    public Out getConnectedOut(){
-        if(connectedOut == null){
-            Tx preTx = TxProvider.getInstance().getTxDetailByTxHash(getPrevTxHash());
-            if(preTx == null){
+    public Out getConnectedOut() {
+        if (connectedOut == null) {
+            Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(getPrevTxHash());
+            if (preTx == null) {
                 return null;
             }
-            if(getPrevOutSn() >=0 && getPrevOutSn() < preTx.getOuts().size()){
+            if (getPrevOutSn() >= 0 && getPrevOutSn() < preTx.getOuts().size()) {
                 connectedOut = preTx.getOuts().get(getPrevOutSn());
             }
         }
         return connectedOut;
     }
 
-    public String getFromAddress(){
-        if(getConnectedOut() != null){
+    public String getFromAddress() {
+        if (getConnectedOut() != null) {
             return getConnectedOut().getOutAddress();
-        } else {
+        } else if (this.getInSignature() != null) {
             Script script = new Script(this.getInSignature());
             if (script.getChunks().size() == 2) {
                 try {
                     return script.getFromAddress();
                 } catch (ScriptException ex) {
-                    ex.printStackTrace();
+//                    if (this.getInSignature() != null) {
+//                        log.warn("out script : " + Utils.bytesToHexString(this.getInSignature()));
+//                    }
                 }
             }
         }
         return null;
     }
 
-    public long getValue(){
-        if(getConnectedOut() != null){
+    public long getValue() {
+        if (getConnectedOut() != null) {
             return getConnectedOut().getOutValue();
         }
         return 0;

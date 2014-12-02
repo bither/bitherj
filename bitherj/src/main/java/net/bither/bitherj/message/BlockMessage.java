@@ -16,35 +16,17 @@
 
 package net.bither.bitherj.message;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-
-
-import net.bither.bitherj.core.BitherjSettings;
 import net.bither.bitherj.core.Block;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.exception.ProtocolException;
-import net.bither.bitherj.exception.VerificationException;
-import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
-import net.bither.bitherj.utils.Utils;
-import net.bither.bitherj.utils.VarInt;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
-
-import static net.bither.bitherj.utils.Utils.doubleDigest;
-import static net.bither.bitherj.utils.Utils.doubleDigestTwoBuffers;
 
 /**
  * <p>A block is a group of transactions, and is one of the fundamental data structures of the Bitcoin system.
@@ -86,9 +68,11 @@ public class BlockMessage extends Message {
     public static final long EASIEST_DIFFICULTY_TARGET = 0x207fFFFFL;
 
     protected Block block;
+
     public void setBlock(Block block) {
         this.block = block;
     }
+
     public Block getBlock() {
         return this.block;
     }
@@ -154,8 +138,8 @@ public class BlockMessage extends Message {
      * Contruct a block object from the Bitcoin wire format.
      * //     * @param params NetworkParameters object.
      *
-     * @param length      The length of message if known.  Usually this is provided when deserializing of the wire
-     *                    as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
+     * @param length The length of message if known.  Usually this is provided when deserializing of the wire
+     *               as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
      * @throws net.bither.bitherj.exception.ProtocolException
      */
     public BlockMessage(byte[] payloadBytes, int length)

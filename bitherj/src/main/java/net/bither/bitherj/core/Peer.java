@@ -16,8 +16,9 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.db.PeerProvider;
-import net.bither.bitherj.db.TxProvider;
+import com.google.common.util.concurrent.Service;
+
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.exception.VerificationException;
@@ -42,7 +43,6 @@ import net.bither.bitherj.net.NioClientManager;
 import net.bither.bitherj.net.PeerSocketHandler;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.InventoryItem;
-import net.bither.bitherj.utils.LogUtil;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
@@ -61,16 +61,15 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Created by zhouqi on 14-8-15.
- */
 public class Peer extends PeerSocketHandler {
     private static final int MAX_GETDATA_HASHES = 50000;
+
+    private static final int MAX_UNRELATED_TX_RELAY_COUNT = 1000;
 
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
     private static final int TimeOutDelay = 5000;
 
-    enum State {
+    public enum State {
         Disconnected, Connecting, Connected
     }
 
@@ -85,7 +84,9 @@ public class Peer extends PeerSocketHandler {
     protected int peerPort;
     protected long peerServices;
     protected int peerConnectedCnt;
-    protected long lastBlockHeight;
+    protected long versionLastBlockHeight;
+    // This may be wrong. Do not rely on it.
+    private int incrementalBlockHeight;
     protected int version;
     protected long nonce;
     protected String userAgent;
@@ -104,6 +105,15 @@ public class Peer extends PeerSocketHandler {
     private VersionMessage versionMessage;
     private boolean bloomFilterSent;
 
+    private int unrelatedTxRelayCount;
+    private boolean synchronising;
+    private int syncStartBlockNo;
+    private long syncStartPeerBlockNo;
+    private int synchronisingBlockCount;
+
+    private List<Block> syncBlocks;
+    private List<Sha256Hash> syncBlockHashes;
+
 
     public Peer(InetAddress address) {
         super(new InetSocketAddress(address, BitherjSettings.port));
@@ -116,9 +126,14 @@ public class Peer extends PeerSocketHandler {
         knownTxHashes = new HashSet<Sha256Hash>();
         requestedBlockHashes = new HashSet<Sha256Hash>();
         needToRequestDependencyDict = new HashMap<Sha256Hash, HashSet<Tx>>();
+        incrementalBlockHeight = 0;
+        unrelatedTxRelayCount = 0;
         nonce = new Random().nextLong();
         peerTimestamp = (int) (new Date().getTime() / 1000 - 24 * 60 * 60 * (3 + new Random()
                 .nextFloat() * 4));
+        synchronising = false;
+        syncBlocks = new ArrayList<Block>();
+        syncBlockHashes = new ArrayList<Sha256Hash>();
     }
 
     public void connect() {
@@ -130,13 +145,19 @@ public class Peer extends PeerSocketHandler {
             log.info("peer[{}:{}] call connect", this.peerAddress.getHostAddress(), this.peerPort);
             state = State.Connecting;
             if (!NioClientManager.instance().isRunning()) {
-                NioClientManager.instance().startAndWait();
+                if (NioClientManager.instance().startAndWait() != Service.State.RUNNING) {
+                    NioClientManager.instance().startUpError();
+                }
             }
             setTimeoutEnabled(true);
             setSocketTimeout(TimeOutDelay);
             bloomFilterSent = false;
-            NioClientManager.instance().openConnection(new InetSocketAddress(getPeerAddress(),
-                    BitherjSettings.port), this);
+            try {
+                NioClientManager.instance().openConnection(new InetSocketAddress(getPeerAddress(),
+                        BitherjSettings.port), this);
+            } catch (Exception ex) {
+                exceptionCaught(ex);
+            }
         }
     }
 
@@ -160,7 +181,7 @@ public class Peer extends PeerSocketHandler {
         if (currentFilteredBlock != null && !(m instanceof Tx)) {
             currentFilteredBlock = null;
             currentTxHashes.clear();
-            exceptionCaught(new ProtocolException("Except more tx for current filtering block"));
+            exceptionCaught(new ProtocolException("Expect more tx for current filtering block, but got a " + m.getClass().getSimpleName() + " message"));
         }
 
         if (m instanceof NotFoundMessage) {
@@ -270,22 +291,24 @@ public class Peer extends PeerSocketHandler {
             for (int i = 0;
                  i < eachTx.getIns().size();
                  i++) {
-                if (Arrays.equals(eachTx.getIns().get(i).getTxHash(), eachTx.getTxHash())) {
-                    byte[] outScript = tx.getOuts().get(eachTx.getIns().get(i).getInSn())
-                            .getOutScript();
-                    Script pubKeyScript = new Script(outScript);
-                    Script script = new Script(eachTx.getIns().get(i).getInSignature());
-                    try {
-                        script.correctlySpends(eachTx, i, pubKeyScript, true);
-                        valid &= true;
-                    } catch (ScriptException e) {
-                        valid &= false;
+                if (Arrays.equals(eachTx.getIns().get(i).getTxHash(), tx.getTxHash())) {
+                    if (eachTx.getIns().get(i).getInSn() < tx.getOuts().size()) {
+                        byte[] outScript = tx.getOuts().get(eachTx.getIns().get(i).getInSn())
+                                .getOutScript();
+                        Script pubKeyScript = new Script(outScript);
+                        Script script = new Script(eachTx.getIns().get(i).getInSignature());
+                        try {
+                            script.correctlySpends(eachTx, i, pubKeyScript, true);
+                            valid &= true;
+                        } catch (ScriptException e) {
+                            valid &= false;
+                        }
+                    } else {
+                        valid = false;
                     }
-                } else {
-                    valid = false;
-                }
-                if (!valid) {
-                    break;
+                    if (!valid) {
+                        break;
+                    }
                 }
             }
             if (valid) {
@@ -339,8 +362,9 @@ public class Peer extends PeerSocketHandler {
                     "" + items.size() + " is too many items, max is " + MAX_GETDATA_HASHES);
             return;
         }
-        if(!bloomFilterSent){
+        if (!bloomFilterSent) {
             log.info("Peer {} received inv. But we didn't send bloomfilter. Ignore");
+            return;
         }
         ArrayList<Sha256Hash> txHashSha256Hashs = new ArrayList<Sha256Hash>();
         ArrayList<Sha256Hash> blockHashSha256Hashs = new ArrayList<Sha256Hash>();
@@ -359,12 +383,12 @@ public class Peer extends PeerSocketHandler {
                     break;
                 case Block:
                 case FilteredBlock:
-                    if(PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) {
-                        Sha256Hash bigBlock = new Sha256Hash(hash);
-                        if (!blockHashSha256Hashs.contains(bigBlock)) {
-                            blockHashSha256Hashs.add(bigBlock);
-                        }
+//                    if(PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) {
+                    Sha256Hash bigBlock = new Sha256Hash(hash);
+                    if (!blockHashSha256Hashs.contains(bigBlock)) {
+                        blockHashSha256Hashs.add(bigBlock);
                     }
+//                    }
                     break;
             }
         }
@@ -387,14 +411,18 @@ public class Peer extends PeerSocketHandler {
         knownTxHashes.addAll(txHashSha256Hashs);
 
         if (txHashSha256Hashs.size() + blockHashSha256Hashs.size() > 0) {
-            sendGetDataMessageWithTxHashesAndBlockHashes(txHashSha256Hashs, blockHashSha256Hashs);
+            if (PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) {
+                sendGetDataMessageWithTxHashesAndBlockHashes(txHashSha256Hashs, blockHashSha256Hashs);
 
-            // Each merkle block the remote peer sends us is followed by a set of tx messages for
-            // that block. We send a ping
-            // to get a pong reply after the block and all its tx are sent,
-            // indicating that there are no more tx messages
-            if (blockHashSha256Hashs.size() == 1) {
-                ping();
+                // Each merkle block the remote peer sends us is followed by a set of tx messages for
+                // that block. We send a ping
+                // to get a pong reply after the block and all its tx are sent,
+                // indicating that there are no more tx messages
+                if (blockHashSha256Hashs.size() == 1) {
+                    ping();
+                }
+            } else {
+                sendGetDataMessageWithTxHashesAndBlockHashes(txHashSha256Hashs, new ArrayList<Sha256Hash>());
             }
         }
 
@@ -407,6 +435,23 @@ public class Peer extends PeerSocketHandler {
                     iterator.remove();
                 }
             }
+            if (this.synchronising) {
+                this.syncBlockHashes.addAll(blockHashSha256Hashs);
+            }
+
+            this.increaseBlockNo(blockHashSha256Hashs.size());
+        }
+
+//        if(blockHashSha256Hashs.size() == 1){
+//            incrementalBlockHeight ++;
+//        }
+    }
+
+    private void increaseBlockNo(int blockCount) {
+        if (this.synchronising) {
+            synchronisingBlockCount += blockCount;
+        } else {
+            incrementalBlockHeight += blockCount;
         }
     }
 
@@ -436,7 +481,7 @@ public class Peer extends PeerSocketHandler {
                     this.peerAddress.getHostAddress(), this.peerPort,
                     Utils.hashToString(m.getBlock().getBlockHash()), Utils.hashToString(txHash));
         }
-        txHashes.removeAll(knownTxHashes);
+//        txHashes.removeAll(knownTxHashes);
 
         // wait util we get all the tx messages before processing the block
         if (txHashes.size() > 0) {
@@ -444,9 +489,22 @@ public class Peer extends PeerSocketHandler {
             currentTxHashes.clear();
             currentTxHashes.addAll(txHashes);
         } else {
-            PeerManager.instance().relayedBlock(this, block);
+            if (this.synchronising && this.syncBlockHashes.contains(new Sha256Hash(block.getBlockHash()))) {
+                this.syncBlockHashes.remove(new Sha256Hash(block.getBlockHash()));
+                this.syncBlocks.add(block);
+
+                if (this.syncBlockHashes.size() == 0) {
+                    PeerManager.instance().relayedBlocks(this, this.syncBlocks);
+                    this.syncBlocks.clear();
+                } else if (this.syncBlocks.size() >= 100) {
+                    PeerManager.instance().relayedBlocks(this, this.syncBlocks);
+                    this.syncBlocks.clear();
+                }
+            } else {
+                PeerManager.instance().relayedBlock(this, block);
+            }
         }
-        if(currentBlockHashes.size() == 0){
+        if (currentBlockHashes.size() == 0) {
             sendGetBlocksMessage(Arrays.asList(new byte[][]{block.getBlockHash(), BlockChain.getInstance().getBlockLocatorArray().get(0)}), null);
         }
     }
@@ -469,13 +527,62 @@ public class Peer extends PeerSocketHandler {
                 Block block = currentFilteredBlock;
                 currentFilteredBlock = null;
                 currentTxHashes.clear();
-                PeerManager.instance().relayedBlock(this, block);
+                if (this.synchronising && this.syncBlockHashes.contains(new Sha256Hash(block.getBlockHash()))) {
+                    this.syncBlockHashes.remove(new Sha256Hash(block.getBlockHash()));
+                    this.syncBlocks.add(block);
+
+                    if (this.syncBlockHashes.size() == 0) {
+                        PeerManager.instance().relayedBlocks(this, this.syncBlocks);
+                        this.syncBlocks.clear();
+                    } else if (this.syncBlocks.size() >= 100) {
+                        PeerManager.instance().relayedBlocks(this, this.syncBlocks);
+                        this.syncBlocks.clear();
+                    }
+                } else {
+                    PeerManager.instance().relayedBlock(this, block);
+                }
             }
         } else {
             log.info("peer[{}:{}] receive tx {}", this.peerAddress.getHostAddress(),
                     this.peerPort, Utils.hashToString(tx.getTxHash()));
+            if (AddressManager.getInstance().isTxRelated(tx)) {
+                unrelatedTxRelayCount = 0;
+            } else {
+                unrelatedTxRelayCount++;
+                if (unrelatedTxRelayCount > MAX_UNRELATED_TX_RELAY_COUNT) {
+                    exceptionCaught(new Exception("Peer " + getPeerAddress().getHostAddress() + " is junking us. Drop it."));
+                    return;
+                }
+            }
+
+
+            boolean valid = true;
+            try {
+                tx.verify();
+                valid = true;
+            } catch (VerificationException e) {
+                valid = false;
+            }
+            if (valid && !tx.hasDustOut()) {
+                PeerManager.instance().relayedTransaction(this, tx);
+            }
+            /*
+            log.info("peer[{}:{}] receive tx {}", this.peerAddress.getHostAddress(),
+                    this.peerPort, Utils.hashToString(tx.getTxHash()));
+            if (needToRequestDependencyDict.get(new Sha256Hash(tx.getTxHash())) == null || needToRequestDependencyDict.get(new Sha256Hash(tx.getTxHash())).size() == 0) {
+                if (AddressManager.getInstance().isTxRelated(tx)) {
+                    unrelatedTxRelayCount = 0;
+                } else {
+                    unrelatedTxRelayCount++;
+                    if (unrelatedTxRelayCount > MAX_UNRELATED_TX_RELAY_COUNT) {
+                        exceptionCaught(new Exception("Peer " + getPeerAddress().getHostAddress() + " is junking us. Drop it."));
+                        return;
+                    }
+                }
+            }
+
             // check dependency
-            HashMap<Sha256Hash, Tx> dependency = TxProvider.getInstance().getTxDependencies(tx);
+            HashMap<Sha256Hash, Tx> dependency = AbstractDb.txProvider.getTxDependencies(tx);
             HashSet<Sha256Hash> needToRequest = new HashSet<Sha256Hash>();
             boolean valid = true;
             for (int i = 0;
@@ -527,6 +634,7 @@ public class Peer extends PeerSocketHandler {
                 sendGetDataMessageWithTxHashesAndBlockHashes(new ArrayList<Sha256Hash>
                         (needToRequest), null);
             }
+            */
         }
     }
 
@@ -539,11 +647,11 @@ public class Peer extends PeerSocketHandler {
                 if (tx != null) {
                     sendMessage(tx);
                     log.info("Peer {} asked for tx: {} , found {}", getPeerAddress()
-                            .getHostAddress(), Utils.hashToString(item.hash),
+                                    .getHostAddress(), Utils.hashToString(item.hash),
                             "hash: " + Utils.hashToString(tx.getTxHash()) + ", " +
                                     "content: " + Utils.bytesToHexString(tx.bitcoinSerialize()));
                     continue;
-                }else{
+                } else {
                     log.info("Peer {} asked for tx: {} , not found", getPeerAddress().getHostAddress(), Utils.hashToString(item.hash));
                 }
             }
@@ -578,44 +686,44 @@ public class Peer extends PeerSocketHandler {
 
         try {
             int lastBlockTime = 0;
-            byte[] firstHash = m.getBlockHeaders().get(0).getBlock().getBlockHash();
-            byte[] lastHash = m.getBlockHeaders().get(m.getBlockHeaders().size() - 1).getBlock()
-                    .getBlockHash();
-            ArrayList<Block> blocksToRelay = new ArrayList<Block>();
-            for (int i = 0;
-                 i < m.getBlockHeaders().size();
-                 i++) {
-                BlockMessage header = m.getBlockHeaders().get(i);
-                // Process headers until we pass the fast catchup time,
-                // or are about to catch up with the head
-                // of the chain - always process the last block as a full/filtered block to kick
-                // us out of the
-                // fast catchup mode (in which we ignore new blocks).
-
-                boolean passedTime = header.getBlock().getBlockTime() >= PeerManager.instance()
-                        .earliestKeyTime;
-                boolean reachedTop = PeerManager.instance().getLastBlockHeight() >= this
-                        .lastBlockHeight;
-                if (!passedTime && !reachedTop) {
-                    if (header.getBlock().getBlockTime() > lastBlockTime) {
-                        lastBlockTime = header.getBlock().getBlockTime();
-                        if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance()
-                                .earliestKeyTime - 2 * 60 * 60) {
-                            lastHash = header.getBlock().getBlockHash();
-                        }
-                    }
-                    if(!blocksToRelay.contains(header.getBlock())){
-                        blocksToRelay.add(header.getBlock());
-                    }
-                }
-            }
-            PeerManager.instance().relayedBlockHeadersForMainChain(this, blocksToRelay);
-            if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance().earliestKeyTime - 2 *
-                    60 * 60) {
-                sendGetBlocksMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);
-            } else {
-                sendGetHeadersMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);
-            }
+            byte[] firstHash = m.getBlockHeaders().get(0).getBlockHash();
+            byte[] lastHash = m.getBlockHeaders().get(m.getBlockHeaders().size() - 1).getBlockHash();
+//            ArrayList<Block> blocksToRelay = new ArrayList<Block>();
+//            for (int i = 0; i < m.getBlockHeaders().size(); i++) {
+//                blocksToRelay.add(m.getBlockHeaders().get(i));
+//            }
+//            for (int i = 0; i < m.getBlockHeaders().size(); i++) {
+//                BlockMessage header = m.getBlockHeaders().get(i);
+//                // Process headers until we pass the fast catchup time,
+//                // or are about to catch up with the head
+//                // of the chain - always process the last block as a full/filtered block to kick
+//                // us out of the
+//                // fast catchup mode (in which we ignore new blocks).
+//
+//                boolean passedTime = header.getBlock().getBlockTime() >= PeerManager.instance()
+//                        .earliestKeyTime;
+//                boolean reachedTop = PeerManager.instance().getLastBlockHeight() >= this
+//                        .versionLastBlockHeight;
+//                if (!passedTime && !reachedTop) {
+//                    if (header.getBlock().getBlockTime() > lastBlockTime) {
+//                        lastBlockTime = header.getBlock().getBlockTime();
+//                        if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance()
+//                                .earliestKeyTime - 2 * 60 * 60) {
+//                            lastHash = header.getBlock().getBlockHash();
+//                        }
+//                    }
+//                    if(!blocksToRelay.contains(header.getBlock())){
+//                        blocksToRelay.add(header.getBlock());
+//                    }
+//                }
+//            }
+            PeerManager.instance().relayedBlockHeadersForMainChain(this, m.getBlockHeaders());
+//            if (lastBlockTime + 7 * 24 * 60 * 60 >= PeerManager.instance().earliestKeyTime - 2 *
+//                    60 * 60) {
+//                sendGetBlocksMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);
+//            } else {
+            sendGetHeadersMessage(Arrays.asList(new byte[][]{lastHash, firstHash}), null);
+//            }
         } catch (VerificationException e) {
             log.warn("Block header verification failed", e);
         }
@@ -632,11 +740,11 @@ public class Peer extends PeerSocketHandler {
         peerTimestamp = (int) version.time;
         userAgent = version.subVer;
 
-        lastBlockHeight = version.bestHeight;
+        versionLastBlockHeight = version.bestHeight;
 
         sendMessage(new VersionAck());
     }
-    
+
     public boolean getDownloadData() {
         if (PeerManager.instance().getDownloadingPeer() != null) {
             return equals(PeerManager.instance().getDownloadingPeer());
@@ -649,14 +757,14 @@ public class Peer extends PeerSocketHandler {
         // Iterates over a snapshot of the list, so we can run unlocked here.
         if (m.getNonce() == nonce) {
             if (pingStartTime > 0) {
-                if(pingTime > 0){
+                if (pingTime > 0) {
                     pingTime = (long) (pingTime * 0.5f + (new Date().getTime() - pingStartTime) * 0.5f);
                 } else {
                     pingTime = new Date().getTime() - pingStartTime;
                 }
                 pingStartTime = 0;
             }
-            LogUtil.i(Peer.class.getSimpleName(), "Peer " + getPeerAddress().getHostAddress() +" receive pong, ping time: " + pingTime);
+            log.info("Peer " + getPeerAddress().getHostAddress() + " receive pong, ping time: " + pingTime);
         }
     }
 
@@ -726,7 +834,7 @@ public class Peer extends PeerSocketHandler {
             return;
         }
         InventoryMessage m = new InventoryMessage();
-        m.addTransaction(TxProvider.getInstance().getTxDetailByTxHash(txHash.getBytes()));
+        m.addTransaction(AbstractDb.txProvider.getTxDetailByTxHash(txHash.getBytes()));
         log.info("Peer {} send inv with tx {}", getPeerAddress().getHostAddress(),
                 Utils.hashToString(txHash.getBytes()));
         sendMessage(m);
@@ -821,18 +929,18 @@ public class Peer extends PeerSocketHandler {
 
 
     public void connectFail() {
-        PeerProvider.getInstance().conncetFail(getPeerAddress());
+        AbstractDb.peerProvider.removePeer(getPeerAddress());
     }
 
     public void connectError() {
-        PeerProvider.getInstance().removePeer(getPeerAddress());
+        AbstractDb.peerProvider.removePeer(getPeerAddress());
     }
 
 
     public void connectSucceed() {
         peerConnectedCnt = 1;
         peerTimestamp = (int) (new Date().getTime() / 1000);
-        PeerProvider.getInstance().connectSucceed(getPeerAddress());
+        AbstractDb.peerProvider.connectSucceed(getPeerAddress());
         sendFilterLoadMessage(PeerManager.instance().bloomFilterForPeer(this));
     }
 
@@ -871,10 +979,15 @@ public class Peer extends PeerSocketHandler {
     public boolean equals(Object o) {
         if (o instanceof Peer) {
             Peer item = (Peer) o;
-            return Arrays.equals(getPeerAddress().getAddress(), item.getPeerAddress().getAddress());
+            return Utils.parseLongFromAddress(getPeerAddress())==Utils.parseLongFromAddress(item.getPeerAddress());
         } else {
             return false;
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return getPeerAddress().hashCode();
     }
 
     public InetAddress getPeerAddress() {
@@ -917,15 +1030,41 @@ public class Peer extends PeerSocketHandler {
         this.peerConnectedCnt = peerConnectedCnt;
     }
 
-    public long getLastBlockHeight() {
-        return lastBlockHeight;
+    public long getVersionLastBlockHeight() {
+        return versionLastBlockHeight;
     }
 
-    public int getClientVersion(){
+    // This may be wrong. Do not rely on it.
+    public long getDisplayLastBlockHeight() {
+        return versionLastBlockHeight + incrementalBlockHeight;
+    }
+
+    public int getClientVersion() {
         return version;
     }
 
-    public String getSubVersion(){
+    public String getSubVersion() {
         return userAgent;
+    }
+
+    public boolean getSynchronising() {
+        return this.synchronising;
+    }
+
+    public void setSynchronising(boolean synchronising) {
+        if (synchronising && !this.synchronising) {
+            syncStartBlockNo = BlockChain.getInstance().getLastBlock().getBlockNo();
+            syncStartPeerBlockNo = this.getDisplayLastBlockHeight();
+            synchronisingBlockCount = 0;
+            syncBlocks = new ArrayList<Block>();
+            syncBlockHashes = new ArrayList<Sha256Hash>();
+
+            this.synchronising = synchronising;
+        } else if (!synchronising && this.synchronising) {
+            incrementalBlockHeight = BlockChain.getInstance().getLastBlock().getBlockNo() - (int) this.getVersionLastBlockHeight();
+            synchronisingBlockCount = 0;
+
+            this.synchronising = synchronising;
+        }
     }
 }
