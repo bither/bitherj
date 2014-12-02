@@ -32,6 +32,6 @@ You can take a look at our implementation of CharSequence for further understand
 The advantage of using SecureCharSequence is : even when next "OpenSSL HeartBleed" happens, your bitcoins are still a little bit safer than others.
 
 We had posted issues for the following projects :
-blockchain.info : https://github.com/blockchain/My-Wallet-Android/issues/10
-Bitcoin Wallet : https://github.com/schildbach/bitcoin-wallet/issues/179
-Mycelium : https://github.com/mycelium-com/wallet/issues/135
+* blockchain.info : https://github.com/blockchain/My-Wallet-Android/issues/10
+* Bitcoin Wallet : https://github.com/schildbach/bitcoin-wallet/issues/179
+* Mycelium : https://github.com/mycelium-com/wallet/issues/135
