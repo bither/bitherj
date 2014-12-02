@@ -8,8 +8,8 @@ We use Bitherj in our Bither Wallet which alse open source on github [bither-and
 
 ## Feature
 
-* Complete Bitcoin Protocol
-* Sqlite base
+* Complete Bitcoin Protocol (SPV)
+* SQLite
 * Seperated TXs & Private Keys
 
 
