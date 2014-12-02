@@ -300,6 +300,7 @@ public class Bip38 {
 
         // Determine Pass Point
         byte[] passPoint = key.getPubKey();
+        key.clearPrivateKey();
 
         // Get 8 byte encrypted part 1, only first half of encrypted part 1
         // (the rest is encrypted within encryptedpart2)
@@ -374,6 +375,7 @@ public class Bip38 {
         // The result is returned in SIPA format
         SecureCharSequence secureCharSequence = dumpedPrivateKey.toSecureCharSequence();
         dumpedPrivateKey.clearPrivateKey();
+        ecKey.clearPrivateKey();
         return secureCharSequence;
     }
 
@@ -424,6 +426,7 @@ public class Bip38 {
 
         SecureCharSequence secureCharSequence = dumpedPrivateKey.toSecureCharSequence();
         dumpedPrivateKey.clearPrivateKey();
+        key.clearPrivateKey();
         return secureCharSequence;
     }
 

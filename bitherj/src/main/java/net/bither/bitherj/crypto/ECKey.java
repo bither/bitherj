@@ -156,13 +156,6 @@ public class ECKey implements Serializable {
         return CURVE.getCurve().decodePoint(uncompressed.getEncoded(true));
     }
 
-    /**
-     * Construct an ECKey from an ASN.1 encoded private key. These are produced by OpenSSL and stored by the Bitcoin
-     * reference implementation in its wallet. Note that this is slow because it requires an EC point multiply.
-     */
-    public static ECKey fromASN1(byte[] asn1privkey) {
-        return new ECKey(extractPrivateKeyFromASN1(asn1privkey));
-    }
 
     /**
      * Creates an ECKey given the private key only.  The public key is calculated from it (this is slow)

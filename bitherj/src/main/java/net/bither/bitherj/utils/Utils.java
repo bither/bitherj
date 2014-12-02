@@ -965,6 +965,9 @@ public class Utils {
     }
 
     public static void wipeBiginteger(BigInteger b) {
+        if (b == null) {
+            return;
+        }
         int bitCount = b.bitCount();
         byte[] bytes = new byte[bitCount];
         for (int i = 0; i < bitCount; i++) {
