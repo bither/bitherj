@@ -346,7 +346,7 @@ public class ECKey implements Serializable {
      * It turns the ECKEy into a watch only key.
      */
     public void clearPrivateKey() {
-        Utils.wipeBiginteger(priv);
+        priv = BigInteger.ZERO;
         if (encryptedPrivateKey != null) {
             encryptedPrivateKey.clear();
         }
@@ -806,7 +806,7 @@ public class ECKey implements Serializable {
         return Utils.bigIntegerToBytes(priv, 32);
     }
 
-  
+
     /**
      * Sets the creation time of this key. Zero is a convention to mean "unavailable". This method can be useful when
      * you have a raw key you are importing from somewhere else.

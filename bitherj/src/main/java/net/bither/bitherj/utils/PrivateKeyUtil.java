@@ -116,7 +116,7 @@ public class PrivateKeyUtil {
         } else {
             BigInteger bigInteger = new BigInteger(1, decrypted);
             byte[] pub = ECKey.publicKeyFromPrivate(bigInteger, isCompressed);
-            Utils.wipeBiginteger(bigInteger);
+
             ecKey = new ECKey(epk, pub, crypter);
             ecKey.setFromXRandom(isFromXRandom);
 
