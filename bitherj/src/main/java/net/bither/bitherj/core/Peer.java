@@ -67,7 +67,7 @@ public class Peer extends PeerSocketHandler {
     private static final int MAX_UNRELATED_TX_RELAY_COUNT = 1000;
 
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
-    private static final int TimeOutDelay = 5000;
+    private static final int TimeOutDelay = 7000;
 
     public enum State {
         Disconnected, Connecting, Connected
