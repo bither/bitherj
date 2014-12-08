@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 
 public class QRCodeUtil {
     public enum QRQuality {
-        Normal(328), LOW(272);
+        Normal(328), LOW(216);
         private int quality;
 
         private QRQuality(int quality) {
