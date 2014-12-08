@@ -732,7 +732,7 @@ public class Utils {
 
     //add by jjz (bither)
     public static File getWalletRomCache() {
-        return AbstractApp.bitherjApp.getPrivateDir(WALLET_ROM_CACHE);
+        return AbstractApp.bitherjSetting.getPrivateDir(WALLET_ROM_CACHE);
     }
 
     //add by jjz (bither)
@@ -749,7 +749,7 @@ public class Utils {
     public static File getPrivateDir() {
         File file = getWalletRomCache();
         String dirName = WALLET_HOT;
-        if (AbstractApp.bitherjApp.getAppMode() == BitherjSettings.AppMode.COLD) {
+        if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
             dirName = WALLET_COLD;
         }
         file = new File(file, dirName);
@@ -877,7 +877,7 @@ public class Utils {
     }
 
     public static long getFeeBase() {
-        return AbstractApp.bitherjApp.getTransactionFeeMode().getMinFeeSatoshi();
+        return AbstractApp.bitherjSetting.getTransactionFeeMode().getMinFeeSatoshi();
     }
 
     public static boolean validPassword(CharSequence password) {

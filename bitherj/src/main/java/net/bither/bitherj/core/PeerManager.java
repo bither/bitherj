@@ -868,7 +868,7 @@ public class PeerManager {
     }
 
     public boolean doneSyncFromSPV() {
-        return AbstractApp.bitherjApp.getBitherjDoneSyncFromSpv();
+        return AbstractApp.bitherjSetting.getBitherjDoneSyncFromSpv();
     }
 
     private void sendConnectedChangeBroadcast() {
@@ -1008,7 +1008,7 @@ public class PeerManager {
     }
 
     private int getMaxPeerConnect() {
-        if (AbstractApp.bitherjApp.isApplicationRunInForeground()) {
+        if (AbstractApp.bitherjSetting.isApplicationRunInForeground()) {
             return BitherjSettings.MaxPeerConnections;
         } else {
             return BitherjSettings.MaxPeerBackgroundConnections;

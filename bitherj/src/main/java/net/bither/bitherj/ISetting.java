@@ -17,6 +17,7 @@
 package net.bither.bitherj;
 
 import net.bither.bitherj.core.BitherjSettings;
+import net.bither.bitherj.utils.QRCodeUtil;
 
 import java.io.File;
 
@@ -27,6 +28,8 @@ public interface ISetting {
     public boolean getBitherjDoneSyncFromSpv();
 
     public void setBitherjDoneSyncFromSpv(boolean isDone);
+
+    public QRCodeUtil.QRQuality getQRQuality();
 
     public BitherjSettings.TransactionFeeMode getTransactionFeeMode();
 
