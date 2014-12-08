@@ -785,7 +785,9 @@ public class Tx extends Message implements Comparable<Tx> {
             }
         }
         for (ECKey key : signingKeys) {
-            key.clearPrivateKey();
+            if (key != null) {
+                key.clearPrivateKey();
+            }
         }
 
         // Every input is now complete.
