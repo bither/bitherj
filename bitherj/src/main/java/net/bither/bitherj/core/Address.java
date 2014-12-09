@@ -404,6 +404,7 @@ public class Address implements Comparable<Address> {
                     assKey), TransactionSignature.SigHash.ALL, false);
             result.add(ScriptBuilder.createInputScript(signature, key).getProgram());
         }
+        key.clearPrivateKey();
         return result;
     }
 

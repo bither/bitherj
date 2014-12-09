@@ -784,6 +784,11 @@ public class Tx extends Message implements Comparable<Tx> {
                 throw new RuntimeException("Do not understand script type: " + scriptPubKey);
             }
         }
+        for (ECKey key : signingKeys) {
+            if (key != null) {
+                key.clearPrivateKey();
+            }
+        }
 
         // Every input is now complete.
     }

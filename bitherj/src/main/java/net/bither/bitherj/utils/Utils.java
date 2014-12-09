@@ -42,6 +42,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -731,7 +732,7 @@ public class Utils {
 
     //add by jjz (bither)
     public static File getWalletRomCache() {
-        return AbstractApp.bitherjApp.getPrivateDir(WALLET_ROM_CACHE);
+        return AbstractApp.bitherjSetting.getPrivateDir(WALLET_ROM_CACHE);
     }
 
     //add by jjz (bither)
@@ -748,7 +749,7 @@ public class Utils {
     public static File getPrivateDir() {
         File file = getWalletRomCache();
         String dirName = WALLET_HOT;
-        if (AbstractApp.bitherjApp.getAppMode() == BitherjSettings.AppMode.COLD) {
+        if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
             dirName = WALLET_COLD;
         }
         file = new File(file, dirName);
@@ -876,7 +877,7 @@ public class Utils {
     }
 
     public static long getFeeBase() {
-        return AbstractApp.bitherjApp.getTransactionFeeMode().getMinFeeSatoshi();
+        return AbstractApp.bitherjSetting.getTransactionFeeMode().getMinFeeSatoshi();
     }
 
     public static boolean validPassword(CharSequence password) {
@@ -889,6 +890,7 @@ public class Utils {
     public static boolean validBitcoinPrivateKey(String str) {
         try {
             DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(str);
+            dumpedPrivateKey.clearPrivateKey();
             return true;
         } catch (AddressFormatException e) {
             e.printStackTrace();
@@ -935,6 +937,31 @@ public class Utils {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public static char[] charsFromBytes(byte[] bytes) {
+        char[] chars = new char[bytes.length];
+        for (int i = 0;
+             i < bytes.length;
+             i++) {
+            chars[i] = (char) bytes[i];
+        }
+        return chars;
+    }
+
+    public static void wipeBytes(byte[] bytes) {
+        if (bytes == null) {
+            return;
+        }
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = 0;
+        }
+        SecureRandom r = new SecureRandom();
+        r.nextBytes(bytes);
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = 0;
+        }
+
     }
 
 

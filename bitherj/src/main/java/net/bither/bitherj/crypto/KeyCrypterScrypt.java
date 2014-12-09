@@ -18,6 +18,7 @@ package net.bither.bitherj.crypto;
 import com.lambdaworks.crypto.SCrypt;
 
 import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -172,6 +173,8 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
 
             byte[] decryptedBytes = new byte[actualLength];
             System.arraycopy(outputBuffer, 0, decryptedBytes, 0, actualLength);
+
+            Utils.wipeBytes(outputBuffer);
 
             return decryptedBytes;
         } catch (Exception e) {

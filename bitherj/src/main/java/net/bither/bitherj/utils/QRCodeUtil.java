@@ -16,6 +16,8 @@
 
 package net.bither.bitherj.utils;
 
+import net.bither.bitherj.AbstractApp;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -23,10 +25,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class QRCodeUtil {
+    public enum QRQuality {
+        Normal(328), LOW(216);
+        private int quality;
+
+        private QRQuality(int quality) {
+            this.quality = quality;
+        }
+
+        public int getQuality() {
+            return this.quality;
+        }
+
+    }
+
     public static final String QR_CODE_SPLIT = "/";
     public static final String XRANDOM_FLAG = "+";
     public static final String OLD_QR_CODE_SPLIT = ":";
-    private static final int MAX_QRCODE_SIZE = 328;
 
 
     public static String[] splitString(String str) {
@@ -130,14 +145,15 @@ public class QRCodeUtil {
     }
 
     public static int getNumOfQrCodeString(int length) {
-        if (length < MAX_QRCODE_SIZE) {
+        int quality = AbstractApp.bitherjSetting.getQRQuality().getQuality();
+        if (length < quality) {
             return 1;
-        } else if (length <= (MAX_QRCODE_SIZE - 4) * 10) {
-            return length / (MAX_QRCODE_SIZE - 4) + 1;
-        } else if (length <= (MAX_QRCODE_SIZE - 5) * 100) {
-            return length / (MAX_QRCODE_SIZE - 5) + 1;
-        } else if (length <= (MAX_QRCODE_SIZE - 6) * 1000) {
-            return length / (MAX_QRCODE_SIZE - 6) + 1;
+        } else if (length <= (quality - 4) * 10) {
+            return length / (quality - 4) + 1;
+        } else if (length <= (quality - 5) * 100) {
+            return length / (quality - 5) + 1;
+        } else if (length <= (quality - 6) * 1000) {
+            return length / (quality - 6) + 1;
         } else {
             return 1000;
         }

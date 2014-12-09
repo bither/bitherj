@@ -21,6 +21,7 @@ import com.lambdaworks.crypto.SCrypt;
 
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
+import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
@@ -44,7 +45,7 @@ public class Bip38 {
     public static final int SCRYPT_P = 8;
     public static final int SCRYPT_LENGTH = 64;
 
-    public static final BigInteger n=new BigInteger(1, Utils.hexStringToByteArray("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"));
+    public static final BigInteger n = new BigInteger(1, Utils.hexStringToByteArray("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"));
 
     /**
      * Encrypt a SIPA formatted private key with a passphrase using BIP38.
@@ -56,6 +57,7 @@ public class Bip38 {
      */
     public static String encryptNoEcMultiply(CharSequence passphrase, String base58EncodedPrivateKey) throws InterruptedException, AddressFormatException {
         DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(base58EncodedPrivateKey);
+        dumpedPrivateKey.clearPrivateKey();
         ECKey key = dumpedPrivateKey.getKey();
         byte[] salt = Bip38.calculateScryptSalt(key.toAddress());
         byte[] stretchedKeyMaterial = bip38Stretch1(passphrase, salt, SCRYPT_LENGTH);
@@ -258,7 +260,7 @@ public class Bip38 {
      *
      * @throws InterruptedException
      */
-    public static String decrypt(String bip38PrivateKeyString, CharSequence passphrase) throws InterruptedException, AddressFormatException {
+    public static SecureCharSequence decrypt(String bip38PrivateKeyString, CharSequence passphrase) throws InterruptedException, AddressFormatException {
         Bip38PrivateKey bip38Key = parseBip38PrivateKey(bip38PrivateKeyString);
         if (bip38Key == null) {
             return null;
@@ -271,7 +273,7 @@ public class Bip38 {
         }
     }
 
-    public static String decryptEcMultiply(Bip38PrivateKey bip38Key, CharSequence passphrase
+    public static SecureCharSequence decryptEcMultiply(Bip38PrivateKey bip38Key, CharSequence passphrase
     ) throws InterruptedException, AddressFormatException {
         // Get 8 byte Owner Salt
         byte[] ownerEntropy = new byte[8];
@@ -298,6 +300,7 @@ public class Bip38 {
 
         // Determine Pass Point
         byte[] passPoint = key.getPubKey();
+        key.clearPrivateKey();
 
         // Get 8 byte encrypted part 1, only first half of encrypted part 1
         // (the rest is encrypted within encryptedpart2)
@@ -370,10 +373,13 @@ public class Bip38 {
         }
         DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(ecKey.getPrivKeyBytes(), ecKey.isCompressed());
         // The result is returned in SIPA format
-        return dumpedPrivateKey.toString();
+        SecureCharSequence secureCharSequence = dumpedPrivateKey.toSecureCharSequence();
+        dumpedPrivateKey.clearPrivateKey();
+        ecKey.clearPrivateKey();
+        return secureCharSequence;
     }
 
-    public static String decryptNoEcMultiply(Bip38PrivateKey bip38Key, byte[] stretcedKeyMaterial) throws AddressFormatException {
+    public static SecureCharSequence decryptNoEcMultiply(Bip38PrivateKey bip38Key, byte[] stretcedKeyMaterial) throws AddressFormatException {
         // Derive Keys
         byte[] derivedHalf1 = new byte[32];
         System.arraycopy(stretcedKeyMaterial, 0, derivedHalf1, 0, 32);
@@ -418,7 +424,10 @@ public class Bip38 {
         // Get SIPA format
         DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(key.getPrivKeyBytes(), key.isCompressed());
 
-        return dumpedPrivateKey.toString();
+        SecureCharSequence secureCharSequence = dumpedPrivateKey.toSecureCharSequence();
+        dumpedPrivateKey.clearPrivateKey();
+        key.clearPrivateKey();
+        return secureCharSequence;
     }
 
 

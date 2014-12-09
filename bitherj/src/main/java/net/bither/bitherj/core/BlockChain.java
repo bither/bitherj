@@ -353,4 +353,8 @@ public class BlockChain {
         this.addBlock(lastBlock);
         this.lastBlock = lastBlock;
     }
+
+    public List<Block> getLimitBlocks(int limit) {
+        return AbstractDb.blockProvider.getLimitBlocks(limit);
+    }
 }

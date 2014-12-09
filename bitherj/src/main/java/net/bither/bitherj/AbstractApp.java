@@ -18,12 +18,12 @@ package net.bither.bitherj;
 
 public abstract class AbstractApp {
     public static NotificationService notificationService;
-    public static ISetting bitherjApp;
+    public static ISetting bitherjSetting;
 
     public static boolean addressIsReady = false;
 
     public void construct() {
-        bitherjApp = initSetting();
+        bitherjSetting = initSetting();
         notificationService = initNotification();
 
     }

@@ -16,6 +16,8 @@
 
 package net.bither.bitherj.utils;
 
+import com.google.common.base.Preconditions;
+
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
@@ -24,6 +26,7 @@ import net.bither.bitherj.crypto.EncryptedPrivateKey;
 import net.bither.bitherj.crypto.KeyCrypter;
 import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.KeyCrypterScrypt;
+import net.bither.bitherj.crypto.SecureCharSequence;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,13 +37,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkState;
+
 public class PrivateKeyUtil {
     private static final Logger log = LoggerFactory.getLogger(PrivateKeyUtil.class);
     private static final int IS_COMPRESSED_FLAG = 1;
     private static final int IS_FROMXRANDOM_FLAG = 2;
 
 
-    public static String getPrivateKeyString(ECKey ecKey) {
+    public static String getEncryptedString(ECKey ecKey) {
         String salt = "1";
         if (ecKey.getKeyCrypter() instanceof KeyCrypterScrypt) {
             KeyCrypterScrypt scrypt = (KeyCrypterScrypt) ecKey.getKeyCrypter();
@@ -75,6 +80,7 @@ public class PrivateKeyUtil {
         }
     }
 
+
     private static DecryptedECKey decryptionECKey(String str, CharSequence password, boolean needPrivteKeyText) throws Exception {
         String[] strs = QRCodeUtil.splitOfPasswordSeed(str);
         if (strs.length != 3) {
@@ -100,24 +106,28 @@ public class PrivateKeyUtil {
         EncryptedPrivateKey epk = new EncryptedPrivateKey(Utils.hexStringToByteArray
                 (strs[1]), Utils.hexStringToByteArray(strs[0]));
         byte[] decrypted = crypter.decrypt(epk, crypter.deriveKey(password));
+
         ECKey ecKey = null;
-        String privateKeyText = null;
+        SecureCharSequence privateKeyText = null;
         if (needPrivteKeyText) {
             DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(decrypted, isCompressed);
-            privateKeyText = dumpedPrivateKey.toString();
+            privateKeyText = dumpedPrivateKey.toSecureCharSequence();
+            dumpedPrivateKey.clearPrivateKey();
         } else {
-            byte[] pub = ECKey.publicKeyFromPrivate(new BigInteger(1, decrypted), isCompressed);
+            BigInteger bigInteger = new BigInteger(1, decrypted);
+            byte[] pub = ECKey.publicKeyFromPrivate(bigInteger, isCompressed);
+
             ecKey = new ECKey(epk, pub, crypter);
             ecKey.setFromXRandom(isFromXRandom);
+
         }
-        PrivateKeyUtil.wipeDecryptedPrivateKey(decrypted);
+        Utils.wipeBytes(decrypted);
         return new DecryptedECKey(ecKey, privateKeyText);
 
     }
 
-    public static String getPrivateKeyString(String str, CharSequence password) {
+    public static SecureCharSequence getDecryptPrivateKeyString(String str, CharSequence password) {
         try {
-
             DecryptedECKey decryptedECKey = decryptionECKey(str, password, true);
             if (decryptedECKey != null && decryptedECKey.privateKeyText != null) {
                 return decryptedECKey.privateKeyText;
@@ -158,8 +168,8 @@ public class PrivateKeyUtil {
         if (!Arrays.equals(decrypted, newDecrypted)) {
             throw new KeyCrypterException("changePassword, cannot be successfully decrypted after encryption so aborting wallet encryption.");
         }
-        PrivateKeyUtil.wipeDecryptedPrivateKey(decrypted);
-        PrivateKeyUtil.wipeDecryptedPrivateKey(newDecrypted);
+        Utils.wipeBytes(decrypted);
+        Utils.wipeBytes(newDecrypted);
         return Utils.bytesToHexString(encryptedPrivateKey.getEncryptedBytes())
                 + QRCodeUtil.QR_CODE_SPLIT + Utils.bytesToHexString(encryptedPrivateKey.getInitialisationVector())
                 + QRCodeUtil.QR_CODE_SPLIT + strs[2];
@@ -167,7 +177,7 @@ public class PrivateKeyUtil {
     }
 
 
-    public static String getPrivateKeyStringFromAllPrivateAddresses() {
+    public static String getEncryptPrivateKeyStringFromAllAddresses() {
         String content = "";
         List<Address> privates = AddressManager.getInstance().getPrivKeyAddresses();
         for (int i = 0;
@@ -182,7 +192,7 @@ public class PrivateKeyUtil {
         return content;
     }
 
-    public static List<Address> getECKeysFromString(String str, CharSequence password) {
+    public static List<Address> getECKeysFromBackupString(String str, CharSequence password) {
         String[] strs = QRCodeUtil.splitOfPasswordSeed(str);
         if (strs.length % 3 != 0) {
             log.error("Backup: PrivateKeyFromString format error");
@@ -202,18 +212,20 @@ public class PrivateKeyUtil {
             } else {
                 Address address = new Address(key.toAddress(), key.getPubKey(), encryptedString,
                         key.isFromXRandom());
+                key.clearPrivateKey();
                 list.add(address);
             }
         }
         return list;
     }
 
-    public static void wipeDecryptedPrivateKey(byte[] decryted) {
-        if (decryted != null) {
-            Arrays.fill(decryted, (byte) 0);
-        }
-    }
-
+    /**
+     * will release key
+     *
+     * @param key
+     * @param password
+     * @return
+     */
     public static ECKey encrypt(ECKey key, CharSequence password) {
         KeyCrypter scrypt = new KeyCrypterScrypt();
         KeyParameter derivedKey = scrypt.deriveKey(password);
@@ -227,18 +239,19 @@ public class PrivateKeyUtil {
             // Abort encryption
             throw new KeyCrypterException("The key " + key.toString() + " cannot be successfully decrypted after encryption so aborting wallet encryption.");
         }
-
+        key.clearPrivateKey();
         return encryptedKey;
     }
 
-    public static class DecryptedECKey {
-        public DecryptedECKey(ECKey ecKey, String privateKeyText) {
+    private static class DecryptedECKey {
+        public DecryptedECKey(ECKey ecKey, SecureCharSequence privateKeyText) {
             this.ecKey = ecKey;
             this.privateKeyText = privateKeyText;
         }
 
         public ECKey ecKey;
-        public String privateKeyText;
+        public SecureCharSequence privateKeyText;
+
     }
 
 }

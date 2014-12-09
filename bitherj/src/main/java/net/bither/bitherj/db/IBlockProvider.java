@@ -27,6 +27,8 @@ public interface IBlockProvider {
 
     public List<Block> getBlocksFrom(int blockNo);
 
+    public List<Block> getLimitBlocks(int limit);
+
     public int getBlockCount();
 
     public Block getLastBlock();

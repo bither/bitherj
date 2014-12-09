@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.utils;
 
+import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.exception.AddressFormatException;
 
 import java.io.UnsupportedEncodingException;
@@ -52,12 +53,9 @@ public class Base58 {
         }
     }
 
-    /**
-     * Encodes the given bytes in base58. No checksum is appended.
-     */
-    public static String encode(byte[] input) {
+    private static byte[] encodeToBytes(byte[] input){
         if (input.length == 0) {
-            return "";
+            return new byte[0];
         }
         input = copyOfRange(input, 0, input.length);
         // Count leading zeroes.
@@ -88,14 +86,32 @@ public class Base58 {
         }
 
         byte[] output = copyOfRange(temp, j, temp.length);
+        return output;
+    }
+
+    /**
+     * Encodes the given bytes in base58. No checksum is appended.
+     */
+    public static String encode(byte[] input) {
+        if (input.length == 0) {
+            return "";
+        }
         try {
-            return new String(output, "US-ASCII");
+            return new String(encodeToBytes(input), "US-ASCII");
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);  // Cannot happen.
+            e.printStackTrace();
+            return "";
         }
     }
 
-    public static String encodeChecked(byte[] input) {
+    public static SecureCharSequence encodeSecure(byte[] input){
+        if (input.length == 0) {
+            return new SecureCharSequence(new char[0]);
+        }
+        return new SecureCharSequence(Utils.charsFromBytes(encodeToBytes(input)));
+    }
+
+    public static CharSequence encodeChecked(byte[] input) {
         byte[] result = new byte[input.length + 4];
         System.arraycopy(input, 0, result, 0, input.length);
         byte[] check = Utils.doubleDigest(result, 0, input.length);
