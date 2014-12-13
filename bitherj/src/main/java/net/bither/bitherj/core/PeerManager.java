@@ -1015,6 +1015,10 @@ public class PeerManager {
         }
     }
 
+    public boolean isSynchronizing(){
+        return synchronizing;
+    }
+
     public void onDestroy() {
         instance = null;
         NioClientManager.instance().onDestroy();
