@@ -169,9 +169,9 @@ public class ECKey implements Serializable {
     /**
      * A constructor variant with BigInteger pubkey. See {@link ECKey#ECKey(BigInteger, byte[])}.
      */
-    public ECKey(BigInteger privKey, BigInteger pubKey) {
-        this(privKey, Utils.bigIntegerToBytes(pubKey, 65));
-    }
+//    public ECKey(BigInteger privKey, BigInteger pubKey) {
+//        this(privKey, Utils.bigIntegerToBytes(pubKey, 65));
+//    }
 
     /**
      * Creates an ECKey given only the private key bytes. This is the same as using the BigInteger constructor, but
