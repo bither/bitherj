@@ -227,7 +227,7 @@ public class ECKey implements Serializable {
      * be used for signing.
      */
     private ECKey(@Nullable BigInteger privKey, @Nullable byte[] pubKey) {
-        this(privKey, pubKey, false);
+        this(privKey, pubKey, true);
     }
 
     public boolean isPubKeyOnly() {
