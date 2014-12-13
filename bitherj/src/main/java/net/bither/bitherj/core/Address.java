@@ -466,4 +466,8 @@ public class Address implements Comparable<Address> {
         }
         return true;
     }
+
+    public boolean removeTx(Tx tx) {
+        return true;
+    }
 }
