@@ -304,33 +304,40 @@ public class Tx extends Message implements Comparable<Tx> {
                     break;
                 }
             }
-            if (isTx2AfterTx1)
+            if (isTx2AfterTx1) {
                 return 1;
+            }
             boolean isTx1AfterTx2 = false;
             for (In in : this.getIns()) {
                 if (Arrays.equals(in.getPrevTxHash(), tx.getTxHash())) {
                     isTx1AfterTx2 = true;
                 }
             }
-            if (isTx1AfterTx2)
+            if (isTx1AfterTx2) {
                 return -1;
+            }
             return tx.getTxTime() - this.getTxTime();
         }
     }
 
-    public String getFirstOutAddress() {
+    public String getFirstOutAddressOtherThanChange(String changeAddress) {
         if (getOuts().size() > 0) {
             if (isCoinBase()) {
                 return getOuts().get(0).getOutAddress();
             }
             for (Out out : getOuts()) {
-                if (!Utils.compareString(out.getOutAddress(), getFromAddress())) {
+                if (!Utils.compareString(out.getOutAddress(), getFromAddress()) && !Utils
+                        .compareString(out.getOutAddress(), changeAddress)) {
                     return out.getOutAddress();
                 }
             }
             return getOuts().get(0).getOutAddress();
         }
         return null;
+    }
+
+    public String getFirstOutAddress() {
+        return getFirstOutAddressOtherThanChange(null);
     }
 
     public String getFromAddress() {
@@ -890,103 +897,153 @@ public class Tx extends Message implements Comparable<Tx> {
     }
 
     /**
-     * This is required for signatures which use a sigHashType which cannot be represented using SigHash and anyoneCanPay
-     * See transaction c99c49da4c38af669dea436d3e73780dfdb6c1ecf9958baa52960e8baee30e73, which has sigHashType 0
+     * This is required for signatures which use a sigHashType which cannot be represented using
+     * SigHash and anyoneCanPay
+     * See transaction c99c49da4c38af669dea436d3e73780dfdb6c1ecf9958baa52960e8baee30e73,
+     * which has sigHashType 0
      */
-    public synchronized byte[] hashForSignature(int inputIndex, byte[] connectedScript, byte sigHashType) {
-        // The SIGHASH flags are used in the design of contracts, please see this page for a further understanding of
+    public synchronized byte[] hashForSignature(int inputIndex, byte[] connectedScript,
+                                                byte sigHashType) {
+        // The SIGHASH flags are used in the design of contracts, please see this page for a
+        // further understanding of
         // the purposes of the code in this method:
         //
         //   https://en.bitcoin.it/wiki/Contracts
 
         try {
-            // Store all the input scripts and clear them in preparation for signing. If we're signing a fresh
-            // transaction that step isn't very helpful, but it doesn't add much cost relative to the actual
+            // Store all the input scripts and clear them in preparation for signing. If we're
+            // signing a fresh
+            // transaction that step isn't very helpful, but it doesn't add much cost relative to
+            // the actual
             // EC math so we'll do it anyway.
             //
-            // Also store the input sequence numbers in case we are clearing them with SigHash.NONE/SINGLE
+            // Also store the input sequence numbers in case we are clearing them with SigHash
+            // .NONE/SINGLE
             byte[][] inputScripts = new byte[this.getIns().size()][];
             long[] inputSequenceNumbers = new long[this.getIns().size()];
-            for (int i = 0; i < this.getIns().size(); i++) {
+            for (int i = 0;
+                 i < this.getIns().size();
+                 i++) {
                 inputScripts[i] = this.getIns().get(i).getInSignature();
                 inputSequenceNumbers[i] = this.getIns().get(i).getInSequence();
                 this.getIns().get(i).setInSignature(new byte[0]);
             }
 
-            // This step has no purpose beyond being synchronized with the reference clients bugs. OP_CODESEPARATOR
-            // is a legacy holdover from a previous, broken design of executing scripts that shipped in Bitcoin 0.1.
-            // It was seriously flawed and would have let anyone take anyone elses money. Later versions switched to
-            // the design we use today where scripts are executed independently but share a stack. This left the
-            // OP_CODESEPARATOR instruction having no purpose as it was only meant to be used internally, not actually
-            // ever put into scripts. Deleting OP_CODESEPARATOR is a step that should never be required but if we don't
+            // This step has no purpose beyond being synchronized with the reference clients bugs
+            // . OP_CODESEPARATOR
+            // is a legacy holdover from a previous, broken design of executing scripts that
+            // shipped in Bitcoin 0.1.
+            // It was seriously flawed and would have let anyone take anyone elses money. Later
+            // versions switched to
+            // the design we use today where scripts are executed independently but share a stack
+            // . This left the
+            // OP_CODESEPARATOR instruction having no purpose as it was only meant to be used
+            // internally, not actually
+            // ever put into scripts. Deleting OP_CODESEPARATOR is a step that should never be
+            // required but if we don't
             // do it, we could split off the main chain.
-            connectedScript = Script.removeAllInstancesOfOp(connectedScript, ScriptOpCodes.OP_CODESEPARATOR);
+            connectedScript = Script.removeAllInstancesOfOp(connectedScript,
+                    ScriptOpCodes.OP_CODESEPARATOR);
 
-            // Set the input to the script of its output. Satoshi does this but the step has no obvious purpose as
-            // the signature covers the hash of the prevout transaction which obviously includes the output script
-            // already. Perhaps it felt safer to him in some way, or is another leftover from how the code was written.
+            // Set the input to the script of its output. Satoshi does this but the step has no
+            // obvious purpose as
+            // the signature covers the hash of the prevout transaction which obviously includes
+            // the output script
+            // already. Perhaps it felt safer to him in some way, or is another leftover from how
+            // the code was written.
             In input = this.getIns().get(inputIndex);
             input.setInSignature(connectedScript);
 
             List<Out> outputs = this.getOuts();
             if ((sigHashType & 0x1f) == (TransactionSignature.SigHash.NONE.ordinal() + 1)) {
-                // SIGHASH_NONE means no outputs are signed at all - the signature is effectively for a "blank cheque".
+                // SIGHASH_NONE means no outputs are signed at all - the signature is effectively
+                // for a "blank cheque".
                 this.outs = new ArrayList<Out>(0);
-                // The signature isn't broken by new versions of the transaction issued by other parties.
-                for (int i = 0; i < this.getIns().size(); i++)
-                    if (i != inputIndex)
+                // The signature isn't broken by new versions of the transaction issued by other
+                // parties.
+                for (int i = 0;
+                     i < this.getIns().size();
+                     i++)
+                    if (i != inputIndex) {
                         this.getIns().get(i).setInSequence(0);
-            } else if ((sigHashType & 0x1f) == (TransactionSignature.SigHash.SINGLE.ordinal() + 1)) {
-                // SIGHASH_SINGLE means only sign the output at the same index as the input (ie, my output).
+                    }
+            } else if ((sigHashType & 0x1f) == (TransactionSignature.SigHash.SINGLE.ordinal() +
+                    1)) {
+                // SIGHASH_SINGLE means only sign the output at the same index as the input (ie,
+                // my output).
                 if (inputIndex >= this.getOuts().size()) {
-                    // The input index is beyond the number of outputs, it's a buggy signature made by a broken
-                    // Bitcoin implementation. The reference client also contains a bug in handling this case:
-                    // any transaction output that is signed in this case will result in both the signed output
+                    // The input index is beyond the number of outputs,
+                    // it's a buggy signature made by a broken
+                    // Bitcoin implementation. The reference client also contains a bug in
+                    // handling this case:
+                    // any transaction output that is signed in this case will result in both the
+                    // signed output
                     // and any future outputs to this public key being steal-able by anyone who has
-                    // the resulting signature and the public key (both of which are part of the signed tx input).
+                    // the resulting signature and the public key (both of which are part of the
+                    // signed tx input).
                     // Put the transaction back to how we found it.
                     //
-                    // TODO: Only allow this to happen if we are checking a signature, not signing a transactions
-                    for (int i = 0; i < this.getIns().size(); i++) {
+                    // TODO: Only allow this to happen if we are checking a signature,
+                    // not signing a transactions
+                    for (int i = 0;
+                         i < this.getIns().size();
+                         i++) {
                         this.getIns().get(i).setInSignature(inputScripts[i]);
                         this.getIns().get(i).setInSequence(inputSequenceNumbers[i]);
                     }
                     this.outs = outputs;
-                    // Satoshis bug is that SignatureHash was supposed to return a hash and on this codepath it
-                    // actually returns the constant "1" to indicate an error, which is never checked for. Oops.
-                    return Utils.hexStringToByteArray("0100000000000000000000000000000000000000000000000000000000000000");
+                    // Satoshis bug is that SignatureHash was supposed to return a hash and on
+                    // this codepath it
+                    // actually returns the constant "1" to indicate an error,
+                    // which is never checked for. Oops.
+                    return Utils.hexStringToByteArray
+                            ("0100000000000000000000000000000000000000000000000000000000000000");
                 }
-                // In SIGHASH_SINGLE the outputs after the matching input index are deleted, and the outputs before
-                // that position are "nulled out". Unintuitively, the value in a "null" transaction is set to -1.
+                // In SIGHASH_SINGLE the outputs after the matching input index are deleted,
+                // and the outputs before
+                // that position are "nulled out". Unintuitively,
+                // the value in a "null" transaction is set to -1.
                 this.outs = new ArrayList<Out>(this.getOuts().subList(0, inputIndex + 1));
-                for (int i = 0; i < inputIndex; i++)
+                for (int i = 0;
+                     i < inputIndex;
+                     i++)
                     this.getOuts().set(i, new Out(this, -1, new byte[]{}));
-                // The signature isn't broken by new versions of the transaction issued by other parties.
-                for (int i = 0; i < this.getIns().size(); i++)
-                    if (i != inputIndex)
+                // The signature isn't broken by new versions of the transaction issued by other
+                // parties.
+                for (int i = 0;
+                     i < this.getIns().size();
+                     i++)
+                    if (i != inputIndex) {
                         this.getIns().get(i).setInSequence(0);
+                    }
             }
 
             List<In> inputs = this.getIns();
-            if ((sigHashType & TransactionSignature.SIGHASH_ANYONECANPAY_VALUE) == TransactionSignature.SIGHASH_ANYONECANPAY_VALUE) {
-                // SIGHASH_ANYONECANPAY means the signature in the input is not broken by changes/additions/removals
+            if ((sigHashType & TransactionSignature.SIGHASH_ANYONECANPAY_VALUE) ==
+                    TransactionSignature.SIGHASH_ANYONECANPAY_VALUE) {
+                // SIGHASH_ANYONECANPAY means the signature in the input is not broken by
+                // changes/additions/removals
                 // of other inputs. For example, this is useful for building assurance contracts.
                 this.ins = new ArrayList<In>();
                 this.getIns().add(input);
             }
 
-            ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(length == UNKNOWN_LENGTH ? 256 : length + 4);
+            ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(length == UNKNOWN_LENGTH
+                    ? 256 : length + 4);
             bitcoinSerialize(bos);
             // We also have to write a hash type (sigHashType is actually an unsigned char)
             uint32ToByteStreamLE(0x000000ff & sigHashType, bos);
-            // Note that this is NOT reversed to ensure it will be signed correctly. If it were to be printed out
+            // Note that this is NOT reversed to ensure it will be signed correctly. If it were
+            // to be printed out
             // however then we would expect that it is IS reversed.
             byte[] hash = doubleDigest(bos.toByteArray());
             bos.close();
 
             // Put the transaction back to how we found it.
             this.ins = inputs;
-            for (int i = 0; i < inputs.size(); i++) {
+            for (int i = 0;
+                 i < inputs.size();
+                 i++) {
                 inputs.get(i).setInSignature(inputScripts[i]);
                 inputs.get(i).setInSequence(inputSequenceNumbers[i]);
             }
@@ -1197,7 +1254,8 @@ public class Tx extends Message implements Comparable<Tx> {
     public List<byte[]> getUnsignedInHashes() {
         List<byte[]> result = new ArrayList<byte[]>();
         for (In in : this.getIns()) {
-            byte sigHashType = (byte) TransactionSignature.calcSigHashValue(TransactionSignature.SigHash.ALL, false);
+            byte sigHashType = (byte) TransactionSignature.calcSigHashValue(TransactionSignature
+                    .SigHash.ALL, false);
             result.add(this.hashForSignature(in.getInSn(), in.getPrevOutScript(), sigHashType));
         }
         return result;
@@ -1215,7 +1273,8 @@ public class Tx extends Message implements Comparable<Tx> {
 //                in.setInSignature(ScriptBuilder.createInputScript(signatures.get(i),
 //                        key).getProgram());
 //            } else if (scriptPubKey.isSentToRawPubKey()) {
-//                in.setInSignature(ScriptBuilder.createInputScript(signatures.get(i)).getProgram());
+//                in.setInSignature(ScriptBuilder.createInputScript(signatures.get(i)).getProgram
+// ());
 //            } else {
 //                // Should be unreachable - if we don't recognize the type of script we're trying
 //                // to sign for, we should
@@ -1244,7 +1303,8 @@ public class Tx extends Message implements Comparable<Tx> {
                     if (in.getPrevOutScript() == null || in.getPrevOutScript().length == 0) {
                         return false;
                     }
-                    scriptSig.correctlySpends(this, in.getInSn(), new Script(in.getPrevOutScript()), true);
+                    scriptSig.correctlySpends(this, in.getInSn(), new Script(in.getPrevOutScript
+                            ()), true);
                 }
             } catch (ScriptException ex) {
                 return false;
