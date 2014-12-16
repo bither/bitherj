@@ -1,10 +1,28 @@
 apply plugin: 'java'
 
+sourceCompatibility = 1.5
+
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
+   // jcenter()
 }
+
+
+jar {
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } } {
+        exclude 'META-INF/MANIFEST.MF'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/*.SF'
+        exclude 'META-INF/*.DSA'
+        exclude 'META-INF/*.RSA'
+    }
+
+
+    // remove the security files (from mail.jar / activation.jar) so that the jar will be executable.
+
+}
+
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
