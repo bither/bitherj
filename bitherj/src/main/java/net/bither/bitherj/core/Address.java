@@ -62,6 +62,7 @@ public class Address implements Comparable<Address> {
     private long mSortTime;
     private long balance = 0;
     private boolean isFromXRandom;
+    private boolean isTrashed = false;
 
     public Address(String address, byte[] pubKey, long sortTime, boolean isSyncComplete,
                    boolean isFromXRandom, boolean hasPrivKey) {
@@ -102,6 +103,14 @@ public class Address implements Comparable<Address> {
         List<Tx> txs = AbstractDb.txProvider.getTxAndDetailByAddress(this.address);
         Collections.sort(txs);
         return txs;
+    }
+
+    public boolean isTrashed() {
+        return isTrashed;
+    }
+
+    public void setTrashed(boolean isTrashed) {
+        this.isTrashed = isTrashed;
     }
 
     @Override
@@ -295,6 +304,7 @@ public class Address implements Comparable<Address> {
 
         Utils.moveFile(oldPrivKeyFile, newPrivKeyFile);
         Utils.moveFile(oldWatchOnlyFile, newWatchOnlyFile);
+        setTrashed(true);
     }
 
     public void restorePrivKey() throws IOException {
@@ -313,6 +323,7 @@ public class Address implements Comparable<Address> {
 
         this.syncComplete = false;
         this.updatePubkey();
+        setTrashed(false);
     }
 
     public void saveTrashKey() throws IOException {
@@ -337,8 +348,14 @@ public class Address implements Comparable<Address> {
     public String getEncryptPrivKey() {
         if (this.hasPrivKey) {
             if (Utils.isEmpty(this.encryptPrivKey)) {
-                String privateKeyFullFileName = Utils.format(BitherjSettings
-                        .PRIVATE_KEY_FILE_NAME, Utils.getPrivateDir(), getAddress());
+                String privateKeyFullFileName;
+                if (!isTrashed()) {
+                    privateKeyFullFileName = Utils.format(BitherjSettings
+                            .PRIVATE_KEY_FILE_NAME, Utils.getPrivateDir(), getAddress());
+                } else {
+                    privateKeyFullFileName = Utils.format(BitherjSettings
+                            .PRIVATE_KEY_FILE_NAME, Utils.getTrashDir(), getAddress());
+                }
                 this.encryptPrivKey = Utils.readFile(new File(privateKeyFullFileName));
                 if (this.encryptPrivKey == null) {
                     //todo backup?
