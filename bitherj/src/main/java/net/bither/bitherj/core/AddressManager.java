@@ -20,7 +20,7 @@ import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.PrivateKeyUtil;
-import net.bither.bitherj.utils.QRCodeUtil;
+import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;

@@ -17,7 +17,7 @@
 package net.bither.bitherj;
 
 import net.bither.bitherj.core.BitherjSettings;
-import net.bither.bitherj.utils.QRCodeUtil;
+import net.bither.bitherj.qrcode.QRCodeUtil;
 
 import java.io.File;
 

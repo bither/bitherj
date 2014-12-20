@@ -25,9 +25,8 @@ import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
-import net.bither.bitherj.script.ScriptChunk;
 import net.bither.bitherj.utils.PrivateKeyUtil;
-import net.bither.bitherj.utils.QRCodeUtil;
+import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -41,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import javax.annotation.Nonnull;

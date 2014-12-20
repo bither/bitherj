@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.utils;
+package net.bither.bitherj.qrcode;
 
 import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.utils.Base58;
 
 import java.util.ArrayList;
 import java.util.List;

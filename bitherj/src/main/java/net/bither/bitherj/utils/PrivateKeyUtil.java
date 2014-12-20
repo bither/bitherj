@@ -19,6 +19,8 @@ package net.bither.bitherj.utils;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.crypto.*;
+import net.bither.bitherj.qrcode.QRCodeUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
