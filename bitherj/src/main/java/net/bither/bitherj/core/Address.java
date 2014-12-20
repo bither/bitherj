@@ -425,6 +425,23 @@ public class Address implements Comparable<Address> {
         return result;
     }
 
+    public String signMessage(String msg, CharSequence passphrase) {
+
+        ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getEncryptPrivKey(), passphrase);
+        if (key == null) {
+            throw new PasswordException("do not decrypt eckey");
+        }
+        KeyParameter assKey = key.getKeyCrypter().deriveKey(passphrase);
+
+        String result = key.signMessage(msg,assKey);
+
+
+        key.clearPrivateKey();
+        return result;
+
+
+    }
+
     public void signTx(Tx tx, CharSequence passphrase) {
         tx.signWithSignatures(this.signHashes(tx.getUnsignedInHashes(), passphrase));
     }
