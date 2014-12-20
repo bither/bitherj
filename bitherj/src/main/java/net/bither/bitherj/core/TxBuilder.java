@@ -41,7 +41,10 @@ public class TxBuilder {
         return uniqueInstance;
     }
 
-    public Tx buildTx(Address address, List<Long> amounts, List<String> addresses) throws TxBuilderException {
+    public Tx buildTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
+        if(Utils.isEmpty(changeAddress)){
+            changeAddress = address.getAddress();
+        }
         long value = 0;
         for (long amount : amounts) {
             value += amount;
@@ -59,7 +62,7 @@ public class TxBuilder {
             throw new TxBuilderException.TxBuilderWaitConfirmException(TxBuilder.getAmount(canNotSpendOuts));
         }
 
-        Tx emptyWalletTx = emptyWallet.buildTx(address, unspendTxs, prepareTx(amounts, addresses));
+        Tx emptyWalletTx = emptyWallet.buildTx(address, changeAddress, unspendTxs, prepareTx(amounts, addresses));
         if (emptyWalletTx != null && estimationTxSize(emptyWalletTx.getIns().size(), emptyWalletTx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
             return emptyWalletTx;
         } else if (emptyWalletTx != null) {
@@ -75,7 +78,7 @@ public class TxBuilder {
         boolean mayMaxTxSize = false;
         List<Tx> txs = new ArrayList<Tx>();
         for (TxBuilderProtocol builder : this.txBuilders) {
-            Tx tx = builder.buildTx(address, unspendTxs, prepareTx(amounts, addresses));
+            Tx tx = builder.buildTx(address, changeAddress, unspendTxs, prepareTx(amounts, addresses));
             if (tx != null && estimationTxSize(tx.getIns().size(), tx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
                 txs.add(tx);
             } else if (tx != null) {
@@ -155,11 +158,11 @@ public class TxBuilder {
 }
 
 interface TxBuilderProtocol {
-    public Tx buildTx(Address address, List<Tx> unspendTxs, Tx tx);
+    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx);
 }
 
 class TxBuilderEmptyWallet implements TxBuilderProtocol {
-    public Tx buildTx(Address address, List<Tx> unspendTxs, Tx tx) {
+    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx) {
 
         List<Out> outs = TxBuilder.getCanSpendOuts(unspendTxs);
         List<Out> unspendOuts = TxBuilder.getUnspendOuts(unspendTxs);
@@ -205,7 +208,7 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 }
 
 class TxBuilderDefault implements TxBuilderProtocol {
-    public Tx buildTx(Address address, List<Tx> unspendTxs, Tx tx) {
+    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx) {
         List<Out> outs = TxBuilder.getUnspendOuts(unspendTxs);
 
         Collections.sort(outs, new Comparator<Out>() {
@@ -306,7 +309,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
             if (change > 0) {
                 changeOutput = new Out();
                 changeOutput.setOutValue(change);
-                changeOutput.setOutAddress(address.address);
+                changeOutput.setOutAddress(changeAddress);
                 // If the change output would result in this transaction being rejected as dust, just drop the change and make it a fee
                 if (BitherjSettings.ensureMinRequiredFee && Tx.MIN_NONDUST_OUTPUT >= change) {
                     // This solution definitely fits in category 3

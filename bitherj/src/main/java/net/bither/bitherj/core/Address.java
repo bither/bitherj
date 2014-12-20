@@ -375,15 +375,23 @@ public class Address implements Comparable<Address> {
     }
 
     public Tx buildTx(List<Long> amounts, List<String> addresses) throws TxBuilderException {
-        return TxBuilder.getInstance().buildTx(this, amounts, addresses);
+        return buildTx(getAddress(), amounts, addresses);
+    }
+
+    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
+        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses);
     }
 
     public Tx buildTx(long amount, String address) throws TxBuilderException {
+        return buildTx(amount, address, getAddress());
+    }
+
+    public Tx buildTx(long amount, String address, String changeAddress) throws TxBuilderException {
         List<Long> amounts = new ArrayList<Long>();
         amounts.add(amount);
         List<String> addresses = new ArrayList<String>();
         addresses.add(address);
-        return buildTx(amounts, addresses);
+        return buildTx(changeAddress, amounts, addresses);
     }
 
     public List<Tx> getRecentlyTxs(int confirmationCnt, int limit) {
