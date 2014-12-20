@@ -16,28 +16,18 @@
 
 package net.bither.bitherj.utils;
 
-import com.google.common.base.Preconditions;
-
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.crypto.DumpedPrivateKey;
-import net.bither.bitherj.crypto.ECKey;
-import net.bither.bitherj.crypto.EncryptedPrivateKey;
-import net.bither.bitherj.crypto.KeyCrypter;
-import net.bither.bitherj.crypto.KeyCrypterException;
-import net.bither.bitherj.crypto.KeyCrypterScrypt;
-import net.bither.bitherj.crypto.SecureCharSequence;
-
+import net.bither.bitherj.crypto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import java.math.BigInteger;
+import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkState;
 
 public class PrivateKeyUtil {
     private static final Logger log = LoggerFactory.getLogger(PrivateKeyUtil.class);
@@ -251,6 +241,21 @@ public class PrivateKeyUtil {
 
         public ECKey ecKey;
         public SecureCharSequence privateKeyText;
+
+    }
+
+    public static boolean verifyMessage(String address, String messageText, String signatureText) {
+        // Strip CRLF from signature text
+        try {
+            signatureText = signatureText.replaceAll("\n", "").replaceAll("\r", "");
+
+            ECKey key = ECKey.signedMessageToKey(messageText, signatureText);
+            String signAddress = key.toAddress();
+            return Utils.compareString(address, signAddress);
+        } catch (SignatureException e) {
+            e.printStackTrace();
+            return false;
+        }
 
     }
 
