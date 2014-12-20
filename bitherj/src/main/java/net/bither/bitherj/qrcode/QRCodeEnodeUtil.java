@@ -103,9 +103,11 @@ public class QRCodeEnodeUtil {
             String changeStr = "";
             if (!Utils.isEmpty(address)) {
                 long changeAmt = tx.amountSentToAddress(address);
-                changeStr = Base58.bas58ToHexWithAddress(address) + QRCodeUtil.QR_CODE_SPLIT + Long.toHexString(changeAmt)
-                        .toLowerCase(Locale.US)
-                        + QRCodeUtil.QR_CODE_SPLIT;
+                if (changeAmt != 0) {
+                    changeStr = Base58.bas58ToHexWithAddress(address) + QRCodeUtil.QR_CODE_SPLIT + Long.toHexString(changeAmt)
+                            .toLowerCase(Locale.US)
+                            + QRCodeUtil.QR_CODE_SPLIT;
+                }
             }
             preSignString = Base58.bas58ToHexWithAddress(qrCodeTransport.getMyAddress())
                     + QRCodeUtil.QR_CODE_SPLIT + changeStr
