@@ -138,10 +138,11 @@ public class QRCodeEnodeUtil {
         try {
 
             String[] strArray = QRCodeUtil.splitString(str);
-            if (is16Long(strArray[1])) {
-                return oldFormatQRCodeTransport(str);
+            String address = Base58.hexToBase58WithAddress(strArray[1]);
+            if (Utils.validBicoinAddress(address)) {
+                return changeFormatQRCodeTransport(str);
             } else {
-                return newFormatQRCodeTransport(str);
+                return noChangeFormatQRCodeTransport(str);
             }
 
         } catch (Exception e) {
@@ -150,17 +151,8 @@ public class QRCodeEnodeUtil {
         }
     }
 
-    private static boolean is16Long(String str) {
-        try {
-            Long.parseLong(
-                    str, 16);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
 
-    private static QRCodeTxTransport newFormatQRCodeTransport(String str) {
+    private static QRCodeTxTransport changeFormatQRCodeTransport(String str) {
         try {
             String[] strArray = QRCodeUtil.splitString(str);
             QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
@@ -204,7 +196,7 @@ public class QRCodeEnodeUtil {
     }
 
 
-    private static QRCodeTxTransport oldFormatQRCodeTransport(String str) {
+    private static QRCodeTxTransport noChangeFormatQRCodeTransport(String str) {
         try {
             String[] strArray = QRCodeUtil.splitString(str);
             QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
