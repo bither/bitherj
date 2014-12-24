@@ -807,9 +807,9 @@ public class PeerManager {
                         iterator.next().sendInvMessageWithTxHash(hash);
                     }
                 }
+                schedulePublishTxTimeoutTimer(BitherjSettings.PROTOCOL_TIMEOUT, tx.getTxHash());
             }
         });
-        schedulePublishTxTimeoutTimer(BitherjSettings.PROTOCOL_TIMEOUT, tx.getTxHash());
     }
 
     private BloomFilter getBloomFilter() {
@@ -998,10 +998,11 @@ public class PeerManager {
     }
 
 
-    private void publishTxTimeout(byte[] txHash) {
+    private void publishTxTimeout(final byte[] txHash) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
+                cancelPublishTxTimeoutTimer(txHash);
                 for (Peer peer : connectedPeers) {
                     peer.disconnect();
                 }
