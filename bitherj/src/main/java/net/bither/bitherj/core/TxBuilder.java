@@ -218,8 +218,17 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 long coinDepth1 = BlockChain.getInstance().lastBlock.getBlockNo() * out1.getOutValue() - out1.getCoinDepth() + out1.getOutValue();
                 long coinDepth2 = BlockChain.getInstance().lastBlock.getBlockNo() * out2.getOutValue() - out2.getCoinDepth() + out2.getOutValue();
                 if (coinDepth1 != coinDepth2) {
-                    return (int) (coinDepth1 - coinDepth2);
-                } else {
+                    if (coinDepth2 > coinDepth1)
+                        return 1;
+                    else
+                        return -1;
+                } else if (out1.getOutValue() != out2.getOutValue()){
+                    if (out2.getOutValue() > out1.getOutValue())
+                        return 1;
+                    else
+                        return -1;
+                }
+                else {
                     BigInteger hash1 = new BigInteger(1, out1.getTxHash());
                     BigInteger hash2 = new BigInteger(1, out2.getTxHash());
                     int result = hash1.compareTo(hash2);
