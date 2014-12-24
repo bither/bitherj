@@ -83,6 +83,7 @@ public class PeerManager {
     private Peer downloadingPeer;
 
     private Timer syncTimeOutTimer;
+    private HashMap<Sha256Hash, Timer> publishTxTimeoutTimers;
 
     public static final PeerManager instance() {
         if (instance == null) {
@@ -808,6 +809,7 @@ public class PeerManager {
                 }
             }
         });
+        schedulePublishTxTimeoutTimer(BitherjSettings.PROTOCOL_TIMEOUT, tx.getTxHash());
     }
 
     private BloomFilter getBloomFilter() {
@@ -991,6 +993,44 @@ public class PeerManager {
             @Override
             public void run() {
                 syncTimeout();
+            }
+        }, delay);
+    }
+
+
+    private void publishTxTimeout(byte[] txHash) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                for (Peer peer : connectedPeers) {
+                    peer.disconnect();
+                }
+            }
+        });
+    }
+
+    private void cancelPublishTxTimeoutTimer(byte[] txHash) {
+        Sha256Hash hash = new Sha256Hash(txHash);
+        if (publishTxTimeoutTimers != null && publishTxTimeoutTimers.containsKey(hash)) {
+            Timer publishTxTimeoutTimer = publishTxTimeoutTimers.get(hash);
+            publishTxTimeoutTimers.remove(hash);
+            publishTxTimeoutTimer.cancel();
+            publishTxTimeoutTimer = null;
+        }
+    }
+
+    private void schedulePublishTxTimeoutTimer(long delay, final byte[] txHash) {
+        cancelPublishTxTimeoutTimer(txHash);
+        if (publishTxTimeoutTimers == null) {
+            publishTxTimeoutTimers = new HashMap<Sha256Hash, Timer>();
+        }
+
+        Timer publishTxTimeoutTimer = new Timer();
+        publishTxTimeoutTimers.put(new Sha256Hash(txHash), publishTxTimeoutTimer);
+        publishTxTimeoutTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                publishTxTimeout(txHash);
             }
         }, delay);
     }
