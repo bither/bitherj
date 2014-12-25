@@ -134,12 +134,25 @@ public class QRCodeEnodeUtil {
         return preSignString;
     }
 
+    private static boolean isAddressHex(String str) {
+        boolean isAddress = false;
+        if (str.length() % 2 == 0) {
+            try {
+                String address = Base58.hexToBase58WithAddress(str);
+                isAddress = Utils.validBicoinAddress(address);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return isAddress;
+    }
+
     public static QRCodeTxTransport formatQRCodeTransport(String str) {
         try {
 
             String[] strArray = QRCodeUtil.splitString(str);
-            String address = Base58.hexToBase58WithAddress(strArray[1]);
-            if (Utils.validBicoinAddress(address)) {
+            boolean isAddress = isAddressHex(strArray[1]);
+            if (isAddress) {
                 return changeFormatQRCodeTransport(str);
             } else {
                 return noChangeFormatQRCodeTransport(str);
