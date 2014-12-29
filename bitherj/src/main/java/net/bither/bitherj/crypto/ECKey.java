@@ -18,20 +18,11 @@ package net.bither.bitherj.crypto;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.asn1.ASN1InputStream;
-import org.spongycastle.asn1.ASN1Integer;
-import org.spongycastle.asn1.ASN1OctetString;
-import org.spongycastle.asn1.DERBitString;
-import org.spongycastle.asn1.DEROctetString;
-import org.spongycastle.asn1.DERSequenceGenerator;
-import org.spongycastle.asn1.DERTaggedObject;
-import org.spongycastle.asn1.DLSequence;
+import org.spongycastle.asn1.*;
 import org.spongycastle.asn1.sec.SECNamedCurves;
 import org.spongycastle.asn1.x9.X9ECParameters;
 import org.spongycastle.asn1.x9.X9IntegerConverter;
@@ -39,19 +30,16 @@ import org.spongycastle.crypto.AsymmetricCipherKeyPair;
 import org.spongycastle.crypto.digests.SHA256Digest;
 import org.spongycastle.crypto.ec.CustomNamedCurves;
 import org.spongycastle.crypto.generators.ECKeyPairGenerator;
-import org.spongycastle.crypto.params.ECDomainParameters;
-import org.spongycastle.crypto.params.ECKeyGenerationParameters;
-import org.spongycastle.crypto.params.ECPrivateKeyParameters;
-import org.spongycastle.crypto.params.ECPublicKeyParameters;
-import org.spongycastle.crypto.params.KeyParameter;
+import org.spongycastle.crypto.params.*;
 import org.spongycastle.crypto.signers.ECDSASigner;
 import org.spongycastle.crypto.signers.HMacDSAKCalculator;
 import org.spongycastle.math.ec.ECAlgorithms;
-import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.math.ec.FixedPointUtil;
+import org.spongycastle.math.ec.custom.sec.SecP256K1Curve;
 import org.spongycastle.util.encoders.Base64;
 
+import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -60,8 +48,6 @@ import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.util.Arrays;
-
-import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -169,9 +155,9 @@ public class ECKey implements Serializable {
     /**
      * A constructor variant with BigInteger pubkey. See {@link ECKey#ECKey(BigInteger, byte[])}.
      */
-    public ECKey(BigInteger privKey, BigInteger pubKey) {
-        this(privKey, Utils.bigIntegerToBytes(pubKey, 65));
-    }
+//    public ECKey(BigInteger privKey, BigInteger pubKey) {
+//        this(privKey, Utils.bigIntegerToBytes(pubKey, 65));
+//    }
 
     /**
      * Creates an ECKey given only the private key bytes. This is the same as using the BigInteger constructor, but
@@ -227,7 +213,7 @@ public class ECKey implements Serializable {
      * be used for signing.
      */
     private ECKey(@Nullable BigInteger privKey, @Nullable byte[] pubKey) {
-        this(privKey, pubKey, false);
+        this(privKey, pubKey, true);
     }
 
     public boolean isPubKeyOnly() {
@@ -633,8 +619,8 @@ public class ECKey implements Serializable {
      * @throws KeyCrypterException   if this ECKey is encrypted and no AESKey is provided or it does not decrypt the ECKey.
      */
     public String signMessage(String message, @Nullable KeyParameter aesKey) throws KeyCrypterException {
-        if (priv == null)
-            throw new IllegalStateException("This ECKey does not have the private key necessary for signing.");
+//        if (priv == null)
+//            throw new IllegalStateException("This ECKey does not have the private key necessary for signing.");
         byte[] data = Utils.formatMessageForSigning(message);
         byte[] hash = Utils.doubleDigest(data);
         ECDSASignature sig = sign(hash, aesKey);
@@ -713,6 +699,7 @@ public class ECKey implements Serializable {
             throw new SignatureException("Signature did not match for message");
     }
 
+
     /**
      * <p>Given the components of a signature and a selector value, recover and return the public key
      * that generated the signature according to the algorithm in SEC1v2 section 4.1.6.</p>
@@ -736,56 +723,29 @@ public class ECKey implements Serializable {
     @Nullable
     public static ECKey recoverFromSignature(int recId, ECDSASignature sig, byte[] message, boolean compressed) {
         Preconditions.checkArgument(recId >= 0, "recId must be positive");
-        Preconditions.checkArgument(sig.r.compareTo(BigInteger.ZERO) >= 0, "r must be positive");
-        Preconditions.checkArgument(sig.s.compareTo(BigInteger.ZERO) >= 0, "s must be positive");
+        Preconditions.checkArgument(sig.r.signum() >= 0, "r must be positive");
+        Preconditions.checkArgument(sig.s.signum() >= 0, "s must be positive");
         Preconditions.checkNotNull(message);
-        // 1.0 For j from 0 to h   (h == recId here and the loop is outside this function)
-        //   1.1 Let x = r + jn
-        BigInteger n = CURVE.getN();  // Curve order.
-        BigInteger i = BigInteger.valueOf((long) recId / 2);
+        BigInteger n = CURVE.getN();
+        BigInteger i = BigInteger.valueOf((long) recId / 2L);
         BigInteger x = sig.r.add(i.multiply(n));
-        //   1.2. Convert the integer x to an octet string X of length mlen using the conversion routine
-        //        specified in Section 2.3.7, where mlen = [(log2 p)/8] or mlen = [m/8].
-        //   1.3. Convert the octet string (16 set binary digits)||X to an elliptic curve point R using the
-        //        conversion routine specified in Section 2.3.4. If this conversion routine outputs "invalid", then
-        //        do another iteration of Step 1.
-        //
-        // More concisely, what these points mean is to use X as a compressed public key.
-        ECCurve.Fp curve = (ECCurve.Fp) CURVE.getCurve();
-        BigInteger prime = curve.getQ();  // Bouncy Castle is not consistent about the letter it uses for the prime.
+        BigInteger prime = SecP256K1Curve.q;
         if (x.compareTo(prime) >= 0) {
-            // Cannot have point co-ordinates larger than this as everything takes place modulo Q.
             return null;
+        } else {
+            ECPoint R = decompressKey(x, (recId & 1) == 1);
+            if (!R.multiply(n).isInfinity()) {
+                return null;
+            } else {
+                BigInteger e = new BigInteger(1, message);
+                BigInteger eInv = BigInteger.ZERO.subtract(e).mod(n);
+                BigInteger rInv = sig.r.modInverse(n);
+                BigInteger srInv = rInv.multiply(sig.s).mod(n);
+                BigInteger eInvrInv = rInv.multiply(eInv).mod(n);
+                ECPoint q = ECAlgorithms.sumOfTwoMultiplies(CURVE.getG(), eInvrInv, R, srInv);
+                return new ECKey((BigInteger) null, (byte[]) q.getEncoded(compressed));
+            }
         }
-        // Compressed keys require you to know an extra bit of data about the y-coord as there are two possibilities.
-        // So it's encoded in the recId.
-        ECPoint R = decompressKey(x, (recId & 1) == 1);
-        //   1.4. If nR != point at infinity, then do another iteration of Step 1 (callers responsibility).
-        if (!R.multiply(n).isInfinity())
-            return null;
-        //   1.5. Compute e from M using Steps 2 and 3 of ECDSA signature verification.
-        BigInteger e = new BigInteger(1, message);
-        //   1.6. For k from 1 to 2 do the following.   (loop is outside this function via iterating recId)
-        //   1.6.1. Compute a candidate public key as:
-        //               Q = mi(r) * (sR - eG)
-        //
-        // Where mi(x) is the modular multiplicative inverse. We transform this into the following:
-        //               Q = (mi(r) * s ** R) + (mi(r) * -e ** G)
-        // Where -e is the modular additive inverse of e, that is z such that z + e = 0 (mod n). In the above equation
-        // ** is point multiplication and + is point addition (the EC group operator).
-        //
-        // We can find the additive inverse by subtracting e from zero then taking the mod. For example the additive
-        // inverse of 3 modulo 11 is 8 because 3 + 8 mod 11 = 0, and -3 mod 11 = 8.
-        BigInteger eInv = BigInteger.ZERO.subtract(e).mod(n);
-        BigInteger rInv = sig.r.modInverse(n);
-        BigInteger srInv = rInv.multiply(sig.s).mod(n);
-        BigInteger eInvrInv = rInv.multiply(eInv).mod(n);
-        ECPoint.Fp q = (ECPoint.Fp) ECAlgorithms.sumOfTwoMultiplies(CURVE.getG(), eInvrInv, R, srInv);
-        if (compressed) {
-            // We have to manually recompress the point as the compressed-ness gets lost when multiply() is used.
-            q = new ECPoint.Fp(curve, q.getX(), q.getY(), true);
-        }
-        return new ECKey((byte[]) null, q.getEncoded());
     }
 
     /**

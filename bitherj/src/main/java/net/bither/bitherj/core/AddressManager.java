@@ -20,7 +20,7 @@ import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.PrivateKeyUtil;
-import net.bither.bitherj.utils.QRCodeUtil;
+import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -88,7 +88,7 @@ public class AddressManager {
             log.info("add tx {} into db", Utils.hashToString(tx.getTxHash()));
         }
         for (Address addr : AddressManager.getInstance().getAllAddresses()) {
-            if(needNotifyAddressHashSet.contains(addr.getAddress())){
+            if (needNotifyAddressHashSet.contains(addr.getAddress())) {
                 addr.notificatTx(tx, txNotificationType);
             }
         }
@@ -335,6 +335,7 @@ public class AddressManager {
                     }
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
                             , isSyncComplete == 1, isFromXRandom, true);
+                    add.setTrashed(true);
                     this.trashAddresses.add(add);
                 }
             }

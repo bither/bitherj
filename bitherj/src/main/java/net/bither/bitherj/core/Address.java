@@ -25,9 +25,8 @@ import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
-import net.bither.bitherj.script.ScriptChunk;
 import net.bither.bitherj.utils.PrivateKeyUtil;
-import net.bither.bitherj.utils.QRCodeUtil;
+import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -41,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -62,6 +60,7 @@ public class Address implements Comparable<Address> {
     private long mSortTime;
     private long balance = 0;
     private boolean isFromXRandom;
+    private boolean isTrashed = false;
 
     public Address(String address, byte[] pubKey, long sortTime, boolean isSyncComplete,
                    boolean isFromXRandom, boolean hasPrivKey) {
@@ -102,6 +101,14 @@ public class Address implements Comparable<Address> {
         List<Tx> txs = AbstractDb.txProvider.getTxAndDetailByAddress(this.address);
         Collections.sort(txs);
         return txs;
+    }
+
+    public boolean isTrashed() {
+        return isTrashed;
+    }
+
+    public void setTrashed(boolean isTrashed) {
+        this.isTrashed = isTrashed;
     }
 
     @Override
@@ -295,6 +302,7 @@ public class Address implements Comparable<Address> {
 
         Utils.moveFile(oldPrivKeyFile, newPrivKeyFile);
         Utils.moveFile(oldWatchOnlyFile, newWatchOnlyFile);
+        setTrashed(true);
     }
 
     public void restorePrivKey() throws IOException {
@@ -313,6 +321,7 @@ public class Address implements Comparable<Address> {
 
         this.syncComplete = false;
         this.updatePubkey();
+        setTrashed(false);
     }
 
     public void saveTrashKey() throws IOException {
@@ -337,8 +346,14 @@ public class Address implements Comparable<Address> {
     public String getEncryptPrivKey() {
         if (this.hasPrivKey) {
             if (Utils.isEmpty(this.encryptPrivKey)) {
-                String privateKeyFullFileName = Utils.format(BitherjSettings
-                        .PRIVATE_KEY_FILE_NAME, Utils.getPrivateDir(), getAddress());
+                String privateKeyFullFileName;
+                if (!isTrashed()) {
+                    privateKeyFullFileName = Utils.format(BitherjSettings
+                            .PRIVATE_KEY_FILE_NAME, Utils.getPrivateDir(), getAddress());
+                } else {
+                    privateKeyFullFileName = Utils.format(BitherjSettings
+                            .PRIVATE_KEY_FILE_NAME, Utils.getTrashDir(), getAddress());
+                }
                 this.encryptPrivKey = Utils.readFile(new File(privateKeyFullFileName));
                 if (this.encryptPrivKey == null) {
                     //todo backup?
@@ -358,15 +373,23 @@ public class Address implements Comparable<Address> {
     }
 
     public Tx buildTx(List<Long> amounts, List<String> addresses) throws TxBuilderException {
-        return TxBuilder.getInstance().buildTx(this, amounts, addresses);
+        return buildTx(getAddress(), amounts, addresses);
+    }
+
+    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
+        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses);
     }
 
     public Tx buildTx(long amount, String address) throws TxBuilderException {
+        return buildTx(amount, address, getAddress());
+    }
+
+    public Tx buildTx(long amount, String address, String changeAddress) throws TxBuilderException {
         List<Long> amounts = new ArrayList<Long>();
         amounts.add(amount);
         List<String> addresses = new ArrayList<String>();
         addresses.add(address);
-        return buildTx(amounts, addresses);
+        return buildTx(changeAddress, amounts, addresses);
     }
 
     public List<Tx> getRecentlyTxs(int confirmationCnt, int limit) {
@@ -406,6 +429,23 @@ public class Address implements Comparable<Address> {
         }
         key.clearPrivateKey();
         return result;
+    }
+
+    public String signMessage(String msg, CharSequence passphrase) {
+
+        ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getEncryptPrivKey(), passphrase);
+        if (key == null) {
+            throw new PasswordException("do not decrypt eckey");
+        }
+        KeyParameter assKey = key.getKeyCrypter().deriveKey(passphrase);
+
+        String result = key.signMessage(msg,assKey);
+
+
+        key.clearPrivateKey();
+        return result;
+
+
     }
 
     public void signTx(Tx tx, CharSequence passphrase) {
@@ -464,6 +504,10 @@ public class Address implements Comparable<Address> {
                 return false;
             rs.add(i);
         }
+        return true;
+    }
+
+    public boolean removeTx(Tx tx) {
         return true;
     }
 }
