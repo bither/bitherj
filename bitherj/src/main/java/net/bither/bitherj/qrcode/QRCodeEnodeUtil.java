@@ -212,6 +212,9 @@ public class QRCodeEnodeUtil {
     private static QRCodeTxTransport noChangeFormatQRCodeTransport(String str) {
         try {
             String[] strArray = QRCodeUtil.splitString(str);
+            if (Utils.validBicoinAddress(strArray[0])) {
+                return oldFormatQRCodeTransport(str);
+            }
             QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
             log.debug("qrcode", "str," + str);
             log.debug("qrcode", "0," + strArray[0]);
@@ -241,6 +244,37 @@ public class QRCodeEnodeUtil {
             return null;
         }
     }
+
+
+    private static QRCodeTxTransport oldFormatQRCodeTransport(String str) {
+        try {
+            String[] strArray = QRCodeUtil.splitString(str);
+            QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
+            String address = strArray[0];
+            if (!Utils.validBicoinAddress(address)) {
+                return null;
+            }
+            qrCodeTransport.setMyAddress(address);
+            qrCodeTransport.setFee(Long.parseLong(
+                    strArray[1], 16));
+            qrCodeTransport.setToAddress(strArray[2]);
+            qrCodeTransport.setTo(Long.parseLong(
+                    strArray[3], 16));
+            List<String> hashList = new ArrayList<String>();
+            for (int i = 4; i < strArray.length; i++) {
+                String text = strArray[i];
+                if (!Utils.isEmpty(text)) {
+                    hashList.add(text);
+                }
+            }
+            qrCodeTransport.setHashList(hashList);
+            return qrCodeTransport;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 
     private static QRCodeTxTransport oldFromSendRequestWithUnsignedTransaction(Tx tx, String addressCannotParsed) {
         QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
