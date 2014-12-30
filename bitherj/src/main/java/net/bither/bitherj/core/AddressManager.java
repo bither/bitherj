@@ -118,6 +118,9 @@ public class AddressManager {
 
     public boolean addAddress(Address address) {
         synchronized (lock) {
+            if(getAllAddresses().contains(address)){
+                return false;
+            }
             try {
                 if (address.hasPrivKey) {
                     if (!this.getTrashAddresses().contains(address)) {
