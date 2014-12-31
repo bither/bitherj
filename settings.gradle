@@ -1,2 +1,2 @@
-include ':bitherj', ':sample'
+include ':bitherj'
 
