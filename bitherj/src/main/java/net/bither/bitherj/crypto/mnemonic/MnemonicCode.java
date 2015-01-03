@@ -38,10 +38,8 @@ import java.util.List;
 
 
 /**
- * A MnemonicCode object may be used to convert between binary seed values and
- * lists of words per <a href="https://github.com/bitcoin/bips/blob/master/bip-0039
- * .mediawiki">the BIP 39
- * specification</a>
+ * A MnemonicCode object may be used to convert between binary seed values and lists of words per
+ * <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">the BIP 39 specification</a>
  */
 
 public abstract class MnemonicCode {
