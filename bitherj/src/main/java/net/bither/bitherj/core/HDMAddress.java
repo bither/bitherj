@@ -16,6 +16,7 @@ public class HDMAddress extends Address {
 
     private int hdKeyId;
     private int hdKeyIndex;
+    private HDMKeychain hdmKeychain;
 
     public List<byte[]> formatInScript(List<TransactionSignature> signs1, List<TransactionSignature> signs2, byte[] scriptPubKey) {
         List<byte[]> result = new ArrayList<byte[]>();
