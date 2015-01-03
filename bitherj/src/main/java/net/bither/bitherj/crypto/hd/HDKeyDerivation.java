@@ -85,10 +85,6 @@ public final class HDKeyDerivation {
         return new DeterministicKey(ImmutableList.<ChildNumber>of(), chainCode, priv, null);
     }
 
-    public static DeterministicKey createMasterPubKeyFromBytes(byte[] pubKeyBytes, byte[] chainCode) {
-        return new DeterministicKey(ImmutableList.<ChildNumber>of(), chainCode, new LazyECPoint(ECKey.CURVE.getCurve(), pubKeyBytes), null, null);
-    }
-
     /**
      * Derives a key given the "extended" child number, ie. the 0x80000000 bit of the value that you
      * pass for <code>childNumber</code> will determine whether to use hardened derivation or not.
@@ -130,7 +126,7 @@ public final class HDKeyDerivation {
             return new DeterministicKey(
                     HDUtils.append(parent.getPath(), childNumber),
                     rawKey.chainCode,
-                    new LazyECPoint(ECKey.CURVE.getCurve(), rawKey.keyBytes),
+                    rawKey.keyBytes,
                     null,
                     parent);
         } else {
