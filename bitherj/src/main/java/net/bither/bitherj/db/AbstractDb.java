@@ -62,27 +62,42 @@ public abstract class AbstractDb {
             ", block_time integer not null" +
             ", block_prev text" +
             ", is_main integer not null);";
+    public static final String CREATE_ADDRESSES_SQL = "create table if not exists addresses " +
+            "(address text not null primary key" +
+            ", encrypt_private_key text" +
+            ", pub_key text not null" +
+            ", is_compressed integer not null" +
+            ", is_xrandom integer not null" +
+            ", is_trash integer not null" +
+            ", is_synced integer not null" +
+            ", sort_time integer not null" +
+            ", hd_key_id integer" +
+            ", hd_key_index integer);";
+    public static final String CREATE_HD_KEYS_SQL = "create table if not exists hd_keys " +
+            "(hd_key_id integer not null primary key" +
+            ", encrypt_private_key text not null" +
+            ", bither_id text not null" +
+            ", encrypt_bither_password text not null);";
+
     public static final String CREATE_BLOCK_NO_INDEX = "create index idx_blocks_block_no on blocks (block_no);";
     public static final String CREATE_BLOCK_PREV_INDEX = "create index idx_blocks_block_prev on blocks (block_prev);";
-
 
     public static IBlockProvider blockProvider;
     public static IPeerProvider peerProvider;
     public static ITxProvider txProvider;
+    public static IAddressProvider addressProvider;
 
     public void construct() {
         blockProvider = initBlockProvider();
         peerProvider = initPeerProvider();
         txProvider = initTxProvider();
-
+        addressProvider = initAddressProvider();
     }
 
     public abstract IBlockProvider initBlockProvider();
-
     public abstract IPeerProvider initPeerProvider();
-
     public abstract ITxProvider initTxProvider();
-
+    public abstract IAddressProvider initAddressProvider();
 
     public interface Tables {
         public static final String BLOCKS = "blocks";
@@ -91,6 +106,8 @@ public abstract class AbstractDb {
         public static final String INS = "ins";
         public static final String OUTS = "outs";
         public static final String PEERS = "peers";
+        public static final String Addresses = "addresses";
+        public static final String HDKeys = "hd_keys";
     }
 
     public interface BlocksColumns {
@@ -143,8 +160,25 @@ public abstract class AbstractDb {
         public static final String PEER_SERVICES = "peer_services";
         public static final String PEER_TIMESTAMP = "peer_timestamp";
         public static final String PEER_CONNECTED_CNT = "peer_connected_cnt";
-
     }
 
+    public interface AddressesColumns {
+        public static final String ADDRESS = "address";
+        public static final String ENCRYPT_PRIVATE_KEY = "encrypt_private_key";
+        public static final String PUB_KEY = "pub_key";
+        public static final String IS_COMPRESSED = "is_compressed";
+        public static final String IS_XRANDOM = "is_xrandom";
+        public static final String IS_TRASH = "is_trash";
+        public static final String IS_SYNCED = "is_synced";
+        public static final String SORT_TIME = "sort_time";
+        public static final String HD_KEY_ID = "hd_key_id";
+        public static final String HD_KEY_INDEX = "hd_key_index";
+    }
 
+    public interface HDKeysColumns {
+        public static final String HD_KEY_ID = "hd_key_id";
+        public static final String ENCRYPT_PRIVATE_KEY = "encrypt_private_key";
+        public static final String BITHER_ID = "bither_id";
+        public static final String ENCRYPT_BITHER_PASSWORD = "encrypt_bither_password";
+    }
 }

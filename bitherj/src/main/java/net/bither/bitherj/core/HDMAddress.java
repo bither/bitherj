@@ -14,6 +14,9 @@ public class HDMAddress extends Address {
         super(address, pubKey, sortTime, isSyncComplete, isFromXRandom, hasPrivKey);
     }
 
+    private int hdKeyId;
+    private int hdKeyIndex;
+
     public List<byte[]> formatInScript(List<TransactionSignature> signs1, List<TransactionSignature> signs2, byte[] scriptPubKey) {
         List<byte[]> result = new ArrayList<byte[]>();
         for (int i = 0; i < signs1.size(); i++) {
