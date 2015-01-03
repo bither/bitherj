@@ -100,22 +100,22 @@ public class ECKey implements Serializable {
     // The two parts of the key. If "priv" is set, "pub" can always be calculated. If "pub" is set but not "priv", we
     // can only verify signatures not make them.
     // TODO: Redesign this class to use consistent internals and more efficient serialization.
-    private BigInteger priv;
-    private byte[] pub;
+    protected BigInteger priv;
+    protected byte[] pub;
     private boolean isFromXRandom = false;
     // Creation time of the key in seconds since the epoch, or zero if the key was deserialized from a version that did
     // not have this field.
-    private long creationTimeSeconds;
+    protected long creationTimeSeconds;
 
     /**
      * Instance of the KeyCrypter interface to use for encrypting and decrypting the key.
      */
-    transient private KeyCrypter keyCrypter;
+    transient protected KeyCrypter keyCrypter;
 
     /**
      * The encrypted private key information.
      */
-    private EncryptedPrivateKey encryptedPrivateKey;
+    protected EncryptedPrivateKey encryptedPrivateKey;
 
     // Transient because it's calculated on demand.
     transient private byte[] pubKeyHash;
