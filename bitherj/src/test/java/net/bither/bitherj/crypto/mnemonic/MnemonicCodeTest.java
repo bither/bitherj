@@ -223,7 +223,7 @@ public class MnemonicCodeTest {
         return new ArrayList<String>(Arrays.asList(words.split("\\s+")));
     }
 
-    private static final class MnemonicCodeTestClass extends MnemonicCode {
+    public static final class MnemonicCodeTestClass extends MnemonicCode {
         private static final String WordListPath = "wordlist/english.txt";
 
         public MnemonicCodeTestClass() throws IOException {
