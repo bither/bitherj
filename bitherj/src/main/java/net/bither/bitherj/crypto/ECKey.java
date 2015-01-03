@@ -139,8 +139,7 @@ public class ECKey implements Serializable {
         return ecKey;
     }
 
-    private static ECPoint compressPoint(ECPoint uncompressed) {
-
+    public final static ECPoint compressPoint(ECPoint uncompressed) {
         return CURVE.getCurve().decodePoint(uncompressed.getEncoded(true));
     }
 
@@ -276,6 +275,11 @@ public class ECKey implements Serializable {
      */
     public byte[] getPubKey() {
         return pub;
+    }
+
+    /** Gets the public key in the form of an elliptic curve point object from Bouncy Castle. */
+    public ECPoint getPubKeyPoint() {
+        return CURVE.getCurve().decodePoint(pub);
     }
 
     /**
