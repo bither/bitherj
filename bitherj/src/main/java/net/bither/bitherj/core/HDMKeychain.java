@@ -69,15 +69,13 @@ public class HDMKeychain {
         initFromDb();
     }
 
-    public HDMKeychain(String encryptSeed, String bitherId, String encryptBitherPassword, CharSequence password, HDMFetchRemoteAddresses fetchDelegate) {
-
-    }
-
     public HDMKeychain(int hdKeyId, String encryptSeed, String bitherId, String encryptBitherPassword) {
         this.hdKeyId = hdKeyId;
         this.encryptSeed = encryptSeed;
         this.bitherId = bitherId;
         this.encryptBitherPassword = encryptBitherPassword;
+    }
+
     public List<HDMAddress> createAddresses(int count, CharSequence password, HDMFetchRemotePublicKeys fetchDelegate, byte[] coldExternalRootPub) {
         ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
         DeterministicKey externalRootHot;
@@ -129,6 +127,8 @@ public class HDMKeychain {
         this.encryptSeed = encryptSeed;
         this.bitherId = bitherId;
         this.encryptBitherPassword = encryptBitherPassword;
+    }
+
     private DeterministicKey externalChainRoot(CharSequence password) throws MnemonicException.MnemonicLengthException {
         DeterministicKey master = masterKey(password);
         DeterministicKey purpose = master.deriveHardened(44);
