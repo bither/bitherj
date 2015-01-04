@@ -27,17 +27,15 @@ public class HDMKeychain {
     private transient byte[] seed;
 
     private ArrayList<HDMAddress> addresses;
-    private boolean isFromXRandom;
 
     private int hdSeedId;
     private BitherId bitherId;
     private EncryptedData encryptedSeed;
 
     public HDMKeychain(SecureRandom random, CharSequence password, BitherId bitherId) {
-        isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
         seed = new byte[64];
         random.nextBytes(seed);
-        encryptedSeed = new EncryptedData(seed, password, isFromXRandom);
+        encryptedSeed = new EncryptedData(seed, password, random.getClass().getCanonicalName().indexOf("XRandom") >= 0);
         wipeSeed();
         this.bitherId = bitherId;
         hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toString());
@@ -48,12 +46,14 @@ public class HDMKeychain {
         this.hdSeedId = seedId;
         this.encryptedSeed = new EncryptedData(encryptedSeed);
         this.bitherId = bitherId;
+        initFromDb();
     }
 
     public HDMKeychain(String encryptedSeed, CharSequence password, BitherId bitherId, HDMFetchRemoteAddresses fetchDelegate) {
         this.encryptedSeed = new EncryptedData(encryptedSeed);
         this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed);
         this.bitherId = bitherId;
+        addresses = new ArrayList<HDMAddress>();
     }
 
     public List<HDMAddress> createAddresses(int count, CharSequence password, HDMFetchRemotePublicKeys fetchDelegate, byte[] coldExternalRootPub) {
@@ -152,12 +152,13 @@ public class HDMKeychain {
     }
 
     private void initFromDb(){
-        //TODO init from db by hdSeedId: isFromXRandom;
         initAddressesFromDb();
     }
 
     private void initAddressesFromDb(){
-        //TODO get addresses from db by hdSeedId
+        synchronized (addresses){
+            addresses.addAll(AbstractDb.addressProvider.getHDMAddressInUse(hdSeedId));
+        }
     }
 
     public int getHdSeedId(){
@@ -169,7 +170,7 @@ public class HDMKeychain {
     }
 
     public boolean isFromXRandom(){
-        return isFromXRandom;
+        return encryptedSeed.isFromXRandom();
     }
 
     public void decryptSeed(CharSequence password){
