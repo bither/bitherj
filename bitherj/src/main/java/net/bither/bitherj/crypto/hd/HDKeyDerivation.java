@@ -85,6 +85,21 @@ public final class HDKeyDerivation {
         return new DeterministicKey(ImmutableList.<ChildNumber>of(), chainCode, priv, null);
     }
 
+    public static DeterministicKey createMasterPubKeyFromBytes(byte[] pubKeyBytes, byte[] chainCode) {
+        return new DeterministicKey(ImmutableList.<ChildNumber>of(), chainCode, pubKeyBytes, null, null);
+    }
+
+    public static DeterministicKey createMasterPubKeyFromExtendedBytes(byte[] extended){
+        checkState(extended.length == 64, extended.length);
+        byte[] il = Arrays.copyOfRange(extended, 0, 32);
+        byte[] ir = Arrays.copyOfRange(extended, 32, 64);
+        Arrays.fill(extended, (byte)0);
+        DeterministicKey key = createMasterPubKeyFromBytes(il, ir);
+        Arrays.fill(il, (byte)0);
+        Arrays.fill(ir, (byte)0);
+        return key;
+    }
+
     /**
      * Derives a key given the "extended" child number, ie. the 0x80000000 bit of the value that you
      * pass for <code>childNumber</code> will determine whether to use hardened derivation or not.

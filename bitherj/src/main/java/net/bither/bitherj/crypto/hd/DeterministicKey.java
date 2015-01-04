@@ -337,4 +337,16 @@ public class DeterministicKey extends ECKey {
         helper.add("isPubKeyOnly", isPubKeyOnly());
         return helper.toString();
     }
+
+    @Override
+    public void clearPrivateKey() {
+        super.clearPrivateKey();
+        priv = null;
+        Utils.wipeBytes(chainCode);
+    }
+
+    public void wipe(){
+        clearPrivateKey();
+        Utils.wipeBytes(pub);
+    }
 }
