@@ -38,7 +38,7 @@ public class HDMKeychain {
         encryptedSeed = new EncryptedData(seed, password, random.getClass().getCanonicalName().indexOf("XRandom") >= 0);
         wipeSeed();
         this.bitherId = bitherId;
-        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toString());
+        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toString(), true);
         addresses = new ArrayList<HDMAddress>();
     }
 
@@ -51,7 +51,7 @@ public class HDMKeychain {
 
     public HDMKeychain(String encryptedSeed, CharSequence password, BitherId bitherId, HDMFetchRemoteAddresses fetchDelegate) {
         this.encryptedSeed = new EncryptedData(encryptedSeed);
-        this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed);
+        this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed, true);
         this.bitherId = bitherId;
         addresses = new ArrayList<HDMAddress>();
     }

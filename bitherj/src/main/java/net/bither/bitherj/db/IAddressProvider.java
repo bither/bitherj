@@ -13,7 +13,7 @@ import java.util.List;
 public interface IAddressProvider {
     public List<Integer> getHDSeeds();
     public String getEncryptSeed(int hdSeedId);
-    public int addHDKey(String encryptSeed);
+    public int addHDKey(String encryptSeed, boolean isXrandom);
 
     public String getBitherId();
     public String getBitherEncryptPassword();
