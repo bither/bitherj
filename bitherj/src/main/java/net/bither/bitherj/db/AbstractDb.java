@@ -70,13 +70,21 @@ public abstract class AbstractDb {
             ", is_xrandom integer not null" +
             ", is_trash integer not null" +
             ", is_synced integer not null" +
-            ", sort_time integer not null" +
-            ", hd_key_id integer" +
-            ", hd_key_index integer);";
+            ", sort_time integer not null);";
     public static final String CREATE_HD_SEEDS_SQL = "create table if not exists hd_seeds " +
             "(hd_seed_id integer not null primary key autoincrement" +
-            ", encrypt_seed text not null" +
-            ", bither_id text not null" +
+            ", encrypt_seed text not null);";
+    public static final String CREATE_HDM_ADDRESSES_SQL = "create table if not exists hdm_addresses " +
+            "(hd_seed_id integer not null" +
+            ", hd_seed_index integer not null" +
+            ", pub_key1 text not null" +
+            ", pub_key2 text not null" +
+            ", pub_key3 text" +
+            ", address text" +
+            ", is_synced integer not null" +
+            ", primary key (hd_seed_id, hd_seed_index));";
+    public static final String CREATE_BITHER_ID_SQL = "create table if not exists bither_id " +
+            "(bither_id text not null primary key" +
             ", encrypt_bither_password text not null);";
 
     public static final String CREATE_BLOCK_NO_INDEX = "create index idx_blocks_block_no on blocks (block_no);";
@@ -171,13 +179,24 @@ public abstract class AbstractDb {
         public static final String IS_TRASH = "is_trash";
         public static final String IS_SYNCED = "is_synced";
         public static final String SORT_TIME = "sort_time";
-        public static final String HD_KEY_ID = "hd_key_id";
-        public static final String HD_KEY_INDEX = "hd_key_index";
     }
 
     public interface HDSeedsColumns {
         public static final String HD_SEED_ID = "hd_seed_id";
         public static final String ENCRYPT_SEED = "encrypt_seed";
+    }
+
+    public interface HDMAddressesColumns {
+        public static final String HD_SEED_ID = "hd_seed_id";
+        public static final String HD_SEED_INDEX = "hd_seed_index";
+        public static final String PUB_KEY1 = "pub_key1";
+        public static final String PUB_KEY2 = "pub_key2";
+        public static final String PUB_KEY3 = "pub_key3";
+        public static final String ADDRESS = "address";
+        public static final String IS_SYNCED = "is_synced";
+    }
+
+    public interface BitherIdColumns {
         public static final String BITHER_ID = "bither_id";
         public static final String ENCRYPT_BITHER_PASSWORD = "encrypt_bither_password";
     }

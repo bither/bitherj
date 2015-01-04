@@ -123,7 +123,7 @@ public class HDMKeychain {
     }
 
     public HDMKeychain(String encryptSeed, String bitherId, String encryptBitherPassword, CharSequence password, HDMFetchRemoteAddresses fetchDelegate) {
-        this.hdKeyId = AbstractDb.addressProvider.addHDKey(encryptSeed, bitherId, encryptBitherPassword);
+//        this.hdKeyId = AbstractDb.addressProvider.addHDKey(encryptSeed, bitherId, encryptBitherPassword);
         this.encryptSeed = encryptSeed;
         this.bitherId = bitherId;
         this.encryptBitherPassword = encryptBitherPassword;
