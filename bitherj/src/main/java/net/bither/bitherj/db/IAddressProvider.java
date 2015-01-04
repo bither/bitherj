@@ -13,7 +13,7 @@ public interface IAddressProvider {
     public List<HDMKeychain> getKeychains();
     public HDMKeychain getKeychain(int hdKeyId);
 
-    public List<HDMAddress> getHDMAddress();
+    public List<HDMAddress> getHDMAddress(int hdSeedId);
     public List<Address> getPrivKeyAddresses();
     public List<Address> getWatchOnlyAddresses();
     public List<Address> getTrashAddresses();

@@ -73,8 +73,8 @@ public abstract class AbstractDb {
             ", sort_time integer not null" +
             ", hd_key_id integer" +
             ", hd_key_index integer);";
-    public static final String CREATE_HD_KEYS_SQL = "create table if not exists hd_keys " +
-            "(hd_key_id integer not null primary key autoincrement" +
+    public static final String CREATE_HD_SEEDS_SQL = "create table if not exists hd_seeds " +
+            "(hd_seed_id integer not null primary key autoincrement" +
             ", encrypt_seed text not null" +
             ", bither_id text not null" +
             ", encrypt_bither_password text not null);";
@@ -175,8 +175,8 @@ public abstract class AbstractDb {
         public static final String HD_KEY_INDEX = "hd_key_index";
     }
 
-    public interface HDKeysColumns {
-        public static final String HD_KEY_ID = "hd_key_id";
+    public interface HDSeedsColumns {
+        public static final String HD_SEED_ID = "hd_seed_id";
         public static final String ENCRYPT_SEED = "encrypt_seed";
         public static final String BITHER_ID = "bither_id";
         public static final String ENCRYPT_BITHER_PASSWORD = "encrypt_bither_password";
