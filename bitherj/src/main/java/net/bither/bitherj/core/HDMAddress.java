@@ -68,6 +68,7 @@ public class HDMAddress extends Address {
         for(int i = 0; i < unsignedHashes.size(); i++){
             sigs.add(key.sign(unsignedHashes.get(i)));
         }
+        key.wipe();
         return sigs;
     }
 
