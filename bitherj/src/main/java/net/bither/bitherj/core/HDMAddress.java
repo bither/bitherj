@@ -38,6 +38,10 @@ public class HDMAddress extends Address {
         return keychain;
     }
 
+    public void setKeychain(HDMKeychain keychain) {
+        this.keychain = keychain;
+    }
+
     public List<byte[]> formatInScript(List<TransactionSignature> signs1, List<TransactionSignature> signs2, byte[] scriptPubKey) {
         List<byte[]> result = new ArrayList<byte[]>();
         for (int i = 0; i < signs1.size(); i++) {

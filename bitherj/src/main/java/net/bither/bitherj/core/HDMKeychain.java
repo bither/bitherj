@@ -157,7 +157,11 @@ public class HDMKeychain {
 
     private void initAddressesFromDb(){
         synchronized (addresses){
-            addresses.addAll(AbstractDb.addressProvider.getHDMAddressInUse(hdSeedId));
+            List<HDMAddress> addrs = AbstractDb.addressProvider.getHDMAddressInUse(hdSeedId);
+            for (HDMAddress addr : addrs) {
+                addr.setKeychain(this);
+            }
+            addresses.addAll(addrs);
         }
     }
 
