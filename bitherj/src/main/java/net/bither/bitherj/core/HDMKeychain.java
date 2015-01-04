@@ -40,13 +40,8 @@ public class HDMKeychain {
         encryptedSeed = new EncryptedData(seed, password, isFromXRandom);
         wipeSeed();
         this.bitherId = bitherId;
+        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toString());
         addresses = new ArrayList<HDMAddress>();
-    }
-
-    public HDMKeychain(int seedId) {
-        this.hdSeedId = seedId;
-        addresses = new ArrayList<HDMAddress>();
-        initFromDb();
     }
 
     public HDMKeychain(int seedId, String encryptedSeed, BitherId bitherId) {
@@ -61,45 +56,49 @@ public class HDMKeychain {
         this.bitherId = bitherId;
     }
 
-
     public List<HDMAddress> createAddresses(int count, CharSequence password, HDMFetchRemotePublicKeys fetchDelegate, byte[] coldExternalRootPub) {
-        ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
-        DeterministicKey externalRootHot;
-        DeterministicKey externalRootCold = HDKeyDerivation.createMasterPubKeyFromExtendedBytes(coldExternalRootPub);
-        try {
-            externalRootHot = externalChainRoot(password);
-            externalRootHot.clearPrivateKey();
-        } catch (MnemonicException.MnemonicLengthException e) {
+        synchronized (addresses) {
+            ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
+            DeterministicKey externalRootHot;
+            DeterministicKey externalRootCold = HDKeyDerivation.createMasterPubKeyFromExtendedBytes(coldExternalRootPub);
+
+            try {
+                externalRootHot = externalChainRoot(password);
+                externalRootHot.clearPrivateKey();
+            } catch (MnemonicException.MnemonicLengthException e) {
+                return as;
+            }
+            ArrayList<HDMAddress.Pubs> pubs = new ArrayList<HDMAddress.Pubs>();
+            for (int i = getCurrentMaxAddressIndex() + 1;
+                 pubs.size() < count;
+                 i++) {
+                HDMAddress.Pubs p = new HDMAddress.Pubs();
+                try {
+                    p.hot = externalRootHot.deriveSoftened(i).getPubKey();
+                    p.cold = externalRootCold.deriveSoftened(i).getPubKey();
+                    pubs.add(p);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            try {
+                fetchDelegate.completeRemotePublicKeys(null, null, pubs);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return addresses;
+            }
+            for (HDMAddress.Pubs p : pubs) {
+                as.add(new HDMAddress(p, false, this));
+            }
+            addresses.addAll(as);
+            if (externalRootHot != null) {
+                externalRootHot.wipe();
+            }
+            if (externalRootCold != null) {
+                externalRootCold.wipe();
+            }
             return as;
         }
-        ArrayList<HDMAddress.Pubs> pubs = new ArrayList<HDMAddress.Pubs>();
-        for(int i = getCurrentMaxAddressIndex() + 1; pubs.size() < count; i++){
-            HDMAddress.Pubs p = new HDMAddress.Pubs();
-            try {
-                p.hot = externalRootHot.deriveSoftened(i).getPubKey();
-                p.cold = externalRootCold.deriveSoftened(i).getPubKey();
-                pubs.add(p);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-        try {
-            fetchDelegate.completeRemotePublicKeys(null, null, pubs);
-        }catch (Exception e){
-            e.printStackTrace();
-            return addresses;
-        }
-        for(HDMAddress.Pubs p : pubs){
-            as.add(new HDMAddress(p, false, isFromXRandom, this));
-        }
-        addresses.addAll(as);
-        if(externalRootHot != null){
-            externalRootHot.wipe();
-        }
-        if(externalRootCold != null){
-            externalRootCold.wipe();
-        }
-        return as;
     }
 
     public List<HDMAddress> getAddresses() {
@@ -167,6 +166,10 @@ public class HDMKeychain {
 
     public BitherId getBitherId() {
         return bitherId;
+    }
+
+    public boolean isFromXRandom(){
+        return isFromXRandom;
     }
 
     public void decryptSeed(CharSequence password){

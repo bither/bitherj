@@ -24,8 +24,8 @@ public class HDMAddress extends Address {
     private HDMKeychain keychain;
     private Pubs pubs;
 
-    public HDMAddress(Pubs pubs, boolean isSyncComplete, boolean isFromXRandom, HDMKeychain keychain){
-        super(addressFromPubs(pubs), pubs.hot, pubs.index, isSyncComplete, isFromXRandom, true);
+    public HDMAddress(Pubs pubs, boolean isSyncComplete, HDMKeychain keychain){
+        super(addressFromPubs(pubs), pubs.hot, pubs.index, isSyncComplete, keychain.isFromXRandom(), true);
         this.keychain = keychain;
         this.pubs = pubs;
     }
@@ -49,7 +49,6 @@ public class HDMAddress extends Address {
         }
         return result;
     }
-
 
     public TransactionSignature signWithRemote(List<byte[]> unsignHash, CharSequence password, HDMFetchRemoteSignature delegate) {
         ArrayList<ECKey.ECDSASignature> sigs = signMyPart(unsignHash, password);
@@ -75,6 +74,11 @@ public class HDMAddress extends Address {
     public static final String addressFromPubs(Pubs pubs){
         //TODO multisig address generation
         return null;
+    }
+
+    @Override
+    public boolean isFromXRandom() {
+        return keychain.isFromXRandom();
     }
 
     public static final class Pubs{
