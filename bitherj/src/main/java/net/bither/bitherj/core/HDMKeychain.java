@@ -18,27 +18,6 @@ import java.util.List;
  * Created by zhouqi on 15/1/3.
  */
 public class HDMKeychain {
-    private int hdKeyId;
-    private String bitherId;
-    private String encryptSeed;
-    private String encryptBitherPassword;
-
-    public int getHdKeyId() {
-        return hdKeyId;
-    }
-
-    public String getBitherId() {
-        return bitherId;
-    }
-
-    public String getEncryptSeed() {
-        return encryptSeed;
-    }
-
-    public String getEncryptBitherPassword() {
-        return encryptBitherPassword;
-    }
-
     public static interface HDMFetchRemotePublicKeys{
         void completeRemotePublicKeys(String bitherId, CharSequence password, List<HDMAddress.Pubs> partialPubs);
     }
@@ -51,7 +30,11 @@ public class HDMKeychain {
 
     private ArrayList<HDMAddress> addresses;
     private boolean isFromXRandom;
+
     private int hdSeedId;
+    private String bitherId;
+    private String encryptSeed;
+    private String encryptBitherPassword;
 
     public HDMKeychain(SecureRandom random, CharSequence password, String bitherId, CharSequence bitherPasswordUnencrypted) {
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
@@ -63,14 +46,14 @@ public class HDMKeychain {
         addresses = new ArrayList<HDMAddress>();
     }
 
-    public HDMKeychain(int hdKeyId) {
-        this.hdSeedId = hdKeyId;
+    public HDMKeychain(int seedId) {
+        this.hdSeedId = seedId;
         addresses = new ArrayList<HDMAddress>();
         initFromDb();
     }
 
-    public HDMKeychain(int hdKeyId, String encryptSeed, String bitherId, String encryptBitherPassword) {
-        this.hdKeyId = hdKeyId;
+    public HDMKeychain(int seedId, String encryptSeed, String bitherId, String encryptBitherPassword) {
+        this.hdSeedId = seedId;
         this.encryptSeed = encryptSeed;
         this.bitherId = bitherId;
         this.encryptBitherPassword = encryptBitherPassword;
@@ -184,6 +167,18 @@ public class HDMKeychain {
 
     public int getHdSeedId(){
         return hdSeedId;
+    }
+
+    public String getBitherId() {
+        return bitherId;
+    }
+
+    public String getEncryptSeed() {
+        return encryptSeed;
+    }
+
+    public String getEncryptBitherPassword() {
+        return encryptBitherPassword;
     }
 
     public void decryptSeed(CharSequence password){
