@@ -58,6 +58,16 @@ public abstract class MnemonicCode {
 
     private static final int PBKDF2_ROUNDS = 2048;
 
+    private static MnemonicCode instance;
+
+    public static void setInstance(MnemonicCode i){
+        instance = i;
+    }
+
+    public static MnemonicCode instance(){
+        return instance;
+    }
+
     /**
      * Initialise from the included word list. Won't work on Android.
      */
