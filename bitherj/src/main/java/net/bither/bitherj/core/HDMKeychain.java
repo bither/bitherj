@@ -21,7 +21,7 @@ public class HDMKeychain {
     }
 
     public static interface HDMFetchRemoteAddresses {
-        List<List<byte[]>> getRemoteExistsPublicKeys(String bitherId, CharSequence password);
+        List<HDMAddress.Pubs> getRemoteExistsPublicKeys(String bitherId, CharSequence password);
     }
 
     private transient byte[] seed;
