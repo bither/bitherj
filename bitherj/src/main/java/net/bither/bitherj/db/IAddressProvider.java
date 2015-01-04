@@ -22,7 +22,7 @@ public interface IAddressProvider {
 
     public List<HDMAddress> getHDMAddressInUse(int hdSeedId);
     public void addHDMAddress(int hdSeedId, List<Integer> indexes, List<byte[]> pubKeys1, List<byte[]> pubKeys2);
-    public void completeHDMAddresses(int hdSeedId, List<Integer> indexes, List<byte[]> pubKeys3);
+    public void completeHDMAddresses(int hdSeedId, List<Integer> indexes, List<byte[]> pubKeys3, List<String> addresses);
     public void syncComplete(int hdSeedId, int hdSeedIndex);
 
     public List<Address> getPrivKeyAddresses();

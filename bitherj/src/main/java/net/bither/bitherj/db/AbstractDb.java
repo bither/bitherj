@@ -85,7 +85,8 @@ public abstract class AbstractDb {
             ", primary key (hd_seed_id, hd_seed_index));";
     public static final String CREATE_BITHER_ID_SQL = "create table if not exists bither_id " +
             "(bither_id text not null primary key" +
-            ", encrypt_bither_password text not null);";
+            ", encrypt_bither_password text not null" +
+            ", is_xrandom integer not null);";
 
     public static final String CREATE_BLOCK_NO_INDEX = "create index idx_blocks_block_no on blocks (block_no);";
     public static final String CREATE_BLOCK_PREV_INDEX = "create index idx_blocks_block_prev on blocks (block_prev);";
@@ -115,7 +116,9 @@ public abstract class AbstractDb {
         public static final String OUTS = "outs";
         public static final String PEERS = "peers";
         public static final String Addresses = "addresses";
-        public static final String HDKeys = "hd_keys";
+        public static final String HDSeeds = "hd_seeds";
+        public static final String HDMAddresses = "hdm_addresses";
+        public static final String BitherId = "bither_id";
     }
 
     public interface BlocksColumns {
@@ -184,6 +187,7 @@ public abstract class AbstractDb {
     public interface HDSeedsColumns {
         public static final String HD_SEED_ID = "hd_seed_id";
         public static final String ENCRYPT_SEED = "encrypt_seed";
+        public static final String IS_XRANDOM = "is_xrandom";
     }
 
     public interface HDMAddressesColumns {
