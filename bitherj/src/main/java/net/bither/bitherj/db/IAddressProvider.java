@@ -19,4 +19,5 @@ public interface IAddressProvider {
     public List<Address> getTrashAddresses();
 
     public void addHDMAddress(List<HDMAddress> addresses);
+    public int addHDKey(String encryptSeed, String bitherId, String encryptBitherPassword);
 }

@@ -1,6 +1,7 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.crypto.TransactionSignature;
+import net.bither.bitherj.db.AbstractDb;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -10,6 +11,27 @@ import java.util.concurrent.Callable;
  * Created by zhouqi on 15/1/3.
  */
 public class HDMKeychain {
+    private int hdKeyId;
+    private String bitherId;
+    private String encryptSeed;
+    private String encryptBitherPassword;
+
+    public int getHdKeyId() {
+        return hdKeyId;
+    }
+
+    public String getBitherId() {
+        return bitherId;
+    }
+
+    public String getEncryptSeed() {
+        return encryptSeed;
+    }
+
+    public String getEncryptBitherPassword() {
+        return encryptBitherPassword;
+    }
+
     public static interface HDMFetchRemotePublicKeys{
         List<byte[]> getRemotePublicKeys(String bitherId, CharSequence password, List<byte[]> pubHot, List<byte[]> pubCold);
     }
@@ -30,12 +52,18 @@ public class HDMKeychain {
 
     }
 
-    public HDMKeychain(int hdKeyId) {
-
+    public HDMKeychain(int hdKeyId, String encryptSeed, String bitherId, String encryptBitherPassword) {
+        this.hdKeyId = hdKeyId;
+        this.encryptSeed = encryptSeed;
+        this.bitherId = bitherId;
+        this.encryptBitherPassword = encryptBitherPassword;
     }
 
     public HDMKeychain(String encryptSeed, String bitherId, String encryptBitherPassword, CharSequence password, HDMFetchRemoteAddresses fetchDelegate) {
-
+        this.hdKeyId = AbstractDb.addressProvider.addHDKey(encryptSeed, bitherId, encryptBitherPassword);
+        this.encryptSeed = encryptSeed;
+        this.bitherId = bitherId;
+        this.encryptBitherPassword = encryptBitherPassword;
     }
 
     public List<HDMAddress> createAddresses(int count, CharSequence password, byte[] masterPub, HDMFetchRemotePublicKeys fetchDelegate) {

@@ -74,7 +74,7 @@ public abstract class AbstractDb {
             ", hd_key_id integer" +
             ", hd_key_index integer);";
     public static final String CREATE_HD_KEYS_SQL = "create table if not exists hd_keys " +
-            "(hd_key_id integer not null primary key" +
+            "(hd_key_id integer not null primary key autoincrement" +
             ", encrypt_seed text not null" +
             ", bither_id text not null" +
             ", encrypt_bither_password text not null);";
