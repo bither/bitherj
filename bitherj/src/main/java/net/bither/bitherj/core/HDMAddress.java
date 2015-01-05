@@ -49,28 +49,27 @@ public class HDMAddress extends Address {
             signs.add(signs1.get(i));
             signs.add(signs2.get(i));
             result.add(ScriptBuilder.createP2SHMultiSigInputScript(signs, scriptPubKey).getProgram());
-
         }
         return result;
     }
 
     public TransactionSignature signWithRemote(List<byte[]> unsignHash, CharSequence password, HDMFetchRemoteSignature delegate) {
-        ArrayList<ECKey.ECDSASignature> sigs = signMyPart(unsignHash, password);
+        ArrayList<TransactionSignature> hotSigs = signMyPart(unsignHash, password);
         //TODO complete the signature for remote sign
         return null;
     }
 
     public TransactionSignature signWithCold(List<byte[]> unsignHash, CharSequence password, Tx tx, HDMFetchColdSignature delegate) {
-        ArrayList<ECKey.ECDSASignature> sigs = signMyPart(unsignHash, password);
+        ArrayList<TransactionSignature> hotSigs = signMyPart(unsignHash, password);
         //TODO complete the signature for cold sign
         return null;
     }
 
-    public ArrayList<ECKey.ECDSASignature> signMyPart(List<byte[]> unsignedHashes, CharSequence password){
+    public ArrayList<TransactionSignature> signMyPart(List<byte[]> unsignedHashes, CharSequence password){
         DeterministicKey key = keychain.getExternalKey(pubs.index, password);
-        ArrayList<ECKey.ECDSASignature> sigs = new ArrayList<ECKey.ECDSASignature>();
+        ArrayList<TransactionSignature> sigs = new ArrayList<TransactionSignature>();
         for(int i = 0; i < unsignedHashes.size(); i++){
-            sigs.add(key.sign(unsignedHashes.get(i)));
+            new TransactionSignature(key.sign(unsignedHashes.get(i)), TransactionSignature.SigHash.ALL, false);
         }
         key.wipe();
         return sigs;
