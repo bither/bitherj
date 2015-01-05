@@ -1,11 +1,13 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.crypto.EncryptedData;
+import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
+import net.bither.bitherj.db.IAddressProvider;
 import net.bither.bitherj.utils.Utils;
 
 import java.security.SecureRandom;
@@ -29,31 +31,30 @@ public class HDMKeychain {
     private ArrayList<HDMAddress> addresses;
 
     private int hdSeedId;
-    private BitherId bitherId;
     private boolean isFromXRandom;
 
-    public HDMKeychain(SecureRandom random, CharSequence password, BitherId bitherId) {
+    // Create
+    public HDMKeychain(SecureRandom random, CharSequence password) {
+        isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
         seed = new byte[64];
         random.nextBytes(seed);
-        EncryptedData encryptedSeed = new EncryptedData(seed, password, random.getClass().getCanonicalName().indexOf("XRandom") >= 0);
+        EncryptedData encryptedSeed = new EncryptedData(seed, password);
         wipeSeed();
-        this.bitherId = bitherId;
-        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toString(), true);
+        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toString(), isFromXRandom);
         addresses = new ArrayList<HDMAddress>();
     }
 
-    public HDMKeychain(int seedId, String encryptedSeed, BitherId bitherId) {
+    // From DB
+    public HDMKeychain(int seedId) {
         this.hdSeedId = seedId;
-        this.encryptedSeed = new EncryptedData(encryptedSeed);
-        this.bitherId = bitherId;
         initFromDb();
     }
 
-    public HDMKeychain(String encryptedSeed, CharSequence password, BitherId bitherId, HDMFetchRemoteAddresses fetchDelegate) {
-        this.encryptedSeed = new EncryptedData(encryptedSeed);
-        this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed, true);
-        this.bitherId = bitherId;
+    // import
+    public HDMKeychain(EncryptedData encryptedSeed, boolean isFromXRandom ,CharSequence password, HDMFetchRemoteAddresses fetchDelegate) {
+        this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toString(), isFromXRandom);
         addresses = new ArrayList<HDMAddress>();
+
     }
 
     public List<HDMAddress> createAddresses(int count, CharSequence password, HDMFetchRemotePublicKeys fetchDelegate, byte[] coldExternalRootPub) {
@@ -169,16 +170,12 @@ public class HDMKeychain {
         return hdSeedId;
     }
 
-    public BitherId getBitherId() {
-        return bitherId;
-    }
-
     public boolean isFromXRandom(){
-        return encryptedSeed.isFromXRandom();
+        return isFromXRandom;
     }
 
-    public void decryptSeed(CharSequence password){
-        seed = encryptedSeed.decrypt(password);
+    public void decryptSeed(CharSequence password) throws KeyCrypterException{
+        seed = new EncryptedData(AbstractDb.addressProvider.getEncryptSeed(hdSeedId)).decrypt(password);
     }
 
     public List<String> getSeedWords(CharSequence password) throws MnemonicException.MnemonicLengthException {
