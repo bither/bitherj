@@ -20,8 +20,9 @@ public interface IAddressProvider {
     public void addBitherId(String bitherId, String encryptBitherPassword);
     public void changeBitherPassword(String encryptBitherPassword);
 
-    public List<HDMAddress> getHDMAddressInUse(int hdSeedId);
+    public List<HDMAddress> getHDMAddressInUse(HDMKeychain keychain);
     public void prepareHDMAddresses(int hdSeedId, List<HDMAddress.Pubs> pubs);
+    public List<HDMAddress.Pubs> getUncompletedHDMAddressPubs(int hdSeedId, int count);
     public void completeHDMAddresses(int hdSeedId, List<HDMAddress> addresses);
     public int uncompletedHDMAddressCount(int hdSeedId);
     public void syncComplete(int hdSeedId, int hdSeedIndex);

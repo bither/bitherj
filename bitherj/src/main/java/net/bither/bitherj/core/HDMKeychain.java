@@ -2,12 +2,11 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.KeyCrypterException;
-import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
-import net.bither.bitherj.db.IAddressProvider;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.Utils;
 
 import java.security.SecureRandom;
@@ -93,17 +92,19 @@ public class HDMKeychain {
         if(uncompletedAddressCount() < count){
             throw new RuntimeException("Not enough uncompleted addresses");
         }
-        synchronized (addresses) {
-            ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
-            DeterministicKey externalRootHot;
-            DeterministicKey externalRootCold = HDKeyDerivation.createMasterPubKeyFromExtendedBytes(coldExternalRootPub);
+        ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
+        DeterministicKey externalRootHot;
+        DeterministicKey externalRootCold = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                (coldExternalRootPub);
 
-            try {
-                externalRootHot = externalChainRoot(password);
-                externalRootHot.clearPrivateKey();
-            } catch (MnemonicException.MnemonicLengthException e) {
-                return as;
-            }
+        try {
+            externalRootHot = externalChainRoot(password);
+            externalRootHot.clearPrivateKey();
+        } catch (MnemonicException.MnemonicLengthException e) {
+            return as;
+        }
+
+        synchronized (addresses) {
             ArrayList<HDMAddress.Pubs> pubs = new ArrayList<HDMAddress.Pubs>();
             for (int i = getCurrentMaxAddressIndex() + 1;
                  pubs.size() < count;
@@ -127,14 +128,14 @@ public class HDMKeychain {
                 as.add(new HDMAddress(p, false, this));
             }
             addresses.addAll(as);
-            if (externalRootHot != null) {
-                externalRootHot.wipe();
-            }
-            if (externalRootCold != null) {
-                externalRootCold.wipe();
-            }
-            return as;
         }
+        if (externalRootHot != null) {
+            externalRootHot.wipe();
+        }
+        if (externalRootCold != null) {
+            externalRootCold.wipe();
+        }
+        return as;
     }
 
     public List<HDMAddress> getAddresses() {
@@ -178,13 +179,15 @@ public class HDMKeychain {
     }
 
     public int getCurrentMaxAddressIndex(){
-        int max = Integer.MIN_VALUE;
-        for(HDMAddress address : addresses){
-            if(address.getIndex() > max){
-                max = address.getIndex();
+        synchronized (addresses) {
+            int max = Integer.MIN_VALUE;
+            for (HDMAddress address : addresses) {
+                if (address.getIndex() > max) {
+                    max = address.getIndex();
+                }
             }
+            return max;
         }
-        return max;
     }
 
     private void initFromDb(){
