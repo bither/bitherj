@@ -18,11 +18,11 @@ import java.util.List;
  */
 public class HDMKeychain {
     public static interface HDMFetchRemotePublicKeys{
-        void completeRemotePublicKeys(String bitherId, CharSequence password, List<HDMAddress.Pubs> partialPubs);
+        void completeRemotePublicKeys(CharSequence password, ArrayList<HDMAddress.Pubs> partialPubs);
     }
 
     public static interface HDMFetchRemoteAddresses {
-        List<HDMAddress.Pubs> getRemoteExistsPublicKeys(String bitherId, CharSequence password);
+        List<HDMAddress.Pubs> getRemoteExistsPublicKeys(CharSequence password);
     }
 
     private transient byte[] seed;
@@ -66,7 +66,7 @@ public class HDMKeychain {
             return 0;
         }
         ArrayList<HDMAddress.Pubs> pubs = new ArrayList<HDMAddress.Pubs>();
-        for (int i = getCurrentMaxAddressIndex() + 1;
+        for (int i = AbstractDb.addressProvider.maxHDMAddressPubIndex(getHdSeedId()) + 1;
              pubs.size() < count;
              i++) {
             HDMAddress.Pubs p = new HDMAddress.Pubs();
@@ -89,51 +89,24 @@ public class HDMKeychain {
     }
 
     public List<HDMAddress> completeAddresses(int count, CharSequence password, HDMFetchRemotePublicKeys fetchDelegate) {
-        if(uncompletedAddressCount() < count){
-            throw new RuntimeException("Not enough uncompleted addresses");
+        int uncompletedAddressCount = uncompletedAddressCount();
+        if(uncompletedAddressCount < count){
+            throw new RuntimeException("Not enough uncompleted addresses " + count + "/" + uncompletedAddressCount + " : " + getHdSeedId());
         }
         ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
-        DeterministicKey externalRootHot;
-        DeterministicKey externalRootCold = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
-                (coldExternalRootPub);
-
-        try {
-            externalRootHot = externalChainRoot(password);
-            externalRootHot.clearPrivateKey();
-        } catch (MnemonicException.MnemonicLengthException e) {
-            return as;
-        }
-
         synchronized (addresses) {
-            ArrayList<HDMAddress.Pubs> pubs = new ArrayList<HDMAddress.Pubs>();
-            for (int i = getCurrentMaxAddressIndex() + 1;
-                 pubs.size() < count;
-                 i++) {
-                HDMAddress.Pubs p = new HDMAddress.Pubs();
-                try {
-                    p.hot = externalRootHot.deriveSoftened(i).getPubKey();
-                    p.cold = externalRootCold.deriveSoftened(i).getPubKey();
-                    pubs.add(p);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+            ArrayList<HDMAddress.Pubs> pubs = AbstractDb.addressProvider.getUncompletedHDMAddressPubs(getHdSeedId(), count);
             try {
-                fetchDelegate.completeRemotePublicKeys(null, null, pubs);
+                fetchDelegate.completeRemotePublicKeys(password, pubs);
+                for (HDMAddress.Pubs p : pubs) {
+                    as.add(new HDMAddress(p, false, this));
+                }
+                AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
             } catch (Exception e) {
                 e.printStackTrace();
-                return addresses;
-            }
-            for (HDMAddress.Pubs p : pubs) {
-                as.add(new HDMAddress(p, false, this));
+                return as;
             }
             addresses.addAll(as);
-        }
-        if (externalRootHot != null) {
-            externalRootHot.wipe();
-        }
-        if (externalRootCold != null) {
-            externalRootCold.wipe();
         }
         return as;
     }
@@ -196,7 +169,7 @@ public class HDMKeychain {
 
     private void initAddressesFromDb(){
         synchronized (addresses){
-            List<HDMAddress> addrs = AbstractDb.addressProvider.getHDMAddressInUse(hdSeedId);
+            List<HDMAddress> addrs = AbstractDb.addressProvider.getHDMAddressInUse(this);
             for (HDMAddress addr : addrs) {
                 addr.setKeychain(this);
             }
