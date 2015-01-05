@@ -25,7 +25,7 @@ public class HDMAddress extends Address {
     private Pubs pubs;
 
     public HDMAddress(Pubs pubs, boolean isSyncComplete, HDMKeychain keychain){
-        super(addressFromPubs(pubs), pubs.hot, pubs.index, isSyncComplete, keychain.isFromXRandom(), true);
+        super(addressFromPubs(pubs), pubs.hot, pubs.index, isSyncComplete, true, true);
         this.keychain = keychain;
         this.pubs = pubs;
     }
