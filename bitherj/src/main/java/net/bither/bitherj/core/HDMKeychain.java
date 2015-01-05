@@ -30,12 +30,12 @@ public class HDMKeychain {
 
     private int hdSeedId;
     private BitherId bitherId;
-    private EncryptedData encryptedSeed;
+    private boolean isFromXRandom;
 
     public HDMKeychain(SecureRandom random, CharSequence password, BitherId bitherId) {
         seed = new byte[64];
         random.nextBytes(seed);
-        encryptedSeed = new EncryptedData(seed, password, random.getClass().getCanonicalName().indexOf("XRandom") >= 0);
+        EncryptedData encryptedSeed = new EncryptedData(seed, password, random.getClass().getCanonicalName().indexOf("XRandom") >= 0);
         wipeSeed();
         this.bitherId = bitherId;
         hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toString(), true);

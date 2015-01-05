@@ -13,14 +13,6 @@ public class EncryptedData {
     }
 
     public EncryptedData(byte[] dataToEncrypt, CharSequence password){
-        this(dataToEncrypt, password, false);
-    }
-
-    public EncryptedData(byte[] dataToEncrypt, CharSequence password, boolean isFromXRandom){
-        this(dataToEncrypt, password, isFromXRandom, true);
-    }
-
-    public EncryptedData(byte[] dataToEncrypt, CharSequence password, boolean isFromXRandom, boolean isCompressed){
         KeyCrypterScrypt crypter = new KeyCrypterScrypt();
         salt = crypter.getSalt();
         EncryptedPrivateKey k = crypter.encrypt(dataToEncrypt, crypter.deriveKey(password));
