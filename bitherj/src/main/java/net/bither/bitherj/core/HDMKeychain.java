@@ -54,10 +54,45 @@ public class HDMKeychain {
     public HDMKeychain(EncryptedData encryptedSeed, boolean isFromXRandom ,CharSequence password, HDMFetchRemoteAddresses fetchDelegate) {
         this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toString(), isFromXRandom);
         addresses = new ArrayList<HDMAddress>();
-
     }
 
-    public List<HDMAddress> createAddresses(int count, CharSequence password, HDMFetchRemotePublicKeys fetchDelegate, byte[] coldExternalRootPub) {
+    public int prepareAddresses(int count, CharSequence password, byte[] coldExternalRootPub){
+        DeterministicKey externalRootHot;
+        DeterministicKey externalRootCold = HDKeyDerivation.createMasterPubKeyFromExtendedBytes(coldExternalRootPub);
+
+        try {
+            externalRootHot = externalChainRoot(password);
+            externalRootHot.clearPrivateKey();
+        } catch (MnemonicException.MnemonicLengthException e) {
+            return 0;
+        }
+        ArrayList<HDMAddress.Pubs> pubs = new ArrayList<HDMAddress.Pubs>();
+        for (int i = getCurrentMaxAddressIndex() + 1;
+             pubs.size() < count;
+             i++) {
+            HDMAddress.Pubs p = new HDMAddress.Pubs();
+            try {
+                p.hot = externalRootHot.deriveSoftened(i).getPubKey();
+                p.cold = externalRootCold.deriveSoftened(i).getPubKey();
+                pubs.add(p);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        AbstractDb.addressProvider.prepareHDMAddresses(getHdSeedId(), pubs);
+        if (externalRootHot != null) {
+            externalRootHot.wipe();
+        }
+        if (externalRootCold != null) {
+            externalRootCold.wipe();
+        }
+        return pubs.size();
+    }
+
+    public List<HDMAddress> completeAddresses(int count, CharSequence password, HDMFetchRemotePublicKeys fetchDelegate) {
+        if(uncompletedAddressCount() < count){
+            throw new RuntimeException("Not enough uncompleted addresses");
+        }
         synchronized (addresses) {
             ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
             DeterministicKey externalRootHot;
@@ -168,6 +203,10 @@ public class HDMKeychain {
 
     public int getHdSeedId(){
         return hdSeedId;
+    }
+
+    public int uncompletedAddressCount(){
+        return AbstractDb.addressProvider.uncompletedHDMAddressCount(getHdSeedId());
     }
 
     public boolean isFromXRandom(){

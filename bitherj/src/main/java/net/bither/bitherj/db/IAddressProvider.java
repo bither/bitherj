@@ -21,8 +21,9 @@ public interface IAddressProvider {
     public void changeBitherPassword(String encryptBitherPassword);
 
     public List<HDMAddress> getHDMAddressInUse(int hdSeedId);
-    public void addHDMAddress(int hdSeedId, List<Integer> indexes, List<byte[]> pubKeys1, List<byte[]> pubKeys2);
-    public void completeHDMAddresses(int hdSeedId, List<Integer> indexes, List<byte[]> pubKeys3, List<String> addresses);
+    public void prepareHDMAddresses(int hdSeedId, List<HDMAddress.Pubs> pubs);
+    public void completeHDMAddresses(int hdSeedId, List<HDMAddress> addresses);
+    public int uncompletedHDMAddressCount(int hdSeedId);
     public void syncComplete(int hdSeedId, int hdSeedIndex);
 
     public List<Address> getPrivKeyAddresses();

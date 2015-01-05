@@ -81,6 +81,26 @@ public class HDMAddress extends Address {
         return null;
     }
 
+    public byte[] getPubCold(){
+        return pubs.cold;
+    }
+
+    public byte[] getPubHot(){
+        return pubs.hot;
+    }
+
+    public byte[] getPubRemote(){
+        return pubs.remote;
+    }
+
+    public List<byte[]> getPubs(){
+        ArrayList<byte[]> list = new ArrayList<byte[]>();
+        list.add(pubs.hot);
+        list.add(pubs.cold);
+        list.add(pubs.remote);
+        return list;
+    }
+
     @Override
     public boolean isFromXRandom() {
         return keychain.isFromXRandom();
