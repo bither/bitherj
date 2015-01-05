@@ -8,9 +8,6 @@ public class EncryptedData {
     private byte[] initialisationVector;
     private byte[] salt;
 
-    private boolean isCompressed;
-    private boolean isFromXRandom;
-
     public EncryptedData(String str){
         //TODO from encrypted string
     }
@@ -24,8 +21,6 @@ public class EncryptedData {
     }
 
     public EncryptedData(byte[] dataToEncrypt, CharSequence password, boolean isFromXRandom, boolean isCompressed){
-        this.isCompressed = isCompressed;
-        this.isFromXRandom = isFromXRandom;
         KeyCrypterScrypt crypter = new KeyCrypterScrypt();
         salt = crypter.getSalt();
         EncryptedPrivateKey k = crypter.encrypt(dataToEncrypt, crypter.deriveKey(password));
@@ -36,14 +31,6 @@ public class EncryptedData {
     public byte[] decrypt(CharSequence password){
         KeyCrypterScrypt crypter = new KeyCrypterScrypt(salt);
         return crypter.decrypt(new EncryptedPrivateKey(initialisationVector, encryptedData), crypter.deriveKey(password));
-    }
-
-    public boolean isCompressed() {
-        return isCompressed;
-    }
-
-    public boolean isFromXRandom() {
-        return isFromXRandom;
     }
 
     public String toString(){
