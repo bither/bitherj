@@ -27,7 +27,7 @@ public class HDMAddress extends Address {
     private Pubs pubs;
 
     public HDMAddress(Pubs pubs, boolean isSyncComplete, HDMKeychain keychain){
-        super(addressFromPubs(pubs), pubs.getScriptPubKey(), pubs.index, isSyncComplete, true, true);
+        super(addressFromPubs(pubs), pubs.getMultiSigScript().getPubKey(), pubs.index, isSyncComplete, true, true);
         this.keychain = keychain;
         this.pubs = pubs;
     }
@@ -77,10 +77,6 @@ public class HDMAddress extends Address {
         return sigs;
     }
 
-    public static final String addressFromPubs(Pubs pubs){
-        return Utils.toP2SHAddress(pubs.getMultiSigScript().getPubKeyHash());
-    }
-
     public byte[] getPubCold(){
         return pubs.cold;
     }
@@ -106,20 +102,31 @@ public class HDMAddress extends Address {
         return keychain.isFromXRandom();
     }
 
+    public static final String addressFromPubs(Pubs pubs){
+        return Utils.toP2SHAddress( Utils.sha256hash160(pubs.getMultiSigScript().getProgram()));
+    }
+
     public static final class Pubs{
         public byte[] hot;
         public byte[] cold;
         public byte[] remote;
         public int index;
+
+        public Pubs(byte[] hot, byte[] cold, byte[] remote, int index){
+            this.hot = hot;
+            this.cold = cold;
+            this.remote = remote;
+            this.index = index;
+        }
+
+        public Pubs(){
+        }
+
         public Script getMultiSigScript(){
-            return ScriptBuilder.createMultiSigOutputScript(2,Arrays.asList(
+            return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(
                     new ECKey(null, hot),
                     new ECKey(null, cold),
                     new ECKey(null, remote)));
-        }
-
-        public byte[] getScriptPubKey(){
-            return getMultiSigScript().getPubKey();
         }
     }
 }
