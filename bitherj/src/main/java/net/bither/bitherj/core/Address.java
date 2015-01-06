@@ -189,10 +189,6 @@ public class Address implements Comparable<Address> {
         notificatTx(null, Tx.TxNotificationType.txDoubleSpend);
     }
 
-    public void removeTx(byte[] txHash) {
-        AbstractDb.txProvider.remove(txHash);
-    }
-
     public boolean initTxs(List<Tx> txs) {
         AbstractDb.txProvider.addTxs(txs);
         if (txs.size() > 0) {
@@ -439,7 +435,7 @@ public class Address implements Comparable<Address> {
         }
         KeyParameter assKey = key.getKeyCrypter().deriveKey(passphrase);
 
-        String result = key.signMessage(msg,assKey);
+        String result = key.signMessage(msg, assKey);
 
 
         key.clearPrivateKey();
@@ -508,6 +504,7 @@ public class Address implements Comparable<Address> {
     }
 
     public boolean removeTx(Tx tx) {
+        AbstractDb.txProvider.remove(tx.getTxHash());
         return true;
     }
 }
