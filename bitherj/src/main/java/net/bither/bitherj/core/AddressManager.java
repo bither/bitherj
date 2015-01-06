@@ -21,6 +21,7 @@ import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.qrcode.QRCodeUtil;
+import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -118,7 +119,7 @@ public class AddressManager {
 
     public boolean addAddress(Address address) {
         synchronized (lock) {
-            if(getAllAddresses().contains(address)){
+            if (getAllAddresses().contains(address)) {
                 return false;
             }
             try {
@@ -378,5 +379,54 @@ public class AddressManager {
             address.saveTrashKey();
         }
         return true;
+    }
+
+    public List<Tx> compressTxsForApi(List<Tx> txList, Address address) {
+        List<Sha256Hash> txHashList = new ArrayList<Sha256Hash>();
+        for (Tx tx : txList) {
+            txHashList.add(new Sha256Hash(tx.getTxHash()));
+        }
+        for (Tx tx : txList) {
+            if (!isSendFormMe(tx, txHashList)) {
+                List<Out> outList = new ArrayList<Out>();
+                for (Out out : tx.getOuts()) {
+                    if (!Utils.compareString(address.getAddress(), out.getOutAddress())) {
+                        outList.add(out);
+                    }
+                }
+                tx.setOuts(outList);
+            }
+        }
+
+        return txList;
+    }
+
+    private boolean isSendFormMe(Tx tx, List<Sha256Hash> txHashList) {
+        for (In in : tx.getIns()) {
+            if (txHashList.contains(new Sha256Hash(in.getPrevTxHash()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Tx compressTx(Tx tx) {
+        List<Out> outList = new ArrayList<Out>();
+        if (!isSendFromMe(tx) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
+            for (Out out : tx.getOuts()) {
+                String outAddress = out.getOutAddress();
+                if (addressHashSet.contains(outAddress)) {
+                    outList.add(out);
+                }
+
+            }
+        }
+        tx.setOuts(outList);
+        return tx;
+
+    }
+
+    private boolean isSendFromMe(Tx tx) {
+        return false;
     }
 }
