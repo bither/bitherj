@@ -39,8 +39,9 @@ public class EncryptedData {
     }
 
     public String toEncryptedString() {
-        //TODO to string
-        return null;
+        return Utils.bytesToHexString(encryptedData)
+                + QRCodeUtil.QR_CODE_SPLIT + Utils.bytesToHexString(initialisationVector)
+                + QRCodeUtil.QR_CODE_SPLIT + Utils.bytesToHexString(salt);
     }
 
 }
