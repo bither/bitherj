@@ -47,6 +47,7 @@ public class HDMKeychain {
     // From DB
     public HDMKeychain(int seedId) {
         this.hdSeedId = seedId;
+        addresses = new ArrayList<HDMAddress>();
         initFromDb();
     }
 
