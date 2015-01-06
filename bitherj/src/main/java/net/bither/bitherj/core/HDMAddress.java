@@ -27,7 +27,7 @@ public class HDMAddress extends Address {
     private Pubs pubs;
 
     public HDMAddress(Pubs pubs, boolean isSyncComplete, HDMKeychain keychain){
-        super(addressFromPubs(pubs), pubs.getMultiSigScript().getPubKey(), pubs.index, isSyncComplete, true, true);
+        super(pubs.getAddress(), pubs.getMultiSigScript().getPubKey(), pubs.index, isSyncComplete, true, true);
         this.keychain = keychain;
         this.pubs = pubs;
     }
@@ -102,10 +102,6 @@ public class HDMAddress extends Address {
         return keychain.isFromXRandom();
     }
 
-    public static final String addressFromPubs(Pubs pubs){
-        return Utils.toP2SHAddress( Utils.sha256hash160(pubs.getMultiSigScript().getProgram()));
-    }
-
     public static final class Pubs{
         public byte[] hot;
         public byte[] cold;
@@ -123,10 +119,15 @@ public class HDMAddress extends Address {
         }
 
         public Script getMultiSigScript(){
+            assert hot != null && cold != null && remote != null;
             return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(
                     new ECKey(null, hot),
                     new ECKey(null, cold),
                     new ECKey(null, remote)));
+        }
+
+        public String getAddress(){
+            return Utils.toP2SHAddress( Utils.sha256hash160(getMultiSigScript().getProgram()));
         }
     }
 }

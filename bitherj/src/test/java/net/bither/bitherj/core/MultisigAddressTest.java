@@ -27,7 +27,7 @@ public class MultisigAddressTest {
             TestCase c = cases[i];
             assertArrayEquals("script program not match", c.script, c.pubs.getMultiSigScript().getProgram());
             System.out.println("\nscript program match: " + Utils.bytesToHexString(c.script));
-            String a = HDMAddress.addressFromPubs(c.pubs);
+            String a = c.pubs.getAddress();
             assertEquals("address not match", a, c.address);
             System.out.println("\naddress match: " + a);
         }
