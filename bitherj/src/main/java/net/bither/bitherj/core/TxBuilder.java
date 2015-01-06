@@ -196,7 +196,11 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
         // note : like bitcoinj, empty wallet will not check min output
         if (fees > 0) {
             Out lastOut = tx.getOuts().get(tx.getOuts().size() - 1);
-            lastOut.setOutValue(lastOut.getOutValue() - fees);
+            if (lastOut.getOutValue() > fees) {
+                lastOut.setOutValue(lastOut.getOutValue() - fees);
+            } else {
+                return null;
+            }
         }
         for (Out out : outs) {
             tx.addInput(out);
