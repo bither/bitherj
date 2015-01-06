@@ -36,7 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class AddressManager {
+public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
 
     private static final Logger log = LoggerFactory.getLogger(AddressManager.class);
     private final byte[] lock = new byte[0];
@@ -46,6 +46,7 @@ public class AddressManager {
     protected List<Address> watchOnlyAddresses = new ArrayList<Address>();
     protected List<Address> trashAddresses = new ArrayList<Address>();
     protected HashSet<String> addressHashSet = new HashSet<String>();
+    protected HDMKeychain hdmKeychain;
 
 
     private AddressManager() {
@@ -53,6 +54,7 @@ public class AddressManager {
             initPrivateKeyListByDesc();
             initWatchOnlyListByDesc();
             initTrashListByDesc();
+            initHDMKeychain();
             AbstractApp.addressIsReady = true;
             AbstractApp.notificationService.sendBroadcastAddressLoadCompleteState();
         }
@@ -190,7 +192,7 @@ public class AddressManager {
 
     public boolean trashPrivKey(Address address) {
         synchronized (lock) {
-            if (address.hasPrivKey && address.getBalance() == 0) {
+            if ((address.hasPrivKey || address.isHDM())&& address.getBalance() == 0) {
                 address.trashPrivKey();
                 trashAddresses.add(address);
                 privKeyAddresses.remove(address);
@@ -205,12 +207,14 @@ public class AddressManager {
     public boolean restorePrivKey(Address address) {
         synchronized (lock) {
             try {
-                if (address.hasPrivKey) {
+                if (address.hasPrivKey || address.isHDM()) {
                     address.restorePrivKey();
                     trashAddresses.remove(address);
-                    long sortTime = getPrivKeySortTime();
-                    address.savePubKey(sortTime);
-                    privKeyAddresses.add(0, address);
+                    if(address.hasPrivKey && !address.isHDM()) {
+                        long sortTime = getPrivKeySortTime();
+                        address.savePubKey(sortTime);
+                        privKeyAddresses.add(0, address);
+                    }
                     addressHashSet.add(address.address);
                 } else {
                     return false;
@@ -246,6 +250,9 @@ public class AddressManager {
             ArrayList<Address> result = new ArrayList<Address>();
             result.addAll(this.privKeyAddresses);
             result.addAll(this.watchOnlyAddresses);
+            if(hasHDMKeychain()){
+                result.addAll(getHdmKeychain().getAddresses());
+            }
             return result;
         }
     }
@@ -349,6 +356,35 @@ public class AddressManager {
         }
     }
 
+    private void initHDMKeychain(){
+        List<Integer> seeds = AbstractDb.addressProvider.getHDSeeds();
+        if(seeds.size() > 0){
+            hdmKeychain = new HDMKeychain(seeds.get(0));
+            hdmKeychain.setAddressChangeDelegate(this);
+            List<HDMAddress> addresses = hdmKeychain.getAddresses();
+            for(HDMAddress a : addresses){
+                addressHashSet.add(a.getAddress());
+            }
+        }
+    }
+
+    public boolean hasHDMKeychain(){
+        synchronized (lock) {
+            return hdmKeychain != null;
+        }
+    }
+
+    public HDMKeychain getHdmKeychain(){
+        synchronized (lock) {
+            return hdmKeychain;
+        }
+    }
+
+    @Override
+    public void hdmAddressAdded(HDMAddress address) {
+        addressHashSet.add(address.getAddress());
+    }
+
     public boolean changePassword(SecureCharSequence oldPassword, SecureCharSequence newPassword) throws IOException {
         List<Address> privKeyAddresses = AddressManager.getInstance().getPrivKeyAddresses();
         List<Address> trashAddresses = AddressManager.getInstance().getTrashAddresses();
@@ -378,6 +414,11 @@ public class AddressManager {
         for (Address address : trashAddresses) {
             address.saveTrashKey();
         }
+
+        if(hasHDMKeychain()){
+            getHdmKeychain().changePassword(oldPassword, newPassword);
+        }
+
         return true;
     }
 
@@ -429,4 +470,5 @@ public class AddressManager {
     private boolean isSendFromMe(Tx tx) {
         return false;
     }
+
 }
