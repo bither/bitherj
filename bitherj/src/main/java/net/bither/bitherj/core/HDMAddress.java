@@ -3,9 +3,12 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
+import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
+import net.bither.bitherj.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -13,19 +16,18 @@ import java.util.List;
  */
 public class HDMAddress extends Address {
     public static interface HDMFetchRemoteSignature {
-        List<byte[]> getRemoteSignature(String bitherId, CharSequence password, List<byte[]> unsignHash, int index);
+        List<byte[]> getRemoteSignature(CharSequence password, List<byte[]> unsignHash, int index);
     }
 
     public static interface HDMFetchColdSignature {
         List<byte[]> getColdSignature(List<byte[]> unsignHash, int index, Tx tx);
     }
 
-
     private HDMKeychain keychain;
     private Pubs pubs;
 
     public HDMAddress(Pubs pubs, boolean isSyncComplete, HDMKeychain keychain){
-        super(addressFromPubs(pubs), pubs.hot, pubs.index, isSyncComplete, true, true);
+        super(addressFromPubs(pubs), pubs.getScriptPubKey(), pubs.index, isSyncComplete, true, true);
         this.keychain = keychain;
         this.pubs = pubs;
     }
@@ -76,8 +78,7 @@ public class HDMAddress extends Address {
     }
 
     public static final String addressFromPubs(Pubs pubs){
-        //TODO multisig address generation
-        return null;
+        return Utils.toP2SHAddress(pubs.getMultiSigScript().getPubKeyHash());
     }
 
     public byte[] getPubCold(){
@@ -110,5 +111,15 @@ public class HDMAddress extends Address {
         public byte[] cold;
         public byte[] remote;
         public int index;
+        public Script getMultiSigScript(){
+            return ScriptBuilder.createMultiSigOutputScript(2,Arrays.asList(
+                    new ECKey(null, hot),
+                    new ECKey(null, cold),
+                    new ECKey(null, remote)));
+        }
+
+        public byte[] getScriptPubKey(){
+            return getMultiSigScript().getPubKey();
+        }
     }
 }
