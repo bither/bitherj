@@ -9,6 +9,7 @@ import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.Utils;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,7 +26,7 @@ public class HDMAddress extends Address {
     private Pubs pubs;
 
     public HDMAddress(Pubs pubs, boolean isSyncComplete, HDMKeychain keychain){
-        super(pubs.getAddress(), pubs.getMultiSigScript().getPubKey(), pubs.index, isSyncComplete, true, false);
+        super(pubs.getAddress(), pubs.getMultiSigScript().getPubKey(), pubs.index, isSyncComplete, true, true);
         this.keychain = keychain;
         this.pubs = pubs;
     }
@@ -50,7 +51,8 @@ public class HDMAddress extends Address {
 
     public List<byte[]> signWithOther(List<byte[]> unsignHash, CharSequence password, Tx tx, HDMFetchOtherSignatureDelegate delegate) {
         ArrayList<TransactionSignature> hotSigs = signMyPart(unsignHash, password);
-        List<TransactionSignature> otherSigs = delegate.getOtherSignature(getIndex(), password, unsignHash, tx);
+        List<TransactionSignature> otherSigs = delegate.getOtherSignature(getIndex(), password,
+                unsignHash, tx);
         assert hotSigs.size() == otherSigs.size() && hotSigs.size() == unsignHash.size();
         return formatInScript(hotSigs, otherSigs, pubs.getMultiSigScript().getProgram());
     }
@@ -116,6 +118,16 @@ public class HDMAddress extends Address {
     @Override
     public boolean isHDM(){
         return true;
+    }
+
+    @Override
+    public void trashPrivKey() {
+        setTrashed(true);
+    }
+
+    @Override
+    public void restorePrivKey() throws IOException {
+        setTrashed(false);
     }
 
     public static final class Pubs{

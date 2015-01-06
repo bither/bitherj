@@ -23,10 +23,10 @@ import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.exception.TxBuilderException;
+import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
-import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -107,8 +107,19 @@ public class Address implements Comparable<Address> {
         return isTrashed;
     }
 
-    public void setTrashed(boolean isTrashed) {
+    public void setTrashed(boolean isTrashed, boolean fromDb) {
+        if (!fromDb && isTrashed() != isTrashed) {
+            if (isTrashed) {
+                AbstractDb.addressProvider.trashPrivKeyAddress(this);
+            } else {
+                AbstractDb.addressProvider.restorePrivKeyAddress(this);
+            }
+        }
         this.isTrashed = isTrashed;
+    }
+
+    public void setTrashed(boolean isTrashed) {
+        setTrashed(isTrashed, false);
     }
 
     @Override

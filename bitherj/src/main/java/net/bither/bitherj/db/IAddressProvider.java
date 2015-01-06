@@ -13,6 +13,7 @@ import java.util.List;
 public interface IAddressProvider {
     public List<Integer> getHDSeeds();
     public String getEncryptSeed(int hdSeedId);
+    public void setEncryptSeed(int hdSeedId, String encryptedSeed);
     public boolean isHDSeedFromXRandom(int hdSeedId);
     public int addHDKey(String encryptSeed, boolean isXrandom);
 
