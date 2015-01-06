@@ -26,7 +26,7 @@ public class HDMKeychain {
         List<HDMAddress.Pubs> getRemoteExistsPublicKeys(CharSequence password);
     }
 
-    private transient byte[] seed;
+    private transient byte[] entropy;
 
     private ArrayList<HDMAddress> addresses;
 
@@ -36,11 +36,11 @@ public class HDMKeychain {
     // Create With Random
     public HDMKeychain(SecureRandom random, CharSequence password) {
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
-        seed = new byte[64];
-        random.nextBytes(seed);
-        EncryptedData encryptedSeed = new EncryptedData(seed, password);
+        entropy = new byte[32];
+        random.nextBytes(entropy);
+        EncryptedData encryptedSeed = new EncryptedData(entropy, password);
         wipeSeed();
-        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toString(), isFromXRandom);
+        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(), isFromXRandom);
         addresses = new ArrayList<HDMAddress>();
     }
 
@@ -53,7 +53,7 @@ public class HDMKeychain {
 
     // Import
     public HDMKeychain(EncryptedData encryptedSeed, boolean isFromXRandom ,CharSequence password, HDMFetchRemoteAddresses fetchDelegate) throws HDMBitherIdNotMatchException, MnemonicException.MnemonicLengthException {
-        seed = encryptedSeed.decrypt(password);
+        entropy = encryptedSeed.decrypt(password);
         addresses = new ArrayList<HDMAddress>();
         List<HDMAddress.Pubs> pubs = fetchDelegate.getRemoteExistsPublicKeys(password);
         if(pubs.size() > 0){
@@ -76,7 +76,7 @@ public class HDMKeychain {
         for (HDMAddress.Pubs p : pubs) {
             as.add(new HDMAddress(p, false, this));
         }
-        this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toString(), isFromXRandom);
+        this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(), isFromXRandom);
         AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
         addresses.addAll(as);
     }
@@ -159,7 +159,7 @@ public class HDMKeychain {
     private DeterministicKey masterKey(CharSequence password) throws MnemonicException.MnemonicLengthException {
         MnemonicCode mnemonic = MnemonicCode.instance();
         decryptSeed(password);
-        byte[] s = mnemonic.toSeed(mnemonic.toMnemonic(seed), "");
+        byte[] s = mnemonic.toSeed(mnemonic.toMnemonic(entropy), "");
         wipeSeed();
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(s);
         Utils.wipeBytes(s);
@@ -219,19 +219,19 @@ public class HDMKeychain {
         }
         String encrypted = AbstractDb.addressProvider.getEncryptSeed(hdSeedId);
         if(!Utils.isEmpty(encrypted)){
-            seed = new EncryptedData(encrypted).decrypt(password);
+            entropy = new EncryptedData(encrypted).decrypt(password);
         }
     }
 
     public List<String> getSeedWords(CharSequence password) throws MnemonicException.MnemonicLengthException {
         decryptSeed(password);
-        List<String> words = MnemonicCode.instance().toMnemonic(seed);
+        List<String> words = MnemonicCode.instance().toMnemonic(entropy);
         wipeSeed();
         return words;
     }
 
     public void wipeSeed(){
-        Utils.wipeBytes(seed);
+        Utils.wipeBytes(entropy);
     }
 
 

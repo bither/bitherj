@@ -38,7 +38,7 @@ public class EncryptedData {
         return crypter.decrypt(new EncryptedPrivateKey(initialisationVector, encryptedData), crypter.deriveKey(password));
     }
 
-    public String toString() {
+    public String toEncryptedString() {
         //TODO to string
         return null;
     }
