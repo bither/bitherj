@@ -1,10 +1,10 @@
 package net.bither.bitherj.db;
 
 import net.bither.bitherj.core.Address;
-import net.bither.bitherj.core.BitherId;
 import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.core.HDMKeychain;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,6 +13,7 @@ import java.util.List;
 public interface IAddressProvider {
     public List<Integer> getHDSeeds();
     public String getEncryptSeed(int hdSeedId);
+    public boolean isHDSeedFromXRandom(int hdSeedId);
     public int addHDKey(String encryptSeed, boolean isXrandom);
 
     public String getBitherId();
@@ -20,9 +21,12 @@ public interface IAddressProvider {
     public void addBitherId(String bitherId, String encryptBitherPassword);
     public void changeBitherPassword(String encryptBitherPassword);
 
-    public List<HDMAddress> getHDMAddressInUse(int hdSeedId);
-    public void addHDMAddress(int hdSeedId, List<Integer> indexes, List<byte[]> pubKeys1, List<byte[]> pubKeys2);
-    public void completeHDMAddresses(int hdSeedId, List<Integer> indexes, List<byte[]> pubKeys3, List<String> addresses);
+    public List<HDMAddress> getHDMAddressInUse(HDMKeychain keychain);
+    public void prepareHDMAddresses(int hdSeedId, List<HDMAddress.Pubs> pubs);
+    public ArrayList<HDMAddress.Pubs> getUncompletedHDMAddressPubs(int hdSeedId, int count);
+    public int maxHDMAddressPubIndex(int hdSeedId);//including completed and uncompleted
+    public void completeHDMAddresses(int hdSeedId, List<HDMAddress> addresses);
+    public int uncompletedHDMAddressCount(int hdSeedId);
     public void syncComplete(int hdSeedId, int hdSeedIndex);
 
     public List<Address> getPrivKeyAddresses();
