@@ -11,6 +11,7 @@ import static org.junit.Assert.assertEquals;
  * Created by songchenwen on 15/1/6.
  */
 public class MultisigAddressTest {
+    // first test case comes from https://gist.github.com/gavinandresen/3966071
     TestCase[] cases = new TestCase[]{
         new TestCase(new HDMAddress.Pubs(
                 Utils.hexStringToByteArray("0491bba2510912a5bd37da1fb5b1673010e43d2c6d812c514e91bfa9f2eb129e1c183329db55bd868e209aac2fbc02cb33d98fe74bf23f0c235d6126b1d8334f86"),

@@ -507,6 +507,10 @@ public class Address implements Comparable<Address> {
         return true;
     }
 
+    public boolean isHDM(){
+        return false;
+    }
+
     public boolean removeTx(Tx tx) {
         return true;
     }
