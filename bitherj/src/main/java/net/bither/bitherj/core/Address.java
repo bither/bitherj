@@ -163,12 +163,14 @@ public class Address implements Comparable<Address> {
             spent.clear();
             spent.addAll(unspendOut);
             spent.retainAll(spentOut);
-
             for (OutPoint o : spent) {
-
                 Tx tx1 = AbstractDb.txProvider.getTxDetailByTxHash(o.getTxHash());
                 unspendOut.remove(o);
-                balance -= tx1.getOuts().get(o.getOutSn()).getOutValue();
+                for (Out out : tx1.getOuts()) {
+                    if (out.getOutSn() == o.getOutSn()) {
+                        balance -= out.getOutValue();
+                    }
+                }
             }
         }
         this.balance = balance;
@@ -513,7 +515,6 @@ public class Address implements Comparable<Address> {
         }
         return true;
     }
-
 
 
     public boolean isHDM() {

@@ -192,7 +192,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
 
     public boolean trashPrivKey(Address address) {
         synchronized (lock) {
-            if ((address.hasPrivKey || address.isHDM())&& address.getBalance() == 0) {
+            if ((address.hasPrivKey || address.isHDM()) && address.getBalance() == 0) {
                 address.trashPrivKey();
                 trashAddresses.add(address);
                 privKeyAddresses.remove(address);
@@ -210,7 +210,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 if (address.hasPrivKey || address.isHDM()) {
                     address.restorePrivKey();
                     trashAddresses.remove(address);
-                    if(address.hasPrivKey && !address.isHDM()) {
+                    if (address.hasPrivKey && !address.isHDM()) {
                         long sortTime = getPrivKeySortTime();
                         address.savePubKey(sortTime);
                         privKeyAddresses.add(0, address);
@@ -250,7 +250,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             ArrayList<Address> result = new ArrayList<Address>();
             result.addAll(this.privKeyAddresses);
             result.addAll(this.watchOnlyAddresses);
-            if(hasHDMKeychain()){
+            if (hasHDMKeychain()) {
                 result.addAll(getHdmKeychain().getAddresses());
             }
             return result;
@@ -356,25 +356,25 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         }
     }
 
-    private void initHDMKeychain(){
+    private void initHDMKeychain() {
         List<Integer> seeds = AbstractDb.addressProvider.getHDSeeds();
-        if(seeds.size() > 0){
+        if (seeds.size() > 0) {
             hdmKeychain = new HDMKeychain(seeds.get(0));
             hdmKeychain.setAddressChangeDelegate(this);
             List<HDMAddress> addresses = hdmKeychain.getAddresses();
-            for(HDMAddress a : addresses){
+            for (HDMAddress a : addresses) {
                 addressHashSet.add(a.getAddress());
             }
         }
     }
 
-    public boolean hasHDMKeychain(){
+    public boolean hasHDMKeychain() {
         synchronized (lock) {
             return hdmKeychain != null;
         }
     }
 
-    public HDMKeychain getHdmKeychain(){
+    public HDMKeychain getHdmKeychain() {
         synchronized (lock) {
             return hdmKeychain;
         }
@@ -415,7 +415,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             address.saveTrashKey();
         }
 
-        if(hasHDMKeychain()){
+        if (hasHDMKeychain()) {
             getHdmKeychain().changePassword(oldPassword, newPassword);
         }
 
@@ -428,10 +428,10 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             txHashList.add(new Sha256Hash(tx.getTxHash()));
         }
         for (Tx tx : txList) {
-            if (!isSendFormMe(tx, txHashList)) {
+            if (!isSendFromMe(tx, txHashList)) {
                 List<Out> outList = new ArrayList<Out>();
                 for (Out out : tx.getOuts()) {
-                    if (!Utils.compareString(address.getAddress(), out.getOutAddress())) {
+                    if (Utils.compareString(address.getAddress(), out.getOutAddress())) {
                         outList.add(out);
                     }
                 }
@@ -442,7 +442,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return txList;
     }
 
-    private boolean isSendFormMe(Tx tx, List<Sha256Hash> txHashList) {
+    private boolean isSendFromMe(Tx tx, List<Sha256Hash> txHashList) {
         for (In in : tx.getIns()) {
             if (txHashList.contains(new Sha256Hash(in.getPrevTxHash()))) {
                 return true;
