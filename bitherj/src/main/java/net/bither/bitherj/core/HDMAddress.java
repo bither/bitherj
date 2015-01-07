@@ -25,6 +25,9 @@ public class HDMAddress extends Address {
     private HDMKeychain keychain;
     private Pubs pubs;
 
+    public HDMAddress(Pubs pubs, HDMKeychain keychain){
+        this(pubs, false, keychain);
+    }
     public HDMAddress(Pubs pubs, boolean isSyncComplete, HDMKeychain keychain){
         super(pubs.getAddress(), pubs.getMultiSigScript().getPubKey(), pubs.index, isSyncComplete, true, true);
         this.keychain = keychain;
