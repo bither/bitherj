@@ -241,7 +241,9 @@ public class HDMKeychain {
     private void initAddressesFromDb(){
         synchronized (allCompletedAddresses){
             List<HDMAddress> addrs = AbstractDb.addressProvider.getHDMAddressInUse(this);
-            allCompletedAddresses.addAll(addrs);
+            if(addrs != null) {
+                allCompletedAddresses.addAll(addrs);
+            }
         }
     }
 

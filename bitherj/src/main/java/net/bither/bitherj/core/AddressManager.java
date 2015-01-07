@@ -406,7 +406,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     public boolean changePassword(SecureCharSequence oldPassword, SecureCharSequence newPassword) throws IOException {
         List<Address> privKeyAddresses = AddressManager.getInstance().getPrivKeyAddresses();
         List<Address> trashAddresses = AddressManager.getInstance().getTrashAddresses();
-        if (privKeyAddresses.size() + trashAddresses.size() == 0) {
+        if (privKeyAddresses.size() + trashAddresses.size() == 0 && getHdmKeychain() == null) {
             return true;
         }
         for (Address a : privKeyAddresses) {
