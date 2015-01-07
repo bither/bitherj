@@ -369,7 +369,24 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         }
     }
 
-    public boolean hasHDMKeychain() {
+    public void setHDMKeychain(HDMKeychain keychain){
+        synchronized (lock){
+            if(hdmKeychain != null && hdmKeychain != keychain){
+                throw new RuntimeException("can not add a different hdm keychain to address manager");
+            }
+            if(hdmKeychain == keychain){
+                return;
+            }
+            hdmKeychain = keychain;
+            hdmKeychain.setAddressChangeDelegate(this);
+            List<HDMAddress> addresses = hdmKeychain.getAddresses();
+            for(HDMAddress a : addresses){
+                addressHashSet.add(a.getAddress());
+            }
+        }
+    }
+
+    public boolean hasHDMKeychain(){
         synchronized (lock) {
             return hdmKeychain != null;
         }
