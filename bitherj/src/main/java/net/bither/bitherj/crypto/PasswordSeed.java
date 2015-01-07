@@ -41,6 +41,11 @@ public class PasswordSeed {
         this.keyStr = address.getEncryptPrivKey();
     }
 
+    public PasswordSeed(String address, String encryptedKey){
+        this.address = address;
+        this.keyStr = encryptedKey;
+    }
+
     public boolean checkPassword(CharSequence password) {
         ECKey ecKey = PrivateKeyUtil.getECKeyFromSingleString(keyStr, password);
         String ecKeyAddress;

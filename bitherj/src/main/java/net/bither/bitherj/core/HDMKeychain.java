@@ -4,8 +4,10 @@ package net.bither.bitherj.core;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
+import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.KeyCrypterException;
+import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
@@ -290,6 +292,15 @@ public class HDMKeychain {
         Utils.wipeBytes(seed);
     }
 
+    public PasswordSeed createPasswordSeed(CharSequence password){
+        String encrypted = AbstractDb.addressProvider.getEncryptSeed(hdSeedId);
+        byte[] priv = new EncryptedData(encrypted).decrypt(password);
+        ECKey k = new ECKey(priv, null);
+        String address = k.toAddress();
+        Utils.wipeBytes(priv);
+        k.clearPrivateKey();
+        return new PasswordSeed(address, encrypted);
+    }
 
     public static final class HDMBitherIdNotMatchException extends RuntimeException{
         public static final String msg = "HDM BitherId Not Match";
