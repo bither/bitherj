@@ -76,5 +76,6 @@ public interface ITxProvider {
 
     public void completeInSignature(List<In> ins);
     public int needCompleteInSignature(String address);
+    public boolean isSendFromMe(In in);
 
 }

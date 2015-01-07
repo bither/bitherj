@@ -87,6 +87,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 needNotifyAddressHashSet.add(address);
         }
         if (needNotifyAddressHashSet.size() > 0) {
+            tx = compressTx(tx);
             AbstractDb.txProvider.add(tx);
             log.info("add tx {} into db", Utils.hashToString(tx.getTxHash()));
         }
@@ -428,7 +429,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             txHashList.add(new Sha256Hash(tx.getTxHash()));
         }
         for (Tx tx : txList) {
-            if (!isSendFromMe(tx, txHashList)) {
+            if (!isSendFromMe(tx, txHashList) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
                 for (Out out : tx.getOuts()) {
                     if (Utils.compareString(address.getAddress(), out.getOutAddress())) {
@@ -468,6 +469,11 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     }
 
     private boolean isSendFromMe(Tx tx) {
+        for (In in : tx.getIns()) {
+            if (AbstractDb.txProvider.isSendFromMe(in)) {
+                return true;
+            }
+        }
         return false;
     }
 
