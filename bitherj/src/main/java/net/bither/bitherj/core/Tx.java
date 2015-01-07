@@ -379,7 +379,7 @@ public class Tx extends Message implements Comparable<Tx> {
             boolean hasOut = false;
             for (Out out : preTx.getOuts()) {
                 if (in.getPrevOutSn() == out.getOutSn()) {
-                    amount += preTx.getOuts().get(in.getPrevOutSn()).getOutValue();
+                    amount += out.getOutValue();
                     hasOut = true;
                 }
 

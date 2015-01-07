@@ -369,24 +369,24 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         }
     }
 
-    public void setHDMKeychain(HDMKeychain keychain){
-        synchronized (lock){
-            if(hdmKeychain != null && hdmKeychain != keychain){
+    public void setHDMKeychain(HDMKeychain keychain) {
+        synchronized (lock) {
+            if (hdmKeychain != null && hdmKeychain != keychain) {
                 throw new RuntimeException("can not add a different hdm keychain to address manager");
             }
-            if(hdmKeychain == keychain){
+            if (hdmKeychain == keychain) {
                 return;
             }
             hdmKeychain = keychain;
             hdmKeychain.setAddressChangeDelegate(this);
             List<HDMAddress> addresses = hdmKeychain.getAddresses();
-            for(HDMAddress a : addresses){
+            for (HDMAddress a : addresses) {
                 addressHashSet.add(a.getAddress());
             }
         }
     }
 
-    public boolean hasHDMKeychain(){
+    public boolean hasHDMKeychain() {
         synchronized (lock) {
             return hdmKeychain != null;
         }
@@ -470,8 +470,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     }
 
     public Tx compressTx(Tx tx) {
-        List<Out> outList = new ArrayList<Out>();
         if (!isSendFromMe(tx) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
+            List<Out> outList = new ArrayList<Out>();
             for (Out out : tx.getOuts()) {
                 String outAddress = out.getOutAddress();
                 if (addressHashSet.contains(outAddress)) {
@@ -479,8 +479,9 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 }
 
             }
+            tx.setOuts(outList);
         }
-        tx.setOuts(outList);
+
         return tx;
 
     }
