@@ -73,7 +73,8 @@ public abstract class AbstractDb {
             ", sort_time integer not null);";
     public static final String CREATE_HD_SEEDS_SQL = "create table if not exists hd_seeds " +
             "(hd_seed_id integer not null primary key autoincrement" +
-            ", encrypt_seed text not null);";
+            ", encrypt_seed text not null" +
+            ", is_xrandom integer not null);";
     public static final String CREATE_HDM_ADDRESSES_SQL = "create table if not exists hdm_addresses " +
             "(hd_seed_id integer not null" +
             ", hd_seed_index integer not null" +
@@ -85,8 +86,7 @@ public abstract class AbstractDb {
             ", primary key (hd_seed_id, hd_seed_index));";
     public static final String CREATE_BITHER_ID_SQL = "create table if not exists bither_id " +
             "(bither_id text not null primary key" +
-            ", encrypt_bither_password text not null" +
-            ", is_xrandom integer not null);";
+            ", encrypt_bither_password text not null);";
 
     public static final String CREATE_BLOCK_NO_INDEX = "create index idx_blocks_block_no on blocks (block_no);";
     public static final String CREATE_BLOCK_PREV_INDEX = "create index idx_blocks_block_prev on blocks (block_prev);";
