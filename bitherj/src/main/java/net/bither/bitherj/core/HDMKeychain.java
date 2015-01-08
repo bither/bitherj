@@ -289,10 +289,14 @@ public class HDMKeychain {
         if(hdSeedId <= 0){
             return;
         }
-        String encrypted = AbstractDb.addressProvider.getEncryptSeed(hdSeedId);
+        String encrypted = getEncryptedSeed();
         if(!Utils.isEmpty(encrypted)){
             seed = new EncryptedData(encrypted).decrypt(password);
         }
+    }
+
+    public String getEncryptedSeed(){
+        return AbstractDb.addressProvider.getEncryptSeed(hdSeedId);
     }
 
     public void changePassword(CharSequence oldPassword, CharSequence newPassword){
