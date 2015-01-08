@@ -16,8 +16,6 @@
 
 package net.bither.bitherj.utils;
 
-import android.text.TextUtils;
-
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.crypto.KeyCrypterScrypt;
@@ -143,7 +141,7 @@ public class UpgradeAddressUtil {
             salt = temp;
         }
         strs[2] = Utils.bytesToHexString(salt);
-        return TextUtils.join(QRCodeUtil.QR_CODE_SPLIT, strs);
+        return strs[0] + QRCodeUtil.QR_CODE_SPLIT + strs[1] + QRCodeUtil.QR_CODE_SPLIT + strs[2];
 
     }
 
@@ -158,7 +156,6 @@ public class UpgradeAddressUtil {
             address.setSyncComplete(false);
             AbstractDb.addressProvider.addAddress(address);
         }
-
         return success;
     }
 
