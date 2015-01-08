@@ -25,20 +25,21 @@ public class HDMAddress extends Address {
     private HDMKeychain keychain;
     private Pubs pubs;
 
-    public HDMAddress(Pubs pubs, HDMKeychain keychain){
+    public HDMAddress(Pubs pubs, HDMKeychain keychain) {
         this(pubs, false, keychain);
     }
-    public HDMAddress(Pubs pubs, boolean isSyncComplete, HDMKeychain keychain){
+
+    public HDMAddress(Pubs pubs, boolean isSyncComplete, HDMKeychain keychain) {
         super(pubs.getAddress(), pubs.getMultiSigScript().getPubKey(), pubs.index, isSyncComplete, true, true);
         this.keychain = keychain;
         this.pubs = pubs;
     }
 
-    public int getIndex(){
+    public int getIndex() {
         return pubs.index;
     }
 
-    public HDMKeychain getKeychain(){
+    public HDMKeychain getKeychain() {
         return keychain;
     }
 
@@ -60,10 +61,10 @@ public class HDMAddress extends Address {
         return formatInScript(hotSigs, otherSigs, pubs.getMultiSigScript().getProgram());
     }
 
-    public ArrayList<TransactionSignature> signMyPart(List<byte[]> unsignedHashes, CharSequence password){
+    public ArrayList<TransactionSignature> signMyPart(List<byte[]> unsignedHashes, CharSequence password) {
         DeterministicKey key = keychain.getExternalKey(pubs.index, password);
         ArrayList<TransactionSignature> sigs = new ArrayList<TransactionSignature>();
-        for(int i = 0; i < unsignedHashes.size(); i++){
+        for (int i = 0; i < unsignedHashes.size(); i++) {
             new TransactionSignature(key.sign(unsignedHashes.get(i)), TransactionSignature.SigHash.ALL, false);
         }
         key.wipe();
@@ -82,15 +83,15 @@ public class HDMAddress extends Address {
         throw new RuntimeException("hdm address can't get encrypted private key");
     }
 
-    public byte[] getPubCold(){
+    public byte[] getPubCold() {
         return pubs.cold;
     }
 
-    public byte[] getPubHot(){
+    public byte[] getPubHot() {
         return pubs.hot;
     }
 
-    public byte[] getPubRemote(){
+    public byte[] getPubRemote() {
         return pubs.remote;
     }
 
@@ -105,7 +106,7 @@ public class HDMAddress extends Address {
         return result;
     }
 
-    public List<byte[]> getPubs(){
+    public List<byte[]> getPubs() {
         ArrayList<byte[]> list = new ArrayList<byte[]>();
         list.add(pubs.hot);
         list.add(pubs.cold);
@@ -119,7 +120,7 @@ public class HDMAddress extends Address {
     }
 
     @Override
-    public boolean isHDM(){
+    public boolean isHDM() {
         return true;
     }
 
@@ -133,23 +134,23 @@ public class HDMAddress extends Address {
         setTrashed(false);
     }
 
-    public static final class Pubs{
+    public static final class Pubs {
         public byte[] hot;
         public byte[] cold;
         public byte[] remote;
         public int index;
 
-        public Pubs(byte[] hot, byte[] cold, byte[] remote, int index){
+        public Pubs(byte[] hot, byte[] cold, byte[] remote, int index) {
             this.hot = hot;
             this.cold = cold;
             this.remote = remote;
             this.index = index;
         }
 
-        public Pubs(){
+        public Pubs() {
         }
 
-        public Script getMultiSigScript(){
+        public Script getMultiSigScript() {
             assert hot != null && cold != null && remote != null;
             return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(
                     new ECKey(null, hot),
@@ -157,7 +158,7 @@ public class HDMAddress extends Address {
                     new ECKey(null, remote)));
         }
 
-        public String getAddress(){
+        public String getAddress() {
             return Utils.toP2SHAddress(Utils.sha256hash160(getMultiSigScript().getProgram()));
         }
     }

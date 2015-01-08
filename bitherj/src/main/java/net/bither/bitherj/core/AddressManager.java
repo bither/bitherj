@@ -66,10 +66,10 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     }
 
     public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {
-        if (AbstractDb.txProvider.isExist(tx.getTxHash())) {
-            // already in db
-            return true;
-        }
+//        if (AbstractDb.txProvider.isExist(tx.getTxHash())) {
+//            // already in db
+//            return true;
+//        }
 
         if (AbstractDb.txProvider.isTxDoubleSpendWithConfirmedTx(tx)) {
             // double spend with confirmed tx
@@ -158,7 +158,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     private long getWatchOnlySortTime() {
         long sortTime = new Date().getTime();
         if (getWatchOnlyAddresses().size() > 0) {
-            long firstSortTime = getWatchOnlyAddresses().get(0).getmSortTime()
+            long firstSortTime = getWatchOnlyAddresses().get(0).getSortTime()
                     + getWatchOnlyAddresses().size();
             if (sortTime < firstSortTime) {
                 sortTime = firstSortTime;
@@ -170,7 +170,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     private long getPrivKeySortTime() {
         long sortTime = new Date().getTime();
         if (getPrivKeyAddresses().size() > 0) {
-            long firstSortTime = getPrivKeyAddresses().get(0).getmSortTime()
+            long firstSortTime = getPrivKeyAddresses().get(0).getSortTime()
                     + getPrivKeyAddresses().size();
             if (sortTime < firstSortTime) {
                 sortTime = firstSortTime;
