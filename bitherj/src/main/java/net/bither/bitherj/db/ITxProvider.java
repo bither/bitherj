@@ -85,4 +85,6 @@ public interface ITxProvider {
 
     public boolean isSendFromMe(In in);
 
+    public void clearAllTx();
+
 }

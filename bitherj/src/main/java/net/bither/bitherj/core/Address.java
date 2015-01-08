@@ -72,7 +72,6 @@ public class Address implements Comparable<Address> {
         this.mSortTime = sortTime;
         this.syncComplete = isSyncComplete;
         this.isFromXRandom = isFromXRandom;
-
         this.updateBalance();
     }
 
@@ -80,7 +79,7 @@ public class Address implements Comparable<Address> {
     public Address(String address, byte[] pubKey, long sortTime, boolean isSyncComplete,
                    boolean isFromXRandom, boolean isTrashed, String encryptPrivKey) {
         this.encryptPrivKey = encryptPrivKey;
-        this.encryptPrivKey = null;
+        this.hasPrivKey = !Utils.isEmpty(this.encryptPrivKey);
         this.address = address;
         this.pubKey = pubKey;
         this.mSortTime = sortTime;

@@ -14,9 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by zhouqi on 15/1/3.
- */
 public class HDMAddress extends Address {
     public static interface HDMFetchOtherSignatureDelegate {
         List<TransactionSignature> getOtherSignature(int addressIndex, CharSequence password, List<byte[]> unsignHash, Tx tx);
