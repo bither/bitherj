@@ -202,7 +202,9 @@ public class HDMKeychain {
 
     public byte[] getExternalChainRootPubExtended(CharSequence password) throws MnemonicException.MnemonicLengthException{
         DeterministicKey ex = externalChainRoot(password);
-        return ex.getPubKey();
+        byte[] pub = ex.getPubKeyExtended();
+        ex.wipe();
+        return pub;
     }
 
     public String getExternalChainRootPubExtendedAsHex(CharSequence password) throws MnemonicException.MnemonicLengthException{
