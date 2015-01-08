@@ -86,13 +86,13 @@ public final class HDKeyDerivation {
     }
 
     public static DeterministicKey createMasterPubKeyFromBytes(byte[] pubKeyBytes, byte[] chainCode) {
-        return new DeterministicKey(ImmutableList.<ChildNumber>of(), chainCode, pubKeyBytes, null, null);
+        return new DeterministicKey(ImmutableList.<ChildNumber>of(), chainCode, ECKey.CURVE.getCurve().decodePoint(pubKeyBytes), null, null);
     }
 
     public static DeterministicKey createMasterPubKeyFromExtendedBytes(byte[] extended){
-        checkState(extended.length == 64, extended.length);
-        byte[] il = Arrays.copyOfRange(extended, 0, 32);
-        byte[] ir = Arrays.copyOfRange(extended, 32, 64);
+        checkState(extended.length == 65, extended.length);
+        byte[] il = Arrays.copyOfRange(extended, 0, 33);
+        byte[] ir = Arrays.copyOfRange(extended, 33, 65);
         Arrays.fill(extended, (byte)0);
         DeterministicKey key = createMasterPubKeyFromBytes(il, ir);
         Arrays.fill(il, (byte)0);

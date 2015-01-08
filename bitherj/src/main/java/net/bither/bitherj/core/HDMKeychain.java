@@ -187,7 +187,7 @@ public class HDMKeychain {
         }
     }
 
-    private DeterministicKey externalChainRoot(CharSequence password) throws MnemonicException.MnemonicLengthException {
+    public DeterministicKey externalChainRoot(CharSequence password) throws MnemonicException.MnemonicLengthException {
         DeterministicKey master = masterKey(password);
         DeterministicKey purpose = master.deriveHardened(44);
         DeterministicKey coinType = purpose.deriveHardened(0);
@@ -198,6 +198,15 @@ public class HDMKeychain {
         coinType.wipe();
         account.wipe();
         return external;
+    }
+
+    public byte[] getExternalChainRootPubExtended(CharSequence password) throws MnemonicException.MnemonicLengthException{
+        DeterministicKey ex = externalChainRoot(password);
+        return ex.getPubKey();
+    }
+
+    public String getExternalChainRootPubExtendedAsHex(CharSequence password) throws MnemonicException.MnemonicLengthException{
+        return Utils.bytesToHexString(getExternalChainRootPubExtended(password));
     }
 
     private DeterministicKey masterKey(CharSequence password) throws MnemonicException.MnemonicLengthException {

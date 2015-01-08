@@ -345,6 +345,19 @@ public class DeterministicKey extends ECKey {
         Utils.wipeBytes(chainCode);
     }
 
+    public byte[] getPubKeyExtended(){
+        byte[] pub = getPubKey();
+        byte[] chainCode = getChainCode();
+        byte[] extended = new byte[pub.length + chainCode.length];
+        for(int i = 0; i < pub.length; i++){
+            extended[i] = pub[i];
+        }
+        for(int i = 0; i < chainCode.length; i++){
+            extended[i + pub.length] = chainCode[i];
+        }
+        return extended;
+    }
+
     public void wipe(){
         clearPrivateKey();
         Utils.wipeBytes(pub);
