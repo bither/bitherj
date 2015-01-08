@@ -17,7 +17,7 @@
 package net.bither.bitherj.message;
 
 
-import net.bither.bitherj.core.BitherjSettings;
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.BloomFilter;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.exception.ProtocolException;

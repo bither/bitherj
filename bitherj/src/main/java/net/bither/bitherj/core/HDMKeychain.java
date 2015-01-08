@@ -91,7 +91,7 @@ public class HDMKeychain {
         wipeSeed();
         ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
         for (HDMAddress.Pubs p : pubs) {
-            as.add(new HDMAddress(p, false, this));
+            as.add(new HDMAddress(p, this));
         }
         this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(), isFromXRandom);
         AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
@@ -142,7 +142,7 @@ public class HDMKeychain {
             try {
                 fetchDelegate.completeRemotePublicKeys(password, pubs);
                 for (HDMAddress.Pubs p : pubs) {
-                    as.add(new HDMAddress(p, false, this));
+                    as.add(new HDMAddress(p, this));
                 }
                 AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
             } catch (Exception e) {
@@ -241,7 +241,9 @@ public class HDMKeychain {
     private void initAddressesFromDb(){
         synchronized (allCompletedAddresses){
             List<HDMAddress> addrs = AbstractDb.addressProvider.getHDMAddressInUse(this);
-            allCompletedAddresses.addAll(addrs);
+            if(addrs != null) {
+                allCompletedAddresses.addAll(addrs);
+            }
         }
     }
 

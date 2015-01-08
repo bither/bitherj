@@ -14,7 +14,7 @@
 * limitations under the License.
 */
 
-package net.bither.bitherj.core;
+package net.bither.bitherj;
 
 import net.bither.bitherj.utils.Utils;
 
@@ -32,6 +32,7 @@ public class BitherjSettings {
 
     public static final int MAX_TX_SIZE = 100000;
     public static final int COMPRESS_OUT_NUM = 5;
+    public static final int TX_PAGE_SIZE = 50;
 
     /**
      * The alert signing key originally owned by Satoshi, and now passed on to Gavin along with a few others.
@@ -43,23 +44,6 @@ public class BitherjSettings {
      * The string returned by getId() for the main, production network where people trade things.
      */
     public static final String ID_MAINNET = "org.bitcoin.production";
-    /**
-     * The string returned by getId() for the testnet.
-     */
-    public static final String ID_TESTNET = "org.bitcoin.test";
-    /**
-     * Unit test network.
-     */
-    public static final String ID_UNITTESTNET = "net.bither.bitherj.unittest";
-
-    /**
-     * The string used by the payment protocol to represent the main net.
-     */
-    public static final String PAYMENT_PROTOCOL_ID_MAINNET = "main";
-    /**
-     * The string used by the payment protocol to represent the test net.
-     */
-    public static final String PAYMENT_PROTOCOL_ID_TESTNET = "test";
 
 
     public static final BigInteger proofOfWorkLimit = Utils.decodeCompactBits(0x1d00ffffL);
@@ -71,9 +55,7 @@ public class BitherjSettings {
     public static final int TARGET_TIMESPAN = 14 * 24 * 60 * 60;  // 2 weeks per difficulty cycle, on average.
     public static final int TARGET_SPACING = 10 * 60;  // 10 minutes per block.
     public static final int INTERVAL = TARGET_TIMESPAN / TARGET_SPACING;
-    public static final int interval = INTERVAL;
-    public static final int targetTimespan = TARGET_TIMESPAN;
-    public static final byte[] alertSigningKey = SATOSHI_KEY;
+
 
     public static final long TX_UNCONFIRMED = Long.MAX_VALUE;
 
@@ -85,9 +67,6 @@ public class BitherjSettings {
      * The depth of blocks required for a coinbase transaction to be spendable.
      */
     public static final int spendableCoinbaseDepth = 100;
-    public static final int subsidyDecreaseBlockCount = 210000;
-
-    public static final int[] acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
     public static final String[] dnsSeeds = new String[]{
             "seed.bitcoin.sipa.be",        // Pieter Wuille
             "dnsseed.bluematt.me",         // Matt Corallo

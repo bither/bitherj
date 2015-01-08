@@ -22,7 +22,7 @@ import com.google.common.primitives.Longs;
 import com.google.common.primitives.UnsignedLongs;
 
 import net.bither.bitherj.AbstractApp;
-import net.bither.bitherj.core.BitherjSettings;
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.exception.AddressFormatException;
 

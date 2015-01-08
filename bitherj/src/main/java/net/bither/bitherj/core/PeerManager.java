@@ -17,6 +17,7 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.net.NioClientManager;

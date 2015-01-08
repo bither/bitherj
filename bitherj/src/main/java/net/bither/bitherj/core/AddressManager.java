@@ -17,6 +17,7 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.PrivateKeyUtil;
@@ -65,10 +66,10 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     }
 
     public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {
-        if (AbstractDb.txProvider.isExist(tx.getTxHash())) {
-            // already in db
-            return true;
-        }
+//        if (AbstractDb.txProvider.isExist(tx.getTxHash())) {
+//            // already in db
+//            return true;
+//        }
 
         if (AbstractDb.txProvider.isTxDoubleSpendWithConfirmedTx(tx)) {
             // double spend with confirmed tx
@@ -157,7 +158,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     private long getWatchOnlySortTime() {
         long sortTime = new Date().getTime();
         if (getWatchOnlyAddresses().size() > 0) {
-            long firstSortTime = getWatchOnlyAddresses().get(0).getmSortTime()
+            long firstSortTime = getWatchOnlyAddresses().get(0).getSortTime()
                     + getWatchOnlyAddresses().size();
             if (sortTime < firstSortTime) {
                 sortTime = firstSortTime;
@@ -169,7 +170,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     private long getPrivKeySortTime() {
         long sortTime = new Date().getTime();
         if (getPrivKeyAddresses().size() > 0) {
-            long firstSortTime = getPrivKeyAddresses().get(0).getmSortTime()
+            long firstSortTime = getPrivKeyAddresses().get(0).getSortTime()
                     + getPrivKeyAddresses().size();
             if (sortTime < firstSortTime) {
                 sortTime = firstSortTime;
@@ -369,24 +370,24 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         }
     }
 
-    public void setHDMKeychain(HDMKeychain keychain){
-        synchronized (lock){
-            if(hdmKeychain != null && hdmKeychain != keychain){
+    public void setHDMKeychain(HDMKeychain keychain) {
+        synchronized (lock) {
+            if (hdmKeychain != null && hdmKeychain != keychain) {
                 throw new RuntimeException("can not add a different hdm keychain to address manager");
             }
-            if(hdmKeychain == keychain){
+            if (hdmKeychain == keychain) {
                 return;
             }
             hdmKeychain = keychain;
             hdmKeychain.setAddressChangeDelegate(this);
             List<HDMAddress> addresses = hdmKeychain.getAddresses();
-            for(HDMAddress a : addresses){
+            for (HDMAddress a : addresses) {
                 addressHashSet.add(a.getAddress());
             }
         }
     }
 
-    public boolean hasHDMKeychain(){
+    public boolean hasHDMKeychain() {
         synchronized (lock) {
             return hdmKeychain != null;
         }
@@ -406,7 +407,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     public boolean changePassword(SecureCharSequence oldPassword, SecureCharSequence newPassword) throws IOException {
         List<Address> privKeyAddresses = AddressManager.getInstance().getPrivKeyAddresses();
         List<Address> trashAddresses = AddressManager.getInstance().getTrashAddresses();
-        if (privKeyAddresses.size() + trashAddresses.size() == 0) {
+        if (privKeyAddresses.size() + trashAddresses.size() == 0 && getHdmKeychain() == null) {
             return true;
         }
         for (Address a : privKeyAddresses) {
@@ -470,8 +471,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     }
 
     public Tx compressTx(Tx tx) {
-        List<Out> outList = new ArrayList<Out>();
         if (!isSendFromMe(tx) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
+            List<Out> outList = new ArrayList<Out>();
             for (Out out : tx.getOuts()) {
                 String outAddress = out.getOutAddress();
                 if (addressHashSet.contains(outAddress)) {
@@ -479,8 +480,9 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 }
 
             }
+            tx.setOuts(outList);
         }
-        tx.setOuts(outList);
+
         return tx;
 
     }

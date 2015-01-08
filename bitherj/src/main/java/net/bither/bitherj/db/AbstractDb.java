@@ -66,7 +66,6 @@ public abstract class AbstractDb {
             "(address text not null primary key" +
             ", encrypt_private_key text" +
             ", pub_key text not null" +
-            ", is_compressed integer not null" +
             ", is_xrandom integer not null" +
             ", is_trash integer not null" +
             ", is_synced integer not null" +
@@ -177,7 +176,6 @@ public abstract class AbstractDb {
         public static final String ADDRESS = "address";
         public static final String ENCRYPT_PRIVATE_KEY = "encrypt_private_key";
         public static final String PUB_KEY = "pub_key";
-        public static final String IS_COMPRESSED = "is_compressed";
         public static final String IS_XRANDOM = "is_xrandom";
         public static final String IS_TRASH = "is_trash";
         public static final String IS_SYNCED = "is_synced";

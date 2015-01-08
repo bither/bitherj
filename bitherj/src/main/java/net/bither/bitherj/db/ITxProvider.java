@@ -27,6 +27,8 @@ import java.util.List;
 public interface ITxProvider {
     public List<Tx> getTxAndDetailByAddress(String address);
 
+    public List<Tx> getTxAndDetailByAddress(String address, int page);
+
     public List<Tx> getPublishedTxs();
 
     public Tx getTxDetailByTxHash(byte[] txHash);
@@ -43,7 +45,9 @@ public interface ITxProvider {
 
 
     public boolean isAddressContainsTx(String address, Tx txItem);
+
     public boolean isTxDoubleSpendWithConfirmedTx(Tx tx);
+
     public List<String> getInAddresses(Tx tx);
 
 
@@ -64,6 +68,7 @@ public interface ITxProvider {
     public void txSentBySelfHasSaw(byte[] txHash);
 
     public List<Out> getOuts();
+
     public List<Out> getUnSpentOuts();
 
     public List<In> getRelatedIn(String address);
@@ -75,7 +80,9 @@ public interface ITxProvider {
     public HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem);
 
     public void completeInSignature(List<In> ins);
+
     public int needCompleteInSignature(String address);
+
     public boolean isSendFromMe(In in);
 
 }

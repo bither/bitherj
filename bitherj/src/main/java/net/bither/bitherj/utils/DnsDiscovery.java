@@ -20,12 +20,11 @@ package net.bither.bitherj.utils;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 
-import net.bither.bitherj.core.BitherjSettings;
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.Peer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.Integers;
 
 import java.net.InetAddress;
 import java.util.ArrayList;

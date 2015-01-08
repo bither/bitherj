@@ -17,6 +17,7 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.db.AbstractDb;
@@ -71,6 +72,21 @@ public class Address implements Comparable<Address> {
         this.mSortTime = sortTime;
         this.syncComplete = isSyncComplete;
         this.isFromXRandom = isFromXRandom;
+        
+        this.updateBalance();
+    }
+
+
+    public Address(String address, byte[] pubKey, long sortTime, boolean isSyncComplete,
+                   boolean isFromXRandom, boolean isTrashed, String encryptPrivKey) {
+        this.encryptPrivKey = encryptPrivKey;
+        this.encryptPrivKey = null;
+        this.address = address;
+        this.pubKey = pubKey;
+        this.mSortTime = sortTime;
+        this.syncComplete = isSyncComplete;
+        this.isFromXRandom = isFromXRandom;
+        this.isTrashed = isTrashed;
         this.updateBalance();
     }
 
@@ -103,6 +119,11 @@ public class Address implements Comparable<Address> {
         return txs;
     }
 
+    public List<Tx> getTxs(int page) {
+        List<Tx> txs = AbstractDb.txProvider.getTxAndDetailByAddress(this.address, page);
+        return txs;
+    }
+
     public boolean isTrashed() {
         return isTrashed;
     }
@@ -124,7 +145,7 @@ public class Address implements Comparable<Address> {
 
     @Override
     public int compareTo(@Nonnull Address address) {
-        return -1 * Long.valueOf(getmSortTime()).compareTo(Long.valueOf(address.getmSortTime()));
+        return -1 * Long.valueOf(getSortTime()).compareTo(Long.valueOf(address.getSortTime()));
     }
 
     public void updateBalance() {
@@ -348,7 +369,7 @@ public class Address implements Comparable<Address> {
         return false;
     }
 
-    public long getmSortTime() {
+    public long getSortTime() {
         return mSortTime;
     }
 
@@ -519,6 +540,10 @@ public class Address implements Comparable<Address> {
 
     public boolean isHDM() {
         return false;
+    }
+
+    public boolean isCompressed() {
+        return pubKey.length == 33;
     }
 
     public boolean removeTx(Tx tx) {

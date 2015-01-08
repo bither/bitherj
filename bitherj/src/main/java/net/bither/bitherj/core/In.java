@@ -208,8 +208,11 @@ public class In extends Message {
             if (preTx == null) {
                 return null;
             }
-            if (getPrevOutSn() >= 0 && getPrevOutSn() < preTx.getOuts().size()) {
-                connectedOut = preTx.getOuts().get(getPrevOutSn());
+            int prevOutSn = getPrevOutSn();
+            for (Out out : preTx.getOuts()) {
+                if (out.getOutSn() == prevOutSn) {
+                    connectedOut = out;
+                }
             }
         }
         return connectedOut;

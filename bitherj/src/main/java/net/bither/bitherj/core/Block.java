@@ -18,6 +18,7 @@ package net.bither.bitherj.core;
 
 import com.google.common.base.Preconditions;
 
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.VerificationException;
 import net.bither.bitherj.message.BlockMessage;

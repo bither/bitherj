@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.core;
 
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.db.AbstractDb;
@@ -353,10 +354,12 @@ public class Tx extends Message implements Comparable<Tx> {
             if (preTx == null) {
                 return null;
             }
-            if (in.getPrevOutSn() >= preTx.getOuts().size()) {
-                return null;
+            for (Out out : preTx.getOuts()) {
+                if (out.getOutSn() == in.getPrevOutSn()) {
+                    return out.getOutAddress();
+                }
             }
-            return preTx.getOuts().get(in.getPrevOutSn()).getOutAddress();
+            return null;
         }
     }
 
@@ -374,9 +377,15 @@ public class Tx extends Message implements Comparable<Tx> {
         long amount = 0;
         for (In in : getIns()) {
             Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
-            if (in.getPrevOutSn() >= 0 && in.getPrevOutSn() < preTx.getOuts().size()) {
-                amount += preTx.getOuts().get(in.getPrevOutSn()).getOutValue();
-            } else {
+            boolean hasOut = false;
+            for (Out out : preTx.getOuts()) {
+                if (in.getPrevOutSn() == out.getOutSn()) {
+                    amount += out.getOutValue();
+                    hasOut = true;
+                }
+
+            }
+            if (!hasOut) {
                 return Long.MAX_VALUE;
             }
         }
@@ -1175,22 +1184,22 @@ public class Tx extends Message implements Comparable<Tx> {
         return false;
     }
 
-    public long feeForTx() {
-        long amount = 0;
-        for (In in : this.ins) {
-            Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
-            int n = in.getPrevOutSn();
-            if (n > tx.outs.size()) {
-                return Integer.MAX_VALUE;
-            }
-            amount += tx.outs.get(n).getOutValue();
-        }
-
-        for (Out out : this.outs) {
-            amount -= out.getOutValue();
-        }
-        return amount;
-    }
+//    public long feeForTx() {
+//        long amount = 0;
+//        for (In in : this.ins) {
+//            Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
+//            int n = in.getPrevOutSn();
+//            if (n > tx.outs.size()) {
+//                return Integer.MAX_VALUE;
+//            }
+//            amount += tx.outs.get(n).getOutValue();
+//        }
+//
+//        for (Out out : this.outs) {
+//            amount -= out.getOutValue();
+//        }
+//        return amount;
+//    }
 
     public long amountReceivedFrom(Address address) {
         long amount = 0;
@@ -1207,10 +1216,11 @@ public class Tx extends Message implements Comparable<Tx> {
         for (In in : this.ins) {
             Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             int n = in.getPrevOutSn();
-
-            if (n < tx.ins.size() && Utils.compareString(address.getAddress(),
-                    tx.outs.get(n).getOutAddress())) {
-                amount += tx.outs.get(n).getOutValue();
+            for (Out out : tx.getOuts()) {
+                if (n == out.getOutSn() && Utils.compareString(address.getAddress(),
+                        out.getOutAddress())) {
+                    amount += tx.outs.get(n).getOutValue();
+                }
             }
         }
         return amount;
@@ -1238,9 +1248,18 @@ public class Tx extends Message implements Comparable<Tx> {
             Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             if (tx != null) {
                 int n = in.getPrevOutSn();
-                if (n < tx.outs.size() && Utils.compareString(address.getAddress(),
-                        tx.outs.get(n).getOutAddress())) {
-                    sent += tx.outs.get(n).getOutValue();
+                if (n < tx.outs.size()) {
+                    if (Utils.compareString(address.getAddress(),
+                            tx.outs.get(n).getOutAddress())) {
+                        sent += tx.outs.get(n).getOutValue();
+                    }
+                } else {
+                    for (Out out : tx.outs) {
+                        if (Utils.compareString(address.getAddress(),
+                                out.getOutAddress())) {
+                            sent += out.getOutValue();
+                        }
+                    }
                 }
             }
         }
