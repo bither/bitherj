@@ -15,6 +15,9 @@ import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.Utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +41,8 @@ public class HDMKeychain {
     public static interface HDMAddressChangeDelegate {
         public void hdmAddressAdded(HDMAddress address);
     }
+
+    private static final Logger log = LoggerFactory.getLogger(HDMKeychain.class);
 
     private transient byte[] seed;
 
@@ -212,12 +217,14 @@ public class HDMKeychain {
     }
 
     private DeterministicKey masterKey(CharSequence password) throws MnemonicException.MnemonicLengthException {
+        long begin = System.currentTimeMillis();
         MnemonicCode mnemonic = MnemonicCode.instance();
         decryptSeed(password);
         byte[] s = mnemonic.toSeed(mnemonic.toMnemonic(seed), "");
         wipeSeed();
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(s);
         Utils.wipeBytes(s);
+        log.info("hdm keychain decrypt time: {}", System.currentTimeMillis() - begin);
         return master;
     }
 
