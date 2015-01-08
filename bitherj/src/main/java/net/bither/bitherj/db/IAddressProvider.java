@@ -43,4 +43,5 @@ public interface IAddressProvider {
     public void restorePrivKeyAddress(Address address);
 
     public void syncComplete(Address address);
+
 }

@@ -19,7 +19,7 @@ package net.bither.bitherj.script;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.UnsignedBytes;
 
-import net.bither.bitherj.core.BitherjSettings;
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.exception.AddressFormatException;

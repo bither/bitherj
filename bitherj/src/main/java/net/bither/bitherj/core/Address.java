@@ -17,6 +17,7 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.db.AbstractDb;
@@ -100,6 +101,11 @@ public class Address implements Comparable<Address> {
     public List<Tx> getTxs() {
         List<Tx> txs = AbstractDb.txProvider.getTxAndDetailByAddress(this.address);
         Collections.sort(txs);
+        return txs;
+    }
+
+    public List<Tx> getTxs(int page) {
+        List<Tx> txs = AbstractDb.txProvider.getTxAndDetailByAddress(this.address, page);
         return txs;
     }
 
