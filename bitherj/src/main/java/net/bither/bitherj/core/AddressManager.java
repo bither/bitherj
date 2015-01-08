@@ -21,17 +21,14 @@ import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.PrivateKeyUtil;
-import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -49,12 +46,9 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     protected HashSet<String> addressHashSet = new HashSet<String>();
     protected HDMKeychain hdmKeychain;
 
-
     private AddressManager() {
         synchronized (lock) {
-            initPrivateKeyListByDesc();
-            initWatchOnlyListByDesc();
-            initTrashListByDesc();
+            initAddress();
             initHDMKeychain();
             AbstractApp.addressIsReady = true;
             AbstractApp.notificationService.sendBroadcastAddressLoadCompleteState();
@@ -63,6 +57,27 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
 
     public static AddressManager getInstance() {
         return uniqueInstance;
+    }
+
+    private void initAddress() {
+        List<Address> addressList = AbstractDb.addressProvider.getAddresses();
+        for (int i = addressList.size() - 1; i >= 0; i--) {
+            Address address = addressList.get(i);
+            if (address.hasPrivKey()) {
+                if (address.isTrashed()) {
+                    this.trashAddresses.add(address);
+                } else {
+                    this.privKeyAddresses.add(address);
+                    this.addressHashSet.add(address.getAddress());
+                }
+            } else {
+                this.watchOnlyAddresses.add(address);
+                this.addressHashSet.add(address.getAddress());
+            }
+
+        }
+
+
     }
 
     public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {
@@ -126,30 +141,26 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             if (getAllAddresses().contains(address)) {
                 return false;
             }
-            try {
-                if (address.hasPrivKey) {
-                    if (!this.getTrashAddresses().contains(address)) {
-                        address.savePrivateKey();
-                        address.savePubKey(getPrivKeySortTime());
-                        privKeyAddresses.add(0, address);
-                        addressHashSet.add(address.address);
-                    } else {
-                        address.restorePrivKey();
-                        trashAddresses.remove(address);
-                        long sortTime = getPrivKeySortTime();
-                        address.savePubKey(sortTime);
-                        privKeyAddresses.add(0, address);
-                        addressHashSet.add(address.address);
-                    }
+            if (address.hasPrivKey) {
+                long sortTime = getPrivKeySortTime();
+                address.setSortTime(sortTime);
+                if (!this.getTrashAddresses().contains(address)) {
+                    AbstractDb.addressProvider.addAddress(address);
+                    privKeyAddresses.add(0, address);
+                    addressHashSet.add(address.address);
                 } else {
-                    address.savePubKey(getWatchOnlySortTime());
-                    watchOnlyAddresses.add(0, address);
+                    address.setSyncComplete(false);
+                    AbstractDb.addressProvider.restorePrivKeyAddress(address);
+                    trashAddresses.remove(address);
+                    privKeyAddresses.add(0, address);
                     addressHashSet.add(address.address);
                 }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
+            } else {
+                long sortTime = getWatchOnlySortTime();
+                address.setSortTime(sortTime);
+                AbstractDb.addressProvider.addAddress(address);
+                watchOnlyAddresses.add(0, address);
+                addressHashSet.add(address.address);
             }
             return true;
         }
@@ -182,7 +193,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     public boolean stopMonitor(Address address) {
         synchronized (lock) {
             if (!address.hasPrivKey) {
-                address.removeWatchOnly();
+                AbstractDb.addressProvider.removeWatchOnlyAddress(address);
                 watchOnlyAddresses.remove(address);
                 addressHashSet.remove(address.address);
             } else {
@@ -195,7 +206,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     public boolean trashPrivKey(Address address) {
         synchronized (lock) {
             if ((address.hasPrivKey || address.isHDM()) && address.getBalance() == 0) {
-                address.trashPrivKey();
+                AbstractDb.addressProvider.trashPrivKeyAddress(address);
                 trashAddresses.add(address);
                 privKeyAddresses.remove(address);
                 addressHashSet.remove(address.address);
@@ -208,24 +219,21 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
 
     public boolean restorePrivKey(Address address) {
         synchronized (lock) {
-            try {
-                if (address.hasPrivKey || address.isHDM()) {
-                    address.restorePrivKey();
-                    trashAddresses.remove(address);
-                    if (address.hasPrivKey && !address.isHDM()) {
-                        long sortTime = getPrivKeySortTime();
-                        address.savePubKey(sortTime);
-                        privKeyAddresses.add(0, address);
-                    }
-                    addressHashSet.add(address.address);
-                } else {
-                    return false;
+            if (address.hasPrivKey || address.isHDM()) {
+                long sortTime = getPrivKeySortTime();
+                address.setSortTime(sortTime);
+                address.setSyncComplete(false);
+                AbstractDb.addressProvider.restorePrivKeyAddress(address);
+                if (address.hasPrivKey && !address.isHDM()) {
+                    privKeyAddresses.add(0, address);
                 }
-                return true;
-            } catch (IOException e) {
-                e.printStackTrace();
+                trashAddresses.remove(address);
+                addressHashSet.add(address.address);
+            } else {
                 return false;
             }
+            return true;
+
         }
     }
 
@@ -272,90 +280,6 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             }
         }
         return true;
-    }
-
-    private void initPrivateKeyListByDesc() {
-        File[] files = Utils.getPrivateDir().listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.getName().contains(Address.PUBLIC_KEY_FILE_NAME_SUFFIX)) {
-                    String content = Utils.readFile(file);
-                    String[] strings = content.split(Address.KEY_SPLIT_STRING);
-                    String address = file.getName().substring(0,
-                            file.getName().length() - Address.PUBLIC_KEY_FILE_NAME_SUFFIX.length());
-                    String publicKey = strings[0];
-                    int isSyncComplete = Integer.valueOf(strings[1]);
-                    long createTime = Long.valueOf(strings[2]);
-                    boolean isFromXRandom = false;
-                    if (strings.length == 4) {
-                        isFromXRandom = Utils.compareString(strings[3], QRCodeUtil.XRANDOM_FLAG);
-                    }
-                    Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
-                            , isSyncComplete == 1, isFromXRandom, true);
-                    this.privKeyAddresses.add(add);
-                    addressHashSet.add(add.address);
-                }
-            }
-            if (this.privKeyAddresses.size() > 0) {
-                Collections.sort(this.privKeyAddresses);
-            }
-        }
-    }
-
-    private void initWatchOnlyListByDesc() {
-        File[] files = Utils.getWatchOnlyDir().listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.getName().contains(Address.PUBLIC_KEY_FILE_NAME_SUFFIX)) {
-                    String content = Utils.readFile(file);
-                    String[] strings = content.split(Address.KEY_SPLIT_STRING);
-                    String address = file.getName().substring(0,
-                            file.getName().length() - Address.PUBLIC_KEY_FILE_NAME_SUFFIX.length());
-                    String publicKey = strings[0];
-                    int isSyncComplete = Integer.valueOf(strings[1]);
-                    long createTime = Long.valueOf(strings[2]);
-                    boolean isFromXRandom = false;
-                    if (strings.length == 4) {
-                        isFromXRandom = Utils.compareString(strings[3], QRCodeUtil.XRANDOM_FLAG);
-                    }
-                    Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
-                            , isSyncComplete == 1, isFromXRandom, false);
-                    this.watchOnlyAddresses.add(add);
-                    addressHashSet.add(add.address);
-                }
-            }
-            if (this.watchOnlyAddresses.size() > 0) {
-                Collections.sort(this.watchOnlyAddresses);
-            }
-        }
-    }
-
-    private void initTrashListByDesc() {
-        File[] files = Utils.getTrashDir().listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.getName().contains(Address.PUBLIC_KEY_FILE_NAME_SUFFIX)) {
-                    String content = Utils.readFile(file);
-                    String[] strings = content.split(Address.KEY_SPLIT_STRING);
-                    String address = file.getName().substring(0,
-                            file.getName().length() - Address.PUBLIC_KEY_FILE_NAME_SUFFIX.length());
-                    String publicKey = strings[0];
-                    int isSyncComplete = Integer.valueOf(strings[1]);
-                    long createTime = Long.valueOf(strings[2]);
-                    boolean isFromXRandom = false;
-                    if (strings.length == 4) {
-                        isFromXRandom = Utils.compareString(strings[3], QRCodeUtil.XRANDOM_FLAG);
-                    }
-                    Address add = new Address(address, Utils.hexStringToByteArray(publicKey), createTime
-                            , isSyncComplete == 1, isFromXRandom, true);
-                    add.setTrashed(true);
-                    this.trashAddresses.add(add);
-                }
-            }
-            if (this.trashAddresses.size() > 0) {
-                Collections.sort(this.trashAddresses);
-            }
-        }
     }
 
     private void initHDMKeychain() {

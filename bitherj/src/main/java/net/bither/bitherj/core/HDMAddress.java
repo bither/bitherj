@@ -124,15 +124,6 @@ public class HDMAddress extends Address {
         return true;
     }
 
-    @Override
-    public void trashPrivKey() {
-        setTrashed(true);
-    }
-
-    @Override
-    public void restorePrivKey() throws IOException {
-        setTrashed(false);
-    }
 
     public static final class Pubs {
         public byte[] hot;

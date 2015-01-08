@@ -72,7 +72,7 @@ public class Address implements Comparable<Address> {
         this.mSortTime = sortTime;
         this.syncComplete = isSyncComplete;
         this.isFromXRandom = isFromXRandom;
-        
+
         this.updateBalance();
     }
 
@@ -261,98 +261,14 @@ public class Address implements Comparable<Address> {
     }
 
 
-    public void savePrivateKey() throws IOException {
-        String privateKeyFullFileName = Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                Utils.getPrivateDir(), getAddress());
-        Utils.writeFile(this.encryptPrivKey, new File(privateKeyFullFileName));
+    public void savePrivateKey() {
+        AbstractDb.addressProvider.updatePrivateKey(Address.this);
     }
 
-    public void savePubKey(long sortTime) throws IOException {
-        if (hasPrivKey()) {
-            savePubKey(Utils.getPrivateDir().getAbsolutePath(), sortTime);
-        } else {
-            savePubKey(Utils.getWatchOnlyDir().getAbsolutePath(), sortTime);
-        }
-
+    public void updateSyncComplete() {
+        AbstractDb.addressProvider.updateSyncComplete(Address.this);
     }
 
-    private void savePubKey(String dir, long sortTime) throws IOException {
-        this.mSortTime = sortTime;
-        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME, dir,
-                getAddress());
-        String watchOnlyContent = Utils.format("%s:%s:%s%s", Utils.bytesToHexString(this.pubKey),
-                getSyncCompleteString(), Long.toString(this.mSortTime), getXRandomString());
-        log.debug("address content " + watchOnlyContent);
-        Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
-    }
-
-    public void updatePubkey() throws IOException {
-        if (hasPrivKey()) {
-            updatePubKey(Utils.getPrivateDir().getAbsolutePath());
-        } else {
-            updatePubKey(Utils.getWatchOnlyDir().getAbsolutePath());
-        }
-    }
-
-    private void updatePubKey(String dir) throws IOException {
-        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME, dir,
-                getAddress());
-        String watchOnlyContent = Utils.format("%s:%s:%s%s", Utils.bytesToHexString(this.pubKey),
-                getSyncCompleteString(), Long.toString(this.mSortTime), getXRandomString());
-        log.debug("address content " + watchOnlyContent);
-        Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
-    }
-
-
-    private String getSyncCompleteString() {
-        return isSyncComplete() ? "1" : "0";
-    }
-
-    private String getXRandomString() {
-        return isFromXRandom() ? ":" + QRCodeUtil.XRANDOM_FLAG : "";
-    }
-
-
-    public void removeWatchOnly() {
-        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
-                Utils.getWatchOnlyDir(), getAddress());
-        Utils.removeFile(new File(watchOnlyFullFileName));
-    }
-
-    public void trashPrivKey() {
-        File oldPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                Utils.getPrivateDir(), getAddress()));
-        File newPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                Utils.getTrashDir(), getAddress()));
-
-        File oldWatchOnlyFile = new File(Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
-                Utils.getPrivateDir(), getAddress()));
-        File newWatchOnlyFile = new File(Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
-                Utils.getTrashDir(), getAddress()));
-
-        Utils.moveFile(oldPrivKeyFile, newPrivKeyFile);
-        Utils.moveFile(oldWatchOnlyFile, newWatchOnlyFile);
-        setTrashed(true);
-    }
-
-    public void restorePrivKey() throws IOException {
-        File oldPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                Utils.getTrashDir(), getAddress()));
-        File newPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                Utils.getPrivateDir(), getAddress()));
-
-        File oldWatchOnlyFile = new File(Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
-                Utils.getTrashDir(), getAddress()));
-        File newWatchOnlyFile = new File(Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
-                Utils.getPrivateDir(), getAddress()));
-
-        Utils.moveFile(oldPrivKeyFile, newPrivKeyFile);
-        Utils.moveFile(oldWatchOnlyFile, newWatchOnlyFile);
-
-        this.syncComplete = false;
-        this.updatePubkey();
-        setTrashed(false);
-    }
 
     public void saveTrashKey() throws IOException {
         String privateKeyFullFileName = Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
@@ -373,24 +289,13 @@ public class Address implements Comparable<Address> {
         return mSortTime;
     }
 
+    public void setSortTime(long mSortTime) {
+        this.mSortTime = mSortTime;
+    }
+
     public String getEncryptPrivKey() {
         if (this.hasPrivKey) {
-            if (Utils.isEmpty(this.encryptPrivKey)) {
-                String privateKeyFullFileName;
-                if (!isTrashed()) {
-                    privateKeyFullFileName = Utils.format(BitherjSettings
-                            .PRIVATE_KEY_FILE_NAME, Utils.getPrivateDir(), getAddress());
-                } else {
-                    privateKeyFullFileName = Utils.format(BitherjSettings
-                            .PRIVATE_KEY_FILE_NAME, Utils.getTrashDir(), getAddress());
-                }
-                this.encryptPrivKey = Utils.readFile(new File(privateKeyFullFileName));
-                if (this.encryptPrivKey == null) {
-                    //todo backup?
-                }
-                //dispaly new version qrcode
-                this.encryptPrivKey = QRCodeUtil.getNewVersionEncryptPrivKey(this.encryptPrivKey);
-            }
+
             return this.encryptPrivKey;
         } else {
             return null;

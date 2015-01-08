@@ -39,15 +39,15 @@ public interface IAddressProvider {
 
     public int uncompletedHDMAddressCount(int hdSeedId);
 
-    public void updateSyncComplete(int hdSeedId, int hdSeedIndex);
+    public void syncComplete(int hdSeedId, int hdSeedIndex);
 
 
     //normal
     public List<Address> getAddresses();
 
-    public void addPrivKeyAddress(Address address);
+    public void addAddress(Address address);
 
-    public void addWatchOnlyAddress(Address address);
+    public void updatePrivateKey(Address address);
 
     public void removeWatchOnlyAddress(Address address);
 
