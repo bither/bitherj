@@ -27,7 +27,7 @@ public class HDMAddress extends Address {
     }
 
     public HDMAddress(Pubs pubs, boolean isSyncComplete, HDMKeychain keychain) {
-        super(pubs.getAddress(), pubs.getMultiSigScript().getPubKey(), pubs.index, isSyncComplete, true, true);
+        super(pubs.getAddress(), pubs.getMultiSigScript().getPubKey(), pubs.index, isSyncComplete, true, false, null);
         this.keychain = keychain;
         this.pubs = pubs;
     }
@@ -76,7 +76,7 @@ public class HDMAddress extends Address {
     }
 
     @Override
-    public String getEncryptPrivKey() {
+    public String getFullEncryptPrivKey() {
         throw new RuntimeException("hdm address can't get encrypted private key");
     }
 
@@ -150,4 +150,5 @@ public class HDMAddress extends Address {
             return Utils.toP2SHAddress(Utils.sha256hash160(getMultiSigScript().getProgram()));
         }
     }
+
 }

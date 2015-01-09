@@ -29,7 +29,6 @@ public class PasswordSeed {
     private String address;
     private String keyStr;
 
-
     public PasswordSeed(String str) {
         int indexOfSplit = QRCodeUtil.indexOfOfPasswordSeed(str);
         this.address = QRCodeUtil.getAddressFromPasswordSeed(str);
@@ -37,8 +36,7 @@ public class PasswordSeed {
     }
 
     public PasswordSeed(Address address) {
-        this.address = address.getAddress();
-        this.keyStr = address.getEncryptPrivKey();
+        this(address.getAddress(),address.getFullEncryptPrivKey());
     }
 
     public PasswordSeed(String address, String encryptedKey){

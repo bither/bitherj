@@ -52,7 +52,7 @@ public class UpgradeAddressUtil {
                     String privateKeyFullFileName = Utils.format(BitherjSettings
                             .PRIVATE_KEY_FILE_NAME, Utils.getPrivateDir(), address);
                     String encryptPrivate = QRCodeUtil.getNewVersionEncryptPrivKey(Utils.readFile(new File(privateKeyFullFileName)));
-                    encryptPrivate = formatEncryptPrivateKey(encryptPrivate);
+                    encryptPrivate = PrivateKeyUtil.formatEncryptPrivateKeyForDb(encryptPrivate);
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), sortTime
                             , isSyncComplete == 1, isFromXRandom, false, encryptPrivate);
                     privKeyAddresses.add(add);
@@ -118,7 +118,7 @@ public class UpgradeAddressUtil {
                     String privateKeyFullFileName = Utils.format(BitherjSettings
                             .PRIVATE_KEY_FILE_NAME, Utils.getTrashDir(), address);
                     String encryptPrivate = QRCodeUtil.getNewVersionEncryptPrivKey(Utils.readFile(new File(privateKeyFullFileName)));
-                    encryptPrivate = formatEncryptPrivateKey(encryptPrivate);
+                    encryptPrivate = PrivateKeyUtil.formatEncryptPrivateKeyForDb(encryptPrivate);
                     Address add = new Address(address, Utils.hexStringToByteArray(publicKey), sortTime
                             , isSyncComplete == 1, isFromXRandom, true, encryptPrivate);
                     add.setTrashed(true);
@@ -132,19 +132,6 @@ public class UpgradeAddressUtil {
         return trashAddresses;
     }
 
-    private static String formatEncryptPrivateKey(String encryptPrivvateKey) {
-        String[] strs = QRCodeUtil.splitOfPasswordSeed(encryptPrivvateKey);
-        byte[] temp = Utils.hexStringToByteArray(strs[2]);
-        byte[] salt = new byte[KeyCrypterScrypt.SALT_LENGTH];
-        if (temp.length == KeyCrypterScrypt.SALT_LENGTH + 1) {
-            System.arraycopy(temp, 1, salt, 0, salt.length);
-        } else {
-            salt = temp;
-        }
-        strs[2] = Utils.bytesToHexString(salt);
-        return Utils.joinString(strs, QRCodeUtil.QR_CODE_SPLIT);
-
-    }
 
     public static boolean upgradeAddress() {
         boolean success = true;

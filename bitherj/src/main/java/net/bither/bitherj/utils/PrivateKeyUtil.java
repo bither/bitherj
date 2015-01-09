@@ -18,7 +18,13 @@ package net.bither.bitherj.utils;
 
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.crypto.*;
+import net.bither.bitherj.crypto.DumpedPrivateKey;
+import net.bither.bitherj.crypto.ECKey;
+import net.bither.bitherj.crypto.EncryptedPrivateKey;
+import net.bither.bitherj.crypto.KeyCrypter;
+import net.bither.bitherj.crypto.KeyCrypterException;
+import net.bither.bitherj.crypto.KeyCrypterScrypt;
+import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 
 import org.slf4j.Logger;
@@ -41,16 +47,6 @@ public class PrivateKeyUtil {
         String salt = "1";
         if (ecKey.getKeyCrypter() instanceof KeyCrypterScrypt) {
             KeyCrypterScrypt scrypt = (KeyCrypterScrypt) ecKey.getKeyCrypter();
-//            byte[] saltBytes = new byte[KeyCrypterScrypt.SALT_LENGTH + 1];
-//            int flag = 0;
-//            if (ecKey.isCompressed()) {
-//                flag += IS_COMPRESSED_FLAG;
-//            }
-//            if (ecKey.isFromXRandom()) {
-//                flag += IS_FROMXRANDOM_FLAG;
-//            }
-//            saltBytes[0] = (byte) flag;
-//            System.arraycopy(scrypt.getSalt(), 0, saltBytes, 1, scrypt.getSalt().length);
             salt = Utils.bytesToHexString(scrypt.getSalt());
         }
         EncryptedPrivateKey key = ecKey.getEncryptedPrivateKey();
@@ -176,7 +172,7 @@ public class PrivateKeyUtil {
              i < privates.size();
              i++) {
             Address address = privates.get(i);
-            content += address.getEncryptPrivKeyOfQRCode();
+            content += address.getFullEncryptPrivKey();
             if (i < privates.size() - 1) {
                 content += QRCodeUtil.QR_CODE_SPLIT;
             }
@@ -260,5 +256,39 @@ public class PrivateKeyUtil {
         }
 
     }
+
+    public static String formatEncryptPrivateKeyForDb(String encryptPrivvateKey) {
+        String[] strs = QRCodeUtil.splitOfPasswordSeed(encryptPrivvateKey);
+        byte[] temp = Utils.hexStringToByteArray(strs[2]);
+        byte[] salt = new byte[KeyCrypterScrypt.SALT_LENGTH];
+        if (temp.length == KeyCrypterScrypt.SALT_LENGTH + 1) {
+            System.arraycopy(temp, 1, salt, 0, salt.length);
+        } else {
+            salt = temp;
+        }
+        strs[2] = Utils.bytesToHexString(salt);
+        return Utils.joinString(strs, QRCodeUtil.QR_CODE_SPLIT);
+
+    }
+
+    public static String getFullencryptPrivateKey(Address address, String encryptPrivKey) {
+        String[] strings = QRCodeUtil.splitString(encryptPrivKey);
+        byte[] salt = Utils.hexStringToByteArray(strings[2]);
+        if (salt.length == KeyCrypterScrypt.SALT_LENGTH) {
+            byte[] saltBytes = new byte[KeyCrypterScrypt.SALT_LENGTH + 1];
+            int flag = 0;
+            if (address.isCompressed()) {
+                flag += PrivateKeyUtil.IS_COMPRESSED_FLAG;
+            }
+            if (address.isFromXRandom()) {
+                flag += PrivateKeyUtil.IS_FROMXRANDOM_FLAG;
+            }
+            saltBytes[0] = (byte) flag;
+            System.arraycopy(salt, 0, saltBytes, 1, salt.length);
+            strings[2] = Utils.bytesToHexString(saltBytes);
+        }
+        return Utils.joinString(strings, QRCodeUtil.QR_CODE_SPLIT);
+    }
+
 
 }

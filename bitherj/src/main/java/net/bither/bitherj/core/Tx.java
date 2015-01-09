@@ -742,7 +742,7 @@ public class Tx extends Message implements Comparable<Tx> {
                         "want" + ".");
             }
             // Find the signing key we'll need to use.
-            ECKey key = PrivateKeyUtil.getECKeyFromSingleString(address.getEncryptPrivKey(),
+            ECKey key = PrivateKeyUtil.getECKeyFromSingleString(address.getFullEncryptPrivKey(),
                     password);//input.getOutpoint().getConnectedKey(address);
             // This assert should never fire. If it does, it means the wallet is inconsistent.
             checkNotNull(key, "Transaction exists in wallet that we cannot redeem: %s",

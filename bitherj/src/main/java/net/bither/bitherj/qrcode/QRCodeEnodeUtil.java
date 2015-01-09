@@ -70,8 +70,7 @@ public class QRCodeEnodeUtil {
             }
             byte[] pub = Utils.hexStringToByteArray(str);
             String addString = Utils.toAddress(Utils.sha256hash160(pub));
-            Address address = new Address(addString, pub, null, false);
-            address.setFromXRandom(isXRandom);
+            Address address = new Address(addString, pub, null, isXRandom);
             wallets.add(address);
         }
         return wallets;

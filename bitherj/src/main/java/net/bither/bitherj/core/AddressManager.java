@@ -141,9 +141,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             if (getAllAddresses().contains(address)) {
                 return false;
             }
-            if (address.hasPrivKey) {
-                long sortTime = getPrivKeySortTime();
-                address.setSortTime(sortTime);
+            if (address.hasPrivKey()) {
                 if (!this.getTrashAddresses().contains(address)) {
                     AbstractDb.addressProvider.addAddress(address);
                     privKeyAddresses.add(0, address);
@@ -163,6 +161,14 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 addressHashSet.add(address.address);
             }
             return true;
+        }
+    }
+
+    public long getSortTime(boolean hasPrivateKey) {
+        if (hasPrivateKey) {
+            return getPrivKeySortTime();
+        } else {
+            return getWatchOnlySortTime();
         }
     }
 
@@ -192,7 +198,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
 
     public boolean stopMonitor(Address address) {
         synchronized (lock) {
-            if (!address.hasPrivKey) {
+            if (!address.hasPrivKey()) {
                 AbstractDb.addressProvider.removeWatchOnlyAddress(address);
                 watchOnlyAddresses.remove(address);
                 addressHashSet.remove(address.address);
@@ -205,7 +211,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
 
     public boolean trashPrivKey(Address address) {
         synchronized (lock) {
-            if ((address.hasPrivKey || address.isHDM()) && address.getBalance() == 0) {
+            if ((address.hasPrivKey() || address.isHDM()) && address.getBalance() == 0) {
                 AbstractDb.addressProvider.trashPrivKeyAddress(address);
                 trashAddresses.add(address);
                 privKeyAddresses.remove(address);
@@ -219,12 +225,12 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
 
     public boolean restorePrivKey(Address address) {
         synchronized (lock) {
-            if (address.hasPrivKey || address.isHDM()) {
+            if (address.hasPrivKey() || address.isHDM()) {
                 long sortTime = getPrivKeySortTime();
                 address.setSortTime(sortTime);
                 address.setSyncComplete(false);
                 AbstractDb.addressProvider.restorePrivKeyAddress(address);
-                if (address.hasPrivKey && !address.isHDM()) {
+                if (address.hasPrivKey() && !address.isHDM()) {
                     privKeyAddresses.add(0, address);
                 }
                 trashAddresses.remove(address);
@@ -335,7 +341,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             return true;
         }
         for (Address a : privKeyAddresses) {
-            String encryptedStr = a.getEncryptPrivKey();
+            String encryptedStr = a.getFullEncryptPrivKey();
             String newEncryptedStr = PrivateKeyUtil.changePassword(encryptedStr, oldPassword, newPassword);
             if (newEncryptedStr == null) {
                 return false;
@@ -343,7 +349,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             a.setEncryptPrivKey(newEncryptedStr);
         }
         for (Address a : trashAddresses) {
-            String encryptedStr = a.getEncryptPrivKey();
+            String encryptedStr = a.getFullEncryptPrivKey();
             String newEncryptedStr = PrivateKeyUtil.changePassword(encryptedStr, oldPassword, newPassword);
             if (newEncryptedStr == null) {
                 return false;

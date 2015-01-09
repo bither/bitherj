@@ -17,7 +17,6 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
-import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.KeyCrypterScrypt;
 import net.bither.bitherj.crypto.TransactionSignature;
@@ -35,8 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,9 +51,9 @@ public class Address implements Comparable<Address> {
     public static final String PUBLIC_KEY_FILE_NAME_SUFFIX = ".pub";
 
     protected String encryptPrivKey;
+    protected String fullEncryptPrivKey = null;
     protected byte[] pubKey;
     protected String address;
-    protected boolean hasPrivKey;
 
     protected boolean syncComplete = false;
     private long mSortTime;
@@ -64,23 +61,15 @@ public class Address implements Comparable<Address> {
     private boolean isFromXRandom;
     private boolean isTrashed = false;
 
-    public Address(String address, byte[] pubKey, long sortTime, boolean isSyncComplete,
-                   boolean isFromXRandom, boolean hasPrivKey) {
-        this.hasPrivKey = hasPrivKey;
-        this.encryptPrivKey = null;
-        this.address = address;
-        this.pubKey = pubKey;
-        this.mSortTime = sortTime;
-        this.syncComplete = isSyncComplete;
-        this.isFromXRandom = isFromXRandom;
-        this.updateBalance();
-    }
+    public Address(String address, byte[] pubKey, String encryptString, boolean isFromXRandom) {
+        this(address, pubKey, AddressManager.getInstance().getSortTime(!Utils.isEmpty(encryptString))
+                , false, isFromXRandom, false, encryptString);
 
+    }
 
     public Address(String address, byte[] pubKey, long sortTime, boolean isSyncComplete,
                    boolean isFromXRandom, boolean isTrashed, String encryptPrivKey) {
         this.encryptPrivKey = encryptPrivKey;
-        this.hasPrivKey = !Utils.isEmpty(this.encryptPrivKey);
         this.address = address;
         this.pubKey = pubKey;
         this.mSortTime = sortTime;
@@ -90,14 +79,6 @@ public class Address implements Comparable<Address> {
         this.updateBalance();
     }
 
-    public Address(String address, byte[] pubKey, String encryptString, boolean isFromXRandom) {
-        this.encryptPrivKey = encryptString;
-        this.address = address;
-        this.pubKey = pubKey;
-        this.hasPrivKey = !Utils.isEmpty(encryptString);
-        this.updateBalance();
-        this.isFromXRandom = isFromXRandom;
-    }
 
     public int txCount() {
         return AbstractDb.txProvider.txCount(this.address);
@@ -241,7 +222,7 @@ public class Address implements Comparable<Address> {
     }
 
     public boolean hasPrivKey() {
-        return this.hasPrivKey;
+        return !Utils.isEmpty(this.encryptPrivKey);
     }
 
     public boolean isSyncComplete() {
@@ -286,36 +267,26 @@ public class Address implements Comparable<Address> {
         this.mSortTime = mSortTime;
     }
 
-    public String getEncryptPrivKey() {
-
-        return this.encryptPrivKey;
+    public String getEncryptPrivKeyOfDb() {
+        return PrivateKeyUtil.formatEncryptPrivateKeyForDb(this.encryptPrivKey);
     }
 
-    public String getEncryptPrivKeyOfQRCode() {
+    public String getFullEncryptPrivKey() {
         if (Utils.isEmpty(this.encryptPrivKey)) {
             return "";
         } else {
-            String[] strings = QRCodeUtil.splitString(this.encryptPrivKey);
-            byte[] salt = Utils.hexStringToByteArray(strings[2]);
-            byte[] saltBytes = new byte[KeyCrypterScrypt.SALT_LENGTH + 1];
-            int flag = 0;
-            if (isCompressed()) {
-                flag += PrivateKeyUtil.IS_COMPRESSED_FLAG;
+            if (!Utils.isEmpty(fullEncryptPrivKey)) {
+                return fullEncryptPrivKey;
             }
-            if (isFromXRandom()) {
-                flag += PrivateKeyUtil.IS_FROMXRANDOM_FLAG;
-            }
-            saltBytes[0] = (byte) flag;
-            System.arraycopy(salt, 0, saltBytes, 1, salt.length);
-            strings[2] = Utils.bytesToHexString(saltBytes);
-            return Utils.joinString(strings, QRCodeUtil.QR_CODE_SPLIT);
+            fullEncryptPrivKey = PrivateKeyUtil.getFullencryptPrivateKey(Address.this
+                    , this.encryptPrivKey);
         }
-
+        return fullEncryptPrivKey;
     }
 
     public void setEncryptPrivKey(String encryptPrivKey) {
         this.encryptPrivKey = encryptPrivKey;
-        this.hasPrivKey = true;
+
     }
 
     public Tx buildTx(List<Long> amounts, List<String> addresses) throws TxBuilderException {
@@ -362,7 +333,7 @@ public class Address implements Comparable<Address> {
 
     public List<byte[]> signHashes(List<byte[]> unsignedInHashes, CharSequence passphrase) throws
             PasswordException {
-        ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getEncryptPrivKey(), passphrase);
+        ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getFullEncryptPrivKey(), passphrase);
         if (key == null) {
             throw new PasswordException("do not decrypt eckey");
         }
@@ -379,7 +350,7 @@ public class Address implements Comparable<Address> {
 
     public String signMessage(String msg, CharSequence passphrase) {
 
-        ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getEncryptPrivKey(), passphrase);
+        ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getFullEncryptPrivKey(), passphrase);
         if (key == null) {
             throw new PasswordException("do not decrypt eckey");
         }
