@@ -3,6 +3,7 @@ package net.bither.bitherj.core;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.primitives.Chars;
 
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
@@ -61,8 +62,9 @@ public class HDMKeychain {
         seed = new byte[32];
         random.nextBytes(seed);
         EncryptedData encryptedSeed = new EncryptedData(seed, password);
+        String firstAddress = getFirstAddressFromSeed(password);
         wipeSeed();
-        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(), isFromXRandom);
+        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(), firstAddress, isFromXRandom);
         allCompletedAddresses = new ArrayList<HDMAddress>();
     }
 
@@ -93,12 +95,13 @@ public class HDMKeychain {
                 throw e;
             }
         }
+        String firstAddress = getFirstAddressFromSeed(password);
         wipeSeed();
         ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
         for (HDMAddress.Pubs p : pubs) {
             as.add(new HDMAddress(p, this));
         }
-        this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(), isFromXRandom);
+        this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(), firstAddress, isFromXRandom);
         AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
         allCompletedAddresses.addAll(as);
     }
@@ -314,6 +317,23 @@ public class HDMKeychain {
 
     public void wipeSeed(){
         Utils.wipeBytes(seed);
+    }
+
+    private String getFirstAddressFromSeed(CharSequence password){
+        DeterministicKey key = getExternalKey(0, password);
+        return Utils.toAddress(key.getPubKeyHash());
+    }
+
+    private String getFirstAddressFromDb(){
+        return AbstractDb.addressProvider.getHDMFristAddress(hdSeedId);
+    }
+
+    public boolean checkWithPassword(CharSequence password){
+        try{
+            return Utils.compareString(getFirstAddressFromDb(), getFirstAddressFromSeed(password));
+        }catch (Exception e){
+            return false;
+        }
     }
 
     public PasswordSeed createPasswordSeed(CharSequence password){

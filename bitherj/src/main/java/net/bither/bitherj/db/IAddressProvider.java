@@ -17,7 +17,9 @@ public interface IAddressProvider {
 
     public boolean isHDSeedFromXRandom(int hdSeedId);
 
-    public int addHDKey(String encryptSeed, boolean isXrandom);
+    public String getHDMFristAddress(int hdSeedId);
+
+    public int addHDKey(String encryptSeed, String firstAddress, boolean isXrandom);
 
     public String getBitherId();
 
