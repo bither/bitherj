@@ -1,10 +1,10 @@
 package net.bither.bitherj.db;
 
 import net.bither.bitherj.core.Address;
+import net.bither.bitherj.core.HDMBId;
 import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.core.HDMKeychain;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public interface IAddressProvider {
@@ -21,19 +21,18 @@ public interface IAddressProvider {
 
     public int addHDKey(String encryptSeed, String firstAddress, boolean isXrandom);
 
-    public String getBitherId();
+    public HDMBId getHDMBId();
 
-    public String getBitherEncryptPassword();
 
-    public void addBitherId(String bitherId, String encryptBitherPassword);
+    public void addHDMBId(HDMBId bitherId);
 
-    public void changeBitherPassword(String encryptBitherPassword);
+    public void changeHDMBIdPassword(String encryptBitherPassword);
 
     public List<HDMAddress> getHDMAddressInUse(HDMKeychain keychain);
 
     public void prepareHDMAddresses(int hdSeedId, List<HDMAddress.Pubs> pubs);
 
-    public ArrayList<HDMAddress.Pubs> getUncompletedHDMAddressPubs(int hdSeedId, int count);
+    public List<HDMAddress.Pubs> getUncompletedHDMAddressPubs(int hdSeedId, int count);
 
     public int maxHDMAddressPubIndex(int hdSeedId);//including completed and uncompleted
 

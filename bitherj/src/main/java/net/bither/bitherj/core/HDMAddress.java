@@ -23,11 +23,11 @@ public class HDMAddress extends Address {
     private Pubs pubs;
 
     public HDMAddress(Pubs pubs, HDMKeychain keychain) {
-        this(pubs, false, keychain);
+        this(pubs, pubs.getAddress(), false, keychain);
     }
 
-    public HDMAddress(Pubs pubs, boolean isSyncComplete, HDMKeychain keychain) {
-        super(pubs.getAddress(), pubs.getMultiSigScript().getPubKey(), pubs.index, isSyncComplete, true, false, null);
+    public HDMAddress(Pubs pubs, String address, boolean isSyncComplete, HDMKeychain keychain) {
+        super(address, pubs.getMultiSigScript().getPubKey(), pubs.index, isSyncComplete, true, false, null);
         this.keychain = keychain;
         this.pubs = pubs;
     }

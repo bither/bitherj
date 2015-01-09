@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
  */
 public class HDMKeychain {
     public static interface HDMFetchRemotePublicKeys{
-        void completeRemotePublicKeys(CharSequence password, ArrayList<HDMAddress.Pubs> partialPubs);
+        void completeRemotePublicKeys(CharSequence password, List<HDMAddress.Pubs> partialPubs);
     }
 
     public static interface HDMFetchRemoteAddresses {
@@ -146,7 +146,7 @@ public class HDMKeychain {
         }
         ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
         synchronized (allCompletedAddresses) {
-            ArrayList<HDMAddress.Pubs> pubs = AbstractDb.addressProvider.getUncompletedHDMAddressPubs(getHdSeedId(), count);
+            List<HDMAddress.Pubs> pubs = AbstractDb.addressProvider.getUncompletedHDMAddressPubs(getHdSeedId(), count);
             try {
                 fetchDelegate.completeRemotePublicKeys(password, pubs);
                 for (HDMAddress.Pubs p : pubs) {
@@ -347,7 +347,7 @@ public class HDMKeychain {
     }
 
     public static final class HDMBitherIdNotMatchException extends RuntimeException{
-        public static final String msg = "HDM BitherId Not Match";
+        public static final String msg = "HDM Bid Not Match";
 
         public HDMBitherIdNotMatchException(){
             super(msg);
