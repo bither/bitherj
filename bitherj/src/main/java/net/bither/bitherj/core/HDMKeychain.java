@@ -124,6 +124,7 @@ public class HDMKeychain {
             try {
                 p.hot = externalRootHot.deriveSoftened(i).getPubKey();
                 p.cold = externalRootCold.deriveSoftened(i).getPubKey();
+                p.index = i;
                 pubs.add(p);
             } catch (Exception e) {
                 e.printStackTrace();
