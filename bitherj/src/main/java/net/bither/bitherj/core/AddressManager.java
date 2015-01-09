@@ -212,6 +212,9 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     public boolean trashPrivKey(Address address) {
         synchronized (lock) {
             if ((address.hasPrivKey() || address.isHDM()) && address.getBalance() == 0) {
+                if(address.isHDM() && hdmKeychain.getAddresses().size() <= 1){
+                    return false;
+                }
                 AbstractDb.addressProvider.trashPrivKeyAddress(address);
                 trashAddresses.add(address);
                 privKeyAddresses.remove(address);
@@ -319,7 +322,11 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
 
     public boolean hasHDMKeychain() {
         synchronized (lock) {
-            return hdmKeychain != null;
+            if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
+                return hdmKeychain != null;
+            } else {
+                return hdmKeychain != null && hdmKeychain.getAddresses().size() > 0;
+            }
         }
     }
 
