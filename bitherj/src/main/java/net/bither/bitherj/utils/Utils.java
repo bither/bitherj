@@ -964,5 +964,17 @@ public class Utils {
 
     }
 
+    public static String joinString(String[] strs, String spiltStr) {
+        String result = "";
+        for (int i = 0; i < strs.length; i++) {
+            if (i < strs.length - 1) {
+                result = result + strs[i] + spiltStr;
+            } else {
+                result = result + strs[i];
+            }
+        }
+        return result;
+    }
+
 
 }

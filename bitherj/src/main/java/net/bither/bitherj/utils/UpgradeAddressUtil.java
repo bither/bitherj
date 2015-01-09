@@ -18,6 +18,7 @@ package net.bither.bitherj.utils;
 
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.Address;
+import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.crypto.KeyCrypterScrypt;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.qrcode.QRCodeUtil;
@@ -135,27 +136,27 @@ public class UpgradeAddressUtil {
         String[] strs = QRCodeUtil.splitOfPasswordSeed(encryptPrivvateKey);
         byte[] temp = Utils.hexStringToByteArray(strs[2]);
         byte[] salt = new byte[KeyCrypterScrypt.SALT_LENGTH];
-        if (temp.length != KeyCrypterScrypt.SALT_LENGTH + 1) {
+        if (temp.length == KeyCrypterScrypt.SALT_LENGTH + 1) {
             System.arraycopy(temp, 1, salt, 0, salt.length);
         } else {
             salt = temp;
         }
         strs[2] = Utils.bytesToHexString(salt);
-        return strs[0] + QRCodeUtil.QR_CODE_SPLIT + strs[1] + QRCodeUtil.QR_CODE_SPLIT + strs[2];
+        return Utils.joinString(strs, QRCodeUtil.QR_CODE_SPLIT);
 
     }
 
     public static boolean upgradeAddress() {
         boolean success = true;
-        AbstractDb.txProvider.clearAllTx();
         List<Address> addressList = new ArrayList<Address>();
         addressList.addAll(initPrivateKeyListByDesc());
         addressList.addAll(initWatchOnlyListByDesc());
         addressList.addAll(initTrashListByDesc());
         for (Address address : addressList) {
             address.setSyncComplete(false);
-            AbstractDb.addressProvider.addAddress(address);
+            AddressManager.getInstance().addAddress(address);
         }
+        AbstractDb.txProvider.clearAllTx();
         return success;
     }
 

@@ -19,6 +19,7 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.ECKey;
+import net.bither.bitherj.crypto.KeyCrypterScrypt;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.PasswordException;
@@ -260,19 +261,12 @@ public class Address implements Comparable<Address> {
     }
 
 
-    public void savePrivateKey() {
+    public void updatePrivateKey() {
         AbstractDb.addressProvider.updatePrivateKey(Address.this);
     }
 
     public void updateSyncComplete() {
         AbstractDb.addressProvider.updateSyncComplete(Address.this);
-    }
-
-
-    public void saveTrashKey() throws IOException {
-        String privateKeyFullFileName = Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                Utils.getTrashDir(), getAddress());
-        Utils.writeFile(this.encryptPrivKey, new File(privateKeyFullFileName));
     }
 
     @Override
@@ -293,12 +287,30 @@ public class Address implements Comparable<Address> {
     }
 
     public String getEncryptPrivKey() {
-        if (this.hasPrivKey) {
 
-            return this.encryptPrivKey;
+        return this.encryptPrivKey;
+    }
+
+    public String getEncryptPrivKeyOfQRCode() {
+        if (Utils.isEmpty(this.encryptPrivKey)) {
+            return "";
         } else {
-            return null;
+            String[] strings = QRCodeUtil.splitString(this.encryptPrivKey);
+            byte[] salt = Utils.hexStringToByteArray(strings[2]);
+            byte[] saltBytes = new byte[KeyCrypterScrypt.SALT_LENGTH + 1];
+            int flag = 0;
+            if (isCompressed()) {
+                flag += PrivateKeyUtil.IS_COMPRESSED_FLAG;
+            }
+            if (isFromXRandom()) {
+                flag += PrivateKeyUtil.IS_FROMXRANDOM_FLAG;
+            }
+            saltBytes[0] = (byte) flag;
+            System.arraycopy(salt, 0, saltBytes, 1, salt.length);
+            strings[2] = Utils.bytesToHexString(saltBytes);
+            return Utils.joinString(strings, QRCodeUtil.QR_CODE_SPLIT);
         }
+
     }
 
     public void setEncryptPrivKey(String encryptPrivKey) {

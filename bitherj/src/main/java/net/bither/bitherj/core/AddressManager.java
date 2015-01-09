@@ -47,22 +47,16 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     protected HDMKeychain hdmKeychain;
 
     private AddressManager() {
-        reloadAddress();
-    }
-
-    public static AddressManager getInstance() {
-        return uniqueInstance;
-    }
-
-    public void reloadAddress() {
-        AbstractApp.addressIsReady = false;
         synchronized (lock) {
             initAddress();
             initHDMKeychain();
             AbstractApp.addressIsReady = true;
             AbstractApp.notificationService.sendBroadcastAddressLoadCompleteState();
         }
+    }
 
+    public static AddressManager getInstance() {
+        return uniqueInstance;
     }
 
     private void initAddress() {
@@ -358,12 +352,11 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         }
 
         for (Address address : privKeyAddresses) {
-            address.savePrivateKey();
+            address.updatePrivateKey();
         }
         for (Address address : trashAddresses) {
-            address.saveTrashKey();
+            address.updatePrivateKey();
         }
-
         if (hasHDMKeychain()) {
             getHdmKeychain().changePassword(oldPassword, newPassword);
         }

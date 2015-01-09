@@ -33,25 +33,25 @@ import java.util.List;
 
 public class PrivateKeyUtil {
     private static final Logger log = LoggerFactory.getLogger(PrivateKeyUtil.class);
-    private static final int IS_COMPRESSED_FLAG = 1;
-    private static final int IS_FROMXRANDOM_FLAG = 2;
+    public static final int IS_COMPRESSED_FLAG = 1;
+    public static final int IS_FROMXRANDOM_FLAG = 2;
 
 
     public static String getEncryptedString(ECKey ecKey) {
         String salt = "1";
         if (ecKey.getKeyCrypter() instanceof KeyCrypterScrypt) {
             KeyCrypterScrypt scrypt = (KeyCrypterScrypt) ecKey.getKeyCrypter();
-            byte[] saltBytes = new byte[KeyCrypterScrypt.SALT_LENGTH + 1];
-            int flag = 0;
-            if (ecKey.isCompressed()) {
-                flag += IS_COMPRESSED_FLAG;
-            }
-            if (ecKey.isFromXRandom()) {
-                flag += IS_FROMXRANDOM_FLAG;
-            }
-            saltBytes[0] = (byte) flag;
-            System.arraycopy(scrypt.getSalt(), 0, saltBytes, 1, scrypt.getSalt().length);
-            salt = Utils.bytesToHexString(saltBytes);
+//            byte[] saltBytes = new byte[KeyCrypterScrypt.SALT_LENGTH + 1];
+//            int flag = 0;
+//            if (ecKey.isCompressed()) {
+//                flag += IS_COMPRESSED_FLAG;
+//            }
+//            if (ecKey.isFromXRandom()) {
+//                flag += IS_FROMXRANDOM_FLAG;
+//            }
+//            saltBytes[0] = (byte) flag;
+//            System.arraycopy(scrypt.getSalt(), 0, saltBytes, 1, scrypt.getSalt().length);
+            salt = Utils.bytesToHexString(scrypt.getSalt());
         }
         EncryptedPrivateKey key = ecKey.getEncryptedPrivateKey();
         return Utils.bytesToHexString(key.getEncryptedBytes()) + QRCodeUtil.QR_CODE_SPLIT + Utils
@@ -176,7 +176,7 @@ public class PrivateKeyUtil {
              i < privates.size();
              i++) {
             Address address = privates.get(i);
-            content += address.getEncryptPrivKey();
+            content += address.getEncryptPrivKeyOfQRCode();
             if (i < privates.size() - 1) {
                 content += QRCodeUtil.QR_CODE_SPLIT;
             }
