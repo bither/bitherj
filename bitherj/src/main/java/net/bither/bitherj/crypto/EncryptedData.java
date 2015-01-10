@@ -39,9 +39,9 @@ public class EncryptedData {
     }
 
     public String toEncryptedString() {
-        return Utils.bytesToHexString(encryptedData)
-                + QRCodeUtil.QR_CODE_SPLIT + Utils.bytesToHexString(initialisationVector)
-                + QRCodeUtil.QR_CODE_SPLIT + Utils.bytesToHexString(salt);
+        return Utils.bytesToHexString(encryptedData).toUpperCase()
+                + QRCodeUtil.QR_CODE_SPLIT + Utils.bytesToHexString(initialisationVector).toUpperCase()
+                + QRCodeUtil.QR_CODE_SPLIT + Utils.bytesToHexString(salt).toUpperCase();
     }
 
 }

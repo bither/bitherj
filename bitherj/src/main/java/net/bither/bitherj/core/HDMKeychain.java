@@ -217,8 +217,8 @@ public class HDMKeychain {
         return pub;
     }
 
-    public String getExternalChainRootPubExtendedAsHex(CharSequence password) throws MnemonicException.MnemonicLengthException {
-        return Utils.bytesToHexString(getExternalChainRootPubExtended(password));
+    public String getExternalChainRootPubExtendedAsHex(CharSequence password) throws MnemonicException.MnemonicLengthException{
+        return Utils.bytesToHexString(getExternalChainRootPubExtended(password)).toUpperCase();
     }
 
     private DeterministicKey masterKey(CharSequence password) throws MnemonicException.MnemonicLengthException {
@@ -299,9 +299,9 @@ public class HDMKeychain {
             seed = new EncryptedData(encrypted).decrypt(password);
         }
     }
-
+    
     public String getEncryptedSeed() {
-        return AbstractDb.addressProvider.getEncryptSeed(hdSeedId);
+        return AbstractDb.addressProvider.getEncryptSeed(hdSeedId).toUpperCase();
     }
 
     public void changePassword(CharSequence oldPassword, CharSequence newPassword) {
