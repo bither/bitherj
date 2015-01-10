@@ -595,6 +595,24 @@ public class Utils {
         }
     }
 
+    public static byte[] getPreSignMessage(String message) {
+        byte[] data = formatMessageForSigning(message);
+        return Utils.doubleDigest(data);
+    }
+
+    private static byte[] formatStringForSigning(String message) {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            byte[] messageBytes = message.getBytes(Charsets.UTF_8);
+            VarInt size = new VarInt(messageBytes.length);
+            bos.write(size.encode());
+            bos.write(messageBytes);
+            return bos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);  // Cannot happen.
+        }
+    }
+
     // 00000001, 00000010, 00000100, 00001000, ...
     private static final int bitMask[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 

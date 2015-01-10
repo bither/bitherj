@@ -19,6 +19,7 @@ import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.crypto.params.KeyParameter;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -152,7 +153,7 @@ public class HDMKeychain {
             try {
                 fetchDelegate.completeRemotePublicKeys(password, pubs);
                 for (HDMAddress.Pubs p : pubs) {
-                    if(p.isCompleted()) {
+                    if (p.isCompleted()) {
                         as.add(new HDMAddress(p, this));
                     }
                 }
@@ -219,7 +220,7 @@ public class HDMKeychain {
         return pub;
     }
 
-    public String getExternalChainRootPubExtendedAsHex(CharSequence password) throws MnemonicException.MnemonicLengthException{
+    public String getExternalChainRootPubExtendedAsHex(CharSequence password) throws MnemonicException.MnemonicLengthException {
         return Utils.bytesToHexString(getExternalChainRootPubExtended(password)).toUpperCase();
     }
 
@@ -301,7 +302,7 @@ public class HDMKeychain {
             seed = new EncryptedData(encrypted).decrypt(password);
         }
     }
-    
+
     public String getEncryptedSeed() {
         return AbstractDb.addressProvider.getEncryptSeed(hdSeedId).toUpperCase();
     }
@@ -351,7 +352,10 @@ public class HDMKeychain {
     }
 
     public String signHDMBId(String messageHash, SecureCharSequence password) {
-        return "";
+        DeterministicKey key = getExternalKey(0, password);
+        String result = key.signHash(Utils.hexStringToByteArray(messageHash), key.getKeyCrypter().deriveKey(password));
+
+        return result;
 
     }
 
