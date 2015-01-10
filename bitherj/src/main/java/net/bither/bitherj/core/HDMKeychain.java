@@ -9,6 +9,7 @@ import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.PasswordSeed;
+import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
@@ -347,7 +348,7 @@ public class HDMKeychain {
         return new PasswordSeed(address, encrypted);
     }
 
-    public String signHDMBId(String messageHash) {
+    public String signHDMBId(String messageHash, SecureCharSequence password) {
         return "";
 
     }
