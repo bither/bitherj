@@ -146,6 +146,10 @@ public class HDMAddress extends Address {
                     new ECKey(null, remote)));
         }
 
+        public boolean isCompleted(){
+            return hot != null && cold != null && remote != null;
+        }
+
         public String getAddress() {
             return Utils.toP2SHAddress(Utils.sha256hash160(getMultiSigScript().getProgram()));
         }

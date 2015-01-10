@@ -152,7 +152,9 @@ public class HDMKeychain {
             try {
                 fetchDelegate.completeRemotePublicKeys(password, pubs);
                 for (HDMAddress.Pubs p : pubs) {
-                    as.add(new HDMAddress(p, this));
+                    if(p.isCompleted()) {
+                        as.add(new HDMAddress(p, this));
+                    }
                 }
                 AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
             } catch (Exception e) {
