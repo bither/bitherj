@@ -106,4 +106,31 @@ public class BitherjSettings {
             return satoshi;
         }
     }
+
+    public enum MarketType {
+        BITSTAMP(1), BTCE(2), HUOBI(3), OKCOIN(4), BTCCHINA(5), CHBTC(6), BITFINEX(7),
+        MARKET796(8);
+        private int mVal;
+
+        private MarketType(int val) {
+            this.mVal = val;
+        }
+
+        public int getValue() {
+            return this.mVal;
+        }
+    }
+
+    public enum KlineTimeType {
+        ONE_MINUTE(1), FIVE_MINUTES(5), ONE_HOUR(60), ONE_DAY(1440);
+        private int mVal;
+
+        private KlineTimeType(int val) {
+            this.mVal = val;
+        }
+
+        public int getValue() {
+            return this.mVal;
+        }
+    }
 }

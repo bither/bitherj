@@ -18,6 +18,8 @@ package net.bither.bitherj;
 
 import net.bither.bitherj.qrcode.QRCodeUtil;
 
+import org.apache.http.client.CookieStore;
+
 import java.io.File;
 
 public interface ISetting {
@@ -28,6 +30,10 @@ public interface ISetting {
 
     public void setBitherjDoneSyncFromSpv(boolean isDone);
 
+    public boolean getDownloadSpvFinish();
+
+    public void setDownloadSpvFinish(boolean finish);
+
     public QRCodeUtil.QRQuality getQRQuality();
 
     public BitherjSettings.TransactionFeeMode getTransactionFeeMode();
@@ -35,5 +41,8 @@ public interface ISetting {
     public File getPrivateDir(String dirName);
 
     public boolean isApplicationRunInForeground();
+
+    public CookieStore getCookieStore();
+
 
 }
