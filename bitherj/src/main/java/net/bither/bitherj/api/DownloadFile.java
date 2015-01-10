@@ -19,11 +19,10 @@ package net.bither.bitherj.api;
 
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.utils.Utils;
-import net.bither.bitherj.http.HttpRequestException;
-import net.bither.bitherj.http.HttpSetting;
+import net.bither.bitherj.api.http.HttpRequestException;
+import net.bither.bitherj.api.http.HttpSetting;
 
 
-import org.apache.http.client.CookieStore;
 import org.apache.http.cookie.Cookie;
 
 import java.io.BufferedInputStream;

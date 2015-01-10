@@ -14,38 +14,29 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.http;
+package net.bither.bitherj.api.http;
 
-public class HttpNoConnectException extends HttpException {
+public class Http500Exception extends HttpException {
 	private static final long serialVersionUID = 1L;
-	private String refuseError;
 
-	public HttpNoConnectException(String msg, int statusCode) {
-		super(msg, statusCode);
-
+	public Http500Exception(Exception cause) {
+		super(cause);
 	}
 
-	public HttpNoConnectException(String msg, Exception cause, int statusCode) {
+	public Http500Exception(String msg, int statusCode) {
+		super(msg, statusCode);
+	}
+
+	public Http500Exception(String msg, Exception cause, int statusCode) {
 		super(msg, cause, statusCode);
 
 	}
 
-	public HttpNoConnectException(String msg, Exception cause) {
+	public Http500Exception(String msg, Exception cause) {
 		super(msg, cause);
-
 	}
 
-	public HttpNoConnectException(String msg) {
+	public Http500Exception(String msg) {
 		super(msg);
-
-	}
-
-	public String getRefuseError() {
-		return refuseError;
-	}
-
-	public HttpNoConnectException setRefuseError(String refuseError) {
-		this.refuseError = refuseError;
-		return this;
 	}
 }

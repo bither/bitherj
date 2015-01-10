@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.http;
+package net.bither.bitherj.api.http;
 
 public class Http400Exception extends HttpException {
 	private static final long serialVersionUID = 1L;

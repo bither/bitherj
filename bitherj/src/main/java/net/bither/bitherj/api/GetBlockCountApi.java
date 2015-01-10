@@ -16,8 +16,8 @@
 
 package net.bither.bitherj.api;
 
-import net.bither.bitherj.http.BitherUrl;
-import net.bither.bitherj.http.HttpGetResponse;
+import net.bither.bitherj.api.http.BitherUrl;
+import net.bither.bitherj.api.http.HttpGetResponse;
 
 public class GetBlockCountApi extends HttpGetResponse<Long> {
 

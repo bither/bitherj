@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.http;
+package net.bither.bitherj.api.http;
 
 public class HttpSetting {
 	/**

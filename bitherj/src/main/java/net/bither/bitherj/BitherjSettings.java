@@ -133,4 +133,8 @@ public class BitherjSettings {
             return this.mVal;
         }
     }
+    public enum AddressType {
+        Normal, TxTooMuch, SpecialAddress
+    }
+
 }
