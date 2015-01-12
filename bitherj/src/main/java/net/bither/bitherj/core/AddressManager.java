@@ -215,6 +215,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 if(address.isHDM() && hdmKeychain.getAddresses().size() <= 1){
                     return false;
                 }
+                address.setTrashed(true);
                 AbstractDb.addressProvider.trashPrivKeyAddress(address);
                 trashAddresses.add(address);
                 privKeyAddresses.remove(address);
@@ -232,6 +233,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 long sortTime = getPrivKeySortTime();
                 address.setSortTime(sortTime);
                 address.setSyncComplete(false);
+                address.setTrashed(false);
                 AbstractDb.addressProvider.restorePrivKeyAddress(address);
                 if (address.hasPrivKey() && !address.isHDM()) {
                     privKeyAddresses.add(0, address);
