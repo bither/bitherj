@@ -43,6 +43,7 @@ public class HttpSetting {
     public static final String PUB_COLD = "pub_cold";
     public static final String START = "start";
     public static final String END = "end";
+    public static final String UNSIGN = "unsign";
 }
 
 

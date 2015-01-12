@@ -994,5 +994,13 @@ public class Utils {
         return result;
     }
 
+    public static byte[] copyOfRange(final byte[] source, final int from,
+                                     final int len) {
+        final byte[] range = new byte[len];
+        System.arraycopy(source, from, range, 0, len);
+
+        return range;
+    }
+
 
 }
