@@ -17,22 +17,46 @@
 package net.bither.bitherj.api.http;
 
 public class HttpSetting {
-	/**
-	 * HTTP_CONNECTION_TIMEOUT: Set the timeout in milliseconds until a
-	 * connection is established. The default value is zero, that means the
-	 * timeout is not used.
-	 */
-	public static final int HTTP_CONNECTION_TIMEOUT = 1000 * 1000;
-	/**
-	 * HTTP_SO_TIMEOUT: Set the default socket timeout (SO_TIMEOUT). in
-	 * milliseconds which is the timeout for waiting for data.
-	 */
-	public static final int HTTP_SO_TIMEOUT = 1400 * 1000;
+    /**
+     * HTTP_CONNECTION_TIMEOUT: Set the timeout in milliseconds until a
+     * connection is established. The default value is zero, that means the
+     * timeout is not used.
+     */
+    public static final int HTTP_CONNECTION_TIMEOUT = 1000 * 1000;
+    /**
+     * HTTP_SO_TIMEOUT: Set the default socket timeout (SO_TIMEOUT). in
+     * milliseconds which is the timeout for waiting for data.
+     */
+    public static final int HTTP_SO_TIMEOUT = 1400 * 1000;
 
-	public final static String SPECIAL_TYPE = "special_type";
-	// enum
-	public enum HttpType {
-		BitherApi, OtherApi, GetBitherCookie
-	}
+    public final static String SPECIAL_TYPE = "special_type";
 
+    // enum
+    public enum HttpType {
+        BitherApi, OtherApi, GetBitherCookie
+    }
+
+    public static final String PASSWORD = "password";
+    public static final String SIGNATURE = "signature";
+
+    public static final String PUB_HOT = "pub_hot";
+    public static final String PUB_COLD = "pub_cold";
+    public static final String START = "start";
+    public static final String END = "end";
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -16,38 +16,28 @@
 
 package net.bither.bitherj.api;
 
-import net.bither.bitherj.api.http.BitherUrl;
 import net.bither.bitherj.api.http.HttpPostResponse;
-import net.bither.bitherj.api.http.HttpSetting;
-import net.bither.bitherj.utils.Utils;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class UploadHDMBidApi extends HttpPostResponse<String> {
-
-    private String signature;
+public class CreateHDMAddressApi extends HttpPostResponse<String> {
     private String password;
+    private String pubHot;
+    private String pubCold;
+    private int start;
+    private int end;
 
-    public UploadHDMBidApi(String address, String signature, String password) {
-        String url = Utils.format(BitherUrl.BITHER_HDM_PASSWORD, address);
-        setUrl(url);
-        this.signature = signature;
+    public CreateHDMAddressApi(String password, String pubHot, String pubCold, int start, int end) {
         this.password = password;
+        this.pubHot = pubHot;
+        this.pubCold = pubCold;
+        this.start = start;
+        this.end = end;
     }
 
     @Override
     public HttpEntity getHttpEntity() throws Exception {
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair(HttpSetting.PASSWORD, this.password));
-        params.add(new BasicNameValuePair(HttpSetting.SIGNATURE, this.signature));
-        return new UrlEncodedFormEntity(params, HTTP.UTF_8);
+        return null;
     }
 
     @Override

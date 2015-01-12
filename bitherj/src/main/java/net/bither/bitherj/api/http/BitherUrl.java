@@ -55,6 +55,8 @@ public class BitherUrl {
     public static final String BITHER_Q_MYTRANSACTIONS = BITHER_DNS.BITHER_BC1
             + "api/v2/address/%s/transaction";
     public static final String BITHER_HDM_PASSWORD = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/password";
+    public static final String BITHER_HDM_CREATE_ADDRESS = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/address/create";
+    public static final String BITHER_HDM_SIGNATURE = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/address/%d/signature";
     public static final String BITHER_GET_ONE_SPVBLOCK_API = BITHER_DNS.BITHER_BITCOIN +
             "api/v1/block/spv/one";
     public static final String BITHER_IN_SIGNATURES_API = BITHER_DNS.BITHER_BITCOIN + "api/v1/address/%s/insignature/%d";
