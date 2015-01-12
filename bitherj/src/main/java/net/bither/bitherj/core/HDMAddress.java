@@ -8,15 +8,14 @@ import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.Utils;
 
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class HDMAddress extends Address {
     public static interface HDMFetchOtherSignatureDelegate {
-        List<TransactionSignature> getOtherSignature(int addressIndex, CharSequence password, List<byte[]> unsignHash, Tx tx);
+        List<TransactionSignature> getOtherSignature(int addressIndex, CharSequence password,
+                                                     List<byte[]> unsignHash, Tx tx);
     }
 
     private HDMKeychain keychain;
@@ -27,7 +26,8 @@ public class HDMAddress extends Address {
     }
 
     public HDMAddress(Pubs pubs, String address, boolean isSyncComplete, HDMKeychain keychain) {
-        super(address, pubs.getMultiSigScript().getProgram(), pubs.index, isSyncComplete, true, false, null);
+        super(address, pubs.getMultiSigScript().getProgram(), pubs.index, isSyncComplete, true,
+                false, null);
         this.keychain = keychain;
         this.pubs = pubs;
     }
@@ -50,7 +50,13 @@ public class HDMAddress extends Address {
         throw new RuntimeException("hdm address can't sign transactions all by self");
     }
 
-    public List<byte[]> signWithOther(List<byte[]> unsignHash, CharSequence password, Tx tx, HDMFetchOtherSignatureDelegate delegate) {
+    public void signTx(Tx tx, CharSequence passphrase, HDMFetchOtherSignatureDelegate delegate) {
+        tx.signWithSignatures(this.signWithOther(tx.getUnsignedInHashes(), passphrase, tx,
+                delegate));
+    }
+
+    public List<byte[]> signWithOther(List<byte[]> unsignHash, CharSequence password, Tx tx,
+                                      HDMFetchOtherSignatureDelegate delegate) {
         ArrayList<TransactionSignature> hotSigs = signMyPart(unsignHash, password);
         List<TransactionSignature> otherSigs = delegate.getOtherSignature(getIndex(), password,
                 unsignHash, tx);
@@ -58,11 +64,15 @@ public class HDMAddress extends Address {
         return formatInScript(hotSigs, otherSigs, pubs.getMultiSigScript().getProgram());
     }
 
-    public ArrayList<TransactionSignature> signMyPart(List<byte[]> unsignedHashes, CharSequence password) {
+    public ArrayList<TransactionSignature> signMyPart(List<byte[]> unsignedHashes,
+                                                      CharSequence password) {
         DeterministicKey key = keychain.getExternalKey(pubs.index, password);
         ArrayList<TransactionSignature> sigs = new ArrayList<TransactionSignature>();
-        for (int i = 0; i < unsignedHashes.size(); i++) {
-            new TransactionSignature(key.sign(unsignedHashes.get(i)), TransactionSignature.SigHash.ALL, false);
+        for (int i = 0;
+             i < unsignedHashes.size();
+             i++) {
+            new TransactionSignature(key.sign(unsignedHashes.get(i)),
+                    TransactionSignature.SigHash.ALL, false);
         }
         key.wipe();
         return sigs;
@@ -92,13 +102,18 @@ public class HDMAddress extends Address {
         return pubs.remote;
     }
 
-    public static List<byte[]> formatInScript(List<TransactionSignature> signs1, List<TransactionSignature> signs2, byte[] scriptPubKey) {
+    public static List<byte[]> formatInScript(List<TransactionSignature> signs1,
+                                              List<TransactionSignature> signs2,
+                                              byte[] scriptPubKey) {
         List<byte[]> result = new ArrayList<byte[]>();
-        for (int i = 0; i < signs1.size(); i++) {
+        for (int i = 0;
+             i < signs1.size();
+             i++) {
             List<TransactionSignature> signs = new ArrayList<TransactionSignature>(2);
             signs.add(signs1.get(i));
             signs.add(signs2.get(i));
-            result.add(ScriptBuilder.createP2SHMultiSigInputScript(signs, scriptPubKey).getProgram());
+            result.add(ScriptBuilder.createP2SHMultiSigInputScript(signs,
+                    scriptPubKey).getProgram());
         }
         return result;
     }
@@ -140,13 +155,11 @@ public class HDMAddress extends Address {
 
         public Script getMultiSigScript() {
             assert hot != null && cold != null && remote != null;
-            return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(
-                    new ECKey(null, hot),
-                    new ECKey(null, cold),
-                    new ECKey(null, remote)));
+            return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(new ECKey(null,
+                    hot), new ECKey(null, cold), new ECKey(null, remote)));
         }
 
-        public boolean isCompleted(){
+        public boolean isCompleted() {
             return hot != null && cold != null && remote != null;
         }
 
