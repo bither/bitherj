@@ -33,6 +33,8 @@ import javax.annotation.Nullable;
  * Created by zhouqi on 15/1/3.
  */
 public class HDMKeychain {
+
+
     public static interface HDMFetchRemotePublicKeys {
         void completeRemotePublicKeys(CharSequence password, List<HDMAddress.Pubs> partialPubs);
     }
@@ -353,9 +355,14 @@ public class HDMKeychain {
 
     public String signHDMBId(String messageHash, SecureCharSequence password) {
         DeterministicKey key = getExternalKey(0, password);
-        String result = key.signHash(Utils.hexStringToByteArray(messageHash), key.getKeyCrypter().deriveKey(password));
+        log.info("messageHash:" + messageHash);
+        if (key == null) {
+            log.info("key:null");
+        }
 
-        return result;
+        byte[] signData = key.signHash(Utils.hexStringToByteArray(messageHash), null);
+
+        return Utils.bytesToHexString(signData);
 
     }
 

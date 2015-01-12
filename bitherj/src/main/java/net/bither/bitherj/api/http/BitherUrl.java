@@ -17,7 +17,6 @@
 package net.bither.bitherj.api.http;
 
 
-
 import net.bither.bitherj.utils.Utils;
 
 
@@ -28,15 +27,14 @@ public class BitherUrl {
         public static final String BITHER_BITCOIN_DOMAIN = "b.getcai.com";
         public static final String BITHER_USER_DOMAIN = "bu.getcai.com";
         public static final String BITHER_STATS_DOMAIN = "bs.getcai.com";
-
         public static final String BITHER_BC1_DOMAIN = "bc1.bither.net";
-
 
         public static final String BITHER_BITCOIN = Utils.format(FORMAT_HTTP, BITHER_BITCOIN_DOMAIN);
         public static final String BITHER_USER = Utils.format(FORMAT_HTTP, BITHER_USER_DOMAIN);
         public static final String BITHER_STATS = Utils.format(FORMAT_HTTP, BITHER_STATS_DOMAIN);
 
         public static final String BITHER_BC1 = Utils.format(FORMAT_HTTP, BITHER_BC1_DOMAIN);
+        public static final String BITHER_HDM = "";
 
 
     }
@@ -53,12 +51,10 @@ public class BitherUrl {
     //bither bitcoin
     public static final String BITHER_Q_GETBLOCK_COUNT_URL = BITHER_DNS.BITHER_BITCOIN
             + "api/v1/block/count";
-    public static final String BITHER_BLOCKHEADER = BITHER_DNS.BITHER_BITCOIN
-            + "api/v1/block/%d/list";
+
     public static final String BITHER_Q_MYTRANSACTIONS = BITHER_DNS.BITHER_BC1
             + "api/v2/address/%s/transaction";
-    public static final String BITHER_GET_SPVBLOCK_API = BITHER_DNS.BITHER_BITCOIN
-            + "api/v1/block/spv";
+    public static final String BITHER_HDM_PASSWORD = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/password";
     public static final String BITHER_GET_ONE_SPVBLOCK_API = BITHER_DNS.BITHER_BITCOIN +
             "api/v1/block/spv/one";
     public static final String BITHER_IN_SIGNATURES_API = BITHER_DNS.BITHER_BITCOIN + "api/v1/address/%s/insignature/%d";

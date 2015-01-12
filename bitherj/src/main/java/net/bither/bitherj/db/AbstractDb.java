@@ -84,7 +84,7 @@ public abstract class AbstractDb {
             ", address text" +
             ", is_synced integer not null" +
             ", primary key (hd_seed_id, hd_seed_index));";
-    public static final String CREATE_HDM_BID_SQL = "create table if not exists hdm_id " +
+    public static final String CREATE_HDM_BID_SQL = "create table if not exists hdm_bid " +
             "(hdm_bid text not null primary key" +
             ", encrypt_bither_password text not null);";
 

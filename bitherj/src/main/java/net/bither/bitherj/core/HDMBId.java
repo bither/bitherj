@@ -1,7 +1,5 @@
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.AbstractApp;
-import net.bither.bitherj.api.GetHDMBIdRandomApi;
 import net.bither.bitherj.api.UploadHDMBidApi;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
@@ -10,10 +8,14 @@ import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.Base64;
 import net.bither.bitherj.utils.Utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.security.SecureRandom;
 import java.security.SignatureException;
 
 public class HDMBId {
+    private static final Logger log = LoggerFactory.getLogger(ECKey.class);
 
     private final String BITID_STRING = "bitid://id.bither.net/%s/password/%s/%d";
     private String address;
@@ -42,9 +44,10 @@ public class HDMBId {
             SecureRandom random = new SecureRandom();
             decryptedPassword = new byte[32];
             random.nextBytes(decryptedPassword);
-            GetHDMBIdRandomApi getHDMBIdRandomApi = new GetHDMBIdRandomApi();
-            getHDMBIdRandomApi.handleHttpGet();
-            serviceRandom = getHDMBIdRandomApi.getResult();
+//            GetHDMBIdRandomApi getHDMBIdRandomApi = new GetHDMBIdRandomApi(address);
+//            getHDMBIdRandomApi.handleHttpGet();
+//            serviceRandom = getHDMBIdRandomApi.getResult();
+            serviceRandom = 1000;
 
             String message = Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), serviceRandom);
             byte[] hash = Utils.getPreSignMessage(message);
@@ -57,8 +60,10 @@ public class HDMBId {
     }
 
     public void setSignature(String signString, SecureCharSequence secureCharSequence) throws Exception {
+        log.debug("signString:" + signString + "," + signString.length());
         String message = Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), serviceRandom);
         byte[] hash = Utils.getPreSignMessage(message);
+
         ECKey key = ECKey.signedMessageToKey(hash, Utils.hexStringToByteArray(signString));
         if (Utils.compareString(address, key.toAddress())) {
             throw new SignatureException();
@@ -66,9 +71,9 @@ public class HDMBId {
         }
         String signature = Base64.encodeToString(Utils.hexStringToByteArray(signString), Base64.URL_SAFE);
         String passwrodString = Base64.encodeToString(decryptedPassword, Base64.URL_SAFE);
-        UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, signature, passwrodString);
-        uploadHDMBidApi.handleHttpPost();
-        String str = uploadHDMBidApi.getResult();
+//        UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, signature, passwrodString);
+//        uploadHDMBidApi.handleHttpPost();
+//        String str = uploadHDMBidApi.getResult();
         encryptedBitherPassword = new EncryptedData(decryptedPassword, secureCharSequence);
         AbstractDb.addressProvider.addHDMBId(HDMBId.this);
 

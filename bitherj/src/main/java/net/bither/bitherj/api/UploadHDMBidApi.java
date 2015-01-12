@@ -16,7 +16,9 @@
 
 package net.bither.bitherj.api;
 
+import net.bither.bitherj.api.http.BitherUrl;
 import net.bither.bitherj.api.http.HttpPostResponse;
+import net.bither.bitherj.utils.Utils;
 
 import org.apache.http.HttpEntity;
 
@@ -25,7 +27,7 @@ public class UploadHDMBidApi extends HttpPostResponse<String> {
     private String password;
 
     public UploadHDMBidApi(String address, String signature, String password) {
-        String url = "";
+        String url = Utils.format(BitherUrl.BITHER_HDM_PASSWORD, address);
         setUrl(url);
         this.signature = signature;
         this.password = password;

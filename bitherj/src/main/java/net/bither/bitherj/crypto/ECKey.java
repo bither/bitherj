@@ -632,10 +632,11 @@ public class ECKey implements Serializable {
 //            throw new IllegalStateException("This ECKey does not have the private key necessary for signing.");
         byte[] data = Utils.formatMessageForSigning(message);
         byte[] hash = Utils.doubleDigest(data);
-        return signHash(hash, aesKey);
+        byte[] sigData = signHash(hash, aesKey);
+        return new String(Base64.encode(sigData), Charset.forName("UTF-8"));
     }
 
-    public String signHash(byte[] hash, @Nullable KeyParameter aesKey) throws KeyCrypterException {
+    public byte[] signHash(byte[] hash, @Nullable KeyParameter aesKey) throws KeyCrypterException {
         ECDSASignature sig = sign(hash, aesKey);
         // Now we have to work backwards to figure out the recId needed to recover the signature.
         int recId = -1;
@@ -653,7 +654,7 @@ public class ECKey implements Serializable {
         sigData[0] = (byte) headerByte;
         System.arraycopy(Utils.bigIntegerToBytes(sig.r, 32), 0, sigData, 1, 32);
         System.arraycopy(Utils.bigIntegerToBytes(sig.s, 32), 0, sigData, 33, 32);
-        return new String(Base64.encode(sigData), Charset.forName("UTF-8"));
+        return sigData;
     }
 
     /**
