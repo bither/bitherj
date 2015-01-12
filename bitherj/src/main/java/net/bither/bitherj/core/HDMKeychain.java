@@ -261,6 +261,12 @@ public class HDMKeychain {
         }
     }
 
+    public List<HDMAddress> getAllCompletedAddresses(){
+        synchronized (allCompletedAddresses) {
+            return allCompletedAddresses;
+        }
+    }
+
     private void initFromDb() {
         isFromXRandom = AbstractDb.addressProvider.isHDSeedFromXRandom(getHdSeedId());
         initAddressesFromDb();
