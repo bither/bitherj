@@ -368,7 +368,7 @@ public class HDMKeychain {
 
         byte[] signData = key.signHash(Utils.hexStringToByteArray(messageHash), null);
 
-        return Utils.bytesToHexString(signData);
+        return Utils.bytesToHexString(signData).toUpperCase();
 
     }
 
