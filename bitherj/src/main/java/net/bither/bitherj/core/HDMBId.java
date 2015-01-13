@@ -1,27 +1,31 @@
 package net.bither.bitherj.core;
 
+import net.bither.bitherj.api.GetHDMBIdRandomApi;
 import net.bither.bitherj.api.UploadHDMBidApi;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.db.AbstractDb;
-import net.bither.bitherj.utils.Base64;
+
+import org.spongycastle.util.encoders.Base64;
+
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 
 public class HDMBId {
     private static final Logger log = LoggerFactory.getLogger(ECKey.class);
 
-    private final String BITID_STRING = "bitid://id.bither.net/%s/password/%s/%d";
+    private final String BITID_STRING = "bitid://hdm.bither.net/%s/password/%s/%d";
     private String address;
     private EncryptedData encryptedBitherPassword;
     private byte[] decryptedPassword;
-    private int serviceRandom;
+    private long serviceRandom;
 
 
     public HDMBId(String address) {
@@ -39,41 +43,39 @@ public class HDMBId {
         this.encryptedBitherPassword = encryptedBitherPassword;
     }
 
-    public String getPreSignString() {
-        try {
-            SecureRandom random = new SecureRandom();
-            decryptedPassword = new byte[32];
-            random.nextBytes(decryptedPassword);
-//            GetHDMBIdRandomApi getHDMBIdRandomApi = new GetHDMBIdRandomApi(address);
-//            getHDMBIdRandomApi.handleHttpGet();
-//            serviceRandom = getHDMBIdRandomApi.getResult();
-            serviceRandom = 1000;
+    public String getPreSignString() throws Exception {
+        SecureRandom random = new SecureRandom();
+        decryptedPassword = new byte[32];
+        random.nextBytes(decryptedPassword);
+        GetHDMBIdRandomApi getHDMBIdRandomApi = new GetHDMBIdRandomApi(address);
+        getHDMBIdRandomApi.handleHttpGet();
+        serviceRandom = getHDMBIdRandomApi.getResult();
+        String message = Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), serviceRandom);
+        log.info("message:" + message);
+        byte[] hash = Utils.getPreSignMessage(message);
+        return Utils.bytesToHexString(hash);
 
-            String message = Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), serviceRandom);
-            byte[] hash = Utils.getPreSignMessage(message);
-            return Utils.bytesToHexString(hash);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
-        return null;
     }
 
     public void setSignature(String signString, SecureCharSequence secureCharSequence) throws Exception {
-        log.debug("signString:" + signString + "," + signString.length());
+        log.info("signString:" + signString + "," + signString.length());
         String message = Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), serviceRandom);
         byte[] hash = Utils.getPreSignMessage(message);
-
+        log.info("hash:" + Utils.bytesToHexString(hash));
         ECKey key = ECKey.signedMessageToKey(hash, Utils.hexStringToByteArray(signString));
         if (Utils.compareString(address, key.toAddress())) {
             throw new SignatureException();
 
         }
-        String signature = Base64.encodeToString(Utils.hexStringToByteArray(signString), Base64.URL_SAFE);
-        String passwrodString = Base64.encodeToString(decryptedPassword, Base64.URL_SAFE);
-//        UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, signature, passwrodString);
-//        uploadHDMBidApi.handleHttpPost();
-//        String str = uploadHDMBidApi.getResult();
+        String signature = new String(Base64.encode(Utils.hexStringToByteArray(signString)), Charset.forName("UTF-8"));
+
+        String passwrodString = new String(Base64.encode(decryptedPassword), Charset.forName("UTF-8"));
+
+        log.info("signature:" + signature + "." + passwrodString);
+        UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, signature, passwrodString);
+        uploadHDMBidApi.handleHttpPost();
+        String str = uploadHDMBidApi.getResult();
         encryptedBitherPassword = new EncryptedData(decryptedPassword, secureCharSequence);
         AbstractDb.addressProvider.addHDMBId(HDMBId.this);
 

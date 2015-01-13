@@ -27,7 +27,7 @@ import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.exception.AddressFormatException;
 
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
-import org.spongycastle.util.encoders.Hex;
+import org.spongycastle.util.encoders.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -40,6 +40,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -596,7 +597,7 @@ public class Utils {
     }
 
     public static byte[] getPreSignMessage(String message) {
-        byte[] data = formatMessageForSigning(message);
+        byte[] data = formatStringForSigning(message);
         return Utils.doubleDigest(data);
     }
 
@@ -1000,6 +1001,10 @@ public class Utils {
         System.arraycopy(source, from, range, 0, len);
 
         return range;
+    }
+
+    public static String base64Encode(byte[] bytes) {
+        return new String(org.spongycastle.util.encoders.Base64.encode(bytes), Charset.forName("UTF-8"));
     }
 
 
