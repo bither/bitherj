@@ -28,6 +28,8 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +40,8 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
     private String pubCold;
     private int start;
     private int end;
+
+    private static final Logger log = LoggerFactory.getLogger(CreateHDMAddressApi.class);
 
     public CreateHDMAddressApi(String address, List<HDMAddress.Pubs> pubsList, byte[] password) {
         this.password = password;
@@ -64,6 +68,8 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
                 end = pubs.index;
             }
         }
+        log.info("param:" + pubHot + "," + pubCold + "," + start + "," + end);
+
     }
 
     @Override

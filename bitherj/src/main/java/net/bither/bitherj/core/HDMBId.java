@@ -19,9 +19,9 @@ import java.security.SecureRandom;
 import java.security.SignatureException;
 
 public class HDMBId {
-    private static final Logger log = LoggerFactory.getLogger(ECKey.class);
+    private static final Logger log = LoggerFactory.getLogger(HDMBId.class);
 
-    private final String BITID_STRING = "bitid://hdm.bither.net/%s/password/%s/%d";
+    public final static String BITID_STRING = "bitid://hdm.bither.net/%s/password/%s/%d";
     private String address;
     private EncryptedData encryptedBitherPassword;
     private byte[] decryptedPassword;
@@ -51,7 +51,6 @@ public class HDMBId {
         getHDMBIdRandomApi.handleHttpGet();
         serviceRandom = getHDMBIdRandomApi.getResult();
         String message = Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), serviceRandom);
-        log.info("message:" + message);
         byte[] hash = Utils.getPreSignMessage(message);
         return Utils.bytesToHexString(hash);
 
@@ -59,10 +58,8 @@ public class HDMBId {
     }
 
     public void setSignature(String signString, SecureCharSequence secureCharSequence) throws Exception {
-        log.info("signString:" + signString + "," + signString.length());
         String message = Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), serviceRandom);
         byte[] hash = Utils.getPreSignMessage(message);
-        log.info("hash:" + Utils.bytesToHexString(hash));
         ECKey key = ECKey.signedMessageToKey(hash, Utils.hexStringToByteArray(signString));
         if (Utils.compareString(address, key.toAddress())) {
             throw new SignatureException();
