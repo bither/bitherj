@@ -91,8 +91,9 @@ public class HDMBId {
         return encryptedBitherPassword.toEncryptedString();
     }
 
-    public void decryptHDMBIdPassword(CharSequence password) {
+    public byte[] decryptHDMBIdPassword(CharSequence password) {
         decryptedPassword = encryptedBitherPassword.decrypt(password);
+        return decryptedPassword;
     }
 
 
