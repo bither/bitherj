@@ -597,21 +597,8 @@ public class Utils {
     }
 
     public static byte[] getPreSignMessage(String message) {
-        byte[] data = formatStringForSigning(message);
+        byte[] data = formatMessageForSigning(message);
         return Utils.doubleDigest(data);
-    }
-
-    private static byte[] formatStringForSigning(String message) {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            byte[] messageBytes = message.getBytes(Charsets.UTF_8);
-            VarInt size = new VarInt(messageBytes.length);
-            bos.write(size.encode());
-            bos.write(messageBytes);
-            return bos.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);  // Cannot happen.
-        }
     }
 
     // 00000001, 00000010, 00000100, 00001000, ...

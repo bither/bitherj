@@ -32,10 +32,10 @@ import java.util.List;
 
 public class UploadHDMBidApi extends HttpPostResponse<String> {
 
-    private String signature;
-    private String password;
+    private byte[] signature;
+    private byte[] password;
 
-    public UploadHDMBidApi(String address, String signature, String password) {
+    public UploadHDMBidApi(String address, byte[] signature, byte[] password) {
         String url = Utils.format(BitherUrl.BITHER_HDM_PASSWORD, address);
         setUrl(url);
         this.signature = signature;
@@ -45,8 +45,8 @@ public class UploadHDMBidApi extends HttpPostResponse<String> {
     @Override
     public HttpEntity getHttpEntity() throws Exception {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair(HttpSetting.PASSWORD, this.password));
-        params.add(new BasicNameValuePair(HttpSetting.SIGNATURE, this.signature));
+        params.add(new BasicNameValuePair(HttpSetting.PASSWORD, Utils.base64Encode(this.password)));
+        params.add(new BasicNameValuePair(HttpSetting.SIGNATURE, Utils.base64Encode(this.signature)));
         return new UrlEncodedFormEntity(params, HTTP.UTF_8);
     }
 

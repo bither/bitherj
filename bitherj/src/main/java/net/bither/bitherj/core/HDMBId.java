@@ -68,12 +68,12 @@ public class HDMBId {
             throw new SignatureException();
 
         }
-        String signature = new String(Base64.encode(Utils.hexStringToByteArray(signString)), Charset.forName("UTF-8"));
-
-        String passwrodString = new String(Base64.encode(decryptedPassword), Charset.forName("UTF-8"));
-
-        log.info("signature:" + signature + "." + passwrodString);
-        UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, signature, passwrodString);
+//        String signature = new String(Base64.encode(Utils.hexStringToByteArray(signString)), Charset.forName("UTF-8"));
+//
+//        String passwrodString = new String(Base64.encode(decryptedPassword), Charset.forName("UTF-8"));
+//
+//        log.info("signature:" + signature + "." + passwrodString);
+        UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, Utils.hexStringToByteArray(signString), decryptedPassword);
         uploadHDMBidApi.handleHttpPost();
         String str = uploadHDMBidApi.getResult();
         encryptedBitherPassword = new EncryptedData(decryptedPassword, secureCharSequence);
