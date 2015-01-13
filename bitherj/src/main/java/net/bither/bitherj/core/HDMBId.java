@@ -22,6 +22,8 @@ public class HDMBId {
     private static final Logger log = LoggerFactory.getLogger(HDMBId.class);
 
     public final static String BITID_STRING = "bitid://hdm.bither.net/%s/password/%s/%d";
+    private static HDMBId hdmbidCache;
+
     private String address;
     private EncryptedData encryptedBitherPassword;
     private byte[] decryptedPassword;
@@ -94,13 +96,17 @@ public class HDMBId {
     }
 
 
-    public static HDMBId getHDMBidFromDb() {
-        HDMBId hdmbId = AbstractDb.addressProvider.getHDMBId();
-        if (Utils.isEmpty(hdmbId.getAddress()) ||
-                Utils.isEmpty(hdmbId.getEncryptedBitherPasswordString())) {
-            return null;
+
+    public synchronized static HDMBId getHDMBidFromDb() {
+        if (hdmbidCache != null) {
+            return hdmbidCache;
         }
-        return hdmbId;
+        hdmbidCache = AbstractDb.addressProvider.getHDMBId();
+        if (Utils.isEmpty(hdmbidCache.getAddress()) ||
+                Utils.isEmpty(hdmbidCache.getEncryptedBitherPasswordString())) {
+            hdmbidCache = null;
+        }
+        return hdmbidCache;
     }
 
 }

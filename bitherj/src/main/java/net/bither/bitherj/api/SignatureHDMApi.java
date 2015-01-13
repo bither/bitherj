@@ -31,15 +31,15 @@ import org.apache.http.protocol.HTTP;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SignatureHDMApi extends HttpPostResponse<byte[]> {
+public class SignatureHDMApi extends HttpPostResponse<List<byte[]>> {
     private byte[] password;
     private byte[] unSigns;
 
-    public SignatureHDMApi(String address, int index, byte[] password, byte[] unSigns) {
+    public SignatureHDMApi(String address, int index, byte[] password, List<byte[]> unSigns) {
         String url = Utils.format(BitherUrl.BITHER_HDM_SIGNATURE, address, index);
         setUrl(url);
         this.password = password;
-        this.unSigns = unSigns;
+
 
     }
 
@@ -47,13 +47,13 @@ public class SignatureHDMApi extends HttpPostResponse<byte[]> {
     @Override
     public HttpEntity getHttpEntity() throws Exception {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair(HttpSetting.PASSWORD, Base64.encodeToString(password, Base64.URL_SAFE)));
-        params.add(new BasicNameValuePair(HttpSetting.UNSIGN, Base64.encodeToString(unSigns, Base64.URL_SAFE)));
+        params.add(new BasicNameValuePair(HttpSetting.PASSWORD, Utils.base64Encode(password)));
+        params.add(new BasicNameValuePair(HttpSetting.UNSIGN, Utils.base64Encode(unSigns)));
         return new UrlEncodedFormEntity(params, HTTP.UTF_8);
     }
 
     @Override
     public void setResult(String response) throws Exception {
-        this.result = Base64.decode(response, Base64.URL_SAFE);
+        // this.result = Base64.decode(response, Base64.DEFAULT);
     }
 }
