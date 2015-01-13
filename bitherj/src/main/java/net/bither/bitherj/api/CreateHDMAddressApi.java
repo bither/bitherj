@@ -69,7 +69,7 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
     @Override
     public HttpEntity getHttpEntity() throws Exception {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair(HttpSetting.PASSWORD, Base64.encodeToString(this.password, Base64.URL_SAFE)));
+        params.add(new BasicNameValuePair(HttpSetting.PASSWORD, Utils.base64Encode(this.password)));
         params.add(new BasicNameValuePair(HttpSetting.PUB_HOT, this.pubHot));
         params.add(new BasicNameValuePair(HttpSetting.PUB_COLD, this.pubCold));
         params.add(new BasicNameValuePair(HttpSetting.START, Integer.toString(this.start)));
