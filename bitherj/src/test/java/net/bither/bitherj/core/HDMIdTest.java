@@ -33,6 +33,8 @@ public class HDMIdTest {
     @Test
     public void testCreateHDAddress() {
         try {
+            TestImplAbstractApp appAndroid = new TestImplAbstractApp();
+            appAndroid.construct();
             ECKey ecKey = new DumpedPrivateKey("L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1").getKey();
             String address = ecKey.toAddress();
             GetHDMBIdRandomApi getHDMBIdRandomApi = new GetHDMBIdRandomApi(address);
