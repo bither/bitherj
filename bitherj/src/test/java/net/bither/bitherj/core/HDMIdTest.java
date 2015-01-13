@@ -68,7 +68,10 @@ public class HDMIdTest {
             unsigns.add(Utils.doubleDigest(decryptedPassword));
             SignatureHDMApi signatureHDMApi = new SignatureHDMApi(address, 0, decryptedPassword, unsigns);
             signatureHDMApi.handleHttpPost();
-
+            List<byte[]> bytesList = signatureHDMApi.getResult();
+            for (byte[] bytes : bytesList) {
+                log.info(Utils.bytesToHexString(bytes));
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
