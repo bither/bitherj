@@ -51,16 +51,27 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
         pubCold = "";
         start = Integer.MAX_VALUE;
         end = Integer.MIN_VALUE;
+        int hotLen = 0;
+        int coldLen = 0;
         for (HDMAddress.Pubs pubs : pubsList) {
-            byte[] cold = new byte[pubs.cold.length + 1];
-            cold[0] = (byte) (pubs.cold.length & 255);
-            System.arraycopy(pubs.cold, 0, cold, 1, pubs.cold.length);
-            pubCold = pubCold + Base64.encodeToString(cold, Base64.URL_SAFE);
+            hotLen += 1 + pubs.hot.length;
+            coldLen += 1 + pubs.cold.length;
+        }
+        byte[] hot = new byte[hotLen];
+        byte[] cold = new byte[coldLen];
+        int hotIndex = 0;
+        int coldIndex = 0;
+        for (HDMAddress.Pubs pubs : pubsList) {
+            hot[hotIndex] = (byte) pubs.hot.length;
+            cold[coldIndex] = (byte) pubs.cold.length;
+            hotIndex += 1;
+            coldIndex += 1;
 
-            byte[] hot = new byte[pubs.hot.length + 1];
-            hot[0] = (byte) (pubs.hot.length & 255);
-            System.arraycopy(pubs.hot, 0, hot, 1, pubs.hot.length);
-            pubHot = pubHot + Base64.encodeToString(pubs.hot, Base64.URL_SAFE);
+            System.arraycopy(pubs.hot, 0, hot, hotIndex, pubs.hot.length);
+            System.arraycopy(pubs.cold, 0, cold, coldIndex, pubs.cold.length);
+            hotIndex += pubs.hot.length;
+            coldIndex += pubs.cold.length;
+
             if (start > pubs.index) {
                 start = pubs.index;
             }
@@ -68,8 +79,9 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
                 end = pubs.index;
             }
         }
+        pubHot = pubHot + Base64.encodeToString(hot, Base64.DEFAULT);
+        pubCold = pubCold + Base64.encodeToString(cold, Base64.DEFAULT);
         log.info("param:" + pubHot + "," + pubCold + "," + start + "," + end);
-
     }
 
     @Override
