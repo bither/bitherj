@@ -45,8 +45,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -992,6 +994,34 @@ public class Utils {
 
     public static String base64Encode(byte[] bytes) {
         return new String(org.spongycastle.util.encoders.Base64.encode(bytes), Charset.forName("UTF-8"));
+    }
+
+    public static List<byte[]> decodeServiceResult(String result) {
+        byte[] servicePubs = Base64.decode(result, Base64.DEFAULT);
+        int index = 0;
+        List<byte[]> pubsList = new ArrayList<byte[]>();
+        while (index < servicePubs.length) {
+            byte charLen = servicePubs[index];
+            pubsList.add(Utils.copyOfRange(servicePubs, index + 1, charLen));
+            index = index + charLen;
+        }
+        return pubsList;
+    }
+
+    public static String encodeBytesForService(List<byte[]> bytesList) {
+        int len = 0;
+        for (byte[] bytes : bytesList) {
+            len = len + 1 + bytes.length;
+        }
+        int index = 0;
+        byte[] result = new byte[len];
+        for (byte[] bytes : bytesList) {
+            result[index] = (byte) bytes.length;
+            System.arraycopy(bytes, 0, result, index, bytes.length);
+        }
+        return new String(org.spongycastle.util.encoders.Base64.encode(result), Charset.forName("UTF-8"));
+
+
     }
 
 

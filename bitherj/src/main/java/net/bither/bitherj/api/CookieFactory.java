@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 public class CookieFactory {
 
     private static boolean isRunning = false;
-    private static final Logger log = LoggerFactory.getLogger(CookieFactory.class);
+    //private static final Logger log = LoggerFactory.getLogger(CookieFactory.class);
 
     private CookieFactory() {
 
@@ -40,7 +40,7 @@ public class CookieFactory {
             try {
                 GetCookieApi getCookieApi = new GetCookieApi();
                 getCookieApi.handleHttpPost();
-                log.debug("getCookieApi");
+               // log.debug("getCookieApi");
             } catch (Exception e) {
                 success = false;
                 e.printStackTrace();

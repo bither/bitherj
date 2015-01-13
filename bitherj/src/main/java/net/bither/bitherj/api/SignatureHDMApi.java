@@ -33,13 +33,13 @@ import java.util.List;
 
 public class SignatureHDMApi extends HttpPostResponse<List<byte[]>> {
     private byte[] password;
-    private byte[] unSigns;
+    private List<byte[]> unSigns;
 
     public SignatureHDMApi(String address, int index, byte[] password, List<byte[]> unSigns) {
         String url = Utils.format(BitherUrl.BITHER_HDM_SIGNATURE, address, index);
         setUrl(url);
         this.password = password;
-
+        this.unSigns = unSigns;
 
     }
 
@@ -48,12 +48,12 @@ public class SignatureHDMApi extends HttpPostResponse<List<byte[]>> {
     public HttpEntity getHttpEntity() throws Exception {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair(HttpSetting.PASSWORD, Utils.base64Encode(password)));
-        params.add(new BasicNameValuePair(HttpSetting.UNSIGN, Utils.base64Encode(unSigns)));
+        params.add(new BasicNameValuePair(HttpSetting.UNSIGN, Utils.encodeBytesForService(unSigns)));
         return new UrlEncodedFormEntity(params, HTTP.UTF_8);
     }
 
     @Override
     public void setResult(String response) throws Exception {
-        // this.result = Base64.decode(response, Base64.DEFAULT);
+        this.result = Utils.decodeServiceResult(response);
     }
 }

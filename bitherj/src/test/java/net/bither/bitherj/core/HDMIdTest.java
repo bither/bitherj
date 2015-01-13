@@ -18,17 +18,21 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.api.CreateHDMAddressApi;
 import net.bither.bitherj.api.GetHDMBIdRandomApi;
+import net.bither.bitherj.api.SignatureHDMApi;
 import net.bither.bitherj.api.UploadHDMBidApi;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.utils.Utils;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class HDMIdTest {
+    private static final Logger log = LoggerFactory.getLogger(HDMIdTest.class);
 
     @Test
     public void testCreateHDAddress() {
@@ -51,12 +55,21 @@ public class HDMIdTest {
             UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, signBytes, decryptedPassword);
             uploadHDMBidApi.handleHttpPost();
             String str = uploadHDMBidApi.getResult();
-            HDMAddress.Pubs pubs = new HDMAddress.Pubs(ecKey.getPubKey(), ecKey.getPubKey(), null, 1);
+            HDMAddress.Pubs pubs = new HDMAddress.Pubs(ecKey.getPubKey(), ecKey.getPubKey(), null, 0);
             List<HDMAddress.Pubs> pubsList = new ArrayList<HDMAddress.Pubs>();
             pubsList.add(pubs);
             CreateHDMAddressApi createHDMAddressApi = new CreateHDMAddressApi(address, pubsList, decryptedPassword);
             createHDMAddressApi.handleHttpPost();
             List<byte[]> pubList = createHDMAddressApi.getResult();
+            for (byte[] bytes : pubList) {
+                log.info(Utils.bytesToHexString(bytes));
+            }
+            List<byte[]> unsigns = new ArrayList<byte[]>();
+            unsigns.add(Utils.doubleDigest(decryptedPassword));
+            SignatureHDMApi signatureHDMApi = new SignatureHDMApi(address, 0, decryptedPassword, unsigns);
+            signatureHDMApi.handleHttpPost();
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }

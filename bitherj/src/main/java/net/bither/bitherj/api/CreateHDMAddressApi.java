@@ -41,7 +41,7 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
     private int start;
     private int end;
 
-    private static final Logger log = LoggerFactory.getLogger(CreateHDMAddressApi.class);
+
 
     public CreateHDMAddressApi(String address, List<HDMAddress.Pubs> pubsList, byte[] password) {
         this.password = password;
@@ -97,14 +97,6 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
 
     @Override
     public void setResult(String response) throws Exception {
-        byte[] servicePubs = Base64.decode(response, Base64.DEFAULT);
-        int index = 0;
-        List<byte[]> pubsList = new ArrayList<byte[]>();
-        while (index < servicePubs.length) {
-            byte charLen = servicePubs[index];
-            pubsList.add(Utils.copyOfRange(servicePubs, index + 1, charLen));
-            index = index + charLen;
-        }
-        this.result = pubsList;
+        this.result = Utils.decodeServiceResult(response);
     }
 }
