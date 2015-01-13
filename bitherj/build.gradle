@@ -24,5 +24,20 @@ dependencies {
     compile 'org.apache.james:apache-mime4j-core:0.7.1@jar'
 
     testCompile group: 'junit', name: 'junit', version: '4.11'
+    testCompile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'org.json:json:20140107@jar'
+    testCompile 'com.google.guava:guava:13.0.1@jar'
+    testCompile 'com.google.code.findbugs:jsr305:2.0.1@jar'
+    testCompile 'net.jcip:jcip-annotations:1.0@jar'
+    testCompile 'com.lambdaworks:scrypt:1.4.0@jar'
+    testCompile 'org.slf4j:slf4j-api:1.7.7'
+    testCompile 'com.madgag.spongycastle:core:1.51.0.0'
+    testCompile 'org.apache.httpcomponents:httpclient:4.2.1@jar'
+    testCompile 'org.apache.httpcomponents:httpmime:4.1@jar'
+    testCompile 'org.apache.httpcomponents:httpcore:4.3.2@jar'
+    testCompile 'org.apache.james:apache-mime4j-core:0.7.1@jar'
+    testCompile 'ch.qos.logback:logback-classic:1.0.9@jar'
+    testCompile 'ch.qos.logback:logback-core:1.0.9@jar'
+    testCompile 'commons-logging:commons-logging:1.2@jar'
 }
 
