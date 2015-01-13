@@ -41,7 +41,7 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
     private int start;
     private int end;
 
-
+    private static final Logger log = LoggerFactory.getLogger(CreateHDMAddressApi.class);
 
     public CreateHDMAddressApi(String address, List<HDMAddress.Pubs> pubsList, byte[] password) {
         this.password = password;
