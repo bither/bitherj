@@ -1000,7 +1000,7 @@ public class Utils {
         byte[] servicePubs = Base64.decode(result, Base64.DEFAULT);
         int index = 0;
         List<byte[]> pubsList = new ArrayList<byte[]>();
-        while (index < servicePubs.length) {
+        while (index < servicePubs.length - 1) {
             byte charLen = servicePubs[index];
             pubsList.add(Utils.copyOfRange(servicePubs, index + 1, charLen));
             index = index + charLen;
