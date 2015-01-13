@@ -4,6 +4,7 @@ package net.bither.bitherj.core;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
+import net.bither.bitherj.api.CreateHDMAddressApi;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.KeyCrypterException;
@@ -34,7 +35,7 @@ public class HDMKeychain {
 
 
     public static interface HDMFetchRemotePublicKeys {
-        void completeRemotePublicKeys(CharSequence password, List<HDMAddress.Pubs> partialPubs);
+        void completeRemotePublicKeys(CharSequence password, List<HDMAddress.Pubs> partialPubs) throws Exception;
     }
 
     public static interface HDMFetchRemoteAddresses {
@@ -190,11 +191,11 @@ public class HDMKeychain {
             if (addressesInUse == null) {
                 addressesInUse = Collections2.filter(allCompletedAddresses,
                         new Predicate<HDMAddress>() {
-                    @Override
-                    public boolean apply(@Nullable HDMAddress input) {
-                        return !input.isTrashed();
-                    }
-                });
+                            @Override
+                            public boolean apply(@Nullable HDMAddress input) {
+                                return !input.isTrashed();
+                            }
+                        });
             }
             return new ArrayList<HDMAddress>(addressesInUse);
         }
@@ -205,11 +206,11 @@ public class HDMKeychain {
             if (addressesTrashed == null) {
                 addressesTrashed = Collections2.filter(allCompletedAddresses,
                         new Predicate<HDMAddress>() {
-                    @Override
-                    public boolean apply(@Nullable HDMAddress input) {
-                        return input.isTrashed();
-                    }
-                });
+                            @Override
+                            public boolean apply(@Nullable HDMAddress input) {
+                                return input.isTrashed();
+                            }
+                        });
             }
             return new ArrayList<HDMAddress>(addressesTrashed);
         }
@@ -396,6 +397,19 @@ public class HDMKeychain {
 
         public HDMBitherIdNotMatchException() {
             super(msg);
+        }
+    }
+
+    public static void getRemotePublicKeys(HDMBId hdmBId, CharSequence
+            password, List<HDMAddress.Pubs> partialPubs) throws Exception {
+        byte[] decryptedPassword = hdmBId.decryptHDMBIdPassword(password);
+        CreateHDMAddressApi createHDMAddressApi = new
+                CreateHDMAddressApi(hdmBId.getAddress(), partialPubs, decryptedPassword);
+        createHDMAddressApi.handleHttpPost();
+        List<byte[]> remotePubs = createHDMAddressApi.getResult();
+        for (int i = 0; i < partialPubs.size(); i++) {
+            HDMAddress.Pubs pubs = partialPubs.get(i);
+            pubs.remote = remotePubs.get(i);
         }
     }
 }
