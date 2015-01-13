@@ -81,7 +81,7 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
         }
         pubHot = pubHot + Base64.encodeToString(hot, Base64.DEFAULT);
         pubCold = pubCold + Base64.encodeToString(cold, Base64.DEFAULT);
-        log.info("param:" + pubHot + "," + pubCold + "," + start + "," + end);
+
     }
 
     @Override
