@@ -145,6 +145,8 @@ public class HDMAddress extends Address {
 
 
     public static final class Pubs {
+        public static final byte[] EmptyBytes = new byte[]{0};
+
         public byte[] hot;
         public byte[] cold;
         public byte[] remote;
@@ -167,7 +169,19 @@ public class HDMAddress extends Address {
         }
 
         public boolean isCompleted() {
-            return hot != null && cold != null && remote != null;
+            return hasHot() && hasCold() && hasRemote();
+        }
+
+        public boolean hasHot() {
+            return hot != null && !Arrays.equals(hot, EmptyBytes);
+        }
+
+        public boolean hasCold() {
+            return cold != null && !Arrays.equals(cold, EmptyBytes);
+        }
+
+        public boolean hasRemote() {
+            return remote != null && !Arrays.equals(remote, EmptyBytes);
         }
 
         public String getAddress() {

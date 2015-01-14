@@ -63,9 +63,15 @@ public class HDMKeychain {
     public HDMKeychain(SecureRandom random, CharSequence password) {
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
         seed = new byte[32];
-        random.nextBytes(seed);
+        String firstAddress = null;
+        while (firstAddress == null) {
+            try {
+                random.nextBytes(seed);
+                firstAddress = getFirstAddressFromSeed(password);
+            } catch (Exception e) {
+            }
+        }
         EncryptedData encryptedSeed = new EncryptedData(seed, password);
-        String firstAddress = getFirstAddressFromSeed(password);
         wipeSeed();
         hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(),
                 firstAddress, isFromXRandom);
@@ -136,12 +142,18 @@ public class HDMKeychain {
             HDMAddress.Pubs p = new HDMAddress.Pubs();
             try {
                 p.hot = externalRootHot.deriveSoftened(i).getPubKey();
-                p.cold = externalRootCold.deriveSoftened(i).getPubKey();
-                p.index = i;
-                pubs.add(p);
             } catch (Exception e) {
                 e.printStackTrace();
+                p.hot = HDMAddress.Pubs.EmptyBytes;
             }
+            try {
+                p.cold = externalRootCold.deriveSoftened(i).getPubKey();
+            } catch (Exception e) {
+                e.printStackTrace();
+                p.hot = HDMAddress.Pubs.EmptyBytes;
+            }
+            p.index = i;
+            pubs.add(p);
         }
         AbstractDb.addressProvider.prepareHDMAddresses(getHdSeedId(), pubs);
         if (externalRootHot != null) {

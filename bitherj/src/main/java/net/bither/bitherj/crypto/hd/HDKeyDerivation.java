@@ -171,7 +171,7 @@ public final class HDKeyDerivation {
         byte[] il = Arrays.copyOfRange(i, 0, 32);
         byte[] chainCode = Arrays.copyOfRange(i, 32, 64);
         BigInteger ilInt = new BigInteger(1, il);
-        assertLessThanN(ilInt, "Illegal derived key: I_L >= n");
+        ilInt = ilInt.mod(ECKey.CURVE.getN());
         final BigInteger priv = parent.getPrivKey();
         BigInteger ki = priv.add(ilInt).mod(ECKey.CURVE.getN());
         assertNonZero(ki, "Illegal derived key: derived private key equals 0.");
