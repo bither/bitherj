@@ -366,7 +366,9 @@ public class HDMKeychain {
 
     private String getFirstAddressFromSeed(CharSequence password) {
         DeterministicKey key = getExternalKey(0, password);
-        return Utils.toAddress(key.getPubKeyHash());
+        String address = Utils.toAddress(key.getPubKeyHash());
+        key.wipe();
+        return address;
     }
 
     private String getFirstAddressFromDb() {
