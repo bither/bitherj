@@ -52,7 +52,7 @@ public class HDMAddress extends Address {
     }
 
     public void signTx(Tx tx, CharSequence passphrase, HDMFetchOtherSignatureDelegate delegate) {
-        tx.signWithSignatures(this.signWithOther(tx.getUnsignedInHashes(), passphrase, tx,
+        tx.signWithSignatures(this.signWithOther(tx.getUnsignedInHashesForHDM(getPubKey()), passphrase, tx,
                 delegate));
     }
 

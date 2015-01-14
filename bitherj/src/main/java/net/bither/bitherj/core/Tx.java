@@ -1280,6 +1280,16 @@ public class Tx extends Message implements Comparable<Tx> {
         return result;
     }
 
+    public List<byte[]> getUnsignedInHashesForHDM(byte[] pubs) {
+        List<byte[]> result = new ArrayList<byte[]>();
+        for (In in : this.getIns()) {
+            byte sigHashType = (byte) TransactionSignature.calcSigHashValue(TransactionSignature
+                    .SigHash.ALL, false);
+            result.add(this.hashForSignature(in.getInSn(), pubs, sigHashType));
+        }
+        return result;
+    }
+
     public void signWithSignatures(List<byte[]> signatures) {
 //        ECKey key = new ECKey(null, pubKey);
         int i = 0;
