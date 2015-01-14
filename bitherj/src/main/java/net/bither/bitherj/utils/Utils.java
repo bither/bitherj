@@ -969,7 +969,6 @@ public class Utils {
         for (int i = 0; i < bytes.length; i++) {
             bytes[i] = 0;
         }
-
     }
 
     public static String joinString(String[] strs, String spiltStr) {

@@ -21,7 +21,6 @@ import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 
 import net.bither.bitherj.crypto.ECKey;
-import net.bither.bitherj.crypto.EncryptedPrivateKey;
 import net.bither.bitherj.crypto.KeyCrypter;
 import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.utils.Sha256Hash;
@@ -30,11 +29,14 @@ import net.bither.bitherj.utils.Utils;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.math.ec.ECPoint;
 
-import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import static com.google.common.base.Preconditions.*;
+import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A deterministic key is a node in a {@link DeterministicHierarchy}. As per
@@ -342,6 +344,9 @@ public class DeterministicKey extends ECKey {
     public void clearPrivateKey() {
         super.clearPrivateKey();
         priv = null;
+    }
+
+    public void clearChainCode() {
         Utils.wipeBytes(chainCode);
     }
 
@@ -360,6 +365,7 @@ public class DeterministicKey extends ECKey {
 
     public void wipe(){
         clearPrivateKey();
+        clearChainCode();
         Utils.wipeBytes(pub);
     }
 }

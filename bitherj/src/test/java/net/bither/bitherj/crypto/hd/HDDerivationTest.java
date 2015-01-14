@@ -13,6 +13,7 @@ import static org.junit.Assert.assertEquals;
  * Created by songchenwen on 15/1/3.
  */
 public class HDDerivationTest {
+
     @Test
     public void testBIP44Derivation() throws IOException {
         TestCase[] vectors = {
@@ -75,9 +76,15 @@ public class HDDerivationTest {
 
             DeterministicKey external = account.deriveSoftened(0);
 
+            DeterministicKey externalPub = account.deriveSoftened(0);
+            external.clearPrivateKey();
+
+
             for(int j = 0; j < tc.addresses.length; j++){
                 DeterministicKey key = external.deriveSoftened(j);
+                DeterministicKey keyPub = externalPub.deriveSoftened(j);
                 assertEquals(tc.addresses[j], Utils.toAddress(key.getPubKeyHash()));
+                assertEquals(tc.addresses[j], Utils.toAddress(keyPub.getPubKeyHash()));
             }
 
             System.out.println("time " + i + ", " + (System.currentTimeMillis() - begin));
