@@ -257,8 +257,11 @@ public class PrivateKeyUtil {
 
     }
 
-    public static String formatEncryptPrivateKeyForDb(String encryptPrivvateKey) {
-        String[] strs = QRCodeUtil.splitOfPasswordSeed(encryptPrivvateKey);
+    public static String formatEncryptPrivateKeyForDb(String encryptPrivateKey) {
+        if (Utils.isEmpty(encryptPrivateKey)) {
+            return encryptPrivateKey;
+        }
+        String[] strs = QRCodeUtil.splitOfPasswordSeed(encryptPrivateKey);
         byte[] temp = Utils.hexStringToByteArray(strs[2]);
         byte[] salt = new byte[KeyCrypterScrypt.SALT_LENGTH];
         if (temp.length == KeyCrypterScrypt.SALT_LENGTH + 1) {
