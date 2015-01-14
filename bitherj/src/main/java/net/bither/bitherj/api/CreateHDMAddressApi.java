@@ -40,11 +40,11 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
     private String pubCold;
     private int start;
     private int end;
-    private String hotAddress;
+
 
     private static final Logger log = LoggerFactory.getLogger(CreateHDMAddressApi.class);
 
-    public CreateHDMAddressApi(String address, String hotAddress
+    public CreateHDMAddressApi(String address
             , List<HDMAddress.Pubs> pubsList, byte[] password) {
         this.password = password;
         String url = Utils.format(BitherUrl.BITHER_HDM_CREATE_ADDRESS, address);
@@ -94,7 +94,7 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
         params.add(new BasicNameValuePair(HttpSetting.PUB_COLD, this.pubCold));
         params.add(new BasicNameValuePair(HttpSetting.START, Integer.toString(this.start)));
         params.add(new BasicNameValuePair(HttpSetting.END, Integer.toString(this.end)));
-        params.add(new BasicNameValuePair(HttpSetting.HOT_ADDRESS, this.hotAddress));
+
         return new UrlEncodedFormEntity(params, HTTP.UTF_8);
     }
 

@@ -72,7 +72,8 @@ public class HDMBId {
 //        String passwrodString = new String(Base64.encode(decryptedPassword), Charset.forName("UTF-8"));
 //
 //        log.info("signature:" + signature + "." + passwrodString);
-        UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, Utils.hexStringToByteArray(signString), decryptedPassword);
+        String hotAddress = AddressManager.getInstance().getHdmKeychain().getFirstAddressFromDb();
+        UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, hotAddress, Utils.hexStringToByteArray(signString), decryptedPassword);
         uploadHDMBidApi.handleHttpPost();
         String str = uploadHDMBidApi.getResult();
         encryptedBitherPassword = new EncryptedData(decryptedPassword, secureCharSequence);
@@ -94,7 +95,6 @@ public class HDMBId {
         decryptedPassword = encryptedBitherPassword.decrypt(password);
         return decryptedPassword;
     }
-
 
 
     public synchronized static HDMBId getHDMBidFromDb() {

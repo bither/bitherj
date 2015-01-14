@@ -34,12 +34,14 @@ public class UploadHDMBidApi extends HttpPostResponse<String> {
 
     private byte[] signature;
     private byte[] password;
+    private String hotAddress;
 
-    public UploadHDMBidApi(String address, byte[] signature, byte[] password) {
+    public UploadHDMBidApi(String address, String hotAddress, byte[] signature, byte[] password) {
         String url = Utils.format(BitherUrl.BITHER_HDM_PASSWORD, address);
         setUrl(url);
         this.signature = signature;
         this.password = password;
+        this.hotAddress = hotAddress;
     }
 
     @Override
@@ -47,6 +49,7 @@ public class UploadHDMBidApi extends HttpPostResponse<String> {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair(HttpSetting.PASSWORD, Utils.base64Encode(this.password)));
         params.add(new BasicNameValuePair(HttpSetting.SIGNATURE, Utils.base64Encode(this.signature)));
+        params.add(new BasicNameValuePair(HttpSetting.HOT_ADDRESS, this.hotAddress));
         return new UrlEncodedFormEntity(params, HTTP.UTF_8);
     }
 

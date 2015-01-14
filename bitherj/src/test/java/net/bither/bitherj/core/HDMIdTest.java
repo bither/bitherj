@@ -52,13 +52,13 @@ public class HDMIdTest {
             String message = Utils.format(HDMBId.BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), randomKey);
             byte[] hash = Utils.getPreSignMessage(message);
             byte[] signBytes = ecKey.signHash(hash, null);
-            UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, signBytes, decryptedPassword);
+            UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, address, signBytes, decryptedPassword);
             uploadHDMBidApi.handleHttpPost();
             String str = uploadHDMBidApi.getResult();
             HDMAddress.Pubs pubs = new HDMAddress.Pubs(ecKey.getPubKey(), ecKey.getPubKey(), null, 0);
             List<HDMAddress.Pubs> pubsList = new ArrayList<HDMAddress.Pubs>();
             pubsList.add(pubs);
-            CreateHDMAddressApi createHDMAddressApi = new CreateHDMAddressApi(address, address, pubsList, decryptedPassword);
+            CreateHDMAddressApi createHDMAddressApi = new CreateHDMAddressApi(address, pubsList, decryptedPassword);
             createHDMAddressApi.handleHttpPost();
             List<byte[]> pubList = createHDMAddressApi.getResult();
             for (byte[] bytes : pubList) {
