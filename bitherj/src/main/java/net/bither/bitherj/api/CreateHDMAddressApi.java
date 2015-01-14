@@ -97,6 +97,7 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
 
     @Override
     public void setResult(String response) throws Exception {
+        log.info("CreateHDMAddressApi:"+response);
         this.result = Utils.decodeServiceResult(response);
     }
 }

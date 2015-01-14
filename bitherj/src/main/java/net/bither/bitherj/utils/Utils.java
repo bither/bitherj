@@ -1002,7 +1002,8 @@ public class Utils {
         List<byte[]> pubsList = new ArrayList<byte[]>();
         while (index < servicePubs.length - 1) {
             byte charLen = servicePubs[index];
-            pubsList.add(Utils.copyOfRange(servicePubs, index + 1, charLen));
+            index++;
+            pubsList.add(Utils.copyOfRange(servicePubs, index, charLen));
             index = index + charLen;
         }
         return pubsList;
@@ -1017,7 +1018,9 @@ public class Utils {
         byte[] result = new byte[len];
         for (byte[] bytes : bytesList) {
             result[index] = (byte) bytes.length;
+            index += 1;
             System.arraycopy(bytes, 0, result, index, bytes.length);
+            index += bytes.length;
         }
         return new String(org.spongycastle.util.encoders.Base64.encode(result), Charset.forName("UTF-8"));
 

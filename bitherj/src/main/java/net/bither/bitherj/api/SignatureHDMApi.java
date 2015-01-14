@@ -27,6 +27,8 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +36,7 @@ import java.util.List;
 public class SignatureHDMApi extends HttpPostResponse<List<byte[]>> {
     private byte[] password;
     private List<byte[]> unSigns;
+    private static final Logger log = LoggerFactory.getLogger(SignatureHDMApi.class);
 
     public SignatureHDMApi(String address, int index, byte[] password, List<byte[]> unSigns) {
         String url = Utils.format(BitherUrl.BITHER_HDM_SIGNATURE, address, index);
@@ -54,6 +57,7 @@ public class SignatureHDMApi extends HttpPostResponse<List<byte[]>> {
 
     @Override
     public void setResult(String response) throws Exception {
+        log.info("SignatureHDMApi:" + response);
         this.result = Utils.decodeServiceResult(response);
     }
 }

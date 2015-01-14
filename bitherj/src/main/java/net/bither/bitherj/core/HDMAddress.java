@@ -72,8 +72,9 @@ public class HDMAddress extends Address {
         for (int i = 0;
              i < unsignedHashes.size();
              i++) {
-            new TransactionSignature(key.sign(unsignedHashes.get(i)),
+            TransactionSignature transactionSignature = new TransactionSignature(key.sign(unsignedHashes.get(i)),
                     TransactionSignature.SigHash.ALL, false);
+            sigs.add(transactionSignature);
         }
         key.wipe();
         return sigs;
