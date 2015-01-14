@@ -81,10 +81,10 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     }
 
     public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {
-//        if (AbstractDb.txProvider.isExist(tx.getTxHash())) {
-//            // already in db
-//            return true;
-//        }
+        if (AbstractDb.txProvider.isExist(tx.getTxHash())) {
+            // already in db
+            return true;
+        }
 
         if (AbstractDb.txProvider.isTxDoubleSpendWithConfirmedTx(tx)) {
             // double spend with confirmed tx
@@ -212,7 +212,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     public boolean trashPrivKey(Address address) {
         synchronized (lock) {
             if ((address.hasPrivKey() || address.isHDM()) && address.getBalance() == 0) {
-                if(address.isHDM() && hdmKeychain.getAddresses().size() <= 1){
+                if (address.isHDM() && hdmKeychain.getAddresses().size() <= 1) {
                     return false;
                 }
                 address.setTrashed(true);

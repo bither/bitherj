@@ -3,6 +3,7 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
@@ -124,6 +125,11 @@ public class HDMAddress extends Address {
         list.add(pubs.cold);
         list.add(pubs.remote);
         return list;
+    }
+
+    @Override
+    public void updateSyncComplete() {
+        AbstractDb.addressProvider.syncComplete(keychain.getHdSeedId(), pubs.index);
     }
 
     @Override

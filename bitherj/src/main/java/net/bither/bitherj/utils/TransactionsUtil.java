@@ -25,6 +25,7 @@ import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.Block;
 import net.bither.bitherj.core.BlockChain;
+import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.exception.ScriptException;
@@ -67,7 +68,7 @@ public class TransactionsUtil {
                     continue;
                 }
                 String txString = txArray.getString(1);
-                byte[] txBytes = Base64.decode(txString, Base64.DEFAULT);
+                byte[] txBytes = Base64.decode(txString, Base64.URL_SAFE);
                 // LogUtil.d("height", "h:" + height);
                 Tx tx = new Tx(txBytes);
 
@@ -218,7 +219,12 @@ public class TransactionsUtil {
                 Collections.sort(transactions, new ComparatorTx());
                 address.initTxs(transactions);
                 address.setSyncComplete(true);
-                address.updateSyncComplete();
+                if (address instanceof HDMAddress) {
+                    HDMAddress hdmAddress = (HDMAddress) address;
+                    hdmAddress.updateSyncComplete();
+                } else {
+                    address.updateSyncComplete();
+                }
             }
         }
     }
