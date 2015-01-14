@@ -371,7 +371,7 @@ public class HDMKeychain {
         return address;
     }
 
-    private String getFirstAddressFromDb() {
+    public String getFirstAddressFromDb() {
         return AbstractDb.addressProvider.getHDMFristAddress(hdSeedId);
     }
 
@@ -414,11 +414,11 @@ public class HDMKeychain {
         }
     }
 
-    public static void getRemotePublicKeys(HDMBId hdmBId, CharSequence
+    public static void getRemotePublicKeys(HDMKeychain keychain, HDMBId hdmBId, CharSequence
             password, List<HDMAddress.Pubs> partialPubs) throws Exception {
         byte[] decryptedPassword = hdmBId.decryptHDMBIdPassword(password);
         CreateHDMAddressApi createHDMAddressApi = new
-                CreateHDMAddressApi(hdmBId.getAddress(), partialPubs, decryptedPassword);
+                CreateHDMAddressApi(hdmBId.getAddress(), keychain.getFirstAddressFromDb(), partialPubs, decryptedPassword);
         createHDMAddressApi.handleHttpPost();
         List<byte[]> remotePubs = createHDMAddressApi.getResult();
         for (int i = 0; i < partialPubs.size(); i++) {

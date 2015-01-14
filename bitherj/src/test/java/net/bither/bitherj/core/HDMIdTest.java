@@ -58,7 +58,7 @@ public class HDMIdTest {
             HDMAddress.Pubs pubs = new HDMAddress.Pubs(ecKey.getPubKey(), ecKey.getPubKey(), null, 0);
             List<HDMAddress.Pubs> pubsList = new ArrayList<HDMAddress.Pubs>();
             pubsList.add(pubs);
-            CreateHDMAddressApi createHDMAddressApi = new CreateHDMAddressApi(address, pubsList, decryptedPassword);
+            CreateHDMAddressApi createHDMAddressApi = new CreateHDMAddressApi(address, address, pubsList, decryptedPassword);
             createHDMAddressApi.handleHttpPost();
             List<byte[]> pubList = createHDMAddressApi.getResult();
             for (byte[] bytes : pubList) {

@@ -38,6 +38,7 @@ public class HttpSetting {
 
     public static final String PASSWORD = "password";
     public static final String SIGNATURE = "signature";
+    public static final String HOT_ADDRESS = "hot_address";
 
     public static final String PUB_HOT = "pub_hot";
     public static final String PUB_COLD = "pub_cold";
