@@ -22,12 +22,12 @@ public class HttpSetting {
      * connection is established. The default value is zero, that means the
      * timeout is not used.
      */
-    public static final int HTTP_CONNECTION_TIMEOUT = 1000 * 1000;
+    public static final int HTTP_CONNECTION_TIMEOUT = 10 * 1000;
     /**
      * HTTP_SO_TIMEOUT: Set the default socket timeout (SO_TIMEOUT). in
      * milliseconds which is the timeout for waiting for data.
      */
-    public static final int HTTP_SO_TIMEOUT = 1400 * 1000;
+    public static final int HTTP_SO_TIMEOUT = 80 * 1000;
 
     public final static String SPECIAL_TYPE = "special_type";
 

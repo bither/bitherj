@@ -42,6 +42,7 @@ public class UploadHDMBidApi extends HttpPostResponse<String> {
         this.signature = signature;
         this.password = password;
         this.hotAddress = hotAddress;
+        setIsHttps(true);
     }
 
     @Override

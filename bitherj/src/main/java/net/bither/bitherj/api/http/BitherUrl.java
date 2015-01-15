@@ -23,7 +23,7 @@ import net.bither.bitherj.utils.Utils;
 public class BitherUrl {
     public static final class BITHER_DNS {
         private static final String FORMAT_HTTP = "http://%s/";
-
+        private static final String FORMAT_HTTPS = "https://%s/";
         public static final String BITHER_BITCOIN_DOMAIN = "b.getcai.com";
         public static final String BITHER_USER_DOMAIN = "bu.getcai.com";
         public static final String BITHER_STATS_DOMAIN = "bs.getcai.com";
@@ -35,7 +35,7 @@ public class BitherUrl {
         public static final String BITHER_STATS = Utils.format(FORMAT_HTTP, BITHER_STATS_DOMAIN);
 
         public static final String BITHER_BC1 = Utils.format(FORMAT_HTTP, BITHER_BC1_DOMAIN);
-        public static final String BITHER_HDM = Utils.format(FORMAT_HTTP, BITHER_HDM_DOMAIN);
+        public static final String BITHER_HDM = Utils.format(FORMAT_HTTPS, BITHER_HDM_DOMAIN);
 
 
     }

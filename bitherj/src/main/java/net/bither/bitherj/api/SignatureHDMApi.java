@@ -43,6 +43,7 @@ public class SignatureHDMApi extends HttpPostResponse<List<byte[]>> {
         setUrl(url);
         this.password = password;
         this.unSigns = unSigns;
+        setIsHttps(true);
 
     }
 

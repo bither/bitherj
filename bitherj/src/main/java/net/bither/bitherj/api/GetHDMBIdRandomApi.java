@@ -29,6 +29,7 @@ public class GetHDMBIdRandomApi extends HttpGetResponse<Long> {
     public GetHDMBIdRandomApi(String address) {
         String url = Utils.format(BitherUrl.BITHER_HDM_PASSWORD, address);
         setUrl(url);
+        setIsHttps(true);
 
     }
 
