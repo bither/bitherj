@@ -20,7 +20,6 @@ import net.bither.bitherj.api.*;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.utils.Utils;
-
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +51,7 @@ public class HDMIdTest {
             byte[] signBytes = ecKey.signHash(hash, null);
             UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, address, signBytes, decryptedPassword);
             uploadHDMBidApi.handleHttpPost();
-            String str = uploadHDMBidApi.getResult();
+            boolean str = uploadHDMBidApi.getResult();
             HDMAddress.Pubs pubs = new HDMAddress.Pubs(ecKey.getPubKey(), ecKey.getPubKey(), null, 0);
             List<HDMAddress.Pubs> pubsList = new ArrayList<HDMAddress.Pubs>();
             pubsList.add(pubs);
