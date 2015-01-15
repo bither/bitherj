@@ -296,6 +296,7 @@ public class Script {
         }
     }
 
+    @Deprecated
     public byte[] getSig() throws ScriptException {
         if (chunks.size() == 1 && chunks.get(0).isPushData()) {
             return chunks.get(0).data;
@@ -323,24 +324,38 @@ public class Script {
                 && chunks.get(1).data.length > 2) {
             result.add(chunks.get(0).data);
         } else if (chunks.size() >= 3 && chunks.get(0).opcode == OP_0) {
-            for (ScriptChunk chunk : chunks) {
-                if (chunk.isPushData() && chunk.data != null && chunk.data.length > 0
-                        && chunk.data[0] == (byte) 48) {
-                    result.add(chunk.data);
+            boolean isPay2SHScript = true;
+            for (int i = 1; i < this.chunks.size(); i++) {
+                isPay2SHScript &= (this.chunks.get(i).data != null && this.chunks.get(i).data.length > 2);
+            }
+            if (isPay2SHScript) {
+                for (int i = 1; i < this.chunks.size() - 1; i++) {
+                    if (this.chunks.get(i).isPushData() && this.chunks.get(i).data != null
+                            && this.chunks.get(i).data.length > 0
+                            && this.chunks.get(i).data[0] == (byte) 48) {
+                        result.add(this.chunks.get(i).data);
+                    }
                 }
             }
         }
         return result;
     }
 
-    /**
-     * For 2-element [input] scripts assumes that the paid-to-address can be derived from the public key.
-     * The concept of a "from address" isn't well defined in Bitcoin and you should not assume the sender of a
-     * transaction can actually receive coins on it. This method may be removed in future.
-     */
-    @Deprecated
     public String getFromAddress() throws ScriptException {
-        return Utils.toAddress(Utils.sha256hash160(getPubKey()));
+        if (this.chunks.size() == 2
+                && this.chunks.get(0).data != null && this.chunks.get(0).data.length > 2
+                && this.chunks.get(1).data != null && this.chunks.get(1).data.length > 2) {
+            return Utils.toAddress(Utils.sha256hash160(this.chunks.get(1).data));
+        } else if (this.chunks.size() >= 3 && this.chunks.get(0).opcode == OP_0) {
+            boolean isPay2SHScript = true;
+            for (int i = 1; i < this.chunks.size(); i++) {
+                isPay2SHScript &= (this.chunks.get(i).data != null && this.chunks.get(i).data.length > 2);
+            }
+            if (isPay2SHScript) {
+                return Utils.toP2SHAddress(Utils.sha256hash160(this.chunks.get(this.chunks.size() - 1).data));
+            }
+        }
+        return null;
     }
 
     /**

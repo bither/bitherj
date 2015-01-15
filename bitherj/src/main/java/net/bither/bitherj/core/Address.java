@@ -382,16 +382,14 @@ public class Address implements Comparable<Address> {
         for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
             if (in.getInSignature() != null) {
                 Script script = new Script(in.getInSignature());
-                try {
-                    if (script.getFromAddress().equals(this.address)) {
-                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
+                if (script.getFromAddress().equals(this.address)) {
+                    for (byte[] data: script.getSigs()) {
+                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
                         BigInteger i = new BigInteger(signature.r.toByteArray());
                         if (rs.contains(i))
                             return false;
                         rs.add(i);
                     }
-                } catch (ScriptException ex) {
-
                 }
             }
         }
