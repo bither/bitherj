@@ -23,6 +23,7 @@ public class HttpSetting {
      * timeout is not used.
      */
     public static final int HTTP_CONNECTION_TIMEOUT = 10 * 1000;
+    public static String REQUEST_ENCODING = "utf-8";
     /**
      * HTTP_SO_TIMEOUT: Set the default socket timeout (SO_TIMEOUT). in
      * milliseconds which is the timeout for waiting for data.

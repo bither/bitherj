@@ -17,24 +17,19 @@
 package net.bither.bitherj.api;
 
 import net.bither.bitherj.api.http.BitherUrl;
-import net.bither.bitherj.api.http.HttpPostResponse;
 import net.bither.bitherj.api.http.HttpSetting;
+import net.bither.bitherj.api.http.HttpsPostResponse;
 import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.utils.Base64;
 import net.bither.bitherj.utils.Utils;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
+public class CreateHDMAddressApi extends HttpsPostResponse<List<byte[]>> {
     private byte[] password;
     private String pubHot;
     private String pubCold;
@@ -83,20 +78,19 @@ public class CreateHDMAddressApi extends HttpPostResponse<List<byte[]>> {
         }
         pubHot = pubHot + Base64.encodeToString(hot, Base64.DEFAULT);
         pubCold = pubCold + Base64.encodeToString(cold, Base64.DEFAULT);
-        setIsHttps(true);
+
 
     }
 
     @Override
-    public HttpEntity getHttpEntity() throws Exception {
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair(HttpSetting.PASSWORD, Utils.base64Encode(this.password)));
-        params.add(new BasicNameValuePair(HttpSetting.PUB_HOT, this.pubHot));
-        params.add(new BasicNameValuePair(HttpSetting.PUB_COLD, this.pubCold));
-        params.add(new BasicNameValuePair(HttpSetting.START, Integer.toString(this.start)));
-        params.add(new BasicNameValuePair(HttpSetting.END, Integer.toString(this.end)));
-
-        return new UrlEncodedFormEntity(params, HTTP.UTF_8);
+    public Map<String, String> getParams() throws Exception {
+        Map<String, String> params = new HashMap<String, String>();
+        params.put(HttpSetting.PASSWORD, Utils.base64Encode(this.password));
+        params.put(HttpSetting.PUB_HOT, this.pubHot);
+        params.put(HttpSetting.PUB_COLD, this.pubCold);
+        params.put(HttpSetting.START, Integer.toString(this.start));
+        params.put(HttpSetting.END, Integer.toString(this.end));
+        return params;
     }
 
     @Override

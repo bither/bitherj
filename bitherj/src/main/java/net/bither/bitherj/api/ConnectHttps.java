@@ -14,7 +14,6 @@ import java.net.URLEncoder;
 import java.security.KeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -22,7 +21,6 @@ import java.util.Map;
 public final class ConnectHttps {
     private static final Logger log = LoggerFactory.getLogger(ConnectHttps.class);
 
-    private static String requestEncoding = "utf-8";
 
     public static void main(String[] args) throws Exception {
 
@@ -34,7 +32,7 @@ public final class ConnectHttps {
         for (int i = 0; i < password.length; i++) {
             password[i] = 0;
         }
-        map.put(HttpSetting.PASSWORD, Base64.getEncoder().encodeToString(password));
+//        map.put(HttpSetting.PASSWORD, Base64.getEncoder().encodeToString(password));
 
 
         doPost("https://104.237.157.111/api/v1/1C6FiRktL3UPd4sywhyU5CYSeLdKhvHxhR/hdm/password", map);
@@ -117,7 +115,7 @@ public final class ConnectHttps {
 
     }
 
-    private static String doPost(String reqUrl, Map parameters) {
+    private static String doPost(String reqUrl, Map parameters) throws Exception {
         HttpsURLConnection url_con = null;
         String responseContent = null;
         try {
@@ -128,7 +126,7 @@ public final class ConnectHttps {
                 params.append(element.getKey().toString());
                 params.append("=");
                 params.append(URLEncoder.encode(element.getValue().toString(),
-                        requestEncoding));
+                        HttpSetting.REQUEST_ENCODING));
                 params.append("&");
             }
 
@@ -152,7 +150,7 @@ public final class ConnectHttps {
 
             InputStream in = url_con.getInputStream();
             BufferedReader rd = new BufferedReader(new InputStreamReader(in,
-                    requestEncoding));
+                    HttpSetting.REQUEST_ENCODING));
             String tempLine = rd.readLine();
             StringBuffer tempStr = new StringBuffer();
             String crlf = System.getProperty("line.separator");
@@ -166,6 +164,7 @@ public final class ConnectHttps {
             in.close();
         } catch (IOException e) {
             e.printStackTrace();
+            throw e;
         } finally {
             if (url_con != null) {
                 url_con.disconnect();

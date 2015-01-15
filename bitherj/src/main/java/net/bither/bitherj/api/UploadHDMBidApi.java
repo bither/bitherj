@@ -17,20 +17,14 @@
 package net.bither.bitherj.api;
 
 import net.bither.bitherj.api.http.BitherUrl;
-import net.bither.bitherj.api.http.HttpPostResponse;
 import net.bither.bitherj.api.http.HttpSetting;
+import net.bither.bitherj.api.http.HttpsPostResponse;
 import net.bither.bitherj.utils.Utils;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
+import java.util.HashMap;
+import java.util.Map;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class UploadHDMBidApi extends HttpPostResponse<String> {
+public class UploadHDMBidApi extends HttpsPostResponse<String> {
 
     private byte[] signature;
     private byte[] password;
@@ -42,16 +36,16 @@ public class UploadHDMBidApi extends HttpPostResponse<String> {
         this.signature = signature;
         this.password = password;
         this.hotAddress = hotAddress;
-        setIsHttps(true);
+
     }
 
     @Override
-    public HttpEntity getHttpEntity() throws Exception {
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair(HttpSetting.PASSWORD, Utils.base64Encode(this.password)));
-        params.add(new BasicNameValuePair(HttpSetting.SIGNATURE, Utils.base64Encode(this.signature)));
-        params.add(new BasicNameValuePair(HttpSetting.HOT_ADDRESS, this.hotAddress));
-        return new UrlEncodedFormEntity(params, HTTP.UTF_8);
+    public Map<String, String> getParams() throws Exception {
+        Map<String, String> params = new HashMap<String, String>();
+        params.put(HttpSetting.PASSWORD, Utils.base64Encode(this.password));
+        params.put(HttpSetting.SIGNATURE, Utils.base64Encode(this.signature));
+        params.put(HttpSetting.HOT_ADDRESS, this.hotAddress);
+        return params;
     }
 
     @Override

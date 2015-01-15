@@ -17,23 +17,17 @@
 package net.bither.bitherj.api;
 
 import net.bither.bitherj.api.http.BitherUrl;
-import net.bither.bitherj.api.http.HttpPostResponse;
 import net.bither.bitherj.api.http.HttpSetting;
-import net.bither.bitherj.utils.Base64;
+import net.bither.bitherj.api.http.HttpsPostResponse;
 import net.bither.bitherj.utils.Utils;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class SignatureHDMApi extends HttpPostResponse<List<byte[]>> {
+public class SignatureHDMApi extends HttpsPostResponse<List<byte[]>> {
     private byte[] password;
     private List<byte[]> unSigns;
     private static final Logger log = LoggerFactory.getLogger(SignatureHDMApi.class);
@@ -43,18 +37,17 @@ public class SignatureHDMApi extends HttpPostResponse<List<byte[]>> {
         setUrl(url);
         this.password = password;
         this.unSigns = unSigns;
-        setIsHttps(true);
 
     }
-
 
     @Override
-    public HttpEntity getHttpEntity() throws Exception {
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair(HttpSetting.PASSWORD, Utils.base64Encode(password)));
-        params.add(new BasicNameValuePair(HttpSetting.UNSIGN, Utils.encodeBytesForService(unSigns)));
-        return new UrlEncodedFormEntity(params, HTTP.UTF_8);
+    public Map<String, String> getParams() throws Exception {
+        Map<String, String> params = new HashMap<String, String>();
+        params.put(HttpSetting.PASSWORD, Utils.base64Encode(password));
+        params.put(HttpSetting.UNSIGN, Utils.encodeBytesForService(unSigns));
+        return params;
     }
+
 
     @Override
     public void setResult(String response) throws Exception {
