@@ -24,10 +24,10 @@ public class MultisigTest {
         ECKey keyHot = new ECKey(null, Utils.hexStringToByteArray(pubHot));
         ECKey keyCold = new ECKey(null, Utils.hexStringToByteArray(pubCold));
         ECKey keyRemote = new ECKey(null, Utils.hexStringToByteArray(pubRemote));
-        List<ECKey> pubKeyList = new ArrayList<ECKey>();
-        pubKeyList.add(keyHot);
-        pubKeyList.add(keyCold);
-        pubKeyList.add(keyRemote);
+        List<byte[]> pubKeyList = new ArrayList<byte[]>();
+        pubKeyList.add(keyHot.getPubKey());
+        pubKeyList.add(keyCold.getPubKey());
+        pubKeyList.add(keyRemote.getPubKey());
 
         Script script = ScriptBuilder.createMultiSigOutputScript(2, pubKeyList);
         String multisigAddress = Utils.toP2SHAddress(Utils.sha256hash160(script.getProgram()));
@@ -42,10 +42,10 @@ public class MultisigTest {
         keyHot = new ECKey(null, Utils.hexStringToByteArray(pubHot));
         keyCold = new ECKey(null, Utils.hexStringToByteArray(pubCold));
         keyRemote = new ECKey(null, Utils.hexStringToByteArray(pubRemote));
-        pubKeyList = new ArrayList<ECKey>();
-        pubKeyList.add(keyHot);
-        pubKeyList.add(keyCold);
-        pubKeyList.add(keyRemote);
+        pubKeyList = new ArrayList<byte[]>();
+        pubKeyList.add(keyHot.getPubKey());
+        pubKeyList.add(keyCold.getPubKey());
+        pubKeyList.add(keyRemote.getPubKey());
 
         script = ScriptBuilder.createMultiSigOutputScript(2, pubKeyList);
         multisigAddress = Utils.toP2SHAddress(Utils.sha256hash160(script.getProgram()));
@@ -60,10 +60,10 @@ public class MultisigTest {
         keyHot = new ECKey(null, Utils.hexStringToByteArray(pubHot));
         keyCold = new ECKey(null, Utils.hexStringToByteArray(pubCold));
         keyRemote = new ECKey(null, Utils.hexStringToByteArray(pubRemote));
-        pubKeyList = new ArrayList<ECKey>();
-        pubKeyList.add(keyHot);
-        pubKeyList.add(keyCold);
-        pubKeyList.add(keyRemote);
+        pubKeyList = new ArrayList<byte[]>();
+        pubKeyList.add(keyHot.getPubKey());
+        pubKeyList.add(keyCold.getPubKey());
+        pubKeyList.add(keyRemote.getPubKey());
 
         script = ScriptBuilder.createMultiSigOutputScript(2, pubKeyList);
         multisigAddress = Utils.toP2SHAddress(Utils.sha256hash160(script.getProgram()));

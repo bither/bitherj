@@ -18,16 +18,12 @@
 package net.bither.bitherj.script;
 
 import com.google.common.collect.Lists;
-
 import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.OutPoint;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.exception.VerificationException;
-import net.bither.bitherj.script.Script;
-import net.bither.bitherj.script.ScriptBuilder;
-import net.bither.bitherj.script.ScriptOpCodes;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
@@ -44,9 +40,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
-import static net.bither.bitherj.script.ScriptOpCodes.OP_INVALIDOPCODE;
-
 import static com.google.common.base.Preconditions.checkArgument;
+import static net.bither.bitherj.script.ScriptOpCodes.OP_INVALIDOPCODE;
 import static org.junit.Assert.*;
 
 public class ScriptTest {
@@ -86,8 +81,12 @@ public class ScriptTest {
     public void testMultiSig() throws Exception {
         SecureRandom random = new SecureRandom();
         List<ECKey> keys = Lists.newArrayList(ECKey.generateECKey(random), ECKey.generateECKey(random), ECKey.generateECKey(random));
-        assertTrue(ScriptBuilder.createMultiSigOutputScript(2, keys).isSentToMultiSig());
-        assertTrue(ScriptBuilder.createMultiSigOutputScript(3, keys).isSentToMultiSig());
+        List<byte[]> pubs = new ArrayList<byte[]>();
+        for (ECKey key : keys) {
+            pubs.add(key.getPubKey());
+        }
+        assertTrue(ScriptBuilder.createMultiSigOutputScript(2, pubs).isSentToMultiSig());
+        assertTrue(ScriptBuilder.createMultiSigOutputScript(3, pubs).isSentToMultiSig());
         assertFalse(ScriptBuilder.createOutputScript(ECKey.generateECKey(random)).isSentToMultiSig());
         try {
             // Fail if we ask for more signatures than keys.

@@ -1,6 +1,5 @@
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.db.AbstractDb;
@@ -164,8 +163,8 @@ public class HDMAddress extends Address {
 
         public Script getMultiSigScript() {
             assert hot != null && cold != null && remote != null;
-            return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(new ECKey(null,
-                    hot), new ECKey(null, cold), new ECKey(null, remote)));
+            return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(
+                    hot, cold, remote));
         }
 
         public boolean isCompleted() {
