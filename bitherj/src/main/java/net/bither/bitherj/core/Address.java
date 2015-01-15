@@ -131,52 +131,64 @@ public class Address implements Comparable<Address> {
 
     public void updateBalance() {
         long balance = 0;
-        List<Tx> txs = this.getTxs();
-
-        Set<byte[]> invalidTx = new HashSet<byte[]>();
-        Set<OutPoint> spentOut = new HashSet<OutPoint>();
-        Set<OutPoint> unspendOut = new HashSet<OutPoint>();
-
-        for (int i = txs.size() - 1;
-             i >= 0;
-             i--) {
-            Set<OutPoint> spent = new HashSet<OutPoint>();
-            Tx tx = txs.get(i);
-
-            Set<byte[]> inHashes = new HashSet<byte[]>();
-            for (In in : tx.getIns()) {
-                spent.add(new OutPoint(in.getPrevTxHash(), in.getPrevOutSn()));
-                inHashes.add(in.getPrevTxHash());
-            }
-
-            if (tx.getBlockNo() == Tx.TX_UNCONFIRMED && (this.isIntersects(spent,
-                    spentOut) || this.isIntersects(inHashes, invalidTx))) {
-                invalidTx.add(tx.getTxHash());
-                continue;
-            }
-
-            spentOut.addAll(spent);
-            for (Out out : tx.getOuts()) {
-                if (Utils.compareString(this.getAddress(), out.getOutAddress())) {
-                    unspendOut.add(new OutPoint(tx.getTxHash(), out.getOutSn()));
-                    balance += out.getOutValue();
-                }
-            }
-            spent.clear();
-            spent.addAll(unspendOut);
-            spent.retainAll(spentOut);
-            for (OutPoint o : spent) {
-                Tx tx1 = AbstractDb.txProvider.getTxDetailByTxHash(o.getTxHash());
-                unspendOut.remove(o);
-                for (Out out : tx1.getOuts()) {
-                    if (out.getOutSn() == o.getOutSn()) {
-                        balance -= out.getOutValue();
-                    }
-                }
+        List<Out> outList = AbstractDb.txProvider.getUnspendOutWithAddress(getAddress());
+        for (Out out : outList) {
+            if (Utils.compareString(out.getOutAddress(), getAddress())) {
+                balance += out.getOutValue();
             }
         }
         this.balance = balance;
     }
+
+//    private void oldUpdateBalance() {
+//        long balance = 0;
+//
+//        List<Tx> txs = this.getTxs();
+//
+//        Set<byte[]> invalidTx = new HashSet<byte[]>();
+//        Set<OutPoint> spentOut = new HashSet<OutPoint>();
+//        Set<OutPoint> unspendOut = new HashSet<OutPoint>();
+//
+//        for (int i = txs.size() - 1;
+//             i >= 0;
+//             i--) {
+//            Set<OutPoint> spent = new HashSet<OutPoint>();
+//            Tx tx = txs.get(i);
+//
+//            Set<byte[]> inHashes = new HashSet<byte[]>();
+//            for (In in : tx.getIns()) {
+//                spent.add(new OutPoint(in.getPrevTxHash(), in.getPrevOutSn()));
+//                inHashes.add(in.getPrevTxHash());
+//            }
+//
+//            if (tx.getBlockNo() == Tx.TX_UNCONFIRMED && (this.isIntersects(spent,
+//                    spentOut) || this.isIntersects(inHashes, invalidTx))) {
+//                invalidTx.add(tx.getTxHash());
+//                continue;
+//            }
+//
+//            spentOut.addAll(spent);
+//            for (Out out : tx.getOuts()) {
+//                if (Utils.compareString(this.getAddress(), out.getOutAddress())) {
+//                    unspendOut.add(new OutPoint(tx.getTxHash(), out.getOutSn()));
+//                    balance += out.getOutValue();
+//                }
+//            }
+//            spent.clear();
+//            spent.addAll(unspendOut);
+//            spent.retainAll(spentOut);
+//            for (OutPoint o : spent) {
+//                Tx tx1 = AbstractDb.txProvider.getTxDetailByTxHash(o.getTxHash());
+//                unspendOut.remove(o);
+//                for (Out out : tx1.getOuts()) {
+//                    if (out.getOutSn() == o.getOutSn()) {
+//                        balance -= out.getOutValue();
+//                    }
+//                }
+//            }
+//        }
+//        this.balance = balance;
+//    }
 
     private boolean isIntersects(Set set1, Set set2) {
         Set result = new HashSet();
@@ -383,7 +395,7 @@ public class Address implements Comparable<Address> {
             if (in.getInSignature() != null) {
                 Script script = new Script(in.getInSignature());
                 if (script.getFromAddress().equals(this.address)) {
-                    for (byte[] data: script.getSigs()) {
+                    for (byte[] data : script.getSigs()) {
                         TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
                         BigInteger i = new BigInteger(signature.r.toByteArray());
                         if (rs.contains(i))
@@ -402,7 +414,7 @@ public class Address implements Comparable<Address> {
             if (in.getInSignature() != null) {
                 Script script = new Script(in.getInSignature());
                 if (script.getFromAddress().equals(this.address)) {
-                    for (byte[] data: script.getSigs()) {
+                    for (byte[] data : script.getSigs()) {
                         TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
                         rs.add(new BigInteger(signature.r.toByteArray()));
                     }
