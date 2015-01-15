@@ -269,11 +269,11 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     public List<Address> getAllAddresses() {
         synchronized (lock) {
             ArrayList<Address> result = new ArrayList<Address>();
-            result.addAll(this.privKeyAddresses);
-            result.addAll(this.watchOnlyAddresses);
             if (hasHDMKeychain()) {
                 result.addAll(getHdmKeychain().getAddresses());
             }
+            result.addAll(this.privKeyAddresses);
+            result.addAll(this.watchOnlyAddresses);
             return result;
         }
     }
