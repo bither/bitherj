@@ -311,6 +311,28 @@ public class Script {
         }
     }
 
+    public List<byte[]> getSigs() {
+        List<byte[]> result = new ArrayList<byte[]>();
+        if (chunks.size() == 1 && chunks.get(0).isPushData()) {
+            result.add(chunks.get(0).data);
+        } else if (chunks.size() == 2 && chunks.get(0).isPushData()
+                && chunks.get(1).isPushData()
+                && chunks.get(0).data != null
+                && chunks.get(0).data.length > 2
+                && chunks.get(1).data != null
+                && chunks.get(1).data.length > 2) {
+            result.add(chunks.get(0).data);
+        } else if (chunks.size() >= 3 && chunks.get(0).opcode == OP_0) {
+            for (ScriptChunk chunk : chunks) {
+                if (chunk.isPushData() && chunk.data != null && chunk.data.length > 0
+                        && chunk.data[0] == (byte) 48) {
+                    result.add(chunk.data);
+                }
+            }
+        }
+        return result;
+    }
+
     /**
      * For 2-element [input] scripts assumes that the paid-to-address can be derived from the public key.
      * The concept of a "from address" isn't well defined in Bitcoin and you should not assume the sender of a

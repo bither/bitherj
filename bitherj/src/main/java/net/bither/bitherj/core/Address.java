@@ -399,29 +399,28 @@ public class Address implements Comparable<Address> {
     }
 
     public boolean checkRValuesForTx(Tx tx) {
-        //TODO r check for hdm is wrong
-//        HashSet<BigInteger> rs = new HashSet<BigInteger>();
-//        for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
-//            if (in.getInSignature() != null) {
-//                Script script = new Script(in.getInSignature());
-//                try {
-//                    if (script.getFromAddress().equals(this.address)) {
-//                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
-//                        rs.add(new BigInteger(signature.r.toByteArray()));
-//                    }
-//                } catch (ScriptException ex) {
-//
-//                }
-//            }
-//        }
-//        for (In in : tx.getIns()) {
-//            Script script = new Script(in.getInSignature());
-//            TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
-//            BigInteger i = new BigInteger(signature.r.toByteArray());
-//            if (rs.contains(i))
-//                return false;
-//            rs.add(i);
-//        }
+        HashSet<BigInteger> rs = new HashSet<BigInteger>();
+        for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
+            if (in.getInSignature() != null) {
+                Script script = new Script(in.getInSignature());
+                if (script.getFromAddress().equals(this.address)) {
+                    for (byte[] data: script.getSigs()) {
+                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
+                        rs.add(new BigInteger(signature.r.toByteArray()));
+                    }
+                }
+            }
+        }
+        for (In in : tx.getIns()) {
+            Script script = new Script(in.getInSignature());
+            for (byte[] data : script.getSigs()) {
+                TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
+                BigInteger i = new BigInteger(signature.r.toByteArray());
+                if (rs.contains(i))
+                    return false;
+                rs.add(i);
+            }
+        }
         return true;
     }
 
