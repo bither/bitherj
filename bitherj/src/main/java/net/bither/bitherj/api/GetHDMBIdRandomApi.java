@@ -17,19 +17,17 @@
 package net.bither.bitherj.api;
 
 import net.bither.bitherj.api.http.BitherUrl;
-import net.bither.bitherj.api.http.HttpGetResponse;
+import net.bither.bitherj.api.http.HttpsGetResponse;
 import net.bither.bitherj.utils.Utils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GetHDMBIdRandomApi extends HttpGetResponse<Long> {
+public class GetHDMBIdRandomApi extends HttpsGetResponse<Long> {
     private static final Logger log = LoggerFactory.getLogger(GetHDMBIdRandomApi.class);
 
     public GetHDMBIdRandomApi(String address) {
         String url = Utils.format(BitherUrl.BITHER_HDM_PASSWORD, address);
         setUrl(url);
-
     }
 
     public void setResult(String response) throws Exception {

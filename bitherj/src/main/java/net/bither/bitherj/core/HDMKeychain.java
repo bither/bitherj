@@ -64,14 +64,15 @@ public class HDMKeychain {
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
         seed = new byte[32];
         String firstAddress = null;
+        EncryptedData encryptedSeed = null;
         while (firstAddress == null) {
             try {
                 random.nextBytes(seed);
+                encryptedSeed = new EncryptedData(seed, password);
                 firstAddress = getFirstAddressFromSeed(password);
             } catch (Exception e) {
             }
         }
-        EncryptedData encryptedSeed = new EncryptedData(seed, password);
         wipeSeed();
         hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(),
                 firstAddress, isFromXRandom);
