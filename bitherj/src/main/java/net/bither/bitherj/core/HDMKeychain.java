@@ -35,7 +35,8 @@ public class HDMKeychain {
 
 
     public static interface HDMFetchRemotePublicKeys {
-        void completeRemotePublicKeys(CharSequence password, List<HDMAddress.Pubs> partialPubs) throws Exception;
+        void completeRemotePublicKeys(CharSequence password, List<HDMAddress.Pubs> partialPubs)
+                throws Exception;
     }
 
     public static interface HDMFetchRemoteAddresses {
@@ -137,6 +138,18 @@ public class HDMKeychain {
         if (maxIndex >= 0) {
             startIndex = maxIndex + 1;
         }
+
+        if (startIndex > 0) {
+            HDMBId id = HDMBId.getHDMBidFromDb();
+            if (id != null) {
+                String hdmIdAddress = id.getAddress();
+                if (!Utils.compareString(hdmIdAddress, Utils.toAddress(externalRootCold
+                        .deriveSoftened(0).getPubKeyHash()))) {
+                    throw new HDMColdPubNotSameException();
+                }
+            }
+        }
+
         for (int i = startIndex;
              pubs.size() < count;
              i++) {
@@ -407,24 +420,30 @@ public class HDMKeychain {
 
     }
 
+    public static void getRemotePublicKeys(HDMBId hdmBId, CharSequence password,
+                                           List<HDMAddress.Pubs> partialPubs) throws Exception {
+        byte[] decryptedPassword = hdmBId.decryptHDMBIdPassword(password);
+        CreateHDMAddressApi createHDMAddressApi = new CreateHDMAddressApi(hdmBId.getAddress(),
+                partialPubs, decryptedPassword);
+        createHDMAddressApi.handleHttpPost();
+        List<byte[]> remotePubs = createHDMAddressApi.getResult();
+        for (int i = 0;
+             i < partialPubs.size();
+             i++) {
+            HDMAddress.Pubs pubs = partialPubs.get(i);
+            pubs.remote = remotePubs.get(i);
+        }
+    }
+
+    public static final class HDMColdPubNotSameException extends RuntimeException {
+
+    }
+
     public static final class HDMBitherIdNotMatchException extends RuntimeException {
         public static final String msg = "HDM Bid Not Match";
 
         public HDMBitherIdNotMatchException() {
             super(msg);
-        }
-    }
-
-    public static void getRemotePublicKeys(HDMBId hdmBId, CharSequence
-            password, List<HDMAddress.Pubs> partialPubs) throws Exception {
-        byte[] decryptedPassword = hdmBId.decryptHDMBIdPassword(password);
-        CreateHDMAddressApi createHDMAddressApi = new
-                CreateHDMAddressApi(hdmBId.getAddress(), partialPubs, decryptedPassword);
-        createHDMAddressApi.handleHttpPost();
-        List<byte[]> remotePubs = createHDMAddressApi.getResult();
-        for (int i = 0; i < partialPubs.size(); i++) {
-            HDMAddress.Pubs pubs = partialPubs.get(i);
-            pubs.remote = remotePubs.get(i);
         }
     }
 }
