@@ -9,9 +9,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.security.KeyException;
 import java.security.NoSuchAlgorithmException;
@@ -29,8 +27,8 @@ public final class ConnectHttps {
     public static void main(String[] args) throws Exception {
 
         trustAllCerts();
-
         String getRespon = httpGet("https://104.237.157.111/api/v1/1C6FiRktL3UPd4sywhyU5CYSeLdKhvHxhR/hdm/password");
+        System.out.println(getRespon);
         Map<String, String> map = new HashMap<String, String>();
         byte[] password = new byte[32];
         for (int i = 0; i < password.length; i++) {
@@ -95,29 +93,31 @@ public final class ConnectHttps {
         }
     }
 
-    private static String httpGet(String urlString) {
+    private static String httpGet(String urlString) throws Exception {
         URL url;
+        HttpsURLConnection con = null;
         try {
             System.out.println("\n" + urlString);
-            String str;
             url = new URL(urlString);
-
-            URLConnection con = url.openConnection();
+            con = (HttpsURLConnection) url.openConnection();
             StringBuffer out = new StringBuffer();
             byte[] b = new byte[4096];
             for (int n; (n = con.getInputStream().read(b)) != -1; ) {
                 out.append(new String(b, 0, n));
             }
-
-        } catch (MalformedURLException e) {
+            return out.toString();
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+            throw e;
+        } finally {
+            if (con != null) {
+                con.disconnect();
+            }
         }
-        return null;
+
     }
 
-    public static String doPost(String reqUrl, Map parameters) {
+    private static String doPost(String reqUrl, Map parameters) {
         HttpsURLConnection url_con = null;
         String responseContent = null;
         try {
