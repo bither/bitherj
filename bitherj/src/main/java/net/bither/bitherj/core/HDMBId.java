@@ -2,6 +2,7 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.api.GetHDMBIdRandomApi;
 import net.bither.bitherj.api.UploadHDMBidApi;
+import net.bither.bitherj.api.http.HttpException;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.SecureCharSequence;
@@ -67,17 +68,16 @@ public class HDMBId {
             throw new SignatureException();
 
         }
-//        String signature = new String(Base64.encode(Utils.hexStringToByteArray(signString)), Charset.forName("UTF-8"));
-//
-//        String passwrodString = new String(Base64.encode(decryptedPassword), Charset.forName("UTF-8"));
-//
-//        log.info("signature:" + signature + "." + passwrodString);
         String hotAddress = AddressManager.getInstance().getHdmKeychain().getFirstAddressFromDb();
         UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, hotAddress, Utils.hexStringToByteArray(signString), decryptedPassword);
         uploadHDMBidApi.handleHttpPost();
-        String str = uploadHDMBidApi.getResult();
-        encryptedBitherPassword = new EncryptedData(decryptedPassword, secureCharSequence);
-        AbstractDb.addressProvider.addHDMBId(HDMBId.this);
+        boolean result = uploadHDMBidApi.getResult();
+        if (result) {
+            encryptedBitherPassword = new EncryptedData(decryptedPassword, secureCharSequence);
+            AbstractDb.addressProvider.addHDMBId(HDMBId.this);
+        } else {
+            throw new HttpException("UploadHDMBidApi error");
+        }
 
 
     }

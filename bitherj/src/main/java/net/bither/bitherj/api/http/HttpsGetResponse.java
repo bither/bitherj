@@ -1,6 +1,7 @@
 package net.bither.bitherj.api.http;
 
 import javax.net.ssl.HttpsURLConnection;
+
 import java.net.URL;
 
 public abstract class HttpsGetResponse<T> extends BaseHttpsResponse<T> {
@@ -25,6 +26,9 @@ public abstract class HttpsGetResponse<T> extends BaseHttpsResponse<T> {
             setResult(out.toString());
         } catch (Exception e) {
             e.printStackTrace();
+            if (con.getResponseCode() == 400) {
+
+            }
             throw e;
         } finally {
             if (con != null) {

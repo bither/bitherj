@@ -46,6 +46,20 @@ public class HttpSetting {
     public static final String START = "start";
     public static final String END = "end";
     public static final String UNSIGN = "unsign";
+    public static final String RESULT = "result";
+    public static final String STATUS_OK = "ok";
+
+    public static final int HDMBIdIsAlready = 1001;
+    public static final int MessageSignatureIsWrong = 1002;
+    public static final int HDMBIdShouldBindToAnAddress = 1003;
+    public static final int HDMBidIsNotExist = 1004;
+    public static final int PasswordWrong = 1005;
+    public static final int PubKeyIsExists = 1006;
+    public static final int SignatureFailed = 1007;
+
+    public static final int HDSeedIsNotExist = 2001;
+    public static final int ServiceSignatureFailed = 2002;
+
 }
 
 

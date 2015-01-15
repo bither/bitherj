@@ -21,10 +21,12 @@ import net.bither.bitherj.api.http.HttpSetting;
 import net.bither.bitherj.api.http.HttpsPostResponse;
 import net.bither.bitherj.utils.Utils;
 
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class UploadHDMBidApi extends HttpsPostResponse<String> {
+public class UploadHDMBidApi extends HttpsPostResponse<Boolean> {
 
     private byte[] signature;
     private byte[] password;
@@ -50,6 +52,12 @@ public class UploadHDMBidApi extends HttpsPostResponse<String> {
 
     @Override
     public void setResult(String response) throws Exception {
-        this.result = response;
+        this.result = false;
+        JSONObject json = new JSONObject(response);
+        if (!json.isNull(HttpSetting.RESULT)) {
+            this.result = Utils.compareString(json.getString(HttpSetting.RESULT)
+                    , HttpSetting.STATUS_OK);
+        }
+
     }
 }
