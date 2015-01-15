@@ -130,14 +130,8 @@ public class Address implements Comparable<Address> {
     }
 
     public void updateBalance() {
-        long balance = 0;
-        List<Out> outList = AbstractDb.txProvider.getUnspendOutWithAddress(getAddress());
-        for (Out out : outList) {
-            if (Utils.compareString(out.getOutAddress(), getAddress())) {
-                balance += out.getOutValue();
-            }
-        }
-        this.balance = balance;
+
+        this.balance = AbstractDb.txProvider.getSumUnspendOutWithAddress(getAddress());
     }
 
 //    private void oldUpdateBalance() {

@@ -59,6 +59,8 @@ public interface ITxProvider {
 
     public List<Out> getUnspendOutWithAddress(String address);
 
+    public long getSumUnspendOutWithAddress(String address);
+
     public List<Out> getUnSpendOutCanSpendWithAddress(String address);
 
     public List<Out> getUnSpendOutButNotConfirmWithAddress(String address);
