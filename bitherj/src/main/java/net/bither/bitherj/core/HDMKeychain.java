@@ -15,6 +15,7 @@ import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -69,7 +70,7 @@ public class HDMKeychain {
         while (firstAddress == null) {
             try {
                 random.nextBytes(seed);
-                encryptedSeed = new EncryptedData(seed, password);
+                encryptedSeed = new EncryptedData(seed, password, isFromXRandom);
                 firstAddress = getFirstAddressFromSeed(password);
             } catch (Exception e) {
             }
@@ -359,6 +360,12 @@ public class HDMKeychain {
         }
     }
 
+    public String getFullEncryptPrivKey() {
+        String encryptPrivKey = getEncryptedSeed();
+        return PrivateKeyUtil.getFullencryptHDMKeyChain(isFromXRandom
+                , encryptPrivKey);
+    }
+
     public String getEncryptedSeed() {
         return AbstractDb.addressProvider.getEncryptSeed(hdSeedId).toUpperCase();
     }
@@ -366,7 +373,7 @@ public class HDMKeychain {
     public void changePassword(CharSequence oldPassword, CharSequence newPassword) {
         decryptSeed(oldPassword);
         AbstractDb.addressProvider.setEncryptSeed(getHdSeedId(), new EncryptedData(seed,
-                newPassword).toEncryptedString());
+                newPassword, isFromXRandom).toEncryptedString());
         wipeSeed();
     }
 

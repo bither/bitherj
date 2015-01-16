@@ -30,7 +30,7 @@ import java.util.List;
 
 public class UpgradeAddressUtil {
 
-    //todo remove isXRandom and isCompress from salt
+
     private static List<Address> initPrivateKeyListByDesc() {
         List<Address> privKeyAddresses = new ArrayList<Address>();
 
