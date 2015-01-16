@@ -15,6 +15,7 @@ import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -69,7 +70,7 @@ public class HDMKeychain {
         while (firstAddress == null) {
             try {
                 random.nextBytes(seed);
-                encryptedSeed = new EncryptedData(seed, password);
+                encryptedSeed = new EncryptedData(seed, password, isFromXRandom);
                 firstAddress = getFirstAddressFromSeed(password);
             } catch (Exception e) {
             }
@@ -88,11 +89,12 @@ public class HDMKeychain {
     }
 
     // Import
-    public HDMKeychain(EncryptedData encryptedSeed, boolean isFromXRandom, CharSequence password,
+    public HDMKeychain(EncryptedData encryptedSeed, CharSequence password,
                        HDMFetchRemoteAddresses fetchDelegate) throws
             HDMBitherIdNotMatchException, MnemonicException.MnemonicLengthException {
         seed = encryptedSeed.decrypt(password);
         allCompletedAddresses = new ArrayList<HDMAddress>();
+        isFromXRandom = encryptedSeed.isXRandom();
         ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
         if (fetchDelegate != null) {
             List<HDMAddress.Pubs> pubs = fetchDelegate.getRemoteExistsPublicKeys(password);
@@ -119,7 +121,7 @@ public class HDMKeychain {
         wipeSeed();
         this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(),
                 firstAddress, isFromXRandom);
-        if(as.size() > 0) {
+        if (as.size() > 0) {
             AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
             allCompletedAddresses.addAll(as);
         }
@@ -359,6 +361,12 @@ public class HDMKeychain {
         }
     }
 
+    public String getFullEncryptPrivKey() {
+        String encryptPrivKey = getEncryptedSeed();
+        return PrivateKeyUtil.getFullencryptHDMKeyChain(isFromXRandom
+                , encryptPrivKey);
+    }
+
     public String getEncryptedSeed() {
         return AbstractDb.addressProvider.getEncryptSeed(hdSeedId).toUpperCase();
     }
@@ -366,7 +374,7 @@ public class HDMKeychain {
     public void changePassword(CharSequence oldPassword, CharSequence newPassword) {
         decryptSeed(oldPassword);
         AbstractDb.addressProvider.setEncryptSeed(getHdSeedId(), new EncryptedData(seed,
-                newPassword).toEncryptedString());
+                newPassword, isFromXRandom).toEncryptedString());
         wipeSeed();
     }
 
@@ -382,7 +390,7 @@ public class HDMKeychain {
         Utils.wipeBytes(seed);
     }
 
-    private String getFirstAddressFromSeed(CharSequence password) {
+    public String getFirstAddressFromSeed(CharSequence password) {
         DeterministicKey key = getExternalKey(0, password);
         String address = Utils.toAddress(key.getPubKeyHash());
         key.wipe();
