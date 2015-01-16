@@ -53,12 +53,13 @@ public interface ITxProvider {
 
     public List<Out> getUnspendOutWithAddress(String address);
 
+    // for calculate balance
     public long getConfirmedBalanceWithAddress(String address);
     public List<Tx> getUnconfirmedTxWithAddress(String address);
 
-    public List<Out> getUnSpendOutCanSpendWithAddress(String address);
-
-    public List<Out> getUnSpendOutButNotConfirmWithAddress(String address);
+//    public List<Out> getUnSpendOutCanSpendWithAddress(String address);
+//
+//    public List<Out> getUnSpendOutButNotConfirmWithAddress(String address);
 
     public int txCount(String address);
 
@@ -66,18 +67,19 @@ public interface ITxProvider {
 
     public List<Out> getOuts();
 
-    public List<Out> getUnSpentOuts();
+//    public List<Out> getUnSpentOuts();
 
     public List<In> getRelatedIn(String address);
 
     public List<Tx> getRecentlyTxsByAddress(String address, int greateThanBlockNo, int limit);
 
-    public List<Long> txInValues(byte[] txHash);
+//    public List<Long> txInValues(byte[] txHash);
 
+    // do not check tx 's dependency fo now
     public HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem);
 
+    // complete in signature
     public void completeInSignature(List<In> ins);
-
     public int needCompleteInSignature(String address);
 
     public void clearAllTx();
