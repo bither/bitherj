@@ -80,30 +80,36 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     }
 
     public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {
-        if (AbstractDb.txProvider.isExist(tx.getTxHash())) {
-            // already in db
-            return true;
-        }
-
         if (AbstractDb.txProvider.isTxDoubleSpendWithConfirmedTx(tx)) {
             // double spend with confirmed tx
             return false;
         }
 
+        boolean isRegister = false;
+        Tx compressedTx = compressTx(tx);
         HashSet<String> needNotifyAddressHashSet = new HashSet<String>();
-        for (Out out : tx.getOuts()) {
+        for (Out out : compressedTx.getOuts()) {
             if (addressHashSet.contains(out.getOutAddress()))
                 needNotifyAddressHashSet.add(out.getOutAddress());
         }
 
-        List<String> inAddresses = AbstractDb.txProvider.getInAddresses(tx);
-        for (String address : inAddresses) {
-            if (addressHashSet.contains(address))
-                needNotifyAddressHashSet.add(address);
+        Tx txInDb =  AbstractDb.txProvider.getTxDetailByTxHash(tx.getTxHash());
+        if (txInDb != null) {
+            for (Out out : txInDb.getOuts()) {
+                if (needNotifyAddressHashSet.contains(out.getOutAddress()))
+                    needNotifyAddressHashSet.remove(out.getOutAddress());
+            }
+            isRegister = true;
+        } else {
+            List<String> inAddresses = AbstractDb.txProvider.getInAddresses(compressedTx);
+            for (String address : inAddresses) {
+                if (addressHashSet.contains(address))
+                    needNotifyAddressHashSet.add(address);
+            }
+            isRegister = needNotifyAddressHashSet.size() > 0;
         }
         if (needNotifyAddressHashSet.size() > 0) {
-            tx = compressTx(tx);
-            AbstractDb.txProvider.add(tx);
+            AbstractDb.txProvider.add(compressedTx);
             log.info("add tx {} into db", Utils.hashToString(tx.getTxHash()));
         }
         for (Address addr : AddressManager.getInstance().getAllAddresses()) {
@@ -111,7 +117,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 addr.notificatTx(tx, txNotificationType);
             }
         }
-        return needNotifyAddressHashSet.size() > 0;
+        return isRegister;
     }
 
     public boolean isTxRelated(Tx tx) {
@@ -415,13 +421,10 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 if (addressHashSet.contains(outAddress)) {
                     outList.add(out);
                 }
-
             }
             tx.setOuts(outList);
         }
-
         return tx;
-
     }
 
     private boolean isSendFromMe(Tx tx) {
