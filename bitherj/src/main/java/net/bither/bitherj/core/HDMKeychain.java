@@ -93,32 +93,36 @@ public class HDMKeychain {
             HDMBitherIdNotMatchException, MnemonicException.MnemonicLengthException {
         seed = encryptedSeed.decrypt(password);
         allCompletedAddresses = new ArrayList<HDMAddress>();
-        List<HDMAddress.Pubs> pubs = fetchDelegate.getRemoteExistsPublicKeys(password);
-        if (pubs.size() > 0) {
-            try {
-                DeterministicKey root = externalChainRoot(password);
-                byte[] pubDerived = root.deriveSoftened(0).getPubKey();
-                byte[] pubFetched = pubs.get(0).hot;
-                root.wipe();
-                if (!Arrays.equals(pubDerived, pubFetched)) {
+        ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
+        if (fetchDelegate != null) {
+            List<HDMAddress.Pubs> pubs = fetchDelegate.getRemoteExistsPublicKeys(password);
+            if (pubs.size() > 0) {
+                try {
+                    DeterministicKey root = externalChainRoot(password);
+                    byte[] pubDerived = root.deriveSoftened(0).getPubKey();
+                    byte[] pubFetched = pubs.get(0).hot;
+                    root.wipe();
+                    if (!Arrays.equals(pubDerived, pubFetched)) {
+                        wipeSeed();
+                        throw new HDMBitherIdNotMatchException();
+                    }
+                } catch (MnemonicException.MnemonicLengthException e) {
                     wipeSeed();
-                    throw new HDMBitherIdNotMatchException();
+                    throw e;
                 }
-            } catch (MnemonicException.MnemonicLengthException e) {
-                wipeSeed();
-                throw e;
+            }
+            for (HDMAddress.Pubs p : pubs) {
+                as.add(new HDMAddress(p, this));
             }
         }
         String firstAddress = getFirstAddressFromSeed(password);
         wipeSeed();
-        ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
-        for (HDMAddress.Pubs p : pubs) {
-            as.add(new HDMAddress(p, this));
-        }
         this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(),
                 firstAddress, isFromXRandom);
-        AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
-        allCompletedAddresses.addAll(as);
+        if(as.size() > 0) {
+            AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
+            allCompletedAddresses.addAll(as);
+        }
     }
 
     public int prepareAddresses(int count, CharSequence password, byte[] coldExternalRootPub) {
