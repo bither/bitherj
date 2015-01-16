@@ -428,12 +428,24 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     }
 
     private boolean isSendFromMe(Tx tx) {
+        boolean canParseFromScript = true;
+        List<String> fromAddress = new ArrayList<String>();
         for (In in : tx.getIns()) {
-            if (AbstractDb.txProvider.isSendFromMe(in)) {
-                return true;
+            String address = in.getFromAddress();
+            if (address != null) {
+                fromAddress.add(address);
+            } else {
+                canParseFromScript = false;
+                break;
             }
         }
-        return false;
+        List<String> addresses = null;
+        if (canParseFromScript) {
+            addresses = fromAddress;
+        } else {
+            addresses = AbstractDb.txProvider.getInAddresses(tx);
+        }
+        return this.addressHashSet.containsAll(fromAddress);
     }
 
 }

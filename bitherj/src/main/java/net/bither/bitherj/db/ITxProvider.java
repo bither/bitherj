@@ -26,21 +26,15 @@ import java.util.List;
 
 public interface ITxProvider {
     public List<Tx> getTxAndDetailByAddress(String address);
-
     public List<Tx> getTxAndDetailByAddress(String address, int page);
 
     public List<Tx> getPublishedTxs();
 
     public Tx getTxDetailByTxHash(byte[] txHash);
-
-
     public boolean isExist(byte[] txHash);
 
     public void add(Tx txItem);
-
     public void addTxs(List<Tx> txItems);
-
-
     public void remove(byte[] txHash);
 
 
@@ -86,8 +80,5 @@ public interface ITxProvider {
 
     public int needCompleteInSignature(String address);
 
-    public boolean isSendFromMe(In in);
-
     public void clearAllTx();
-
 }
