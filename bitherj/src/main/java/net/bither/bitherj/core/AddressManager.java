@@ -455,7 +455,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         } else {
             addresses = AbstractDb.txProvider.getInAddresses(tx);
         }
-        return this.addressHashSet.containsAll(fromAddress);
+        return this.addressHashSet.containsAll(addresses);
     }
 
 }
