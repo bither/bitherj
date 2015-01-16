@@ -26,6 +26,8 @@ public interface IAddressProvider {
 
     public void addHDMBId(HDMBId bitherId);
 
+    public void changeHDBIdPassword(HDMBId hdmbId);
+
     public void changeHDMBIdPassword(String encryptBitherPassword);
 
     public List<HDMAddress> getHDMAddressInUse(HDMKeychain keychain);

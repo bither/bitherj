@@ -127,7 +127,7 @@ public class PrivateKeyUtil {
     public static String changePassword(String str, CharSequence oldpassword, CharSequence newPassword) {
         String[] strs = QRCodeUtil.splitOfPasswordSeed(str);
         if (strs.length != 3) {
-            log.error("changePassword: PrivateKeyFromString format error");
+            log.error("change Password: PrivateKeyFromString format error");
             return null;
         }
 
@@ -150,7 +150,7 @@ public class PrivateKeyUtil {
         EncryptedPrivateKey encryptedPrivateKey = crypter.encrypt(decrypted, crypter.deriveKey(newPassword));
         byte[] newDecrypted = crypter.decrypt(encryptedPrivateKey, crypter.deriveKey(newPassword));
         if (!Arrays.equals(decrypted, newDecrypted)) {
-            throw new KeyCrypterException("changePassword, cannot be successfully decrypted after encryption so aborting wallet encryption.");
+            throw new KeyCrypterException("change Password, cannot be successfully decrypted after encryption so aborting wallet encryption.");
         }
         Utils.wipeBytes(decrypted);
         Utils.wipeBytes(newDecrypted);

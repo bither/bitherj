@@ -18,6 +18,7 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
+import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.PrivateKeyUtil;
@@ -370,13 +371,22 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             }
             a.setEncryptPrivKey(newEncryptedStr);
         }
-
+        HDMBId hdmbId = HDMBId.getHDMBidFromDb();
+        if (hdmbId != null) {
+            String oldEncryptedBitherPassword = hdmbId.getEncryptedBitherPasswordString();
+            String newEncryptedBitherPassword = PrivateKeyUtil.changePassword(oldEncryptedBitherPassword, oldPassword, newPassword);
+            hdmbId.setEncryptedData(new EncryptedData(newEncryptedBitherPassword));
+        }
         for (Address address : privKeyAddresses) {
             address.updatePrivateKey();
         }
         for (Address address : trashAddresses) {
             address.updatePrivateKey();
         }
+        if (hdmbId != null) {
+            hdmbId.saveEncryptedBitherPassword();
+        }
+
         if (getHdmKeychain() != null) {
             getHdmKeychain().changePassword(oldPassword, newPassword);
         }

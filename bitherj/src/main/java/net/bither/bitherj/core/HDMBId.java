@@ -91,6 +91,14 @@ public class HDMBId {
         return encryptedBitherPassword.toEncryptedString();
     }
 
+    public void setEncryptedData(EncryptedData encryptedData) {
+        this.encryptedBitherPassword = encryptedData;
+    }
+
+    public void saveEncryptedBitherPassword() {
+        AbstractDb.addressProvider.changeHDBIdPassword(HDMBId.this);
+    }
+
     public byte[] decryptHDMBIdPassword(CharSequence password) {
         decryptedPassword = encryptedBitherPassword.decrypt(password);
         return decryptedPassword;
