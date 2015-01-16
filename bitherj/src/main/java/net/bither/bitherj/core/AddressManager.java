@@ -377,7 +377,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         for (Address address : trashAddresses) {
             address.updatePrivateKey();
         }
-        if (hasHDMKeychain()) {
+        if (getHdmKeychain() != null) {
             getHdmKeychain().changePassword(oldPassword, newPassword);
         }
 
