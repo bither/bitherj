@@ -59,7 +59,8 @@ public interface ITxProvider {
 
     public List<Out> getUnspendOutWithAddress(String address);
 
-    public long getSumUnspendOutWithAddress(String address);
+    public long getConfirmedBalanceWithAddress(String address);
+    public List<Tx> getUnconfirmedTxWithAddress(String address);
 
     public List<Out> getUnSpendOutCanSpendWithAddress(String address);
 
