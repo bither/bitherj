@@ -552,6 +552,7 @@ public class ScriptTest {
 
         String expected = "3Js7oJY1qc5VH1erNuLCkTm3cHMZvApn1X";
         assertEquals(expected, fromAddress);
+        assertEquals("148f1331a08ff419a9fb59628b5c44b5e43e52bdce55eac4b97aeb3ba0424bb9", Utils.hashToString(tx.getTxHash()));
 
         rawTx = Utils.hexStringToByteArray("0100000001c40754ec26f15ecf62cdbe3bc45d1c1fd2f8490e10fa6aa56941fa9bc9ee8a15010000006c493046022100ef55375c95f78628d57ca5d6b043172b2f32281314c17e7b91f70c8e77026047022100d61d33ed0f2d769381d1239c7d3b93256da87329c6876a74333e3ec77f97ad15012103d628d9bab1c1d0b88e6aad67ba4ca386d815bbeb9cb360293d978a8b9392719fffffffff02b0c0d6170000000017a914252b16322735d7f667ee194e52e2466cd2ca06f0877142e544000000001976a914747786372207612d9573df3a204d49639f6e0b9788ac00000000");
         tx = new Tx(rawTx);
@@ -559,5 +560,6 @@ public class ScriptTest {
 
         expected = "14EMNcB1BpE2oV5caJKWScnzMxtkrhk3re";
         assertEquals(expected, fromAddress);
+        assertEquals("de5004877260f86d59479db1eb95082d128131a637484cbe98617f7b6837bddf", Utils.hashToString(tx.getTxHash()));
     }
 }
