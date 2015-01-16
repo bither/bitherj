@@ -64,4 +64,12 @@ public class EncryptedData {
                 + QRCodeUtil.QR_CODE_SPLIT + Utils.bytesToHexString(saltForQRCode.getQrCodeSalt()).toUpperCase();
     }
 
+    public boolean isXRandom() {
+        return saltForQRCode.isFromXRandom();
+    }
+
+    public boolean isCompressed() {
+        return saltForQRCode.isCompressed();
+    }
+
 }
