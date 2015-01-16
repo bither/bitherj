@@ -162,7 +162,7 @@ public class HDMAddress extends Address {
         }
 
         public Script getMultiSigScript() {
-            assert hot != null && cold != null && remote != null;
+            assert isCompleted();
             return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(
                     hot, cold, remote));
         }

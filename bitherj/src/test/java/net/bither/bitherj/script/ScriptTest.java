@@ -543,4 +543,21 @@ public class ScriptTest {
         System.arraycopy(check, 0, addressBytes, bytes.length + 1, 4);
         return Base58.encode(addressBytes);
     }
+
+    @Test
+    public void testFromAddress() {
+        byte[] rawTx = Utils.hexStringToByteArray("0100000001f98a280010ea7397485a2cbde9e6355deeca50b9b73eba5011f2248da1c9d12c00000000fc00463043021f149e45355bbb45b9d70aa2a30a707da871a7e97bf6e5e82ee679ffe078794f02202e94a43d1df4a9659cf187026bea5581c0db7050b70ae4a8c2340dd7353577bf0148304502210087d0e3f03c68a8962dc203a5491ea31d39f78652f241b5aff2b04a2f77a113990220335e5191ab93b54e9fdee18c06c1713ed1da85e92fb2f96ecff3e7f82362c81c014c695221031b2e51069f115a662fafdbe92347ddcbca693df1cfb96a0c41ce46b57fd746e2210202d41f339f2ca186eacf1fe31f8ff5e8ddf376745a96642a7439c3be7bad70662102951d6cbde04a9fdcf036befb767c96f17a4a3d20ab1a01c147f38b6c035e652853aeffffffff02102700000000000017a9145b39adef84a2728e5b147c1d57c11a1660bb31c787a85b01000000000017a914bc6333c8a2fd1b9be0094bfe6d846ff0298636768700000000");
+        Tx tx = new Tx(rawTx);
+        String fromAddress = new Script(tx.getIns().get(0).getInSignature()).getFromAddress();
+
+        String expected = "3Js7oJY1qc5VH1erNuLCkTm3cHMZvApn1X";
+        assertEquals(expected, fromAddress);
+
+        rawTx = Utils.hexStringToByteArray("0100000001c40754ec26f15ecf62cdbe3bc45d1c1fd2f8490e10fa6aa56941fa9bc9ee8a15010000006c493046022100ef55375c95f78628d57ca5d6b043172b2f32281314c17e7b91f70c8e77026047022100d61d33ed0f2d769381d1239c7d3b93256da87329c6876a74333e3ec77f97ad15012103d628d9bab1c1d0b88e6aad67ba4ca386d815bbeb9cb360293d978a8b9392719fffffffff02b0c0d6170000000017a914252b16322735d7f667ee194e52e2466cd2ca06f0877142e544000000001976a914747786372207612d9573df3a204d49639f6e0b9788ac00000000");
+        tx = new Tx(rawTx);
+        fromAddress = new Script(tx.getIns().get(0).getInSignature()).getFromAddress();
+
+        expected = "14EMNcB1BpE2oV5caJKWScnzMxtkrhk3re";
+        assertEquals(expected, fromAddress);
+    }
 }
