@@ -178,7 +178,7 @@ public class Tx extends Message implements Comparable<Tx> {
         return txHash;
     }
 
-    public void recaculateTxHash() {
+    public void recalculateTxHash() {
         byte[] bits = bitcoinSerialize();
         this.txHash = doubleDigest(bits);
         for (In in : this.getIns()) {
@@ -462,6 +462,9 @@ public class Tx extends Message implements Comparable<Tx> {
             length = calcLength(bytes, offset);
             cursor = offset + length;
         }
+        byte[] b = new byte[length];
+        System.arraycopy(bytes, cursor, b, 0, length);
+        txHash = doubleDigest(b);
 
         cursor = offset;
 
@@ -1312,7 +1315,7 @@ public class Tx extends Message implements Comparable<Tx> {
 //            }
 
         }
-        this.recaculateTxHash();
+        this.recalculateTxHash();
     }
 
     public boolean isSigned() {

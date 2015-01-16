@@ -168,7 +168,7 @@ public class NioClientManager extends AbstractExecutionThreadService implements
     @Override
     public void openConnection(SocketAddress serverAddress, StreamParser parser) {
         if (!isRunning()) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Nio is not running");
         }
         // Create a new connection, give it a parser as an attachment
         try {
