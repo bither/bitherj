@@ -93,7 +93,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 needNotifyAddressHashSet.add(out.getOutAddress());
         }
 
-        Tx txInDb =  AbstractDb.txProvider.getTxDetailByTxHash(tx.getTxHash());
+        Tx txInDb = AbstractDb.txProvider.getTxDetailByTxHash(tx.getTxHash());
         if (txInDb != null) {
             for (Out out : txInDb.getOuts()) {
                 if (needNotifyAddressHashSet.contains(out.getOutAddress()))
@@ -377,7 +377,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         for (Address address : trashAddresses) {
             address.updatePrivateKey();
         }
-        if (hasHDMKeychain()) {
+        if (getHdmKeychain() != null) {
             getHdmKeychain().changePassword(oldPassword, newPassword);
         }
 

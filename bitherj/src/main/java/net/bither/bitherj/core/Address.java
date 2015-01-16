@@ -48,7 +48,7 @@ public class Address implements Comparable<Address> {
     public static final String PUBLIC_KEY_FILE_NAME_SUFFIX = ".pub";
 
     protected String encryptPrivKey;
-    protected String fullEncryptPrivKey = null;
+
     protected byte[] pubKey;
     protected String address;
 
@@ -152,7 +152,7 @@ public class Address implements Comparable<Address> {
             }
 
             if (tx.getBlockNo() == Tx.TX_UNCONFIRMED
-                    && (this.isIntersects(spent,spentOut) || this.isIntersects(inHashes, invalidTx))) {
+                    && (this.isIntersects(spent, spentOut) || this.isIntersects(inHashes, invalidTx))) {
                 invalidTx.add(tx.getTxHash());
                 continue;
             }
@@ -277,13 +277,9 @@ public class Address implements Comparable<Address> {
         if (Utils.isEmpty(this.encryptPrivKey)) {
             return "";
         } else {
-            if (!Utils.isEmpty(fullEncryptPrivKey)) {
-                return fullEncryptPrivKey;
-            }
-            fullEncryptPrivKey = PrivateKeyUtil.getFullencryptPrivateKey(Address.this
+            return PrivateKeyUtil.getFullencryptPrivateKey(Address.this
                     , this.encryptPrivKey);
         }
-        return fullEncryptPrivKey;
     }
 
     public void setEncryptPrivKey(String encryptPrivKey) {
