@@ -28,6 +28,7 @@ import net.bither.bitherj.core.BlockChain;
 import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.Tx;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.api.http.HttpSetting;
@@ -41,7 +42,9 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TransactionsUtil {
 
@@ -56,6 +59,15 @@ public class TransactionsUtil {
     private static List<Tx> getTransactionsFromBither(
             JSONObject jsonObject, int storeBlockHeight) throws JSONException {
         List<Tx> transactions = new ArrayList<Tx>();
+        List<Block> blocks = AbstractDb.blockProvider.getAllBlocks();
+        Map<Integer, Integer> blockMapList = new HashMap<Integer, Integer>();
+        int minBlockNo = blocks.get(blocks.size() - 1).getBlockNo();
+        for (Block block : blocks) {
+            blockMapList.put(block.getBlockNo(), block.getBlockTime());
+            if (minBlockNo > block.getBlockNo()) {
+                minBlockNo = block.getBlockNo();
+            }
+        }
         if (!jsonObject.isNull(TX)) {
             JSONArray txsArray = jsonObject.getJSONArray(TX);
             for (int i = 0; i < txsArray.length(); i++) {
@@ -69,10 +81,13 @@ public class TransactionsUtil {
                 }
                 String txString = txArray.getString(1);
                 byte[] txBytes = Base64.decode(txString, Base64.DEFAULT);
-                // LogUtil.d("height", "h:" + height);
                 Tx tx = new Tx(txBytes);
-
                 tx.setBlockNo(height);
+                if (height <= minBlockNo) {
+                    tx.setTxTime(blockMapList.get(minBlockNo));
+                } else {
+                    tx.setTxTime(blockMapList.get(height));
+                }
                 transactions.add(tx);
             }
         }
