@@ -2,15 +2,14 @@ package net.bither.bitherj.api.http;
 
 import org.json.JSONObject;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Iterator;
 import java.util.Map;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public abstract class HttpsPostResponse<T> extends BaseHttpsResponse<T> {
 
@@ -62,6 +61,9 @@ public abstract class HttpsPostResponse<T> extends BaseHttpsResponse<T> {
                     String value = json.getString(key);
                     throw new Http400Exception(Integer.valueOf(key), value);
                 }
+            } else if (con.getResponseCode() != 200) {
+                String str = getStringFromIn(con.getErrorStream());
+                throw new HttpException(con.getResponseCode() + "," + str);
             } else {
                 throw e;
             }
@@ -73,21 +75,6 @@ public abstract class HttpsPostResponse<T> extends BaseHttpsResponse<T> {
         setResult(responseContent);
     }
 
-    private String getStringFromIn(InputStream in) throws IOException {
-        BufferedReader rd = new BufferedReader(new InputStreamReader(in,
-                HttpSetting.REQUEST_ENCODING));
-        String tempLine = rd.readLine();
-        StringBuffer tempStr = new StringBuffer();
-        String crlf = System.getProperty("line.separator");
-        while (tempLine != null) {
-            tempStr.append(tempLine);
-            tempStr.append(crlf);
-            tempLine = rd.readLine();
-        }
-        rd.close();
-
-        return tempStr.toString();
-    }
 
     public abstract Map<String, String> getParams() throws Exception;
 }
