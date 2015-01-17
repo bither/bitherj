@@ -1,8 +1,9 @@
 package net.bither.bitherj.api.http;
 
-import javax.net.ssl.HttpsURLConnection;
-
+import java.io.IOException;
 import java.net.URL;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public abstract class HttpsGetResponse<T> extends BaseHttpsResponse<T> {
 
@@ -24,12 +25,13 @@ public abstract class HttpsGetResponse<T> extends BaseHttpsResponse<T> {
                 out.append(new String(b, 0, n));
             }
             setResult(out.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-            if (con.getResponseCode() == 400) {
-
+        } catch (IOException e) {
+            if (con.getResponseCode() != 200) {
+                String str = getStringFromIn(con.getErrorStream());
+                throw new HttpException(con.getResponseCode() + "," + str);
+            } else {
+                throw e;
             }
-            throw e;
         } finally {
             if (con != null) {
                 con.disconnect();

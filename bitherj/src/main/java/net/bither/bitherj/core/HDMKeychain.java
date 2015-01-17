@@ -15,6 +15,8 @@ import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.qrcode.QRCodeUtil;
+import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
 
@@ -89,11 +91,12 @@ public class HDMKeychain {
     }
 
     // Import
-    public HDMKeychain(EncryptedData encryptedSeed, boolean isFromXRandom, CharSequence password,
+    public HDMKeychain(EncryptedData encryptedSeed, CharSequence password,
                        HDMFetchRemoteAddresses fetchDelegate) throws
             HDMBitherIdNotMatchException, MnemonicException.MnemonicLengthException {
         seed = encryptedSeed.decrypt(password);
         allCompletedAddresses = new ArrayList<HDMAddress>();
+        isFromXRandom = encryptedSeed.isXRandom();
         ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
         if (fetchDelegate != null) {
             List<HDMAddress.Pubs> pubs = fetchDelegate.getRemoteExistsPublicKeys(password);
@@ -120,7 +123,7 @@ public class HDMKeychain {
         wipeSeed();
         this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(),
                 firstAddress, isFromXRandom);
-        if(as.size() > 0) {
+        if (as.size() > 0) {
             AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
             allCompletedAddresses.addAll(as);
         }
@@ -389,7 +392,7 @@ public class HDMKeychain {
         Utils.wipeBytes(seed);
     }
 
-    private String getFirstAddressFromSeed(CharSequence password) {
+    public String getFirstAddressFromSeed(CharSequence password) {
         DeterministicKey key = getExternalKey(0, password);
         String address = Utils.toAddress(key.getPubKeyHash());
         key.wipe();
@@ -456,5 +459,36 @@ public class HDMKeychain {
         public HDMBitherIdNotMatchException() {
             super(msg);
         }
+    }
+
+    public static boolean checkPassword(String keysString, CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keysString);
+        String address = Base58.hexToBase58WithAddress(passwordSeeds[0]);
+        String encreyptString = Utils.joinString(new String[]{passwordSeeds[1], passwordSeeds[2], passwordSeeds[3]}, QRCodeUtil.QR_CODE_SPLIT);
+        byte[] seed = new EncryptedData(encreyptString).decrypt(password);
+        MnemonicCode mnemonic = MnemonicCode.instance();
+
+        byte[] s = mnemonic.toSeed(mnemonic.toMnemonic(seed), "");
+
+        DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(s);
+
+        DeterministicKey purpose = master.deriveHardened(44);
+
+        DeterministicKey coinType = purpose.deriveHardened(0);
+
+        DeterministicKey account = coinType.deriveHardened(0);
+
+        DeterministicKey external = account.deriveSoftened(0);
+
+
+        external.clearPrivateKey();
+
+
+        DeterministicKey key = external.deriveSoftened(0);
+        boolean result = Utils.compareString(address, Utils.toAddress(key.getPubKeyHash()));
+        key.wipe();
+
+        return result;
     }
 }

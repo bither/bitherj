@@ -21,6 +21,7 @@ import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.core.HDMKeychain;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
+import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.EncryptedPrivateKey;
 import net.bither.bitherj.crypto.KeyCrypter;
 import net.bither.bitherj.crypto.KeyCrypterException;
@@ -126,7 +127,7 @@ public class PrivateKeyUtil {
     public static String changePassword(String str, CharSequence oldpassword, CharSequence newPassword) {
         String[] strs = QRCodeUtil.splitOfPasswordSeed(str);
         if (strs.length != 3) {
-            log.error("changePassword: PrivateKeyFromString format error");
+            log.error("change Password: PrivateKeyFromString format error");
             return null;
         }
 
@@ -149,7 +150,7 @@ public class PrivateKeyUtil {
         EncryptedPrivateKey encryptedPrivateKey = crypter.encrypt(decrypted, crypter.deriveKey(newPassword));
         byte[] newDecrypted = crypter.decrypt(encryptedPrivateKey, crypter.deriveKey(newPassword));
         if (!Arrays.equals(decrypted, newDecrypted)) {
-            throw new KeyCrypterException("changePassword, cannot be successfully decrypted after encryption so aborting wallet encryption.");
+            throw new KeyCrypterException("change Password, cannot be successfully decrypted after encryption so aborting wallet encryption.");
         }
         Utils.wipeBytes(decrypted);
         Utils.wipeBytes(newDecrypted);
@@ -186,6 +187,32 @@ public class PrivateKeyUtil {
         return content;
     }
 
+    public static HDMKeychain getHDMKeychain(String str, CharSequence password) {
+        HDMKeychain hdmKeychain = null;
+        String[] strs = QRCodeUtil.splitOfPasswordSeed(str);
+        if (strs.length % 3 != 0) {
+            log.error("Backup: PrivateKeyFromString format error");
+            return null;
+        }
+        for (int i = 0;
+             i < strs.length;
+             i += 3) {
+
+            if (strs[i].indexOf(QRCodeUtil.HDM_QR_CODE_FLAG) == 0) {
+                try {
+                    String encryptedString = strs[i].substring(1) + QRCodeUtil.QR_CODE_SPLIT + strs[i + 1]
+                            + QRCodeUtil.QR_CODE_SPLIT + strs[i + 2];
+                    hdmKeychain = new HDMKeychain(new EncryptedData(encryptedString)
+                            , password, null);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return hdmKeychain;
+
+    }
+
     public static List<Address> getECKeysFromBackupString(String str, CharSequence password) {
         String[] strs = QRCodeUtil.splitOfPasswordSeed(str);
         if (strs.length % 3 != 0) {
@@ -196,7 +223,9 @@ public class PrivateKeyUtil {
         for (int i = 0;
              i < strs.length;
              i += 3) {
-
+            if (strs[i].indexOf(QRCodeUtil.HDM_QR_CODE_FLAG) == 0) {
+                continue;
+            }
             String encryptedString = strs[i] + QRCodeUtil.QR_CODE_SPLIT + strs[i + 1]
                     + QRCodeUtil.QR_CODE_SPLIT + strs[i + 2];
             ECKey key = getECKeyFromSingleString(encryptedString, password);

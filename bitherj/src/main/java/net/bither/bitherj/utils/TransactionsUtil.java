@@ -68,7 +68,7 @@ public class TransactionsUtil {
                     continue;
                 }
                 String txString = txArray.getString(1);
-                byte[] txBytes = Base64.decode(txString, Base64.URL_SAFE);
+                byte[] txBytes = Base64.decode(txString, Base64.DEFAULT);
                 // LogUtil.d("height", "h:" + height);
                 Tx tx = new Tx(txBytes);
 

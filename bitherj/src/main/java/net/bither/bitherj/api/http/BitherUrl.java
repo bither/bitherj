@@ -27,40 +27,35 @@ public class BitherUrl {
         public static final String BITHER_BITCOIN_DOMAIN = "b.getcai.com";
         public static final String BITHER_USER_DOMAIN = "bu.getcai.com";
         public static final String BITHER_STATS_DOMAIN = "bs.getcai.com";
-        public static final String BITHER_BC1_DOMAIN = "bc1.bither.net";
+        public static final String BITHER_BC_DOMAIN = "bc.bither.net";
         public static final String BITHER_HDM_DOMAIN = "hdm.bither.net";
 
         public static final String BITHER_BITCOIN = Utils.format(FORMAT_HTTP, BITHER_BITCOIN_DOMAIN);
         public static final String BITHER_USER = Utils.format(FORMAT_HTTP, BITHER_USER_DOMAIN);
         public static final String BITHER_STATS = Utils.format(FORMAT_HTTP, BITHER_STATS_DOMAIN);
 
-        public static final String BITHER_BC1 = Utils.format(FORMAT_HTTP, BITHER_BC1_DOMAIN);
+        public static final String BITHER_BC = Utils.format(FORMAT_HTTP, BITHER_BC_DOMAIN);
         public static final String BITHER_HDM = Utils.format(FORMAT_HTTPS, BITHER_HDM_DOMAIN);
 
 
     }
 
-    //bither user
-    public static final String BITHER_GET_COOKIE_URL = BITHER_DNS.BITHER_USER
-            + "api/v1/cookie";
+    // bither user
+    public static final String BITHER_GET_COOKIE_URL = BITHER_DNS.BITHER_USER + "api/v1/cookie";
     public static final String BITHER_UPLOAD_AVATAR = BITHER_DNS.BITHER_USER + "api/v1/avatar";
     public static final String BITHER_DOWNLOAD_AVATAR = BITHER_DNS.BITHER_USER + "api/v1/avatar";
-    public static final String BITHER_ERROR_API = BITHER_DNS.BITHER_USER
-            + "api/v1/error";
+    public static final String BITHER_ERROR_API = BITHER_DNS.BITHER_USER + "api/v1/error";
+    public static final String BITHER_IN_SIGNATURES_API = BITHER_DNS.BITHER_USER + "api/v1/address/%s/insignature/%d";
 
+    // bither bitcoin
+    public static final String BITHER_Q_GETBLOCK_COUNT_URL = BITHER_DNS.BITHER_BC + "api/v2/block/count";
+    public static final String BITHER_GET_ONE_SPVBLOCK_API = BITHER_DNS.BITHER_BC + "api/v2/block/spv/one";
+    public static final String BITHER_Q_MYTRANSACTIONS = BITHER_DNS.BITHER_BC + "api/v2/address/%s/transaction";
 
-    //bither bitcoin
-    public static final String BITHER_Q_GETBLOCK_COUNT_URL = BITHER_DNS.BITHER_BITCOIN
-            + "api/v1/block/count";
-
-    public static final String BITHER_Q_MYTRANSACTIONS = BITHER_DNS.BITHER_BC1
-            + "api/v2/address/%s/transaction";
+    // hdm api
     public static final String BITHER_HDM_PASSWORD = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/password";
     public static final String BITHER_HDM_CREATE_ADDRESS = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/address/create";
     public static final String BITHER_HDM_SIGNATURE = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/address/%d/signature";
-    public static final String BITHER_GET_ONE_SPVBLOCK_API = BITHER_DNS.BITHER_BITCOIN +
-            "api/v1/block/spv/one";
-    public static final String BITHER_IN_SIGNATURES_API = BITHER_DNS.BITHER_BITCOIN + "api/v1/address/%s/insignature/%d";
 
     //bither stats
     public static final String BITHER_EXCHANGE_TICKER = BITHER_DNS.BITHER_STATS
@@ -75,6 +70,4 @@ public class BitherUrl {
     //other
     public static final String BLOCKCHAIN_INFO_ADDRESS_URL = "http://blockchain.info/address/";
     public static final String BLOCKMETA_ADDRESS_URL = "http://www.blockmeta.com/address/";
-
-
 }
