@@ -420,6 +420,13 @@ public class Address implements Comparable<Address> {
         return true;
     }
 
+    public long totalReceive() {
+        return AbstractDb.txProvider.totalReceive(getAddress());
+    }
+
+    public long totalSend() {
+        return AbstractDb.txProvider.totalSend(getAddress());
+    }
 
     public boolean isHDM() {
         return false;
