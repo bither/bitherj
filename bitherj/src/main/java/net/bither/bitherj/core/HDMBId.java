@@ -110,7 +110,7 @@ public class HDMBId {
             return hdmbidCache;
         }
         hdmbidCache = AbstractDb.addressProvider.getHDMBId();
-        if (Utils.isEmpty(hdmbidCache.getAddress()) ||
+        if (hdmbidCache == null || Utils.isEmpty(hdmbidCache.getAddress()) ||
                 Utils.isEmpty(hdmbidCache.getEncryptedBitherPasswordString())) {
             hdmbidCache = null;
         }
