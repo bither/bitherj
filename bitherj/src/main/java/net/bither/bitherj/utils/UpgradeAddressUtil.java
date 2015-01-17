@@ -139,6 +139,7 @@ public class UpgradeAddressUtil {
         addressList.addAll(initPrivateKeyListByDesc());
         addressList.addAll(initWatchOnlyListByDesc());
         addressList.addAll(initTrashListByDesc());
+        Collections.reverse(addressList);
         for (Address address : addressList) {
             address.setSyncComplete(false);
             AddressManager.getInstance().addAddress(address);
