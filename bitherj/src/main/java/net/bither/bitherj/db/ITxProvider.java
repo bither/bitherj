@@ -62,6 +62,8 @@ public interface ITxProvider {
 //    public List<Out> getUnSpendOutButNotConfirmWithAddress(String address);
 
     public int txCount(String address);
+    public long totalReceive(String address);
+    public long totalSend(String address);
 
     public void txSentBySelfHasSaw(byte[] txHash);
 
