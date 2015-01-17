@@ -83,10 +83,12 @@ public class TransactionsUtil {
                 byte[] txBytes = Base64.decode(txString, Base64.DEFAULT);
                 Tx tx = new Tx(txBytes);
                 tx.setBlockNo(height);
+                Integer timeKey = height;
                 if (height <= minBlockNo) {
-                    tx.setTxTime(blockMapList.get(minBlockNo));
-                } else {
-                    tx.setTxTime(blockMapList.get(height));
+                    timeKey = minBlockNo;
+                }
+                if (blockMapList.containsKey(timeKey)) {
+                    tx.setTxTime(blockMapList.get(timeKey));
                 }
                 transactions.add(tx);
             }
