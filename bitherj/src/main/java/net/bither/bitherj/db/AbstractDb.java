@@ -91,6 +91,11 @@ public abstract class AbstractDb {
     public static final String CREATE_BLOCK_NO_INDEX = "create index idx_blocks_block_no on blocks (block_no);";
     public static final String CREATE_BLOCK_PREV_INDEX = "create index idx_blocks_block_prev on blocks (block_prev);";
 
+    // new index
+    public static final String CREATE_OUT_OUT_ADDRESS_INDEX = "create index idx_out_out_address on outs (out_address);";
+    public static final String CREATE_TX_BLOCK_NO_INDEX = "create index idx_tx_block_no on txs (block_no);";
+    public static final String CREATE_IN_PREV_TX_HASH_INDEX = "create index idx_in_prev_tx_hash on ins (prev_tx_hash);";
+
     public static IBlockProvider blockProvider;
     public static IPeerProvider peerProvider;
     public static ITxProvider txProvider;
