@@ -148,6 +148,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 return false;
             }
             if (address.hasPrivKey()) {
+                long sortTime = getPrivKeySortTime();
+                address.setSortTime(sortTime);
                 if (!this.getTrashAddresses().contains(address)) {
                     AbstractDb.addressProvider.addAddress(address);
                     privKeyAddresses.add(0, address);
