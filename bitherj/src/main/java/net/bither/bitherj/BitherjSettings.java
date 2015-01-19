@@ -32,7 +32,7 @@ public class BitherjSettings {
 
     public static final int MAX_TX_SIZE = 100000;
     public static final int COMPRESS_OUT_NUM = 5;
-    public static final int TX_PAGE_SIZE = 50;
+    public static final int TX_PAGE_SIZE = 20;
 
     /**
      * The alert signing key originally owned by Satoshi, and now passed on to Gavin along with a few others.
