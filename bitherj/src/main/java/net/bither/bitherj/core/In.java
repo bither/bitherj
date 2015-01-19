@@ -208,8 +208,11 @@ public class In extends Message {
             if (preTx == null) {
                 return null;
             }
-            if (getPrevOutSn() >= 0 && getPrevOutSn() < preTx.getOuts().size()) {
-                connectedOut = preTx.getOuts().get(getPrevOutSn());
+            int prevOutSn = getPrevOutSn();
+            for (Out out : preTx.getOuts()) {
+                if (out.getOutSn() == prevOutSn) {
+                    connectedOut = out;
+                }
             }
         }
         return connectedOut;
@@ -220,15 +223,7 @@ public class In extends Message {
             return getConnectedOut().getOutAddress();
         } else if (this.getInSignature() != null) {
             Script script = new Script(this.getInSignature());
-            if (script.getChunks().size() == 2) {
-                try {
-                    return script.getFromAddress();
-                } catch (ScriptException ex) {
-//                    if (this.getInSignature() != null) {
-//                        log.warn("out script : " + Utils.bytesToHexString(this.getInSignature()));
-//                    }
-                }
-            }
+            return script.getFromAddress();
         }
         return null;
     }

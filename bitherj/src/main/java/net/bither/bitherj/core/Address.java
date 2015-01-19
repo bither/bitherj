@@ -21,20 +21,16 @@ import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.PasswordException;
-import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
-import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,9 +48,9 @@ public class Address implements Comparable<Address> {
     public static final String PUBLIC_KEY_FILE_NAME_SUFFIX = ".pub";
 
     protected String encryptPrivKey;
+
     protected byte[] pubKey;
     protected String address;
-    protected boolean hasPrivKey;
 
     protected boolean syncComplete = false;
     private long mSortTime;
@@ -62,26 +58,24 @@ public class Address implements Comparable<Address> {
     private boolean isFromXRandom;
     private boolean isTrashed = false;
 
+    public Address(String address, byte[] pubKey, String encryptString, boolean isFromXRandom) {
+        this(address, pubKey, AddressManager.getInstance().getSortTime(!Utils.isEmpty(encryptString))
+                , false, isFromXRandom, false, encryptString);
+
+    }
+
     public Address(String address, byte[] pubKey, long sortTime, boolean isSyncComplete,
-                   boolean isFromXRandom, boolean hasPrivKey) {
-        this.hasPrivKey = hasPrivKey;
-        this.encryptPrivKey = null;
+                   boolean isFromXRandom, boolean isTrashed, String encryptPrivKey) {
+        this.encryptPrivKey = encryptPrivKey;
         this.address = address;
         this.pubKey = pubKey;
         this.mSortTime = sortTime;
         this.syncComplete = isSyncComplete;
         this.isFromXRandom = isFromXRandom;
+        this.isTrashed = isTrashed;
         this.updateBalance();
     }
 
-    public Address(String address, byte[] pubKey, String encryptString, boolean isFromXRandom) {
-        this.encryptPrivKey = encryptString;
-        this.address = address;
-        this.pubKey = pubKey;
-        this.hasPrivKey = !Utils.isEmpty(encryptString);
-        this.updateBalance();
-        this.isFromXRandom = isFromXRandom;
-    }
 
     public int txCount() {
         return AbstractDb.txProvider.txCount(this.address);
@@ -103,30 +97,51 @@ public class Address implements Comparable<Address> {
         return txs;
     }
 
+    public List<Tx> getTxs(int page) {
+        List<Tx> txs = AbstractDb.txProvider.getTxAndDetailByAddress(this.address, page);
+        return txs;
+    }
+
     public boolean isTrashed() {
         return isTrashed;
     }
 
-    public void setTrashed(boolean isTrashed) {
+    public void setTrashed(boolean isTrashed, boolean fromDb) {
+        if (!fromDb && isTrashed() != isTrashed) {
+            if (isTrashed) {
+                AbstractDb.addressProvider.trashPrivKeyAddress(this);
+            } else {
+                AbstractDb.addressProvider.restorePrivKeyAddress(this);
+            }
+        }
         this.isTrashed = isTrashed;
+    }
+
+    public void setTrashed(boolean isTrashed) {
+        setTrashed(isTrashed, false);
     }
 
     @Override
     public int compareTo(@Nonnull Address address) {
-        return -1 * Long.valueOf(getmSortTime()).compareTo(Long.valueOf(address.getmSortTime()));
+        return -1 * Long.valueOf(getSortTime()).compareTo(Long.valueOf(address.getSortTime()));
     }
 
     public void updateBalance() {
+        this.balance = AbstractDb.txProvider.getConfirmedBalanceWithAddress(getAddress())
+                + this.calculateUnconfirmedBalance();
+    }
+
+    private long calculateUnconfirmedBalance() {
         long balance = 0;
-        List<Tx> txs = this.getTxs();
+
+        List<Tx> txs = AbstractDb.txProvider.getUnconfirmedTxWithAddress(this.address);
+        Collections.sort(txs);
 
         Set<byte[]> invalidTx = new HashSet<byte[]>();
         Set<OutPoint> spentOut = new HashSet<OutPoint>();
         Set<OutPoint> unspendOut = new HashSet<OutPoint>();
 
-        for (int i = txs.size() - 1;
-             i >= 0;
-             i--) {
+        for (int i = txs.size() - 1; i >= 0; i--) {
             Set<OutPoint> spent = new HashSet<OutPoint>();
             Tx tx = txs.get(i);
 
@@ -136,8 +151,8 @@ public class Address implements Comparable<Address> {
                 inHashes.add(in.getPrevTxHash());
             }
 
-            if (tx.getBlockNo() == Tx.TX_UNCONFIRMED && (this.isIntersects(spent,
-                    spentOut) || this.isIntersects(inHashes, invalidTx))) {
+            if (tx.getBlockNo() == Tx.TX_UNCONFIRMED
+                    && (this.isIntersects(spent, spentOut) || this.isIntersects(inHashes, invalidTx))) {
                 invalidTx.add(tx.getTxHash());
                 continue;
             }
@@ -152,15 +167,17 @@ public class Address implements Comparable<Address> {
             spent.clear();
             spent.addAll(unspendOut);
             spent.retainAll(spentOut);
-
             for (OutPoint o : spent) {
-
                 Tx tx1 = AbstractDb.txProvider.getTxDetailByTxHash(o.getTxHash());
                 unspendOut.remove(o);
-                balance -= tx1.getOuts().get(o.getOutSn()).getOutValue();
+                for (Out out : tx1.getOuts()) {
+                    if (out.getOutSn() == o.getOutSn()) {
+                        balance -= out.getOutValue();
+                    }
+                }
             }
         }
-        this.balance = balance;
+        return balance;
     }
 
     private boolean isIntersects(Set set1, Set set2) {
@@ -189,10 +206,6 @@ public class Address implements Comparable<Address> {
         notificatTx(null, Tx.TxNotificationType.txDoubleSpend);
     }
 
-    public void removeTx(byte[] txHash) {
-        AbstractDb.txProvider.remove(txHash);
-    }
-
     public boolean initTxs(List<Tx> txs) {
         AbstractDb.txProvider.addTxs(txs);
         if (txs.size() > 0) {
@@ -211,7 +224,7 @@ public class Address implements Comparable<Address> {
     }
 
     public boolean hasPrivKey() {
-        return this.hasPrivKey;
+        return !Utils.isEmpty(this.encryptPrivKey);
     }
 
     public boolean isSyncComplete() {
@@ -231,103 +244,12 @@ public class Address implements Comparable<Address> {
     }
 
 
-    public void savePrivateKey() throws IOException {
-        String privateKeyFullFileName = Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                Utils.getPrivateDir(), getAddress());
-        Utils.writeFile(this.encryptPrivKey, new File(privateKeyFullFileName));
+    public void updatePrivateKey() {
+        AbstractDb.addressProvider.updatePrivateKey(Address.this);
     }
 
-    public void savePubKey(long sortTime) throws IOException {
-        if (hasPrivKey()) {
-            savePubKey(Utils.getPrivateDir().getAbsolutePath(), sortTime);
-        } else {
-            savePubKey(Utils.getWatchOnlyDir().getAbsolutePath(), sortTime);
-        }
-
-    }
-
-    private void savePubKey(String dir, long sortTime) throws IOException {
-        this.mSortTime = sortTime;
-        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME, dir,
-                getAddress());
-        String watchOnlyContent = Utils.format("%s:%s:%s%s", Utils.bytesToHexString(this.pubKey),
-                getSyncCompleteString(), Long.toString(this.mSortTime), getXRandomString());
-        log.debug("address content " + watchOnlyContent);
-        Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
-    }
-
-    public void updatePubkey() throws IOException {
-        if (hasPrivKey()) {
-            updatePubKey(Utils.getPrivateDir().getAbsolutePath());
-        } else {
-            updatePubKey(Utils.getWatchOnlyDir().getAbsolutePath());
-        }
-    }
-
-    private void updatePubKey(String dir) throws IOException {
-        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME, dir,
-                getAddress());
-        String watchOnlyContent = Utils.format("%s:%s:%s%s", Utils.bytesToHexString(this.pubKey),
-                getSyncCompleteString(), Long.toString(this.mSortTime), getXRandomString());
-        log.debug("address content " + watchOnlyContent);
-        Utils.writeFile(watchOnlyContent, new File(watchOnlyFullFileName));
-    }
-
-
-    private String getSyncCompleteString() {
-        return isSyncComplete() ? "1" : "0";
-    }
-
-    private String getXRandomString() {
-        return isFromXRandom() ? ":" + QRCodeUtil.XRANDOM_FLAG : "";
-    }
-
-
-    public void removeWatchOnly() {
-        String watchOnlyFullFileName = Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
-                Utils.getWatchOnlyDir(), getAddress());
-        Utils.removeFile(new File(watchOnlyFullFileName));
-    }
-
-    public void trashPrivKey() {
-        File oldPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                Utils.getPrivateDir(), getAddress()));
-        File newPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                Utils.getTrashDir(), getAddress()));
-
-        File oldWatchOnlyFile = new File(Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
-                Utils.getPrivateDir(), getAddress()));
-        File newWatchOnlyFile = new File(Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
-                Utils.getTrashDir(), getAddress()));
-
-        Utils.moveFile(oldPrivKeyFile, newPrivKeyFile);
-        Utils.moveFile(oldWatchOnlyFile, newWatchOnlyFile);
-        setTrashed(true);
-    }
-
-    public void restorePrivKey() throws IOException {
-        File oldPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                Utils.getTrashDir(), getAddress()));
-        File newPrivKeyFile = new File(Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                Utils.getPrivateDir(), getAddress()));
-
-        File oldWatchOnlyFile = new File(Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
-                Utils.getTrashDir(), getAddress()));
-        File newWatchOnlyFile = new File(Utils.format(BitherjSettings.WATCH_ONLY_FILE_NAME,
-                Utils.getPrivateDir(), getAddress()));
-
-        Utils.moveFile(oldPrivKeyFile, newPrivKeyFile);
-        Utils.moveFile(oldWatchOnlyFile, newWatchOnlyFile);
-
-        this.syncComplete = false;
-        this.updatePubkey();
-        setTrashed(false);
-    }
-
-    public void saveTrashKey() throws IOException {
-        String privateKeyFullFileName = Utils.format(BitherjSettings.PRIVATE_KEY_FILE_NAME,
-                Utils.getTrashDir(), getAddress());
-        Utils.writeFile(this.encryptPrivKey, new File(privateKeyFullFileName));
+    public void updateSyncComplete() {
+        AbstractDb.addressProvider.updateSyncComplete(Address.this);
     }
 
     @Override
@@ -339,37 +261,30 @@ public class Address implements Comparable<Address> {
         return false;
     }
 
-    public long getmSortTime() {
+    public long getSortTime() {
         return mSortTime;
     }
 
-    public String getEncryptPrivKey() {
-        if (this.hasPrivKey) {
-            if (Utils.isEmpty(this.encryptPrivKey)) {
-                String privateKeyFullFileName;
-                if (!isTrashed()) {
-                    privateKeyFullFileName = Utils.format(BitherjSettings
-                            .PRIVATE_KEY_FILE_NAME, Utils.getPrivateDir(), getAddress());
-                } else {
-                    privateKeyFullFileName = Utils.format(BitherjSettings
-                            .PRIVATE_KEY_FILE_NAME, Utils.getTrashDir(), getAddress());
-                }
-                this.encryptPrivKey = Utils.readFile(new File(privateKeyFullFileName));
-                if (this.encryptPrivKey == null) {
-                    //todo backup?
-                }
-                //dispaly new version qrcode
-                this.encryptPrivKey = QRCodeUtil.getNewVersionEncryptPrivKey(this.encryptPrivKey);
-            }
-            return this.encryptPrivKey;
+    public void setSortTime(long mSortTime) {
+        this.mSortTime = mSortTime;
+    }
+
+    public String getEncryptPrivKeyOfDb() {
+        return PrivateKeyUtil.formatEncryptPrivateKeyForDb(this.encryptPrivKey);
+    }
+
+    public String getFullEncryptPrivKey() {
+        if (Utils.isEmpty(this.encryptPrivKey)) {
+            return "";
         } else {
-            return null;
+            return PrivateKeyUtil.getFullencryptPrivateKey(Address.this
+                    , this.encryptPrivKey);
         }
     }
 
     public void setEncryptPrivKey(String encryptPrivKey) {
         this.encryptPrivKey = encryptPrivKey;
-        this.hasPrivKey = true;
+
     }
 
     public Tx buildTx(List<Long> amounts, List<String> addresses) throws TxBuilderException {
@@ -416,7 +331,7 @@ public class Address implements Comparable<Address> {
 
     public List<byte[]> signHashes(List<byte[]> unsignedInHashes, CharSequence passphrase) throws
             PasswordException {
-        ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getEncryptPrivKey(), passphrase);
+        ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getFullEncryptPrivKey(), passphrase);
         if (key == null) {
             throw new PasswordException("do not decrypt eckey");
         }
@@ -433,13 +348,13 @@ public class Address implements Comparable<Address> {
 
     public String signMessage(String msg, CharSequence passphrase) {
 
-        ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getEncryptPrivKey(), passphrase);
+        ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getFullEncryptPrivKey(), passphrase);
         if (key == null) {
             throw new PasswordException("do not decrypt eckey");
         }
         KeyParameter assKey = key.getKeyCrypter().deriveKey(passphrase);
 
-        String result = key.signMessage(msg,assKey);
+        String result = key.signMessage(msg, assKey);
 
 
         key.clearPrivateKey();
@@ -465,16 +380,14 @@ public class Address implements Comparable<Address> {
         for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
             if (in.getInSignature() != null) {
                 Script script = new Script(in.getInSignature());
-                try {
-                    if (script.getFromAddress().equals(this.address)) {
-                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
+                if (script.getFromAddress().equals(this.address)) {
+                    for (byte[] data : script.getSigs()) {
+                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
                         BigInteger i = new BigInteger(signature.r.toByteArray());
                         if (rs.contains(i))
                             return false;
                         rs.add(i);
                     }
-                } catch (ScriptException ex) {
-
                 }
             }
         }
@@ -486,28 +399,45 @@ public class Address implements Comparable<Address> {
         for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
             if (in.getInSignature() != null) {
                 Script script = new Script(in.getInSignature());
-                try {
-                    if (script.getFromAddress().equals(this.address)) {
-                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
+                if (script.getFromAddress().equals(this.address)) {
+                    for (byte[] data : script.getSigs()) {
+                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
                         rs.add(new BigInteger(signature.r.toByteArray()));
                     }
-                } catch (ScriptException ex) {
-
                 }
             }
         }
         for (In in : tx.getIns()) {
             Script script = new Script(in.getInSignature());
-            TransactionSignature signature = TransactionSignature.decodeFromBitcoin(script.getSig(), false);
-            BigInteger i = new BigInteger(signature.r.toByteArray());
-            if (rs.contains(i))
-                return false;
-            rs.add(i);
+            for (byte[] data : script.getSigs()) {
+                TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
+                BigInteger i = new BigInteger(signature.r.toByteArray());
+                if (rs.contains(i))
+                    return false;
+                rs.add(i);
+            }
         }
         return true;
     }
 
+    public long totalReceive() {
+        return AbstractDb.txProvider.totalReceive(getAddress());
+    }
+
+    public long totalSend() {
+        return AbstractDb.txProvider.totalSend(getAddress());
+    }
+
+    public boolean isHDM() {
+        return false;
+    }
+
+    public boolean isCompressed() {
+        return pubKey.length == 33;
+    }
+
     public boolean removeTx(Tx tx) {
+        AbstractDb.txProvider.remove(tx.getTxHash());
         return true;
     }
 }

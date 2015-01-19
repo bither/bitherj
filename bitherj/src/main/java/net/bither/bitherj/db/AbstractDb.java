@@ -62,19 +62,50 @@ public abstract class AbstractDb {
             ", block_time integer not null" +
             ", block_prev text" +
             ", is_main integer not null);";
+    public static final String CREATE_ADDRESSES_SQL = "create table if not exists addresses " +
+            "(address text not null primary key" +
+            ", encrypt_private_key text" +
+            ", pub_key text not null" +
+            ", is_xrandom integer not null" +
+            ", is_trash integer not null" +
+            ", is_synced integer not null" +
+            ", sort_time integer not null);";
+    public static final String CREATE_HD_SEEDS_SQL = "create table if not exists hd_seeds " +
+            "(hd_seed_id integer not null primary key autoincrement" +
+            ", encrypt_seed text not null" +
+            ", hdm_address text not null" +
+            ", is_xrandom integer not null);";
+    public static final String CREATE_HDM_ADDRESSES_SQL = "create table if not exists hdm_addresses " +
+            "(hd_seed_id integer not null" +
+            ", hd_seed_index integer not null" +
+            ", pub_key_hot text not null" +
+            ", pub_key_cold text not null" +
+            ", pub_key_remote text" +
+            ", address text" +
+            ", is_synced integer not null" +
+            ", primary key (hd_seed_id, hd_seed_index));";
+    public static final String CREATE_HDM_BID_SQL = "create table if not exists hdm_bid " +
+            "(hdm_bid text not null primary key" +
+            ", encrypt_bither_password text not null);";
+
     public static final String CREATE_BLOCK_NO_INDEX = "create index idx_blocks_block_no on blocks (block_no);";
     public static final String CREATE_BLOCK_PREV_INDEX = "create index idx_blocks_block_prev on blocks (block_prev);";
 
+    // new index
+    public static final String CREATE_OUT_OUT_ADDRESS_INDEX = "create index idx_out_out_address on outs (out_address);";
+    public static final String CREATE_TX_BLOCK_NO_INDEX = "create index idx_tx_block_no on txs (block_no);";
+    public static final String CREATE_IN_PREV_TX_HASH_INDEX = "create index idx_in_prev_tx_hash on ins (prev_tx_hash);";
 
     public static IBlockProvider blockProvider;
     public static IPeerProvider peerProvider;
     public static ITxProvider txProvider;
+    public static IAddressProvider addressProvider;
 
     public void construct() {
         blockProvider = initBlockProvider();
         peerProvider = initPeerProvider();
         txProvider = initTxProvider();
-
+        addressProvider = initAddressProvider();
     }
 
     public abstract IBlockProvider initBlockProvider();
@@ -83,6 +114,7 @@ public abstract class AbstractDb {
 
     public abstract ITxProvider initTxProvider();
 
+    public abstract IAddressProvider initAddressProvider();
 
     public interface Tables {
         public static final String BLOCKS = "blocks";
@@ -91,6 +123,10 @@ public abstract class AbstractDb {
         public static final String INS = "ins";
         public static final String OUTS = "outs";
         public static final String PEERS = "peers";
+        public static final String Addresses = "addresses";
+        public static final String HDSeeds = "hd_seeds";
+        public static final String HDMAddresses = "hdm_addresses";
+        public static final String HDM_BID = "hdm_bid";
     }
 
     public interface BlocksColumns {
@@ -143,8 +179,37 @@ public abstract class AbstractDb {
         public static final String PEER_SERVICES = "peer_services";
         public static final String PEER_TIMESTAMP = "peer_timestamp";
         public static final String PEER_CONNECTED_CNT = "peer_connected_cnt";
-
     }
 
+    public interface AddressesColumns {
+        public static final String ADDRESS = "address";
+        public static final String ENCRYPT_PRIVATE_KEY = "encrypt_private_key";
+        public static final String PUB_KEY = "pub_key";
+        public static final String IS_XRANDOM = "is_xrandom";
+        public static final String IS_TRASH = "is_trash";
+        public static final String IS_SYNCED = "is_synced";
+        public static final String SORT_TIME = "sort_time";
+    }
 
+    public interface HDSeedsColumns {
+        public static final String HD_SEED_ID = "hd_seed_id";
+        public static final String ENCRYPT_SEED = "encrypt_seed";
+        public static final String IS_XRANDOM = "is_xrandom";
+        public static final String HDM_ADDRESS = "hdm_address";
+    }
+
+    public interface HDMAddressesColumns {
+        public static final String HD_SEED_ID = "hd_seed_id";
+        public static final String HD_SEED_INDEX = "hd_seed_index";
+        public static final String PUB_KEY_HOT = "pub_key_hot";
+        public static final String PUB_KEY_COLD = "pub_key_cold";
+        public static final String PUB_KEY_REMOTE = "pub_key_remote";
+        public static final String ADDRESS = "address";
+        public static final String IS_SYNCED = "is_synced";
+    }
+
+    public interface HDMBIdColumns {
+        public static final String HDM_BID = "hdm_bid";
+        public static final String ENCRYPT_BITHER_PASSWORD = "encrypt_bither_password";
+    }
 }

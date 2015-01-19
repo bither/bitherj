@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.core;
 
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.utils.Utils;
@@ -196,7 +197,11 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
         // note : like bitcoinj, empty wallet will not check min output
         if (fees > 0) {
             Out lastOut = tx.getOuts().get(tx.getOuts().size() - 1);
-            lastOut.setOutValue(lastOut.getOutValue() - fees);
+            if (lastOut.getOutValue() > fees) {
+                lastOut.setOutValue(lastOut.getOutValue() - fees);
+            } else {
+                return null;
+            }
         }
         for (Out out : outs) {
             tx.addInput(out);

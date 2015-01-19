@@ -18,32 +18,17 @@ package net.bither.bitherj.script;
 
 import com.google.common.collect.Lists;
 import com.google.common.primitives.UnsignedBytes;
-
-import net.bither.bitherj.core.BitherjSettings;
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Utils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
 import javax.annotation.Nullable;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_0;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_CHECKMULTISIG;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_CHECKSIG;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_DUP;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_EQUAL;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_EQUALVERIFY;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_HASH160;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA1;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA2;
-import static net.bither.bitherj.script.ScriptOpCodes.OP_PUSHDATA4;
+import static net.bither.bitherj.script.ScriptOpCodes.*;
 
 /**
  * <p>Tools for the construction of commonly used script types. You don't normally need this as it's hidden behind
@@ -153,14 +138,14 @@ public class ScriptBuilder {
     /**
      * Creates a program that requires at least N of the given keys to sign, using OP_CHECKMULTISIG.
      */
-    public static Script createMultiSigOutputScript(int threshold, List<ECKey> pubkeys) {
+    public static Script createMultiSigOutputScript(int threshold, List<byte[]> pubkeys) {
         checkArgument(threshold > 0);
         checkArgument(threshold <= pubkeys.size());
         checkArgument(pubkeys.size() <= 16);  // That's the max we can represent with a single opcode.
         ScriptBuilder builder = new ScriptBuilder();
         builder.smallNum(threshold);
-        for (ECKey key : pubkeys) {
-            builder.data(key.getPubKey());
+        for (byte[] pubs : pubkeys) {
+            builder.data(pubs);
         }
         builder.smallNum(pubkeys.size());
         builder.op(OP_CHECKMULTISIG);
@@ -236,7 +221,7 @@ public class ScriptBuilder {
      * Creates a P2SH output script with given public keys and threshold. Given public keys will be placed in
      * redeem script in the lexicographical sorting order.
      */
-    public static Script createP2SHOutputScript(int threshold, List<ECKey> pubkeys) {
+    public static Script createP2SHOutputScript(int threshold, List<byte[]> pubkeys) {
         Script redeemScript = createRedeemScript(threshold, pubkeys);
         return createP2SHOutputScript(redeemScript);
     }
@@ -245,13 +230,13 @@ public class ScriptBuilder {
      * Creates redeem script with given public keys and threshold. Given public keys will be placed in
      * redeem script in the lexicographical sorting order.
      */
-    public static Script createRedeemScript(int threshold, List<ECKey> pubkeys) {
-        pubkeys = new ArrayList<ECKey>(pubkeys);
+    public static Script createRedeemScript(int threshold, List<byte[]> pubkeys) {
+        pubkeys = new ArrayList<byte[]>(pubkeys);
         final Comparator comparator = UnsignedBytes.lexicographicalComparator();
-        Collections.sort(pubkeys, new Comparator<ECKey>() {
+        Collections.sort(pubkeys, new Comparator<byte[]>() {
             @Override
-            public int compare(ECKey k1, ECKey k2) {
-                return comparator.compare(k1.getPubKey(), k2.getPubKey());
+            public int compare(byte[] k1, byte[] k2) {
+                return comparator.compare(k1, k2);
             }
         });
 

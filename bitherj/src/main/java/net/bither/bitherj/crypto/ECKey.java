@@ -18,8 +18,10 @@ package net.bither.bitherj.crypto;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.asn1.*;
@@ -40,6 +42,7 @@ import org.spongycastle.math.ec.custom.sec.SecP256K1Curve;
 import org.spongycastle.util.encoders.Base64;
 
 import javax.annotation.Nullable;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -100,22 +103,22 @@ public class ECKey implements Serializable {
     // The two parts of the key. If "priv" is set, "pub" can always be calculated. If "pub" is set but not "priv", we
     // can only verify signatures not make them.
     // TODO: Redesign this class to use consistent internals and more efficient serialization.
-    private BigInteger priv;
-    private byte[] pub;
+    protected BigInteger priv;
+    protected byte[] pub;
     private boolean isFromXRandom = false;
     // Creation time of the key in seconds since the epoch, or zero if the key was deserialized from a version that did
     // not have this field.
-    private long creationTimeSeconds;
+    protected long creationTimeSeconds;
 
     /**
      * Instance of the KeyCrypter interface to use for encrypting and decrypting the key.
      */
-    transient private KeyCrypter keyCrypter;
+    transient protected KeyCrypter keyCrypter;
 
     /**
      * The encrypted private key information.
      */
-    private EncryptedPrivateKey encryptedPrivateKey;
+    protected EncryptedPrivateKey encryptedPrivateKey;
 
     // Transient because it's calculated on demand.
     transient private byte[] pubKeyHash;
@@ -139,8 +142,7 @@ public class ECKey implements Serializable {
         return ecKey;
     }
 
-    private static ECPoint compressPoint(ECPoint uncompressed) {
-
+    public final static ECPoint compressPoint(ECPoint uncompressed) {
         return CURVE.getCurve().decodePoint(uncompressed.getEncoded(true));
     }
 
@@ -276,6 +278,13 @@ public class ECKey implements Serializable {
      */
     public byte[] getPubKey() {
         return pub;
+    }
+
+    /**
+     * Gets the public key in the form of an elliptic curve point object from Bouncy Castle.
+     */
+    public ECPoint getPubKeyPoint() {
+        return CURVE.getCurve().decodePoint(pub);
     }
 
     /**
@@ -623,6 +632,11 @@ public class ECKey implements Serializable {
 //            throw new IllegalStateException("This ECKey does not have the private key necessary for signing.");
         byte[] data = Utils.formatMessageForSigning(message);
         byte[] hash = Utils.doubleDigest(data);
+        byte[] sigData = signHash(hash, aesKey);
+        return new String(Base64.encode(sigData), Charset.forName("UTF-8"));
+    }
+
+    public byte[] signHash(byte[] hash, @Nullable KeyParameter aesKey) throws KeyCrypterException {
         ECDSASignature sig = sign(hash, aesKey);
         // Now we have to work backwards to figure out the recId needed to recover the signature.
         int recId = -1;
@@ -640,7 +654,7 @@ public class ECKey implements Serializable {
         sigData[0] = (byte) headerByte;
         System.arraycopy(Utils.bigIntegerToBytes(sig.r, 32), 0, sigData, 1, 32);
         System.arraycopy(Utils.bigIntegerToBytes(sig.s, 32), 0, sigData, 33, 32);
-        return new String(Base64.encode(sigData), Charset.forName("UTF-8"));
+        return sigData;
     }
 
     /**
@@ -662,6 +676,12 @@ public class ECKey implements Serializable {
             // This is what you get back from Bouncy Castle if base64 doesn't decode :(
             throw new SignatureException("Could not decode base64", e);
         }
+        byte[] messageBytes = Utils.formatMessageForSigning(message);
+        return signedMessageToKey(messageBytes, signatureEncoded);
+
+    }
+
+    public static ECKey signedMessageToKey(byte[] messageBytes, byte[] signatureEncoded) throws SignatureException {
         // Parse the signature bytes into r/s and the selector value.
         if (signatureEncoded.length < 65)
             throw new SignatureException("Signature truncated, expected 65 bytes and got " + signatureEncoded.length);
@@ -673,7 +693,6 @@ public class ECKey implements Serializable {
         BigInteger r = new BigInteger(1, Arrays.copyOfRange(signatureEncoded, 1, 33));
         BigInteger s = new BigInteger(1, Arrays.copyOfRange(signatureEncoded, 33, 65));
         ECDSASignature sig = new ECDSASignature(r, s);
-        byte[] messageBytes = Utils.formatMessageForSigning(message);
         // Note that the C++ code doesn't actually seem to specify any character encoding. Presumably it's whatever
         // JSON-SPIRIT hands back. Assume UTF-8 for now.
         byte[] messageHash = Utils.doubleDigest(messageBytes);

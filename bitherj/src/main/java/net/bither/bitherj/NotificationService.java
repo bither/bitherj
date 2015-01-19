@@ -24,6 +24,8 @@ public interface NotificationService {
 
     void removeBroadcastSyncSPVFinished();
 
+    void sendBroadcastGetSpvBlockComplete(boolean isComplete);
+
     void sendLastBlockChange();
 
     void notificatTx(Address address, Tx tx, Tx.TxNotificationType txNotificationType,

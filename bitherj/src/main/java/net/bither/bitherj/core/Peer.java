@@ -18,6 +18,7 @@ package net.bither.bitherj.core;
 
 import com.google.common.util.concurrent.Service;
 
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
@@ -292,20 +293,22 @@ public class Peer extends PeerSocketHandler {
                  i < eachTx.getIns().size();
                  i++) {
                 if (Arrays.equals(eachTx.getIns().get(i).getTxHash(), tx.getTxHash())) {
-                    if (eachTx.getIns().get(i).getInSn() < tx.getOuts().size()) {
-                        byte[] outScript = tx.getOuts().get(eachTx.getIns().get(i).getInSn())
-                                .getOutScript();
-                        Script pubKeyScript = new Script(outScript);
-                        Script script = new Script(eachTx.getIns().get(i).getInSignature());
-                        try {
-                            script.correctlySpends(eachTx, i, pubKeyScript, true);
-                            valid &= true;
-                        } catch (ScriptException e) {
-                            valid &= false;
+                    valid = false;
+                    for (Out out : tx.getOuts()) {
+                        if (out.getOutSn() == eachTx.getIns().get(i).getInSn()) {
+                            byte[] outScript = out
+                                    .getOutScript();
+                            Script pubKeyScript = new Script(outScript);
+                            Script script = new Script(eachTx.getIns().get(i).getInSignature());
+                            try {
+                                script.correctlySpends(eachTx, i, pubKeyScript, true);
+                                valid &= true;
+                            } catch (ScriptException e) {
+                                valid &= false;
+                            }
                         }
-                    } else {
-                        valid = false;
                     }
+
                     if (!valid) {
                         break;
                     }
@@ -979,7 +982,7 @@ public class Peer extends PeerSocketHandler {
     public boolean equals(Object o) {
         if (o instanceof Peer) {
             Peer item = (Peer) o;
-            return Utils.parseLongFromAddress(getPeerAddress())==Utils.parseLongFromAddress(item.getPeerAddress());
+            return Utils.parseLongFromAddress(getPeerAddress()) == Utils.parseLongFromAddress(item.getPeerAddress());
         } else {
             return false;
         }

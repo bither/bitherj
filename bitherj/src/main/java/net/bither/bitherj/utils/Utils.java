@@ -22,12 +22,12 @@ import com.google.common.primitives.Longs;
 import com.google.common.primitives.UnsignedLongs;
 
 import net.bither.bitherj.AbstractApp;
-import net.bither.bitherj.core.BitherjSettings;
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.exception.AddressFormatException;
 
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
-import org.spongycastle.util.encoders.Hex;
+import org.spongycastle.util.encoders.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -40,12 +40,15 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -595,6 +598,11 @@ public class Utils {
         }
     }
 
+    public static byte[] getPreSignMessage(String message) {
+        byte[] data = formatMessageForSigning(message);
+        return Utils.doubleDigest(data);
+    }
+
     // 00000001, 00000010, 00000100, 00001000, ...
     private static final int bitMask[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 
@@ -961,6 +969,60 @@ public class Utils {
         for (int i = 0; i < bytes.length; i++) {
             bytes[i] = 0;
         }
+    }
+
+    public static String joinString(String[] strs, String spiltStr) {
+        String result = "";
+        for (int i = 0; i < strs.length; i++) {
+            if (i < strs.length - 1) {
+                result = result + strs[i] + spiltStr;
+            } else {
+                result = result + strs[i];
+            }
+        }
+        return result;
+    }
+
+    public static byte[] copyOfRange(final byte[] source, final int from,
+                                     final int len) {
+        final byte[] range = new byte[len];
+        System.arraycopy(source, from, range, 0, len);
+
+        return range;
+    }
+
+    public static String base64Encode(byte[] bytes) {
+        return new String(org.spongycastle.util.encoders.Base64.encode(bytes), Charset.forName("UTF-8"));
+    }
+
+    public static List<byte[]> decodeServiceResult(String result) {
+        byte[] servicePubs = Base64.decode(result, Base64.DEFAULT);
+        int index = 0;
+        List<byte[]> pubsList = new ArrayList<byte[]>();
+        while (index < servicePubs.length - 1) {
+            byte charLen = servicePubs[index];
+            index++;
+            pubsList.add(Utils.copyOfRange(servicePubs, index, charLen));
+            index = index + charLen;
+        }
+        return pubsList;
+    }
+
+    public static String encodeBytesForService(List<byte[]> bytesList) {
+        int len = 0;
+        for (byte[] bytes : bytesList) {
+            len = len + 1 + bytes.length;
+        }
+        int index = 0;
+        byte[] result = new byte[len];
+        for (byte[] bytes : bytesList) {
+            result[index] = (byte) bytes.length;
+            index += 1;
+            System.arraycopy(bytes, 0, result, index, bytes.length);
+            index += bytes.length;
+        }
+        return new String(org.spongycastle.util.encoders.Base64.encode(result), Charset.forName("UTF-8"));
+
 
     }
 

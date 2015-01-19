@@ -19,7 +19,7 @@ package net.bither.bitherj.crypto;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
-import net.bither.bitherj.core.BitherjSettings;
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Utils;
