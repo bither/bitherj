@@ -55,23 +55,66 @@ public class HDMIdTest {
             HDMAddress.Pubs pubs = new HDMAddress.Pubs(ecKey.getPubKey(), ecKey.getPubKey(), null, 0);
             List<HDMAddress.Pubs> pubsList = new ArrayList<HDMAddress.Pubs>();
             pubsList.add(pubs);
+
             CreateHDMAddressApi createHDMAddressApi = new CreateHDMAddressApi(address, pubsList, decryptedPassword);
             createHDMAddressApi.handleHttpPost();
-            List<byte[]> pubList = createHDMAddressApi.getResult();
-            for (byte[] bytes : pubList) {
-                log.info(Utils.bytesToHexString(bytes));
+
+
+            List<byte[]> remotePubs = createHDMAddressApi.getResult();
+            for (int i = 0;
+                 i < pubsList.size();
+                 i++) {
+                HDMAddress.Pubs pubss = pubsList.get(i);
+                pubss.remote = remotePubs.get(i);
+                System.out.println("hot:"+Utils.bytesToHexString(pubss.hot));
+                System.out.println("cold:"+Utils.bytesToHexString(pubss.cold));
+                System.out.println("remote:"+Utils.bytesToHexString(pubss.remote));
+                System.out.println("create,Address:" + pubss.getAddress());
             }
+
             List<byte[]> unsigns = new ArrayList<byte[]>();
             unsigns.add(Utils.doubleDigest(decryptedPassword));
             SignatureHDMApi signatureHDMApi = new SignatureHDMApi(address, 0, decryptedPassword, unsigns);
             signatureHDMApi.handleHttpPost();
             List<byte[]> bytesList = signatureHDMApi.getResult();
-            for (byte[] bytes : bytesList) {
-                log.info(Utils.bytesToHexString(bytes));
-            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void testRecoveryHDM() {
+        try {
+
+            ConnectHttps.trustAllCerts();
+            TestImplAbstractApp appAndroid = new TestImplAbstractApp();
+            appAndroid.construct();
+            ECKey ecKey = new DumpedPrivateKey("L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1").getKey();
+            String address = ecKey.toAddress();
+            System.out.println("eckey:"+address);
+            byte[] decryptedPassword = new byte[32];
+            for (int i = 0; i < decryptedPassword.length; i++) {
+                decryptedPassword[i] = 0;
+            }
+            GetHDMBIdRandomApi getHDMBIdRandomApi = new GetHDMBIdRandomApi(address);
+            getHDMBIdRandomApi.handleHttpGet();
+            long randomKey = getHDMBIdRandomApi.getResult();
+            String message = Utils.format(HDMBId.BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), randomKey);
+            byte[] hash = Utils.getPreSignMessage(message);
+            byte[] signBytes = ecKey.signHash(hash, null);
+            RecoveryHDMApi recoveryHDMApi = new RecoveryHDMApi(address, signBytes, decryptedPassword);
+            recoveryHDMApi.handleHttpPost();
+            List<HDMAddress.Pubs> pubses = recoveryHDMApi.getResult();
+            for (HDMAddress.Pubs pubs : pubses) {
+                System.out.println("hot:"+Utils.bytesToHexString(pubs.hot));
+                System.out.println("cold:"+Utils.bytesToHexString(pubs.cold));
+                System.out.println("remote:"+Utils.bytesToHexString(pubs.remote));
+                System.out.println("address:" + pubs.getAddress());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 }

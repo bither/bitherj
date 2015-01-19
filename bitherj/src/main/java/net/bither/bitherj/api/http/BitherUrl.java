@@ -54,6 +54,7 @@ public class BitherUrl {
 
     // hdm api
     public static final String BITHER_HDM_PASSWORD = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/password";
+    public static final String BITHER_REVOCERY_HDM = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/recovery";
     public static final String BITHER_HDM_CREATE_ADDRESS = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/address/create";
     public static final String BITHER_HDM_SIGNATURE = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/address/%d/signature";
 
