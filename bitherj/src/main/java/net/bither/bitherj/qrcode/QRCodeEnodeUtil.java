@@ -77,63 +77,6 @@ public class QRCodeEnodeUtil {
 
     }
 
-    private static QRCodeTxTransport fromSendRequestWithUnsignedTransaction(Tx tx, String addressCannotParsed, int hdmIndex) {
-        QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
-        qrCodeTransport.setMyAddress(tx.getFromAddress());
-        String toAddress = tx.getFirstOutAddress();
-        if (Utils.isEmpty(toAddress)) {
-            toAddress = addressCannotParsed;
-        }
-        qrCodeTransport.setHdmIndex(hdmIndex);
-        qrCodeTransport.setToAddress(toAddress);
-        qrCodeTransport.setTo(tx.amountSentToAddress(toAddress));
-        qrCodeTransport.setFee(tx.getFee());
-        List<String> hashList = new ArrayList<String>();
-        for (byte[] h : tx.getUnsignedInHashes()) {
-            hashList.add(Utils.bytesToHexString(h));
-        }
-        qrCodeTransport.setHashList(hashList);
-        return qrCodeTransport;
-    }
-
-    public static String getPresignTxString(Tx tx, String changeAddress, String addressCannotParsed, int hdmIndex) {
-        QRCodeTxTransport qrCodeTransport = fromSendRequestWithUnsignedTransaction(tx, addressCannotParsed, hdmIndex);
-        String preSignString = "";
-        try {
-            String changeStr = "";
-            if (!Utils.isEmpty(changeAddress)) {
-                long changeAmt = tx.amountSentToAddress(changeAddress);
-                if (changeAmt != 0) {
-                    String[] changeStrings = new String[]{
-                            Base58.bas58ToHexWithAddress(changeAddress), Long.toHexString(changeAmt)
-                    };
-                    changeStr = Utils.joinString(changeStrings, QRCodeUtil.QR_CODE_SPLIT);
-
-                }
-            }
-            String hdmIndexString = "";
-            if (qrCodeTransport.getHdmIndex() != QRCodeTxTransport.NO_HDM_INDEX) {
-                hdmIndexString = Integer.toHexString(qrCodeTransport.getHdmIndex());
-            }
-            String[] preSigns = new String[]{hdmIndexString,
-                    Base58.bas58ToHexWithAddress(qrCodeTransport.getMyAddress())
-                    , changeStr, Long.toHexString(qrCodeTransport.getFee()),
-                    Base58.bas58ToHexWithAddress(qrCodeTransport.getToAddress()),
-                    Long.toHexString(qrCodeTransport.getTo())
-            };
-            preSignString = Utils.joinString(preSigns, QRCodeUtil.QR_CODE_SPLIT);
-            String[] hashStrings = new String[qrCodeTransport.getHashList().size()];
-            hashStrings = qrCodeTransport.getHashList().toArray(hashStrings);
-            preSignString = preSignString + Utils.joinString(hashStrings, QRCodeUtil.QR_CODE_SPLIT);
-            preSignString.toUpperCase(Locale.US);
-        } catch (AddressFormatException e) {
-            e.printStackTrace();
-        }
-
-        return preSignString;
-    }
-
-
     public static String oldEncodeQrCodeString(String text) {
         Pattern pattern = Pattern.compile("[A-Z]");
         Matcher matcher = pattern.matcher(text);
