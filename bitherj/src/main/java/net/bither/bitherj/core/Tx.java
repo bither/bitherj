@@ -1333,8 +1333,10 @@ public class Tx extends Message implements Comparable<Tx> {
                             ()), true);
                 }
             } catch (ScriptException ex) {
+                ex.printStackTrace();
                 return false;
             } catch (Exception ex) {
+                ex.printStackTrace();
                 return false;
             }
             return true;
