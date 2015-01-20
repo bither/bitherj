@@ -114,7 +114,7 @@ public class QRCodeTxTransport implements Serializable {
             boolean isHDM = !isAddressHex(strArray[0]);
             if (isHDM) {
                 hdmIndex = Integer.parseInt(strArray[0], 16);
-                str = str.substring(strArray[0].length());
+                str = str.substring(strArray[0].length() + 1);
                 strArray = QRCodeUtil.splitString(str);
             }
             boolean hasChangeAddress = isAddressHex(strArray[1]);
@@ -339,7 +339,7 @@ public class QRCodeTxTransport implements Serializable {
             preSignString = Utils.joinString(preSigns, QRCodeUtil.QR_CODE_SPLIT);
             String[] hashStrings = new String[qrCodeTransport.getHashList().size()];
             hashStrings = qrCodeTransport.getHashList().toArray(hashStrings);
-            preSignString = preSignString + Utils.joinString(hashStrings, QRCodeUtil.QR_CODE_SPLIT);
+            preSignString = preSignString + QRCodeUtil.QR_CODE_SPLIT + Utils.joinString(hashStrings, QRCodeUtil.QR_CODE_SPLIT);
             preSignString.toUpperCase(Locale.US);
         } catch (AddressFormatException e) {
             e.printStackTrace();
