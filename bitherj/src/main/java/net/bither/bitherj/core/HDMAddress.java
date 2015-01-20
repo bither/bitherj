@@ -51,8 +51,20 @@ public class HDMAddress extends Address {
     }
 
     public void signTx(Tx tx, CharSequence passphrase, HDMFetchOtherSignatureDelegate delegate) {
-        tx.signWithSignatures(this.signWithOther(tx.getUnsignedInHashesForHDM(getPubKey()), passphrase, tx,
-                delegate));
+        tx.signWithSignatures(this.signWithOther(tx.getUnsignedInHashesForHDM(getPubKey()),
+                passphrase, tx, delegate));
+    }
+
+    public void signTx(Tx tx, CharSequence password, HDMFetchOtherSignatureDelegate delegateCold,
+                       HDMFetchOtherSignatureDelegate delegateRemote) {
+        List<byte[]> unsigns = tx.getUnsignedInHashesForHDM(getPubKey());
+        List<TransactionSignature> coldSigs = delegateCold.getOtherSignature(getIndex(),
+                password, unsigns, tx);
+        List<TransactionSignature> remoteSigs = delegateRemote.getOtherSignature(getIndex(),
+                password, unsigns, tx);
+        assert coldSigs.size() == remoteSigs.size() && coldSigs.size() == unsigns.size();
+        List<byte[]> joined = formatInScript(coldSigs, remoteSigs, getPubKey());
+        tx.signWithSignatures(joined);
     }
 
     public List<byte[]> signWithOther(List<byte[]> unsignHash, CharSequence password, Tx tx,
@@ -71,8 +83,8 @@ public class HDMAddress extends Address {
         for (int i = 0;
              i < unsignedHashes.size();
              i++) {
-            TransactionSignature transactionSignature = new TransactionSignature(key.sign(unsignedHashes.get(i)),
-                    TransactionSignature.SigHash.ALL, false);
+            TransactionSignature transactionSignature = new TransactionSignature(key.sign
+                    (unsignedHashes.get(i)), TransactionSignature.SigHash.ALL, false);
             sigs.add(transactionSignature);
         }
         key.wipe();
@@ -163,8 +175,7 @@ public class HDMAddress extends Address {
 
         public Script getMultiSigScript() {
             assert isCompleted();
-            return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(
-                    hot, cold, remote));
+            return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(hot, cold, remote));
         }
 
         public boolean isCompleted() {
