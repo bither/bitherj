@@ -425,7 +425,10 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 Tx preTx = txHashList.get(prevTxHahs);
                 for (Out out : preTx.getOuts()) {
                     if (out.getOutSn() == in.getPrevOutSn()) {
-                        return Utils.compareString(out.getOutAddress(), address.getAddress());
+                        if (Utils.compareString(out.getOutAddress(), address.getAddress())) {
+                            return true;
+                        }
+
                     }
                 }
             }
