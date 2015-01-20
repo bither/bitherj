@@ -1251,19 +1251,13 @@ public class Tx extends Message implements Comparable<Tx> {
             Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             if (tx != null) {
                 int n = in.getPrevOutSn();
-                if (n < tx.outs.size()) {
+                for (Out out : tx.outs) {
                     if (Utils.compareString(address.getAddress(),
-                            tx.outs.get(n).getOutAddress())) {
-                        sent += tx.outs.get(n).getOutValue();
-                    }
-                } else {
-                    for (Out out : tx.outs) {
-                        if (Utils.compareString(address.getAddress(),
-                                out.getOutAddress())) {
-                            sent += out.getOutValue();
-                        }
+                            out.getOutAddress()) && n == out.getOutSn()) {
+                        sent += out.getOutValue();
                     }
                 }
+
             }
         }
         return receive - sent;

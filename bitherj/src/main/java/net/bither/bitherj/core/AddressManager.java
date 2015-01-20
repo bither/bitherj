@@ -31,8 +31,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
@@ -397,12 +399,12 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     }
 
     public List<Tx> compressTxsForApi(List<Tx> txList, Address address) {
-        List<Sha256Hash> txHashList = new ArrayList<Sha256Hash>();
+        Map<Sha256Hash, Tx> txHashList = new HashMap<Sha256Hash, Tx>();
         for (Tx tx : txList) {
-            txHashList.add(new Sha256Hash(tx.getTxHash()));
+            txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
         }
         for (Tx tx : txList) {
-            if (!isSendFromMe(tx, txHashList) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
+            if (!isSendFromMe(tx, txHashList, address) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
                 for (Out out : tx.getOuts()) {
                     if (Utils.compareString(address.getAddress(), out.getOutAddress())) {
@@ -416,11 +418,18 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return txList;
     }
 
-    private boolean isSendFromMe(Tx tx, List<Sha256Hash> txHashList) {
+    private boolean isSendFromMe(Tx tx, Map<Sha256Hash, Tx> txHashList, Address address) {
         for (In in : tx.getIns()) {
-            if (txHashList.contains(new Sha256Hash(in.getPrevTxHash()))) {
-                return true;
+            Sha256Hash prevTxHahs = new Sha256Hash(in.getPrevTxHash());
+            if (txHashList.containsKey(prevTxHahs)) {
+                Tx preTx = txHashList.get(prevTxHahs);
+                for (Out out : preTx.getOuts()) {
+                    if (out.getOutSn() == in.getPrevOutSn()) {
+                        return Utils.compareString(out.getOutAddress(), address.getAddress());
+                    }
+                }
             }
+
         }
         return false;
     }
