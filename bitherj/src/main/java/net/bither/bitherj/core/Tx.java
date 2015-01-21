@@ -1364,7 +1364,7 @@ public class Tx extends Message implements Comparable<Tx> {
             ECPoint point = ECKey.recoverECPointFromSignature(i, sig, messageHash);
             ECKey ecKeyCompress = new ECKey(null, point.getEncoded(true));
             ECKey ecKeyUnCompress = new ECKey(null, point.getEncoded(false));
-            for (int j = 0; j < pubs.size(); i++) {
+            for (int j = 0; j < pubs.size(); j++) {
                 if (Arrays.equals(ecKeyCompress.getPubKey(), pubs.get(j))) {
                     return ecKeyCompress.getPubKey();
 
