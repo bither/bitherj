@@ -68,7 +68,7 @@ public class QRCodeTransportPage {
         }
         QRCodeTransportPage qrCodetTransportPage = new QRCodeTransportPage();
         String[] strArray = QRCodeUtil.splitString(text);
-        if (Utils.isInteger(strArray[0])) {
+        if (Utils.isInteger(strArray[0]) && Utils.isInteger(strArray[1])) {
             int length = strArray[0].length() + strArray[1].length() + 2;
             qrCodetTransportPage.setSumPage(Integer.valueOf(strArray[0]) + 1);
             qrCodetTransportPage.setCurrentPage(Integer.valueOf(strArray[1]));
