@@ -54,7 +54,7 @@ public class HDMKeychain {
 
     private transient byte[] seed;
 
-    private ArrayList<HDMAddress> allCompletedAddresses;
+    protected ArrayList<HDMAddress> allCompletedAddresses;
     private Collection<HDMAddress> addressesInUse;
     private Collection<HDMAddress> addressesTrashed;
 
@@ -365,8 +365,7 @@ public class HDMKeychain {
 
     public String getFullEncryptPrivKey() {
         String encryptPrivKey = getEncryptedSeed();
-        return PrivateKeyUtil.getFullencryptHDMKeyChain(isFromXRandom
-                , encryptPrivKey);
+        return PrivateKeyUtil.getFullencryptHDMKeyChain(isFromXRandom, encryptPrivKey);
     }
 
     public String getEncryptedSeed() {
@@ -389,6 +388,9 @@ public class HDMKeychain {
     }
 
     public void wipeSeed() {
+        if (seed == null) {
+            return;
+        }
         Utils.wipeBytes(seed);
     }
 
@@ -404,6 +406,9 @@ public class HDMKeychain {
     }
 
     public boolean checkWithPassword(CharSequence password) {
+        if (isInRecovery()) {
+            return true;
+        }
         try {
             return Utils.compareString(getFirstAddressFromDb(), getFirstAddressFromSeed(password));
         } catch (Exception e) {
@@ -434,6 +439,11 @@ public class HDMKeychain {
 
     }
 
+    public boolean isInRecovery() {
+        return Utils.compareString(getEncryptedSeed(), HDMKeychainRecover.RecoverPlaceHolder) ||
+                Utils.compareString(getFirstAddressFromDb(), HDMKeychainRecover.RecoverPlaceHolder);
+    }
+
     public static void getRemotePublicKeys(HDMBId hdmBId, CharSequence password,
                                            List<HDMAddress.Pubs> partialPubs) throws Exception {
         byte[] decryptedPassword = hdmBId.decryptHDMBIdPassword(password);
@@ -461,11 +471,12 @@ public class HDMKeychain {
         }
     }
 
-    public static boolean checkPassword(String keysString, CharSequence password) throws MnemonicException
-            .MnemonicLengthException {
+    public static boolean checkPassword(String keysString, CharSequence password) throws
+            MnemonicException.MnemonicLengthException {
         String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keysString);
         String address = Base58.hexToBase58WithAddress(passwordSeeds[0]);
-        String encreyptString = Utils.joinString(new String[]{passwordSeeds[1], passwordSeeds[2], passwordSeeds[3]}, QRCodeUtil.QR_CODE_SPLIT);
+        String encreyptString = Utils.joinString(new String[]{passwordSeeds[1], passwordSeeds[2],
+                passwordSeeds[3]}, QRCodeUtil.QR_CODE_SPLIT);
         byte[] seed = new EncryptedData(encreyptString).decrypt(password);
         MnemonicCode mnemonic = MnemonicCode.instance();
 
@@ -490,5 +501,41 @@ public class HDMKeychain {
         key.wipe();
 
         return result;
+    }
+
+    public static class HDMKeychainRecover extends HDMKeychain {
+        public static final String RecoverPlaceHolder = "recover";
+
+        public HDMKeychainRecover(byte[] coldExternalRootPub, CharSequence password,
+                                  HDMFetchRemoteAddresses fetchDelegate) {
+            super(AbstractDb.addressProvider.addHDKey(RecoverPlaceHolder, RecoverPlaceHolder,
+                    false));
+            DeterministicKey coldRoot = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                    (Arrays.copyOf(coldExternalRootPub, coldExternalRootPub.length));
+            ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
+            if (fetchDelegate != null) {
+                List<HDMAddress.Pubs> pubs = fetchDelegate.getRemoteExistsPublicKeys(password);
+                if (pubs.size() > 0) {
+                    byte[] pubFetched = pubs.get(0).cold;
+                    byte[] pubDerived = coldRoot.deriveSoftened(pubs.get(0).index).getPubKey();
+                    coldRoot.wipe();
+                    if (!Arrays.equals(pubDerived, pubFetched)) {
+                        throw new HDMBitherIdNotMatchException();
+                    }
+                }
+                for (HDMAddress.Pubs p : pubs) {
+                    as.add(new HDMAddress(p, this));
+                }
+            }
+            if (as.size() > 0) {
+                AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
+                allCompletedAddresses.addAll(as);
+            }
+        }
+
+        @Override
+        public boolean isInRecovery() {
+            return true;
+        }
     }
 }
