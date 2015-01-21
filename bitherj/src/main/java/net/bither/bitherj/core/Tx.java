@@ -1242,25 +1242,12 @@ public class Tx extends Message implements Comparable<Tx> {
 
     public long deltaAmountFrom(Address address) {
         long receive = 0;
-        long sent = 0;
         for (Out out : this.outs) {
             if (Utils.compareString(address.getAddress(), out.getOutAddress())) {
                 receive += out.getOutValue();
             }
         }
-        for (In in : this.ins) {
-            Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
-            if (tx != null) {
-                int n = in.getPrevOutSn();
-                for (Out out : tx.outs) {
-                    if (Utils.compareString(address.getAddress(),
-                            out.getOutAddress()) && n == out.getOutSn()) {
-                        sent += out.getOutValue();
-                    }
-                }
-
-            }
-        }
+        long sent = AbstractDb.txProvider.sentFromAddress(getTxHash(), address.getAddress());
         return receive - sent;
     }
 

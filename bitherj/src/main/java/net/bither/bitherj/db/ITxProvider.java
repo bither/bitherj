@@ -26,15 +26,21 @@ import java.util.List;
 
 public interface ITxProvider {
     public List<Tx> getTxAndDetailByAddress(String address);
+
     public List<Tx> getTxAndDetailByAddress(String address, int page);
 
     public List<Tx> getPublishedTxs();
 
     public Tx getTxDetailByTxHash(byte[] txHash);
+
+    public long sentFromAddress(byte[] txHash, String address);
+
     public boolean isExist(byte[] txHash);
 
     public void add(Tx txItem);
+
     public void addTxs(List<Tx> txItems);
+
     public void remove(byte[] txHash);
 
 
@@ -55,6 +61,7 @@ public interface ITxProvider {
 
     // for calculate balance
     public long getConfirmedBalanceWithAddress(String address);
+
     public List<Tx> getUnconfirmedTxWithAddress(String address);
 
 //    public List<Out> getUnSpendOutCanSpendWithAddress(String address);
@@ -62,6 +69,7 @@ public interface ITxProvider {
 //    public List<Out> getUnSpendOutButNotConfirmWithAddress(String address);
 
     public int txCount(String address);
+
     public long totalReceive(String address);
 
     public void txSentBySelfHasSaw(byte[] txHash);
@@ -81,6 +89,7 @@ public interface ITxProvider {
 
     // complete in signature
     public void completeInSignature(List<In> ins);
+
     public int needCompleteInSignature(String address);
 
     public void clearAllTx();
