@@ -1,18 +1,18 @@
 /*
-* Copyright 2014 http://Bither.net
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2014 http://Bither.net
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package net.bither.bitherj.core;
 
@@ -36,6 +36,7 @@ import net.bither.bitherj.utils.VarInt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
+import org.spongycastle.math.ec.ECPoint;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -590,7 +591,7 @@ public class Tx extends Message implements Comparable<Tx> {
      * of this method
      * that sets them to typical defaults.
      *
-     * @throws ScriptException if the scriptPubKey is not a pay to address or pay to pubkey script.
+     * @throws net.bither.bitherj.exception.ScriptException if the scriptPubKey is not a pay to address or pay to pubkey script.
      */
     public In addSignedInput(Out prevOut, Script scriptPubKey, ECKey sigKey,
                              TransactionSignature.SigHash sigHash, boolean anyoneCanPay) throws
@@ -612,7 +613,7 @@ public class Tx extends Message implements Comparable<Tx> {
     }
 
     /**
-     * Same as {@link #addSignedInput(Out, Script, ECKey, TransactionSignature.SigHash, boolean)}
+     * Same as {@link #addSignedInput(net.bither.bitherj.core.Out, net.bither.bitherj.script.Script, net.bither.bitherj.crypto.ECKey, net.bither.bitherj.crypto.TransactionSignature.SigHash, boolean)}
      * but defaults to {@link net.bither.bitherj.crypto.TransactionSignature.SigHash#ALL} and
      * "false" for the anyoneCanPay flag. This is normally what you want.
      */
@@ -815,11 +816,11 @@ public class Tx extends Message implements Comparable<Tx> {
     /**
      * Calculates a signature that is valid for being inserted into the input at the given
      * position. This is simply
-     * a wrapper around calling {@link Tx#hashForSignature(int, byte[],
+     * a wrapper around calling {@link net.bither.bitherj.core.Tx#hashForSignature(int, byte[],
      * net.bither.bitherj.crypto.TransactionSignature.SigHash, boolean)}
-     * followed by {@link ECKey#sign(byte[], org.spongycastle.crypto.params.KeyParameter)} and
+     * followed by {@link net.bither.bitherj.crypto.ECKey#sign(byte[], org.spongycastle.crypto.params.KeyParameter)} and
      * then returning
-     * a new {@link TransactionSignature}.
+     * a new {@link net.bither.bitherj.crypto.TransactionSignature}.
      *
      * @param inputIndex            Which input to calculate the signature for, as an index.
      * @param key                   The private key used to calculate the signature.
@@ -843,9 +844,9 @@ public class Tx extends Message implements Comparable<Tx> {
     /**
      * Calculates a signature that is valid for being inserted into the input at the given
      * position. This is simply
-     * a wrapper around calling {@link Tx#hashForSignature(int, byte[],
+     * a wrapper around calling {@link net.bither.bitherj.core.Tx#hashForSignature(int, byte[],
      * net.bither.bitherj.crypto.TransactionSignature.SigHash, boolean)}
-     * followed by {@link ECKey#sign(byte[])} and then returning a new {@link TransactionSignature}.
+     * followed by {@link net.bither.bitherj.crypto.ECKey#sign(byte[])} and then returning a new {@link net.bither.bitherj.crypto.TransactionSignature}.
      *
      * @param inputIndex            Which input to calculate the signature for, as an index.
      * @param key                   The private key used to calculate the signature.
@@ -1109,7 +1110,7 @@ public class Tx extends Message implements Comparable<Tx> {
      * Does <b>not</b> perform all checks on a transaction such as whether the inputs are already
      * spent.
      *
-     * @throws VerificationException
+     * @throws net.bither.bitherj.exception.VerificationException
      */
     public void verify() throws VerificationException {
         if (ins.size() == 0 || outs.size() == 0) {
@@ -1149,7 +1150,7 @@ public class Tx extends Message implements Comparable<Tx> {
      * lock time</p>
      * <p/>
      * <p>To check if this transaction is final at a given height and time,
-     * see {@link Tx#isFinal(int, long)}
+     * see {@link net.bither.bitherj.core.Tx#isFinal(int, long)}
      * </p>
      */
     public boolean isTimeLocked() {
@@ -1319,6 +1320,64 @@ public class Tx extends Message implements Comparable<Tx> {
         }
         return isSign;
     }
+
+    public List<byte[]> getSignPubs(List<byte[]> pubKeys, byte[] params) {
+
+        List<byte[]> pubs = new ArrayList<byte[]>();
+        if (this.isSigned()) {
+            try {
+                In in = null;
+                if (this.getIns().size() > 0) {
+                    in = this.getIns().get(0);
+                    Script scriptSig = new Script(in.getInSignature());
+
+                    byte sigHashType = (byte) TransactionSignature.calcSigHashValue(TransactionSignature
+                            .SigHash.ALL, false);
+                    byte[] hash = hashForSignature(in.getInSn(), params, sigHashType);
+                    List<byte[]> sigs = scriptSig.getSigs();
+                    for (byte[] sig : sigs) {
+                        byte[] pub = getSignPubs(hash, ECKey.ECDSASignature.decodeFromDER(sig), pubKeys);
+                        if (pub != null) {
+                            pubs.add(pub);
+                        }
+
+                    }
+
+                }
+
+            } catch (ScriptException ex) {
+                ex.printStackTrace();
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+
+            }
+
+        }
+        return pubs;
+    }
+
+    private byte[] getSignPubs(byte[] messageHash,
+                               ECKey.ECDSASignature sig, List<byte[]> pubs) {
+
+        for (int i = 0; i < 4; i++) {
+            ECPoint point = ECKey.recoverECPointFromSignature(i, sig, messageHash);
+            ECKey ecKeyCompress = new ECKey(null, point.getEncoded(true));
+            ECKey ecKeyUnCompress = new ECKey(null, point.getEncoded(false));
+            for (int j = 0; j < pubs.size(); i++) {
+                if (Arrays.equals(ecKeyCompress.getPubKey(), pubs.get(j))) {
+                    return ecKeyCompress.getPubKey();
+
+                }
+                if (Arrays.equals(ecKeyUnCompress.getPubKey(), pubs.get(j))) {
+                    return ecKeyUnCompress.getPubKey();
+
+                }
+            }
+        }
+        return null;
+    }
+
 
     public boolean verifySignatures() {
         if (this.isSigned()) {
