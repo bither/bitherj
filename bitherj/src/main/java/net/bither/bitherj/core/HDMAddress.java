@@ -78,6 +78,9 @@ public class HDMAddress extends Address {
 
     public ArrayList<TransactionSignature> signMyPart(List<byte[]> unsignedHashes,
                                                       CharSequence password) {
+        if (isInRecovery()) {
+            throw new AssertionError("recovery hdm address can not sign");
+        }
         DeterministicKey key = keychain.getExternalKey(pubs.index, password);
         ArrayList<TransactionSignature> sigs = new ArrayList<TransactionSignature>();
         for (int i = 0;
@@ -154,6 +157,9 @@ public class HDMAddress extends Address {
         return true;
     }
 
+    public boolean isInRecovery() {
+        return getKeychain().isInRecovery();
+    }
 
     public static final class Pubs {
         public static final byte[] EmptyBytes = new byte[]{0};
