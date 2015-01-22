@@ -370,7 +370,7 @@ public class HDMKeychain {
         return PrivateKeyUtil.getFullencryptHDMKeyChain(isFromXRandom, encryptPrivKey);
     }
 
-    public String getEncryptedSeed() {
+    private String getEncryptedSeed() {
         return AbstractDb.addressProvider.getEncryptSeed(hdSeedId).toUpperCase();
     }
 
