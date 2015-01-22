@@ -36,10 +36,10 @@ public class PasswordSeed {
     }
 
     public PasswordSeed(Address address) {
-        this(address.getAddress(),address.getFullEncryptPrivKey());
+        this(address.getAddress(), address.getFullEncryptPrivKey());
     }
 
-    public PasswordSeed(String address, String encryptedKey){
+    public PasswordSeed(String address, String encryptedKey) {
         this.address = address;
         this.keyStr = encryptedKey;
     }
@@ -55,6 +55,12 @@ public class PasswordSeed {
         }
         return Utils.compareString(this.address,
                 ecKeyAddress);
+
+    }
+
+    public boolean changePassword(CharSequence oldPassword, CharSequence newPassword) {
+        keyStr = PrivateKeyUtil.changePassword(keyStr, oldPassword, newPassword);
+        return !Utils.isEmpty(keyStr);
 
     }
 
