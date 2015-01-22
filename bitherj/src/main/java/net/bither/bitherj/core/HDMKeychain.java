@@ -391,7 +391,11 @@ public class HDMKeychain {
         if (isInRecovery()) {
             throw new AssertionError("recover mode hdm keychain do not have encrypted hd seed");
         }
-        return AbstractDb.addressProvider.getEncryptHDSeed(hdSeedId).toUpperCase();
+        String encrypted = AbstractDb.addressProvider.getEncryptHDSeed(hdSeedId);
+        if (encrypted == null) {
+            return null;
+        }
+        return encrypted.toUpperCase();
     }
 
     public String getEncryptedMnemonicSeed() {
