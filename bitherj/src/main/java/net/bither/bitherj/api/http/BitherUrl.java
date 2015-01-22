@@ -36,6 +36,7 @@ public class BitherUrl {
 
         public static final String BITHER_BC = Utils.format(FORMAT_HTTP, BITHER_BC_DOMAIN);
         public static final String BITHER_HDM = Utils.format(FORMAT_HTTPS, BITHER_HDM_DOMAIN);
+        public static final String BITHER_URL = Utils.format(FORMAT_HTTP, "bither.net");
 
 
     }
