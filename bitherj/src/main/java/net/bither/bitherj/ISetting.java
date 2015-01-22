@@ -16,6 +16,7 @@
 
 package net.bither.bitherj;
 
+import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 
 import org.apache.http.client.CookieStore;
@@ -43,6 +44,10 @@ public interface ISetting {
     public boolean isApplicationRunInForeground();
 
     public CookieStore getCookieStore();
+
+    public PasswordSeed getPasswordSeed();
+
+    public void setPasswordSeed(PasswordSeed passwordSeed);
 
 
 }
