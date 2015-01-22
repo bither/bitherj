@@ -594,7 +594,7 @@ public class HDMKeychain {
                 }
             }
             if (as.size() > 0) {
-                AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
+                AbstractDb.addressProvider.recoverHDMAddresses(getHdSeedId(), as);
                 allCompletedAddresses.addAll(as);
             }
         }

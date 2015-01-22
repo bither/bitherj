@@ -39,7 +39,10 @@ public interface IAddressProvider {
 
     public int maxHDMAddressPubIndex(int hdSeedId);//including completed and uncompleted
 
-    public void completeHDMAddresses(int hdSeedId, List<HDMAddress> addresses);
+    public void recoverHDMAddresses(int hdSeedId, List<HDMAddress> addresses);
+
+
+    public void completeHDMAddresses(int hdSeedId, List<HDMAddress> addresses) ;
 
     public int uncompletedHDMAddressCount(int hdSeedId);
 
