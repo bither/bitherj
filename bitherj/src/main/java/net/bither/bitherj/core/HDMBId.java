@@ -1,6 +1,7 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.api.GetHDMBIdRandomApi;
+import net.bither.bitherj.api.RecoveryHDMApi;
 import net.bither.bitherj.api.UploadHDMBidApi;
 import net.bither.bitherj.api.http.HttpException;
 import net.bither.bitherj.crypto.ECKey;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.security.SignatureException;
+import java.util.List;
 
 public class HDMBId {
     private static final Logger log = LoggerFactory.getLogger(HDMBId.class);
@@ -60,7 +62,7 @@ public class HDMBId {
 
     }
 
-    public void setSignature(String signString, SecureCharSequence secureCharSequence) throws Exception {
+    public void setSignature(String signString, CharSequence secureCharSequence) throws Exception {
         String message = Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), serviceRandom);
         byte[] hash = Utils.getPreSignMessage(message);
         ECKey key = ECKey.signedMessageToKey(hash, Utils.hexStringToByteArray(signString));
@@ -78,6 +80,25 @@ public class HDMBId {
         } else {
             throw new HttpException("UploadHDMBidApi error");
         }
+
+
+    }
+
+    public List<HDMAddress.Pubs> recoverHDM(String signString, CharSequence secureCharSequence) throws Exception {
+        String message = Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), serviceRandom);
+        byte[] hash = Utils.getPreSignMessage(message);
+        ECKey key = ECKey.signedMessageToKey(hash, Utils.hexStringToByteArray(signString));
+        if (Utils.compareString(address, key.toAddress())) {
+            throw new SignatureException();
+
+        }
+
+        RecoveryHDMApi recoveryHDMApi = new RecoveryHDMApi(address, Utils.hexStringToByteArray(signString), decryptedPassword);
+        recoveryHDMApi.handleHttpPost();
+        List<HDMAddress.Pubs> result = recoveryHDMApi.getResult();
+        encryptedBitherPassword = new EncryptedData(decryptedPassword, secureCharSequence);
+        AbstractDb.addressProvider.addHDMBId(HDMBId.this);
+        return result;
 
 
     }
