@@ -20,6 +20,7 @@ import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.SecureCharSequence;
+import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Sha256Hash;
@@ -353,7 +354,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         addressHashSet.add(address.getAddress());
     }
 
-    public boolean changePassword(SecureCharSequence oldPassword, SecureCharSequence newPassword) throws IOException {
+    public boolean changePassword(SecureCharSequence oldPassword, SecureCharSequence newPassword) throws IOException, MnemonicException.MnemonicLengthException {
         List<Address> privKeyAddresses = AddressManager.getInstance().getPrivKeyAddresses();
         List<Address> trashAddresses = AddressManager.getInstance().getTrashAddresses();
         if (privKeyAddresses.size() + trashAddresses.size() == 0 && getHdmKeychain() == null) {
