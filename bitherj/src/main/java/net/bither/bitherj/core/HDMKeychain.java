@@ -78,7 +78,8 @@ public class HDMKeychain {
             }
         }
         wipeSeed();
-        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(),
+        // todo
+        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(), null,
                 firstAddress, isFromXRandom);
         allCompletedAddresses = new ArrayList<HDMAddress>();
     }
@@ -121,7 +122,8 @@ public class HDMKeychain {
         }
         String firstAddress = getFirstAddressFromSeed(password);
         wipeSeed();
-        this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(),
+        // todo
+        this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedSeed.toEncryptedString(), null,
                 firstAddress, isFromXRandom);
         if (as.size() > 0) {
             AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
@@ -375,8 +377,9 @@ public class HDMKeychain {
 
     public void changePassword(CharSequence oldPassword, CharSequence newPassword) {
         decryptSeed(oldPassword);
+        // todo:
         AbstractDb.addressProvider.setEncryptSeed(getHdSeedId(), new EncryptedData(seed,
-                newPassword, isFromXRandom).toEncryptedString());
+                newPassword, isFromXRandom).toEncryptedString(), null);
         wipeSeed();
     }
 

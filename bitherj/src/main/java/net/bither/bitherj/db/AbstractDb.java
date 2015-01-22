@@ -73,6 +73,7 @@ public abstract class AbstractDb {
     public static final String CREATE_HD_SEEDS_SQL = "create table if not exists hd_seeds " +
             "(hd_seed_id integer not null primary key autoincrement" +
             ", encrypt_seed text not null" +
+            ", encrypt_hd_seed text" +
             ", hdm_address text not null" +
             ", is_xrandom integer not null);";
     public static final String CREATE_HDM_ADDRESSES_SQL = "create table if not exists hdm_addresses " +
@@ -194,6 +195,7 @@ public abstract class AbstractDb {
     public interface HDSeedsColumns {
         public static final String HD_SEED_ID = "hd_seed_id";
         public static final String ENCRYPT_SEED = "encrypt_seed";
+        public static final String ENCRYPT_HD_SEED = "encrypt_HD_seed";
         public static final String IS_XRANDOM = "is_xrandom";
         public static final String HDM_ADDRESS = "hdm_address";
     }

@@ -12,14 +12,15 @@ public interface IAddressProvider {
     public List<Integer> getHDSeeds();
 
     public String getEncryptSeed(int hdSeedId);
-
-    public void setEncryptSeed(int hdSeedId, String encryptedSeed);
+    public String getEncryptHDSeed(int hdSeedId);
+    public void updateEncryptHDSeed(int hdSeedId, String encryptHDSeed);
+    public void setEncryptSeed(int hdSeedId, String encryptedSeed, String encryptHDSeed);
 
     public boolean isHDSeedFromXRandom(int hdSeedId);
 
     public String getHDMFristAddress(int hdSeedId);
 
-    public int addHDKey(String encryptSeed, String firstAddress, boolean isXrandom);
+    public int addHDKey(String encryptSeed, String encryptHdSeed, String firstAddress, boolean isXrandom);
 
     public HDMBId getHDMBId();
 
