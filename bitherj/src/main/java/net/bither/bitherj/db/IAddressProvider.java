@@ -14,7 +14,7 @@ public interface IAddressProvider {
     public String getEncryptSeed(int hdSeedId);
     public String getEncryptHDSeed(int hdSeedId);
     public void updateEncryptHDSeed(int hdSeedId, String encryptHDSeed);
-    public void setEncryptSeed(int hdSeedId, String encryptedSeed, String encryptHDSeed);
+    public void setEncryptSeed(int hdSeedId, String encryptSeed, String encryptHDSeed);
 
     public boolean isHDSeedFromXRandom(int hdSeedId);
 
