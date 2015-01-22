@@ -30,8 +30,6 @@ public class SaltForQRCode {
 
     public SaltForQRCode(byte[] qrCodeSalt) {
 
-        assert qrCodeSalt.length != KeyCrypterScrypt.SALT_LENGTH + 1 && qrCodeSalt.length != KeyCrypterScrypt.SALT_LENGTH;
-
         this.qrCodeSalt = qrCodeSalt;
         salt = new byte[KeyCrypterScrypt.SALT_LENGTH];
         isCompressed = true;

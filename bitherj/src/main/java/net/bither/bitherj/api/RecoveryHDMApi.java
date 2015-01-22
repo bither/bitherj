@@ -52,7 +52,7 @@ public class RecoveryHDMApi extends HttpsPostResponse<List<HDMAddress.Pubs>> {
             String pubServiceString = json.getString(HttpSetting.PUB_SERVER);
             pubService = Utils.decodeServiceResult(pubServiceString);
         }
-        assert pubColds.size() == pubHots.size() && pubColds.size() == pubService.size();
+
         for (int i = 0; i < pubHots.size(); i++) {
             HDMAddress.Pubs pubs = new HDMAddress.Pubs(pubHots.get(i), pubColds.get(i), pubService.get(i), i);
             this.result.add(pubs);
