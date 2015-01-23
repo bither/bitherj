@@ -1,5 +1,8 @@
 package net.bither.bitherj.api.http;
 
+import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.api.ConnectHttps;
+
 import javax.net.ssl.HttpsURLConnection;
 
 import java.io.BufferedReader;
@@ -9,9 +12,10 @@ import java.io.InputStreamReader;
 import java.net.URL;
 
 public abstract class BaseHttpsResponse<T> {
-
+    private static boolean isTrust = false;
     protected T result;
     private String mUrl;
+
 
     public T getResult() {
         return result;
@@ -19,6 +23,13 @@ public abstract class BaseHttpsResponse<T> {
 
     public abstract void setResult(String response) throws Exception;
 
+    protected synchronized void trustCerts() {
+        if (!isTrust) {
+            ConnectHttps.trustCerts(AbstractApp.trustCert);
+            isTrust = true;
+        }
+
+    }
 
     protected String getUrl() {
         return mUrl;

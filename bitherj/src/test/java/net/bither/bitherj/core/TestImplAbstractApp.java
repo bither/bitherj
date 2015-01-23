@@ -34,7 +34,7 @@ public class TestImplAbstractApp extends AbstractApp {
     private CookieStore cookieStore = new BasicCookieStore();
 
     @Override
-    public TrustCert getTrustCert() {
+    public TrustCert initTrustCert() {
         return null;
     }
 
