@@ -37,7 +37,7 @@ public abstract class ImportPrivateKey {
 
 
     public enum ImportPrivateKeyType {
-        Text, BitherQrcode, Bip38, HDMColdSeedQRCode, HDMColdPhrase
+        Text, BitherQrcode, Bip38
     }
 
     public static final int IMPORT_FAILED = 0;
@@ -48,6 +48,7 @@ public abstract class ImportPrivateKey {
     public static final int PASSWORD_IS_DIFFEREND_LOCAL = 5;
     public static final int CONTAIN_SPECIAL_ADDRESS = 6;
     public static final int TX_TOO_MUCH = 7;
+
 
     private String content;
     private SecureCharSequence password;
