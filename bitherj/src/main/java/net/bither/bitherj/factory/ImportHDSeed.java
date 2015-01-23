@@ -19,6 +19,7 @@ package net.bither.bitherj.factory;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.core.HDMKeychain;
 import net.bither.bitherj.crypto.EncryptedData;
+import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.qrcode.QRCodeUtil;
@@ -58,32 +59,20 @@ public abstract class ImportHDSeed {
                     String keyString = content.substring(1);
                     String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keyString);
                     String encreyptString = Utils.joinString(new String[]{passwordSeeds[0], passwordSeeds[1], passwordSeeds[2]}, QRCodeUtil.QR_CODE_SPLIT);
-                    EncryptedData encryptedData = new EncryptedData(encreyptString);
-                    byte[] result = null;
+                    PasswordSeed passwordSeed = AbstractApp.bitherjSetting.getPasswordSeed();
+                    if (passwordSeed != null && !passwordSeed.checkPassword(password)) {
+                        importError(PASSWORD_IS_DIFFEREND_LOCAL);
+                        return null;
+                    }
                     try {
-                        result = encryptedData.decrypt(this.password);
+                        return new HDMKeychain(new EncryptedData(encreyptString)
+                                , password, null);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                         return null;
-
                     }
-                    if (result == null) {
-                        if (AbstractApp.bitherjSetting.getPasswordSeed() == null) {
-                            importError(ImportPrivateKey.PASSWORD_WRONG);
-                        } else {
-                            importError(ImportPrivateKey.PASSWORD_IS_DIFFEREND_LOCAL);
-                        }
-                        return null;
-                    } else {
-                        try {
-                            return new HDMKeychain(new EncryptedData(encreyptString)
-                                    , password, null);
 
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            return null;
-                        }
-                    }
                 } else {
                     importError(NOT_HDM_COLD_SEED);
                     return null;
