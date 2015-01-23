@@ -64,6 +64,29 @@ public class HDMKeychain {
 
     private HDMAddressChangeDelegate addressChangeDelegate;
 
+    public HDMKeychain(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        this.mnemonicSeed = mnemonicSeed;
+        String firstAddress = null;
+        EncryptedData encryptedMnemonicSeed = null;
+        EncryptedData encryptedHDSeed = null;
+
+
+        hdSeed = seedFromMnemonic(mnemonicSeed);
+        encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
+        encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
+        firstAddress = getFirstAddressFromSeed(password);
+
+        wipeHDSeed();
+
+        wipeMnemonicSeed();
+
+        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
+                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom);
+        allCompletedAddresses = new ArrayList<HDMAddress>();
+
+    }
+
     // Create With Random
     public HDMKeychain(SecureRandom random, CharSequence password) {
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
