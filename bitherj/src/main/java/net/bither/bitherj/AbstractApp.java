@@ -17,6 +17,9 @@
 package net.bither.bitherj;
 
 import net.bither.bitherj.api.ConnectHttps;
+import net.bither.bitherj.api.TrustCert;
+
+import java.io.InputStream;
 
 public abstract class AbstractApp {
     public static NotificationService notificationService;
@@ -27,12 +30,12 @@ public abstract class AbstractApp {
     public void construct() {
         bitherjSetting = initSetting();
         notificationService = initNotification();
-        ConnectHttps.trustAllCerts();
-
+        ConnectHttps.trustCerts(getTrustCert());
     }
 
-    public abstract ISetting initSetting();
+    public abstract TrustCert getTrustCert();
 
+    public abstract ISetting initSetting();
 
     public abstract NotificationService initNotification();
 }

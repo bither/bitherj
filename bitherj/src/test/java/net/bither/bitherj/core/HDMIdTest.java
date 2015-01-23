@@ -17,6 +17,7 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.api.*;
+import net.bither.bitherj.core.https.HttpsTest;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.utils.Utils;
@@ -33,9 +34,7 @@ public class HDMIdTest {
     @Test
     public void testCreateHDAddress() {
         try {
-            ConnectHttps.trustAllCerts();
-            TestImplAbstractApp appAndroid = new TestImplAbstractApp();
-            appAndroid.construct();
+            HttpsTest.trust();
             ECKey ecKey = new DumpedPrivateKey("L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1").getKey();
             String address = ecKey.toAddress();
             GetHDMBIdRandomApi getHDMBIdRandomApi = new GetHDMBIdRandomApi(address);
@@ -86,10 +85,7 @@ public class HDMIdTest {
     @Test
     public void testRecoveryHDM() {
         try {
-
-            ConnectHttps.trustAllCerts();
-            TestImplAbstractApp appAndroid = new TestImplAbstractApp();
-            appAndroid.construct();
+            HttpsTest.trust();
             ECKey ecKey = new DumpedPrivateKey("L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1").getKey();
             String address = ecKey.toAddress();
             System.out.println("eckey:"+address);
