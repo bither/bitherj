@@ -69,6 +69,7 @@ public abstract class ImportHDSeed {
                                 , password, null);
 
                     } catch (Exception e) {
+                        importError(IMPORT_FAILED);
                         e.printStackTrace();
                         return null;
                     }
@@ -85,6 +86,7 @@ public abstract class ImportHDSeed {
                     return hdmKeychain;
                 } catch (Exception e) {
                     e.printStackTrace();
+                    importError(IMPORT_FAILED);
                 }
                 return null;
 
