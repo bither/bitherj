@@ -138,10 +138,12 @@ public class HDMKeychain {
                     root.wipe();
                     if (!Arrays.equals(pubDerived, pubFetched)) {
                         wipeMnemonicSeed();
+                        wipeHDSeed();
                         throw new HDMBitherIdNotMatchException();
                     }
                 } catch (MnemonicException.MnemonicLengthException e) {
                     wipeMnemonicSeed();
+                    wipeHDSeed();
                     throw e;
                 }
             }
@@ -153,7 +155,7 @@ public class HDMKeychain {
         wipeMnemonicSeed();
         wipeHDSeed();
         this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedMnemonicSeed
-                        .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
+                .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
                 isFromXRandom);
         if (as.size() > 0) {
             AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
@@ -384,7 +386,7 @@ public class HDMKeychain {
 
     public void decryptHDSeed(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
-        if (hdSeedId < 0) {
+        if (hdSeedId < 0 || password == null) {
             return;
         }
         String encryptedHDSeed = getEncryptedHDSeed();
@@ -481,8 +483,18 @@ public class HDMKeychain {
             return true;
         }
         try {
-            return Utils.compareString(getFirstAddressFromDb(), getFirstAddressFromSeed(password));
+            decryptMnemonicSeed(password);
+            decryptHDSeed(password);
+            byte[] hdCopy = Arrays.copyOf(hdSeed, hdSeed.length);
+            boolean hdSeedSafe = Utils.compareString(getFirstAddressFromDb(),
+                    getFirstAddressFromSeed(null));
+            boolean mnemonicSeedSafe = Arrays.equals(seedFromMnemonic(mnemonicSeed), hdCopy);
+            Utils.wipeBytes(hdCopy);
+            wipeHDSeed();
+            wipeMnemonicSeed();
+            return hdSeedSafe && mnemonicSeedSafe;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
