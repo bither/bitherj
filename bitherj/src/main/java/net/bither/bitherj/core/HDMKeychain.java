@@ -486,8 +486,8 @@ public class HDMKeychain {
             return true;
         }
         try {
-            decryptMnemonicSeed(password);
             decryptHDSeed(password);
+            decryptMnemonicSeed(password);
             byte[] hdCopy = Arrays.copyOf(hdSeed, hdSeed.length);
             boolean hdSeedSafe = Utils.compareString(getFirstAddressFromDb(),
                     getFirstAddressFromSeed(null));
