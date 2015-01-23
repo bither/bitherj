@@ -15,6 +15,7 @@ import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.PrivateKeyUtil;
@@ -327,6 +328,8 @@ public class HDMKeychain {
             DeterministicKey key = externalChainRoot.deriveSoftened(index);
             externalChainRoot.wipe();
             return key;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
