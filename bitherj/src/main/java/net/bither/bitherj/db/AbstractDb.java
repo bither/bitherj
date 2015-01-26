@@ -62,6 +62,10 @@ public abstract class AbstractDb {
             ", block_time integer not null" +
             ", block_prev text" +
             ", is_main integer not null);";
+
+    public static final String CREATE_PASSWORD_SEED_SQL = "create table if not exists addresses " +
+            "(address text not null primary key" +
+            ", encrypt_str text not null);";
     public static final String CREATE_ADDRESSES_SQL = "create table if not exists addresses " +
             "(address text not null primary key" +
             ", encrypt_private_key text" +
@@ -180,6 +184,11 @@ public abstract class AbstractDb {
         public static final String PEER_SERVICES = "peer_services";
         public static final String PEER_TIMESTAMP = "peer_timestamp";
         public static final String PEER_CONNECTED_CNT = "peer_connected_cnt";
+    }
+
+    public interface PasswordSeedColumns {
+        public static final String ADDRESS = "address";
+        public static final String ENCRYPT_SEED = "encrypt_seed";
     }
 
     public interface AddressesColumns {
