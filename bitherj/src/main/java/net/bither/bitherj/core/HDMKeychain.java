@@ -631,6 +631,7 @@ public class HDMKeychain {
             DeterministicKey coldRoot = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                     (Arrays.copyOf(coldExternalRootPub, coldExternalRootPub.length));
             ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
+            ArrayList<HDMAddress.Pubs> uncompPubs = new ArrayList<HDMAddress.Pubs>();
             if (fetchDelegate != null) {
                 List<HDMAddress.Pubs> pubs = fetchDelegate.getRemoteExistsPublicKeys(password);
                 if (pubs.size() > 0) {
@@ -642,12 +643,22 @@ public class HDMKeychain {
                     }
                 }
                 for (HDMAddress.Pubs p : pubs) {
-                    as.add(new HDMAddress(p, this));
+                    if (p.isCompleted()) {
+                        as.add(new HDMAddress(p, this));
+                    } else {
+                        uncompPubs.add(p);
+                    }
                 }
             }
             if (as.size() > 0) {
                 AbstractDb.addressProvider.recoverHDMAddresses(getHdSeedId(), as);
                 allCompletedAddresses.addAll(as);
+                if (uncompPubs.size() > 0) {
+                    AbstractDb.addressProvider.prepareHDMAddresses(getHdSeedId(), uncompPubs);
+                    for(HDMAddress.Pubs p : uncompPubs){
+                        AbstractDb.addressProvider.setHDMPubsRemote(getHdSeedId(), p.index, p.remote);
+                    }
+                }
             }
         }
 
