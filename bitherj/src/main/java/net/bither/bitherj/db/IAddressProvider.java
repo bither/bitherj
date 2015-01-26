@@ -4,10 +4,15 @@ import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.HDMBId;
 import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.core.HDMKeychain;
+import net.bither.bitherj.crypto.PasswordSeed;
 
 import java.util.List;
 
 public interface IAddressProvider {
+    // password
+    public boolean changePassword(String oldPassword, String newPassword);
+    public PasswordSeed getPasswordSeed();
+
     //hd
     public List<Integer> getHDSeeds();
 
