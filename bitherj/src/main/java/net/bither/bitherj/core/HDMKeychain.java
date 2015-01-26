@@ -156,7 +156,7 @@ public class HDMKeychain {
         wipeMnemonicSeed();
         wipeHDSeed();
         this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedMnemonicSeed
-                .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
+                        .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
                 isFromXRandom);
         if (as.size() > 0) {
             AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);

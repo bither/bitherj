@@ -12,8 +12,11 @@ public interface IAddressProvider {
     public List<Integer> getHDSeeds();
 
     public String getEncryptSeed(int hdSeedId);
+
     public String getEncryptHDSeed(int hdSeedId);
+
     public void updateEncryptHDSeed(int hdSeedId, String encryptHDSeed);
+
     public void setEncryptSeed(int hdSeedId, String encryptSeed, String encryptHDSeed);
 
     public boolean isHDSeedFromXRandom(int hdSeedId);
@@ -42,7 +45,9 @@ public interface IAddressProvider {
     public void recoverHDMAddresses(int hdSeedId, List<HDMAddress> addresses);
 
 
-    public void completeHDMAddresses(int hdSeedId, List<HDMAddress> addresses) ;
+    public void completeHDMAddresses(int hdSeedId, List<HDMAddress> addresses);
+
+    public void setHDMPubsRemote(int hdSeedId, int index, byte[] remote);
 
     public int uncompletedHDMAddressCount(int hdSeedId);
 
