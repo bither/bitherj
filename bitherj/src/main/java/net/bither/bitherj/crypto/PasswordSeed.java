@@ -72,6 +72,10 @@ public class PasswordSeed {
         return this.address;
     }
 
+    public String getKeyStr() {
+        return this.keyStr;
+    }
+
     public String toPasswordSeedString() {
         try {
             String passwordSeedString = Base58.bas58ToHexWithAddress(this.address) + QRCodeUtil.QR_CODE_SPLIT

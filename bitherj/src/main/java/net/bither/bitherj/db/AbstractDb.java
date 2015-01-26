@@ -63,7 +63,7 @@ public abstract class AbstractDb {
             ", block_prev text" +
             ", is_main integer not null);";
 
-    public static final String CREATE_PASSWORD_SEED_SQL = "create table if not exists addresses " +
+    public static final String CREATE_PASSWORD_SEED_SQL = "create table if not exists password_seed " +
             "(address text not null primary key" +
             ", encrypt_str text not null);";
     public static final String CREATE_ADDRESSES_SQL = "create table if not exists addresses " +
@@ -132,6 +132,7 @@ public abstract class AbstractDb {
         public static final String HDSeeds = "hd_seeds";
         public static final String HDMAddresses = "hdm_addresses";
         public static final String HDM_BID = "hdm_bid";
+        public static final String PASSWORD_SEED = "password_seed";
     }
 
     public interface BlocksColumns {
