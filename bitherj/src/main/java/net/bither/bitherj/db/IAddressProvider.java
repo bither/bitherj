@@ -28,12 +28,12 @@ public interface IAddressProvider {
 
     public String getHDMFristAddress(int hdSeedId);
 
-    public int addHDKey(String encryptSeed, String encryptHdSeed, String firstAddress, boolean isXrandom);
+    public int addHDKey(String encryptSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
 
     public HDMBId getHDMBId();
 
 
-    public void addHDMBId(HDMBId bitherId);
+    public void addHDMBId(HDMBId bitherId,String addressOfPS);
 
     public void changeHDBIdPassword(HDMBId hdmbId);
 
