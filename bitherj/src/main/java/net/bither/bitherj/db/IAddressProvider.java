@@ -4,6 +4,7 @@ import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.HDMBId;
 import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.core.HDMKeychain;
+import net.bither.bitherj.crypto.PasswordSeed;
 
 import java.util.List;
 
@@ -68,5 +69,10 @@ public interface IAddressProvider {
     public void restorePrivKeyAddress(Address address);
 
     public void updateSyncComplete(Address address);
+
+    //passwrod seed
+    public PasswordSeed getPasswordSeed();
+
+
 
 }
