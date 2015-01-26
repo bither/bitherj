@@ -74,9 +74,4 @@ public interface IAddressProvider {
 
     public void updateSyncComplete(Address address);
 
-    //passwrod seed
-    public PasswordSeed getPasswordSeed();
-
-
-
 }
