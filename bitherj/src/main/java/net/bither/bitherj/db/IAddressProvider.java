@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface IAddressProvider {
     // password
-    public boolean changePassword(String oldPassword, String newPassword);
+    public boolean changePassword(CharSequence oldPassword, CharSequence newPassword);
     public PasswordSeed getPasswordSeed();
 
     //hd

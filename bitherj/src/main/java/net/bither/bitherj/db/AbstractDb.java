@@ -189,7 +189,7 @@ public abstract class AbstractDb {
 
     public interface PasswordSeedColumns {
         public static final String ADDRESS = "address";
-        public static final String ENCRYPT_SEED = "encrypt_seed";
+        public static final String ENCRYPT_STR = "encrypt_str";
     }
 
     public interface AddressesColumns {
