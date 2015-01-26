@@ -75,6 +75,9 @@ public class HDMBId {
         uploadHDMBidApi.handleHttpPost();
         boolean result = uploadHDMBidApi.getResult();
         if (result) {
+            ECKey k = new ECKey(decryptedPassword, null);
+            String address = k.toAddress();
+            k.clearPrivateKey();
             encryptedBitherPassword = new EncryptedData(decryptedPassword, secureCharSequence);
             AbstractDb.addressProvider.addHDMBId(HDMBId.this);
         } else {
