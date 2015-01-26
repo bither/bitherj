@@ -129,6 +129,7 @@ public class HDMKeychain {
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         allCompletedAddresses = new ArrayList<HDMAddress>();
         ArrayList<HDMAddress> as = new ArrayList<HDMAddress>();
+        ArrayList<HDMAddress.Pubs> uncompPubs = new ArrayList<HDMAddress.Pubs>();
         if (fetchDelegate != null) {
             List<HDMAddress.Pubs> pubs = fetchDelegate.getRemoteExistsPublicKeys(password);
             if (pubs.size() > 0) {
@@ -149,18 +150,28 @@ public class HDMKeychain {
                 }
             }
             for (HDMAddress.Pubs p : pubs) {
-                as.add(new HDMAddress(p, this));
+                if (p.isCompleted()) {
+                    as.add(new HDMAddress(p, this));
+                } else {
+                    uncompPubs.add(p);
+                }
             }
         }
         String firstAddress = getFirstAddressFromSeed(password);
         wipeMnemonicSeed();
         wipeHDSeed();
         this.hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedMnemonicSeed
-                        .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
+                .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
                 isFromXRandom);
         if (as.size() > 0) {
             AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
             allCompletedAddresses.addAll(as);
+            if (uncompPubs.size() > 0) {
+                AbstractDb.addressProvider.prepareHDMAddresses(getHdSeedId(), uncompPubs);
+                for(HDMAddress.Pubs p : uncompPubs){
+                    AbstractDb.addressProvider.setHDMPubsRemote(getHdSeedId(), p.index, p.remote);
+                }
+            }
         }
     }
 
@@ -238,6 +249,9 @@ public class HDMKeychain {
                 for (HDMAddress.Pubs p : pubs) {
                     if (p.isCompleted()) {
                         as.add(new HDMAddress(p, this));
+                    } else {
+                        AbstractDb.addressProvider.setHDMPubsRemote(getHdSeedId(), p.index,
+                                p.remote);
                     }
                 }
                 AbstractDb.addressProvider.completeHDMAddresses(getHdSeedId(), as);
