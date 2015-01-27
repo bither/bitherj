@@ -79,7 +79,7 @@ public class HDMBId {
             String address = k.toAddress();
             k.clearPrivateKey();
             encryptedBitherPassword = new EncryptedData(decryptedPassword, secureCharSequence);
-            AbstractDb.addressProvider.addHDMBId(HDMBId.this);
+            AbstractDb.addressProvider.addHDMBId(HDMBId.this, address);
         } else {
             throw new HttpException("UploadHDMBidApi error");
         }
@@ -99,8 +99,11 @@ public class HDMBId {
         RecoveryHDMApi recoveryHDMApi = new RecoveryHDMApi(address, Utils.hexStringToByteArray(signString), decryptedPassword);
         recoveryHDMApi.handleHttpPost();
         List<HDMAddress.Pubs> result = recoveryHDMApi.getResult();
+        ECKey k = new ECKey(decryptedPassword, null);
+        String address = k.toAddress();
+        k.clearPrivateKey();
         encryptedBitherPassword = new EncryptedData(decryptedPassword, secureCharSequence);
-        AbstractDb.addressProvider.addHDMBId(HDMBId.this);
+        AbstractDb.addressProvider.addHDMBId(HDMBId.this, address);
         return result;
 
 
