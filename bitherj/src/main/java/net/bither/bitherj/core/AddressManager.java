@@ -354,50 +354,6 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         addressHashSet.add(address.getAddress());
     }
 
-    public boolean changePassword(SecureCharSequence oldPassword, SecureCharSequence newPassword) throws IOException, MnemonicException.MnemonicLengthException {
-        List<Address> privKeyAddresses = AddressManager.getInstance().getPrivKeyAddresses();
-        List<Address> trashAddresses = AddressManager.getInstance().getTrashAddresses();
-        if (privKeyAddresses.size() + trashAddresses.size() == 0 && getHdmKeychain() == null) {
-            return true;
-        }
-        for (Address a : privKeyAddresses) {
-            String encryptedStr = a.getFullEncryptPrivKey();
-            String newEncryptedStr = PrivateKeyUtil.changePassword(encryptedStr, oldPassword, newPassword);
-            if (newEncryptedStr == null) {
-                return false;
-            }
-            a.setEncryptPrivKey(newEncryptedStr);
-        }
-        for (Address a : trashAddresses) {
-            String encryptedStr = a.getFullEncryptPrivKey();
-            String newEncryptedStr = PrivateKeyUtil.changePassword(encryptedStr, oldPassword, newPassword);
-            if (newEncryptedStr == null) {
-                return false;
-            }
-            a.setEncryptPrivKey(newEncryptedStr);
-        }
-        HDMBId hdmbId = HDMBId.getHDMBidFromDb();
-        if (hdmbId != null) {
-            String oldEncryptedBitherPassword = hdmbId.getEncryptedBitherPasswordString();
-            String newEncryptedBitherPassword = PrivateKeyUtil.changePassword(oldEncryptedBitherPassword, oldPassword, newPassword);
-            hdmbId.setEncryptedData(new EncryptedData(newEncryptedBitherPassword));
-        }
-        for (Address address : privKeyAddresses) {
-            address.updatePrivateKey();
-        }
-        for (Address address : trashAddresses) {
-            address.updatePrivateKey();
-        }
-        if (hdmbId != null) {
-            hdmbId.saveEncryptedBitherPassword();
-        }
-
-        if (getHdmKeychain() != null) {
-            getHdmKeychain().changePassword(oldPassword, newPassword);
-        }
-
-        return true;
-    }
 
     public List<Tx> compressTxsForApi(List<Tx> txList, Address address) {
         Map<Sha256Hash, Tx> txHashList = new HashMap<Sha256Hash, Tx>();

@@ -11,7 +11,10 @@ import java.util.List;
 public interface IAddressProvider {
     // password
     public boolean changePassword(CharSequence oldPassword, CharSequence newPassword);
+
     public PasswordSeed getPasswordSeed();
+
+    public boolean hasPasswordSeed();
 
     //hd
     public List<Integer> getHDSeeds();
@@ -61,6 +64,8 @@ public interface IAddressProvider {
 
     //normal
     public List<Address> getAddresses();
+
+    public String getEncryptPrivateKey(String address);
 
     public void addAddress(Address address);
 

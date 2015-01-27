@@ -122,9 +122,7 @@ public class HDMBId {
         this.encryptedBitherPassword = encryptedData;
     }
 
-    public void saveEncryptedBitherPassword() {
-        AbstractDb.addressProvider.changeHDBIdPassword(HDMBId.this);
-    }
+
 
     public byte[] decryptHDMBIdPassword(CharSequence password) {
         decryptedPassword = encryptedBitherPassword.decrypt(password);

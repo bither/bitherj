@@ -18,6 +18,7 @@ package net.bither.bitherj.crypto;
 
 
 import net.bither.bitherj.core.Address;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.PrivateKeyUtil;
@@ -90,11 +91,11 @@ public class PasswordSeed {
     }
 
     public static boolean hasPasswordSeed() {
-        return true;
+        return AbstractDb.addressProvider.hasPasswordSeed();
     }
 
     public static PasswordSeed getPasswordSeed() {
-        return null;
+        return AbstractDb.addressProvider.getPasswordSeed();
     }
 
 }

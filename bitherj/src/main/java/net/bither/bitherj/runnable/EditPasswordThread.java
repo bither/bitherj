@@ -20,6 +20,7 @@ import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.crypto.SecureCharSequence;
+import net.bither.bitherj.db.AbstractDb;
 
 public class EditPasswordThread extends Thread {
 
@@ -59,11 +60,7 @@ public class EditPasswordThread extends Thread {
 
     public boolean editPassword(SecureCharSequence oldPassword, SecureCharSequence newPassword) {
         try {
-            AddressManager.getInstance().changePassword(oldPassword, newPassword);
-            PasswordSeed passwordSeed = PasswordSeed.getPasswordSeed();
-            passwordSeed.changePassword(oldPassword, newPassword);
-           // AbstractApp.bitherjSetting.setPasswordSeed(passwordSeed);
-
+            AbstractDb.addressProvider.changePassword(oldPassword, newPassword);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
