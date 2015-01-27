@@ -33,7 +33,7 @@ public interface IAddressProvider {
     public HDMBId getHDMBId();
 
 
-    public void addHDMBId(HDMBId bitherId,String addressOfPS);
+    public void addHDMBId(HDMBId bitherId, String addressOfPS);
 
     public void changeHDBIdPassword(HDMBId hdmbId);
 

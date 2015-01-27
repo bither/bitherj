@@ -64,8 +64,7 @@ public abstract class AbstractDb {
             ", is_main integer not null);";
 
     public static final String CREATE_PASSWORD_SEED_SQL = "create table if not exists password_seed " +
-            "(address text not null primary key" +
-            ", encrypt_str text not null);";
+            "(password_seed text not null primary key);";
     public static final String CREATE_ADDRESSES_SQL = "create table if not exists addresses " +
             "(address text not null primary key" +
             ", encrypt_private_key text" +
@@ -188,8 +187,7 @@ public abstract class AbstractDb {
     }
 
     public interface PasswordSeedColumns {
-        public static final String ADDRESS = "address";
-        public static final String ENCRYPT_STR = "encrypt_str";
+        public static final String PASSWORD_SEED = "password_seed";
     }
 
     public interface AddressesColumns {
