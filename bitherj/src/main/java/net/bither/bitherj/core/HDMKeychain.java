@@ -227,7 +227,7 @@ public class HDMKeychain {
                 p.cold = externalRootCold.deriveSoftened(i).getPubKey();
             } catch (Exception e) {
                 e.printStackTrace();
-                p.hot = HDMAddress.Pubs.EmptyBytes;
+                p.cold = HDMAddress.Pubs.EmptyBytes;
             }
             p.index = i;
             pubs.add(p);
