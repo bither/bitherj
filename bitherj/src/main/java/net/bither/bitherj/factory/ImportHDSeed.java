@@ -59,7 +59,7 @@ public abstract class ImportHDSeed {
                     String keyString = content.substring(1);
                     String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keyString);
                     String encreyptString = Utils.joinString(new String[]{passwordSeeds[0], passwordSeeds[1], passwordSeeds[2]}, QRCodeUtil.QR_CODE_SPLIT);
-                    PasswordSeed passwordSeed = AbstractApp.bitherjSetting.getPasswordSeed();
+                    PasswordSeed passwordSeed = PasswordSeed.getPasswordSeed();
                     if (passwordSeed != null && !passwordSeed.checkPassword(password)) {
                         importError(PASSWORD_IS_DIFFEREND_LOCAL);
                         return null;

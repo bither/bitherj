@@ -60,9 +60,9 @@ public class EditPasswordThread extends Thread {
     public boolean editPassword(SecureCharSequence oldPassword, SecureCharSequence newPassword) {
         try {
             AddressManager.getInstance().changePassword(oldPassword, newPassword);
-            PasswordSeed passwordSeed = AbstractApp.bitherjSetting.getPasswordSeed();
+            PasswordSeed passwordSeed = PasswordSeed.getPasswordSeed();
             passwordSeed.changePassword(oldPassword, newPassword);
-            AbstractApp.bitherjSetting.setPasswordSeed(passwordSeed);
+           // AbstractApp.bitherjSetting.setPasswordSeed(passwordSeed);
 
         } catch (Exception e) {
             e.printStackTrace();
