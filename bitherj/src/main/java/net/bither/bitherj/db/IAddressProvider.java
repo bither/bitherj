@@ -69,7 +69,7 @@ public interface IAddressProvider {
 
     public void addAddress(Address address);
 
-    public void updatePrivateKey(Address address);
+    public void updatePrivateKey(String address, String encryptPriv);
 
     public void removeWatchOnlyAddress(Address address);
 
