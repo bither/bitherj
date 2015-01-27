@@ -130,7 +130,7 @@ public abstract class ImportPrivateKey {
 
         } else {
             if (importPrivateKeyType == ImportPrivateKeyType.BitherQrcode) {
-                PasswordSeed passwordSeed = AbstractApp.bitherjSetting.getPasswordSeed();
+                PasswordSeed passwordSeed = PasswordSeed.getPasswordSeed();
                 if (passwordSeed != null && !passwordSeed.checkPassword(password)) {
                     password.wipe();
                     importError(PASSWORD_IS_DIFFEREND_LOCAL);

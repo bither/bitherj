@@ -45,9 +45,5 @@ public interface ISetting {
 
     public CookieStore getCookieStore();
 
-    public PasswordSeed getPasswordSeed();
-
-    public void setPasswordSeed(PasswordSeed passwordSeed);
-
 
 }
