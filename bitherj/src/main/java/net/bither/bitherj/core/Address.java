@@ -239,14 +239,6 @@ public class Address implements Comparable<Address> {
         return this.isFromXRandom;
     }
 
-    public void setFromXRandom(boolean isFromXRAndom) {
-        this.isFromXRandom = isFromXRAndom;
-    }
-
-
-    public void updatePrivateKey() {
-        AbstractDb.addressProvider.updatePrivateKey(Address.this);
-    }
 
     public void updateSyncComplete() {
         AbstractDb.addressProvider.updateSyncComplete(Address.this);
@@ -273,19 +265,20 @@ public class Address implements Comparable<Address> {
         return PrivateKeyUtil.formatEncryptPrivateKeyForDb(this.encryptPrivKey);
     }
 
+    public void recoverFromBackup(String encryptPriv) {
+        AbstractDb.addressProvider.updatePrivateKey(getAddress(),encryptPriv);
+    }
+
     public String getFullEncryptPrivKey() {
-        if (Utils.isEmpty(this.encryptPrivKey)) {
+        String encryptPrivKeyString = AbstractDb.addressProvider.getEncryptPrivateKey(getAddress());
+        if (Utils.isEmpty(encryptPrivKeyString)) {
             return "";
         } else {
             return PrivateKeyUtil.getFullencryptPrivateKey(Address.this
-                    , this.encryptPrivKey);
+                    , encryptPrivKeyString);
         }
     }
 
-    public void setEncryptPrivKey(String encryptPrivKey) {
-        this.encryptPrivKey = encryptPrivKey;
-
-    }
 
     public Tx buildTx(List<Long> amounts, List<String> addresses) throws TxBuilderException {
         return buildTx(getAddress(), amounts, addresses);
@@ -422,10 +415,6 @@ public class Address implements Comparable<Address> {
 
     public long totalReceive() {
         return AbstractDb.txProvider.totalReceive(getAddress());
-    }
-
-    public long totalSend() {
-        return AbstractDb.txProvider.totalSend(getAddress());
     }
 
     public boolean isHDM() {

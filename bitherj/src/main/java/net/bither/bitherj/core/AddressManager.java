@@ -20,6 +20,7 @@ import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.SecureCharSequence;
+import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Sha256Hash;
@@ -31,8 +32,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
@@ -351,58 +354,14 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         addressHashSet.add(address.getAddress());
     }
 
-    public boolean changePassword(SecureCharSequence oldPassword, SecureCharSequence newPassword) throws IOException {
-        List<Address> privKeyAddresses = AddressManager.getInstance().getPrivKeyAddresses();
-        List<Address> trashAddresses = AddressManager.getInstance().getTrashAddresses();
-        if (privKeyAddresses.size() + trashAddresses.size() == 0 && getHdmKeychain() == null) {
-            return true;
-        }
-        for (Address a : privKeyAddresses) {
-            String encryptedStr = a.getFullEncryptPrivKey();
-            String newEncryptedStr = PrivateKeyUtil.changePassword(encryptedStr, oldPassword, newPassword);
-            if (newEncryptedStr == null) {
-                return false;
-            }
-            a.setEncryptPrivKey(newEncryptedStr);
-        }
-        for (Address a : trashAddresses) {
-            String encryptedStr = a.getFullEncryptPrivKey();
-            String newEncryptedStr = PrivateKeyUtil.changePassword(encryptedStr, oldPassword, newPassword);
-            if (newEncryptedStr == null) {
-                return false;
-            }
-            a.setEncryptPrivKey(newEncryptedStr);
-        }
-        HDMBId hdmbId = HDMBId.getHDMBidFromDb();
-        if (hdmbId != null) {
-            String oldEncryptedBitherPassword = hdmbId.getEncryptedBitherPasswordString();
-            String newEncryptedBitherPassword = PrivateKeyUtil.changePassword(oldEncryptedBitherPassword, oldPassword, newPassword);
-            hdmbId.setEncryptedData(new EncryptedData(newEncryptedBitherPassword));
-        }
-        for (Address address : privKeyAddresses) {
-            address.updatePrivateKey();
-        }
-        for (Address address : trashAddresses) {
-            address.updatePrivateKey();
-        }
-        if (hdmbId != null) {
-            hdmbId.saveEncryptedBitherPassword();
-        }
-
-        if (getHdmKeychain() != null) {
-            getHdmKeychain().changePassword(oldPassword, newPassword);
-        }
-
-        return true;
-    }
 
     public List<Tx> compressTxsForApi(List<Tx> txList, Address address) {
-        List<Sha256Hash> txHashList = new ArrayList<Sha256Hash>();
+        Map<Sha256Hash, Tx> txHashList = new HashMap<Sha256Hash, Tx>();
         for (Tx tx : txList) {
-            txHashList.add(new Sha256Hash(tx.getTxHash()));
+            txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
         }
         for (Tx tx : txList) {
-            if (!isSendFromMe(tx, txHashList) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
+            if (!isSendFromMe(tx, txHashList, address) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
                 for (Out out : tx.getOuts()) {
                     if (Utils.compareString(address.getAddress(), out.getOutAddress())) {
@@ -416,11 +375,21 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return txList;
     }
 
-    private boolean isSendFromMe(Tx tx, List<Sha256Hash> txHashList) {
+    private boolean isSendFromMe(Tx tx, Map<Sha256Hash, Tx> txHashList, Address address) {
         for (In in : tx.getIns()) {
-            if (txHashList.contains(new Sha256Hash(in.getPrevTxHash()))) {
-                return true;
+            Sha256Hash prevTxHahs = new Sha256Hash(in.getPrevTxHash());
+            if (txHashList.containsKey(prevTxHahs)) {
+                Tx preTx = txHashList.get(prevTxHahs);
+                for (Out out : preTx.getOuts()) {
+                    if (out.getOutSn() == in.getPrevOutSn()) {
+                        if (Utils.compareString(out.getOutAddress(), address.getAddress())) {
+                            return true;
+                        }
+
+                    }
+                }
             }
+
         }
         return false;
     }

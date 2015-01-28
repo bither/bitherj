@@ -36,6 +36,7 @@ public class BitherUrl {
 
         public static final String BITHER_BC = Utils.format(FORMAT_HTTP, BITHER_BC_DOMAIN);
         public static final String BITHER_HDM = Utils.format(FORMAT_HTTPS, BITHER_HDM_DOMAIN);
+        public static final String BITHER_URL = Utils.format(FORMAT_HTTP, "bither.net");
 
 
     }
@@ -54,6 +55,7 @@ public class BitherUrl {
 
     // hdm api
     public static final String BITHER_HDM_PASSWORD = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/password";
+    public static final String BITHER_REVOCERY_HDM = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/recovery";
     public static final String BITHER_HDM_CREATE_ADDRESS = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/address/create";
     public static final String BITHER_HDM_SIGNATURE = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/address/%d/signature";
 

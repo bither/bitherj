@@ -20,15 +20,23 @@ import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.ISetting;
 import net.bither.bitherj.NotificationService;
+import net.bither.bitherj.api.TrustCert;
+import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.client.BasicCookieStore;
 
 import java.io.File;
+import java.io.InputStream;
 
 public class TestImplAbstractApp extends AbstractApp {
     private CookieStore cookieStore = new BasicCookieStore();
+
+    @Override
+    public TrustCert initTrustCert() {
+        return null;
+    }
 
     @Override
     public ISetting initSetting() {
@@ -86,6 +94,16 @@ public class TestImplAbstractApp extends AbstractApp {
             @Override
             public CookieStore getCookieStore() {
                 return cookieStore;
+            }
+
+            @Override
+            public PasswordSeed getPasswordSeed() {
+                return null;
+            }
+
+            @Override
+            public void setPasswordSeed(PasswordSeed passwordSeed) {
+
             }
         };
     }

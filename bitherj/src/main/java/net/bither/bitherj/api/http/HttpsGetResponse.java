@@ -8,6 +8,7 @@ import javax.net.ssl.HttpsURLConnection;
 public abstract class HttpsGetResponse<T> extends BaseHttpsResponse<T> {
 
     public void handleHttpGet() throws Exception {
+        trustCerts();
         URL url;
         HttpsURLConnection con = null;
         try {

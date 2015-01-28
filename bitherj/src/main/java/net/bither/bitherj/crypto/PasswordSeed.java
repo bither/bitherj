@@ -18,6 +18,7 @@ package net.bither.bitherj.crypto;
 
 
 import net.bither.bitherj.core.Address;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.PrivateKeyUtil;
@@ -36,10 +37,10 @@ public class PasswordSeed {
     }
 
     public PasswordSeed(Address address) {
-        this(address.getAddress(),address.getFullEncryptPrivKey());
+        this(address.getAddress(), address.getFullEncryptPrivKey());
     }
 
-    public PasswordSeed(String address, String encryptedKey){
+    public PasswordSeed(String address, String encryptedKey) {
         this.address = address;
         this.keyStr = encryptedKey;
     }
@@ -58,6 +59,12 @@ public class PasswordSeed {
 
     }
 
+    public boolean changePassword(CharSequence oldPassword, CharSequence newPassword) {
+        keyStr = PrivateKeyUtil.changePassword(keyStr, oldPassword, newPassword);
+        return !Utils.isEmpty(keyStr);
+
+    }
+
     public ECKey getECKey(CharSequence password) {
         return PrivateKeyUtil.getECKeyFromSingleString(keyStr, password);
     }
@@ -65,6 +72,11 @@ public class PasswordSeed {
     public String getAddress() {
         return this.address;
     }
+
+    public String getKeyStr() {
+        return this.keyStr;
+    }
+
 
     public String toPasswordSeedString() {
         try {
@@ -76,6 +88,14 @@ public class PasswordSeed {
 
         }
 
+    }
+
+    public static boolean hasPasswordSeed() {
+        return AbstractDb.addressProvider.hasPasswordSeed();
+    }
+
+    public static PasswordSeed getPasswordSeed() {
+        return AbstractDb.addressProvider.getPasswordSeed();
     }
 
 }

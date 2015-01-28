@@ -14,6 +14,7 @@ import javax.net.ssl.HttpsURLConnection;
 public abstract class HttpsPostResponse<T> extends BaseHttpsResponse<T> {
 
     public void handleHttpPost() throws Exception {
+        trustCerts();
         HttpsURLConnection con = null;
         String responseContent = null;
         try {

@@ -25,8 +25,8 @@ import java.math.BigInteger;
 public class BitherjSettings {
 
     public static final boolean LOG_DEBUG = true;
+    public static final boolean DEV_DEBUG = true;
 
-    public static final boolean DEV_DEBUG = false;
     public static final int PROTOCOL_VERSION = 70001;
     public static final int MIN_PROTO_VERSION = 70001;
 
@@ -133,6 +133,7 @@ public class BitherjSettings {
             return this.mVal;
         }
     }
+
     public enum AddressType {
         Normal, TxTooMuch, SpecialAddress
     }

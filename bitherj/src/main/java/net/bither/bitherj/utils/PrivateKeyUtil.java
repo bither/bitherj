@@ -324,7 +324,7 @@ public class PrivateKeyUtil {
         byte[] salt = Utils.hexStringToByteArray(strings[2]);
         if (salt.length == KeyCrypterScrypt.SALT_LENGTH) {
             SaltForQRCode saltForQRCode = new SaltForQRCode(salt, true, isFromXRandom);
-            strings[2] = Utils.bytesToHexString(saltForQRCode.getQrCodeSalt());
+            strings[2] = Utils.bytesToHexString(saltForQRCode.getQrCodeSalt()).toUpperCase();
         }
         return Utils.joinString(strings, QRCodeUtil.QR_CODE_SPLIT);
     }

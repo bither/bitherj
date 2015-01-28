@@ -16,6 +16,7 @@
 
 package net.bither.bitherj;
 
+import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 
 import org.apache.http.client.CookieStore;

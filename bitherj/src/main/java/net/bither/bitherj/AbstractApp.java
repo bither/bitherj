@@ -16,23 +16,24 @@
 
 package net.bither.bitherj;
 
-import net.bither.bitherj.api.ConnectHttps;
+import net.bither.bitherj.api.TrustCert;
 
 public abstract class AbstractApp {
     public static NotificationService notificationService;
     public static ISetting bitherjSetting;
+    public static TrustCert trustCert;
 
     public static boolean addressIsReady = false;
 
     public void construct() {
         bitherjSetting = initSetting();
         notificationService = initNotification();
-        ConnectHttps.trustAllCerts();
-
+        trustCert = initTrustCert();
     }
 
-    public abstract ISetting initSetting();
+    protected abstract TrustCert initTrustCert();
 
+    protected abstract ISetting initSetting();
 
-    public abstract NotificationService initNotification();
+    protected abstract NotificationService initNotification();
 }

@@ -1,5 +1,5 @@
-/**
- * Copyright 2011 Google Inc.
+/*
+ * Copyright 2014 http://Bither.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -155,7 +155,7 @@ public class ECKey implements Serializable {
     }
 
     /**
-     * A constructor variant with BigInteger pubkey. See {@link ECKey#ECKey(BigInteger, byte[])}.
+     * A constructor variant with BigInteger pubkey. See {@link net.bither.bitherj.crypto.ECKey#ECKey(java.math.BigInteger, byte[])}.
      */
 //    public ECKey(BigInteger privKey, BigInteger pubKey) {
 //        this(privKey, Utils.bigIntegerToBytes(pubKey, 65));
@@ -430,11 +430,11 @@ public class ECKey implements Serializable {
 
     /**
      * Signs the given hash and returns the R and S components as BigIntegers. In the Bitcoin protocol, they are
-     * usually encoded using DER format, so you want {@link ECKey.ECDSASignature#toASN1()}
+     * usually encoded using DER format, so you want {@link net.bither.bitherj.crypto.ECKey.ECDSASignature#toASN1()}
      * instead. However sometimes the independent components can be useful, for instance, if you're doing to do
      * further EC maths on them.
      *
-     * @throws KeyCrypterException if this ECKey doesn't have a private part.
+     * @throws net.bither.bitherj.crypto.KeyCrypterException if this ECKey doesn't have a private part.
      */
     public ECDSASignature sign(byte[] input) throws KeyCrypterException {
         return sign(input, null);
@@ -450,12 +450,12 @@ public class ECKey implements Serializable {
 
     /**
      * Signs the given hash and returns the R and S components as BigIntegers. In the Bitcoin protocol, they are
-     * usually encoded using DER format, so you want {@link ECKey.ECDSASignature#encodeToDER()}
+     * usually encoded using DER format, so you want {@link net.bither.bitherj.crypto.ECKey.ECDSASignature#encodeToDER()}
      * instead. However sometimes the independent components can be useful, for instance, if you're doing to do further
      * EC maths on them.
      *
      * @param aesKey The AES key to use for decryption of the private key. If null then no decryption is required.
-     * @throws KeyCrypterException if this ECKey doesn't have a private part.
+     * @throws net.bither.bitherj.crypto.KeyCrypterException if this ECKey doesn't have a private part.
      */
     public ECDSASignature sign(byte[] input, @Nullable KeyParameter aesKey) throws KeyCrypterException {
         if (FAKE_SIGNATURES)
@@ -614,7 +614,7 @@ public class ECKey implements Serializable {
      * encoded string.
      *
      * @throws IllegalStateException if this ECKey does not have the private part.
-     * @throws KeyCrypterException   if this ECKey is encrypted and no AESKey is provided or it does not decrypt the ECKey.
+     * @throws net.bither.bitherj.crypto.KeyCrypterException   if this ECKey is encrypted and no AESKey is provided or it does not decrypt the ECKey.
      */
     public String signMessage(String message) throws KeyCrypterException {
         return signMessage(message, null);
@@ -625,7 +625,7 @@ public class ECKey implements Serializable {
      * encoded string.
      *
      * @throws IllegalStateException if this ECKey does not have the private part.
-     * @throws KeyCrypterException   if this ECKey is encrypted and no AESKey is provided or it does not decrypt the ECKey.
+     * @throws net.bither.bitherj.crypto.KeyCrypterException   if this ECKey is encrypted and no AESKey is provided or it does not decrypt the ECKey.
      */
     public String signMessage(String message, @Nullable KeyParameter aesKey) throws KeyCrypterException {
 //        if (priv == null)
@@ -666,7 +666,7 @@ public class ECKey implements Serializable {
      *
      * @param message         Some piece of human readable text.
      * @param signatureBase64 The Bitcoin-format message signature in base64
-     * @throws SignatureException If the public key could not be recovered or if there was a signature format error.
+     * @throws java.security.SignatureException If the public key could not be recovered or if there was a signature format error.
      */
     public static ECKey signedMessageToKey(String message, String signatureBase64) throws SignatureException {
         byte[] signatureEncoded;
@@ -709,7 +709,7 @@ public class ECKey implements Serializable {
     }
 
     /**
-     * Convenience wrapper around {@link ECKey#signedMessageToKey(String, String)}. If the key derived from the
+     * Convenience wrapper around {@link net.bither.bitherj.crypto.ECKey#signedMessageToKey(String, String)}. If the key derived from the
      * signature is not the same as this one, throws a SignatureException.
      */
     public void verifyMessage(String message, String signatureBase64) throws SignatureException {
@@ -741,6 +741,15 @@ public class ECKey implements Serializable {
      */
     @Nullable
     public static ECKey recoverFromSignature(int recId, ECDSASignature sig, byte[] message, boolean compressed) {
+        ECPoint q = recoverECPointFromSignature(recId, sig, message);
+        if (q != null) {
+            return new ECKey((BigInteger) null, (byte[]) q.getEncoded(compressed));
+        } else {
+            return null;
+        }
+    }
+
+    public static ECPoint recoverECPointFromSignature(int recId, ECDSASignature sig, byte[] message) {
         Preconditions.checkArgument(recId >= 0, "recId must be positive");
         Preconditions.checkArgument(sig.r.signum() >= 0, "r must be positive");
         Preconditions.checkArgument(sig.s.signum() >= 0, "s must be positive");
@@ -762,8 +771,9 @@ public class ECKey implements Serializable {
                 BigInteger srInv = rInv.multiply(sig.s).mod(n);
                 BigInteger eInvrInv = rInv.multiply(eInv).mod(n);
                 ECPoint q = ECAlgorithms.sumOfTwoMultiplies(CURVE.getG(), eInvrInv, R, srInv);
-                return new ECKey((BigInteger) null, (byte[]) q.getEncoded(compressed));
+                return q;
             }
+
         }
     }
 
@@ -863,7 +873,8 @@ public class ECKey implements Serializable {
      * @return true if the encrypted key can be decrypted back to the original key successfully.
      */
     //todo: See {@link net.bither.bitherj.core.Address#encrypt(KeyCrypter keyCrypter, KeyParameter aesKey)} for example usage.
-    public static boolean encryptionIsReversible(ECKey originalKey, ECKey encryptedKey, KeyCrypter keyCrypter, KeyParameter aesKey) {
+    public static boolean encryptionIsReversible(ECKey originalKey, ECKey
+            encryptedKey, KeyCrypter keyCrypter, KeyParameter aesKey) {
         String genericErrorText = "The check that encryption could be reversed failed for key " + originalKey.toString() + ". ";
         try {
             ECKey rebornUnencryptedKey = encryptedKey.decrypt(keyCrypter, aesKey);
