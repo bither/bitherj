@@ -36,10 +36,7 @@ public class PasswordSeed {
         this.keyStr = str.substring(indexOfSplit + 1);
     }
 
-    public PasswordSeed(Address address) {
-        this(address.getAddress(), address.getFullEncryptPrivKey());
-    }
-
+   
     public PasswordSeed(String address, String encryptedKey) {
         this.address = address;
         this.keyStr = encryptedKey;

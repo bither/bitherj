@@ -265,8 +265,13 @@ public class Address implements Comparable<Address> {
         return PrivateKeyUtil.formatEncryptPrivateKeyForDb(this.encryptPrivKey);
     }
 
+    public String getFullEncryptPrivKeyOfDb() {
+        return PrivateKeyUtil.getFullencryptPrivateKey(Address.this
+                , this.encryptPrivKey);
+    }
+
     public void recoverFromBackup(String encryptPriv) {
-        AbstractDb.addressProvider.updatePrivateKey(getAddress(),encryptPriv);
+        AbstractDb.addressProvider.updatePrivateKey(getAddress(), encryptPriv);
     }
 
     public String getFullEncryptPrivKey() {
