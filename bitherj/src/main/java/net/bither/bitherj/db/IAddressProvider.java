@@ -25,8 +25,6 @@ public interface IAddressProvider {
 
     public void updateEncryptHDSeed(int hdSeedId, String encryptHDSeed);
 
-    public void setEncryptSeed(int hdSeedId, String encryptSeed, String encryptHDSeed);
-
     public boolean isHDSeedFromXRandom(int hdSeedId);
 
     public String getHDMFristAddress(int hdSeedId);
@@ -38,9 +36,6 @@ public interface IAddressProvider {
 
     public void addHDMBId(HDMBId bitherId, String addressOfPS);
 
-    public void changeHDBIdPassword(HDMBId hdmbId);
-
-    public void changeHDMBIdPassword(String encryptBitherPassword);
 
     public List<HDMAddress> getHDMAddressInUse(HDMKeychain keychain);
 
