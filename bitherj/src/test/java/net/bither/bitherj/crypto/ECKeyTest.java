@@ -20,6 +20,7 @@ import net.bither.bitherj.utils.Utils;
 import org.junit.Test;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.List;
@@ -88,4 +89,32 @@ public class ECKeyTest {
         }
 
     }
+
+    @Test
+    public void testGenerateECKeyWithRandom() {
+        ECKey.generateECKey(new TestRandom());
+    }
+
+    public class TestRandom extends SecureRandom {
+        int index = 0;
+
+        @Override
+        public synchronized void nextBytes(byte[] bytes) {
+            for (int i = 0; i < bytes.length; i++) {
+                bytes[i] = 0;
+            }
+            if (index == 0) {
+                System.out.println("call nextBytes: " + Utils.bytesToHexString(bytes));
+            } else {
+                SecureRandom secureRandom = new SecureRandom();
+                secureRandom.nextBytes(bytes);
+
+                assertTrue("use new bytes: " + Utils.bytesToHexString(bytes), index > 0);
+            }
+            index++;
+
+
+        }
+    }
+
 }
