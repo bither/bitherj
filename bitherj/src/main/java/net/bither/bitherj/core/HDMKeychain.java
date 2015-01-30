@@ -105,6 +105,7 @@ public class HDMKeychain {
                 encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
                 firstAddress = getFirstAddressFromSeed(password);
             } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         ECKey k = new ECKey(mnemonicSeed, null);

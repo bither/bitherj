@@ -21,6 +21,7 @@ import net.bither.bitherj.exception.AddressFormatException;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * <p>Base58 is a way to encode Bitcoin addresses as numbers and letters. Note that this is not the same base58 as used by
@@ -53,7 +54,7 @@ public class Base58 {
         }
     }
 
-    private static byte[] encodeToBytes(byte[] input){
+    private static byte[] encodeToBytes(byte[] input) {
         if (input.length == 0) {
             return new byte[0];
         }
@@ -104,7 +105,7 @@ public class Base58 {
         }
     }
 
-    public static SecureCharSequence encodeSecure(byte[] input){
+    public static SecureCharSequence encodeSecure(byte[] input) {
         if (input.length == 0) {
             return new SecureCharSequence(new char[0]);
         }
@@ -234,7 +235,7 @@ public class Base58 {
     public static String bas58ToHexWithAddress(String address) throws AddressFormatException {
         byte[] bytes = Base58.decodeChecked(address);
         String hex = Utils.bytesToHexString(bytes);
-        return hex;
+        return hex.toUpperCase(Locale.US);
     }
 
     //added by jjz (bither)
