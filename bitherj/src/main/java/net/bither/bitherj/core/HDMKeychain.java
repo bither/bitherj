@@ -105,6 +105,7 @@ public class HDMKeychain {
                 encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
                 firstAddress = getFirstAddressFromSeed(password);
             } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         ECKey k = new ECKey(mnemonicSeed, null);
@@ -455,20 +456,6 @@ public class HDMKeychain {
                     + "seed");
         }
         return AbstractDb.addressProvider.getEncryptSeed(hdSeedId).toUpperCase();
-    }
-
-    public void changePassword(CharSequence oldPassword, CharSequence newPassword) throws
-            MnemonicException.MnemonicLengthException {
-        if (isInRecovery()) {
-            return;
-        }
-        decryptMnemonicSeed(oldPassword);
-        hdSeed = seedFromMnemonic(mnemonicSeed);
-        AbstractDb.addressProvider.setEncryptSeed(getHdSeedId(), new EncryptedData(mnemonicSeed,
-                newPassword, isFromXRandom).toEncryptedString(), new EncryptedData(hdSeed,
-                newPassword, isFromXRandom).toEncryptedString());
-        wipeMnemonicSeed();
-        wipeHDSeed();
     }
 
     public List<String> getSeedWords(CharSequence password) throws MnemonicException
