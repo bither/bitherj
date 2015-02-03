@@ -221,7 +221,7 @@ public class In extends Message {
     public String getFromAddress() {
         if (getConnectedOut() != null) {
             return getConnectedOut().getOutAddress();
-        } else if (this.getInSignature() != null) {
+        } else if (this.getInSignature() != null && !this.isCoinBase()) {
             Script script = new Script(this.getInSignature());
             return script.getFromAddress();
         }

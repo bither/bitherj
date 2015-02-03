@@ -371,7 +371,7 @@ public class Address implements Comparable<Address> {
     public boolean checkRValues() {
         HashSet<BigInteger> rs = new HashSet<BigInteger>();
         for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
-            if (in.getInSignature() != null) {
+            if (in.getInSignature() != null && !in.isCoinBase()) {
                 Script script = new Script(in.getInSignature());
                 if (script.getFromAddress().equals(this.address)) {
                     for (byte[] data : script.getSigs()) {
@@ -390,7 +390,7 @@ public class Address implements Comparable<Address> {
     public boolean checkRValuesForTx(Tx tx) {
         HashSet<BigInteger> rs = new HashSet<BigInteger>();
         for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
-            if (in.getInSignature() != null) {
+            if (in.getInSignature() != null && !in.isCoinBase()) {
                 Script script = new Script(in.getInSignature());
                 if (script.getFromAddress().equals(this.address)) {
                     for (byte[] data : script.getSigs()) {
