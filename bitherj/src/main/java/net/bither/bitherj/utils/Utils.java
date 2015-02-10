@@ -27,7 +27,7 @@ import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.exception.AddressFormatException;
 
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
-import org.spongycastle.util.encoders.*;
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

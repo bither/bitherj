@@ -6,20 +6,16 @@ import net.bither.bitherj.api.UploadHDMBidApi;
 import net.bither.bitherj.api.http.HttpException;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
-import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.db.AbstractDb;
-
-import org.spongycastle.util.encoders.Base64;
-
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.util.List;
+import java.util.Locale;
 
 public class HDMBId {
     private static final Logger log = LoggerFactory.getLogger(HDMBId.class);
@@ -55,7 +51,7 @@ public class HDMBId {
         GetHDMBIdRandomApi getHDMBIdRandomApi = new GetHDMBIdRandomApi(address);
         getHDMBIdRandomApi.handleHttpGet();
         serviceRandom = getHDMBIdRandomApi.getResult();
-        String message = Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), serviceRandom);
+        String message = getBitidString();
         byte[] hash = Utils.getPreSignMessage(message);
         return Utils.bytesToHexString(hash);
 
@@ -63,7 +59,7 @@ public class HDMBId {
     }
 
     public void setSignature(String signString, CharSequence secureCharSequence) throws Exception {
-        String message = Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), serviceRandom);
+        String message = getBitidString();
         byte[] hash = Utils.getPreSignMessage(message);
         ECKey key = ECKey.signedMessageToKey(hash, Utils.hexStringToByteArray(signString));
         if (Utils.compareString(address, key.toAddress())) {
@@ -88,7 +84,7 @@ public class HDMBId {
     }
 
     public List<HDMAddress.Pubs> recoverHDM(String signString, CharSequence secureCharSequence) throws Exception {
-        String message = Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), serviceRandom);
+        String message = getBitidString();
         byte[] hash = Utils.getPreSignMessage(message);
         ECKey key = ECKey.signedMessageToKey(hash, Utils.hexStringToByteArray(signString));
         if (Utils.compareString(address, key.toAddress())) {
@@ -109,6 +105,11 @@ public class HDMBId {
 
     }
 
+    private String getBitidString() {
+        return Utils.format(BITID_STRING, address, Utils.bytesToHexString(decryptedPassword).toLowerCase(Locale.US), serviceRandom);
+
+    }
+
     public String getAddress() {
         return address;
     }
@@ -121,7 +122,6 @@ public class HDMBId {
     public void setEncryptedData(EncryptedData encryptedData) {
         this.encryptedBitherPassword = encryptedData;
     }
-
 
 
     public byte[] decryptHDMBIdPassword(CharSequence password) {
