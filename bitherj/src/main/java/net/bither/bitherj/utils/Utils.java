@@ -20,22 +20,15 @@ import com.google.common.base.Charsets;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.primitives.UnsignedLongs;
-
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.exception.AddressFormatException;
-
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import javax.annotation.Nonnull;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -45,18 +38,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.annotation.Nonnull;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
@@ -977,6 +964,21 @@ public class Utils {
             String str = strs[i];
             if (!Utils.isEmpty(str)) {
                 if (i < strs.length - 1) {
+                    result = result + str + spiltStr;
+                } else {
+                    result = result + str;
+                }
+            }
+        }
+        return result;
+    }
+
+    public static String joinString(List<String> strs, String spiltStr) {
+        String result = "";
+        for (int i = 0; i < strs.size(); i++) {
+            String str = strs.get(i);
+            if (!Utils.isEmpty(str)) {
+                if (i < strs.size() - 1) {
                     result = result + str + spiltStr;
                 } else {
                     result = result + str;
