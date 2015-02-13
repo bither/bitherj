@@ -554,7 +554,7 @@ public class HDMKeychain {
                 password, isFromXRandom).toEncryptedString());
     }
 
-    private static final byte[] seedFromMnemonic(byte[] mnemonicSeed) throws MnemonicException
+    public static final byte[] seedFromMnemonic(byte[] mnemonicSeed) throws MnemonicException
             .MnemonicLengthException {
         MnemonicCode mnemonic = MnemonicCode.instance();
         return mnemonic.toSeed(mnemonic.toMnemonic(mnemonicSeed), "");

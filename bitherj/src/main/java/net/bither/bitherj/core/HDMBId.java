@@ -58,29 +58,34 @@ public class HDMBId {
 
     }
 
-    public void setSignature(String signString, CharSequence secureCharSequence) throws Exception {
+    public void setSignature(byte[] signed, CharSequence password, String firstHotAddress) throws Exception {
         String message = getBitidString();
         byte[] hash = Utils.getPreSignMessage(message);
-        ECKey key = ECKey.signedMessageToKey(hash, Utils.hexStringToByteArray(signString));
+        ECKey key = ECKey.signedMessageToKey(hash, signed);
         if (Utils.compareString(address, key.toAddress())) {
             throw new SignatureException();
 
         }
-        String hotAddress = AddressManager.getInstance().getHdmKeychain().getFirstAddressFromDb();
-        UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, hotAddress, Utils.hexStringToByteArray(signString), decryptedPassword);
+        String hotAddress = firstHotAddress != null ? firstHotAddress : AddressManager.getInstance().getHdmKeychain().getFirstAddressFromDb();
+        UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, hotAddress, signed, decryptedPassword);
         uploadHDMBidApi.handleHttpPost();
         boolean result = uploadHDMBidApi.getResult();
         if (result) {
-            ECKey k = new ECKey(decryptedPassword, null);
-            String address = k.toAddress();
-            k.clearPrivateKey();
-            encryptedBitherPassword = new EncryptedData(decryptedPassword, secureCharSequence);
-            AbstractDb.addressProvider.addHDMBId(HDMBId.this, address);
+            encryptedBitherPassword = new EncryptedData(decryptedPassword, password);
+            if(firstHotAddress == null) {
+                save();
+            }
         } else {
             throw new HttpException("UploadHDMBidApi error");
         }
+    }
 
+    public void setSignature(String signString, CharSequence password) throws Exception {
+        setSignature(Utils.hexStringToByteArray(signString), password, null);
+    }
 
+    public void save(){
+        AbstractDb.addressProvider.addHDMBId(HDMBId.this, address);
     }
 
     public List<HDMAddress.Pubs> recoverHDM(String signString, CharSequence secureCharSequence) throws Exception {
