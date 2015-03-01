@@ -38,8 +38,6 @@ public abstract class AbstratHDMHotAdd {
 
         public abstract void completeAddrees(List<HDMAddress> hdmAddresses);
 
-        public abstract int getCanAddHDMCount(HDMKeychain keychain);
-
 
     }
 
@@ -59,6 +57,7 @@ public abstract class AbstratHDMHotAdd {
 
 
     }
+
     protected IPasswordGetter passwordGetter;
     protected boolean isServerClicked = false;
     protected HDMBId hdmBid;

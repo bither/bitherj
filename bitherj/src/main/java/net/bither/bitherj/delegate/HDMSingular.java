@@ -16,7 +16,6 @@
 
 package net.bither.bitherj.delegate;
 
-
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.core.HDMBId;
@@ -31,17 +30,15 @@ import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
 
+
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 
-public abstract class AbstractHDMSingular {
-
+public abstract class HDMSingular {
     public static interface HDMSingularUtilDelegate {
-
-
         public void setSingularModeAvailable(boolean available);
 
         public void onSingularModeBegin();
@@ -60,6 +57,7 @@ public abstract class AbstractHDMSingular {
 
     private HDMSingularUtilDelegate delegate;
 
+
     private boolean running;
     private boolean isSingularMode;
 
@@ -77,7 +75,8 @@ public abstract class AbstractHDMSingular {
     private List<String> coldWords;
     private String coldQr;
 
-    public AbstractHDMSingular(@Nonnull HDMSingularUtilDelegate delegate) {
+
+    public HDMSingular(@Nonnull HDMSingularUtilDelegate delegate) {
         this.delegate = delegate;
         if (AddressManager.getInstance().getHdmKeychain() == null) {
             delegate.setSingularModeAvailable(true);
@@ -100,6 +99,9 @@ public abstract class AbstractHDMSingular {
             }
         });
     }
+
+    protected abstract void runOnUIThread(Runnable runnable);
+
 
     public boolean isInSingularMode() {
         return running && isSingularMode;
@@ -142,7 +144,6 @@ public abstract class AbstractHDMSingular {
         }.start();
     }
 
-
     public void setPassword(SecureCharSequence password) {
         this.password = new SecureCharSequence(password);
     }
@@ -180,7 +181,7 @@ public abstract class AbstractHDMSingular {
         }.start();
     }
 
-    protected void callInServer(AbstratHDMHotAdd.IGenerateHDMKeyChain generateHDMKeyChain) {
+    protected void callInServer(@Nonnull AbstratHDMHotAdd.IGenerateHDMKeyChain generateHDMKeyChainDelegate) {
         String preSign;
         try {
             preSign = hdmBid.getPreSignString();
@@ -212,23 +213,14 @@ public abstract class AbstractHDMSingular {
         try {
             HDMKeychain keychain = new HDMKeychain(hotMnemonicSeed, password);
             hdmBid.save();
-            if (generateHDMKeyChain != null) {
-                generateHDMKeyChain.generateHDMKeyChain(keychain);
-            }
-
-            final int count;
-            if (generateHDMKeyChain != null) {
-                count = keychain.getCanAddHDMCount();
-            } else {
-                count = 0;
-            }
+            generateHDMKeyChainDelegate.generateHDMKeyChain(keychain);
+            //KeyUtil.setHDKeyChain(keychain);
+            final int count = keychain.getCanAddHDMCount();
             if (count > 0) {
                 keychain.prepareAddresses(count, password, Arrays.copyOf(coldRoot,
                         coldRoot.length));
             }
-            if (generateHDMKeyChain != null) {
-                generateHDMKeyChain.beginCompleteAddress();
-            }
+            generateHDMKeyChainDelegate.beginCompleteAddress();
             List<HDMAddress> as = keychain.completeAddresses(1, password,
                     new HDMKeychain.HDMFetchRemotePublicKeys() {
                         @Override
@@ -238,6 +230,7 @@ public abstract class AbstractHDMSingular {
                             try {
                                 HDMKeychain.getRemotePublicKeys(hdmBid, password,
                                         partialPubs);
+
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 runOnUIThread(new Runnable() {
@@ -249,9 +242,7 @@ public abstract class AbstractHDMSingular {
                             }
                         }
                     });
-            if (generateHDMKeyChain != null) {
-                generateHDMKeyChain.completeAddrees(as);
-            }
+            generateHDMKeyChainDelegate.completeAddrees(as);
         } catch (MnemonicException.MnemonicLengthException e) {
             password.wipe();
             throw new RuntimeException(e);
@@ -264,9 +255,7 @@ public abstract class AbstractHDMSingular {
             }
         });
 
-
     }
-
 
     private void initHotFirst() {
         DeterministicKey hotEx = rootFromMnemonic(hotMnemonicSeed);
@@ -300,10 +289,4 @@ public abstract class AbstractHDMSingular {
             throw new RuntimeException(e);
         }
     }
-
-    public abstract void runOnUIThread(Runnable runnable);
-
-    public abstract void server();
-
-
 }

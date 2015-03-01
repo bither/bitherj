@@ -666,6 +666,10 @@ public class HDMKeychain {
         }
     }
 
+    public int getCanAddHDMCount() {
+        return BitherjSettings.HDM_ADDRESS_PER_SEED_PREPARE_COUNT -
+                uncompletedAddressCount();
+    }
 
 
 }
