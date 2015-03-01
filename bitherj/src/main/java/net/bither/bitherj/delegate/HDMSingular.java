@@ -37,7 +37,7 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-public abstract class HDMSingular {
+public abstract class HDMSingular  {
     public static interface HDMSingularUtilDelegate {
         public void setSingularModeAvailable(boolean available);
 
@@ -101,6 +101,8 @@ public abstract class HDMSingular {
     }
 
     protected abstract void runOnUIThread(Runnable runnable);
+
+    public abstract void server();
 
 
     public boolean isInSingularMode() {
