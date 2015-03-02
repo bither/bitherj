@@ -879,6 +879,7 @@ public class Utils {
         String pattern = "[0-9,a-z,A-Z]+";
         Pattern p = Pattern.compile(pattern);
         Matcher m = p.matcher(password);
+        //TODO jjz allow symbols for password
         return m.matches();
     }
 
