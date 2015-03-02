@@ -54,14 +54,11 @@ public abstract class HDMHotAdd implements IPasswordGetterDelegate {
 
     public HDMSingular singularUtil;
 
-    public HDMHotAdd(IHDMHotAddDelegate delegate, HDMSingular.HDMSingularUtilDelegate hdmSingularUtilDelegate) {
+    public HDMHotAdd(IHDMHotAddDelegate delegate) {
         this.delegate = delegate;
         hdmKeychainLimit = AddressManager.isHDMKeychainLimit();
-        setHDMSingular(hdmSingularUtilDelegate);
 
     }
-
-    public abstract void setHDMSingular(HDMSingular.HDMSingularUtilDelegate hdmSingularUtilDelegate);
 
     public abstract void hotClick();
 
