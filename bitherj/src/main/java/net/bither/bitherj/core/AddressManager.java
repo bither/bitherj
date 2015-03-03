@@ -65,22 +65,31 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             return;
         }
         for (Address address : privKeyAddresses) {
-            String alias = addressAlias.get(address.getAddress());
-            address.setAlias(alias);
+            if (addressAlias.containsKey(address.getAddress())) {
+                String alias = addressAlias.get(address.getAddress());
+                address.setAlias(alias);
+            }
         }
         for (Address address : watchOnlyAddresses) {
-            String alias = addressAlias.get(address.getAddress());
-            address.setAlias(alias);
+            if (addressAlias.containsKey(address.getAddress())) {
+                String alias = addressAlias.get(address.getAddress());
+                address.setAlias(alias);
+            }
         }
-        for (HDMAddress address : hdmKeychain.getAllCompletedAddresses()) {
-            String alias = addressAlias.get(address.getAddress());
-            address.setAlias(alias);
+        if (hdmKeychain != null) {
+            for (HDMAddress address : hdmKeychain.getAllCompletedAddresses()) {
+                if (addressAlias.containsKey(address.getAddress())) {
+                    String alias = addressAlias.get(address.getAddress());
+                    address.setAlias(alias);
+                }
+            }
         }
     }
 
     private void initAddress() {
         List<Address> addressList = AbstractDb.addressProvider.getAddresses();
         for (Address address : addressList) {
+
             if (address.hasPrivKey()) {
                 if (address.isTrashed()) {
                     this.trashAddresses.add(address);
