@@ -478,7 +478,7 @@ public final class Rijndael {
                 (pt[14] & 0xff) << 8 |
                 (pt[15] & 0xff)) ^ rek[3];
         /*
-	     * Nr - 1 full rounds:
+         * Nr - 1 full rounds:
 	     */
         for (int r = 1; r < Nr; r++) {
             k += 4;

@@ -16,9 +16,9 @@
 
 package net.bither.bitherj.api;
 
-import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.api.http.BitherUrl;
 import net.bither.bitherj.api.http.HttpPostResponse;
+import net.bither.bitherj.utils.Utils;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -31,26 +31,26 @@ import java.util.List;
 
 public class BitherErrorApi extends HttpPostResponse<String> {
 
-	private static String ERROR_MSG = "error_msg";
-	private String mErrorMsg;
+    private static String ERROR_MSG = "error_msg";
+    private String mErrorMsg;
 
-	public BitherErrorApi(String errorMsg) {
-		this.mErrorMsg = errorMsg;
-		setUrl(BitherUrl.BITHER_ERROR_API);
-	}
+    public BitherErrorApi(String errorMsg) {
+        this.mErrorMsg = errorMsg;
+        setUrl(BitherUrl.BITHER_ERROR_API);
+    }
 
-	@Override
-	public HttpEntity getHttpEntity() throws Exception {
-		List<NameValuePair> params = new ArrayList<NameValuePair>();
-		if (!Utils.isEmpty(this.mErrorMsg)) {
-			params.add(new BasicNameValuePair(ERROR_MSG, this.mErrorMsg.trim()));
-		}
-		return new UrlEncodedFormEntity(params, HTTP.UTF_8);
-	}
+    @Override
+    public HttpEntity getHttpEntity() throws Exception {
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        if (!Utils.isEmpty(this.mErrorMsg)) {
+            params.add(new BasicNameValuePair(ERROR_MSG, this.mErrorMsg.trim()));
+        }
+        return new UrlEncodedFormEntity(params, HTTP.UTF_8);
+    }
 
-	@Override
-	public void setResult(String response) throws Exception {
+    @Override
+    public void setResult(String response) throws Exception {
 
-	}
+    }
 
 }

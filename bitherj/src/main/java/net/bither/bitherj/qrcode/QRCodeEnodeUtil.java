@@ -19,12 +19,7 @@ package net.bither.bitherj.qrcode;
 
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.core.Tx;
-import net.bither.bitherj.exception.AddressFormatException;
-import net.bither.bitherj.utils.Base58;
-
 import net.bither.bitherj.utils.Utils;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

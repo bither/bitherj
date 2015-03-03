@@ -29,7 +29,6 @@ import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.TransactionsUtil;
 
-
 import java.util.ArrayList;
 import java.util.List;
 

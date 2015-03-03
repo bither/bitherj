@@ -18,8 +18,8 @@ package net.bither.bitherj.utils;
 
 
 import net.bither.bitherj.AbstractApp;
-import net.bither.bitherj.api.DownloadSpvApi;
 import net.bither.bitherj.BitherjSettings;
+import net.bither.bitherj.api.DownloadSpvApi;
 import net.bither.bitherj.core.Block;
 import net.bither.bitherj.core.BlockChain;
 

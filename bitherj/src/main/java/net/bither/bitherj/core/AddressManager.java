@@ -18,18 +18,13 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
-import net.bither.bitherj.crypto.EncryptedData;
-import net.bither.bitherj.crypto.SecureCharSequence;
-import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
-import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;

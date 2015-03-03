@@ -17,12 +17,15 @@
 package net.bither.bitherj.delegate;
 
 import net.bither.bitherj.core.AddressManager;
+import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.core.HDMBId;
+import net.bither.bitherj.core.HDMKeychain;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.utils.Utils;
 
 import java.util.Arrays;
+import java.util.List;
 
 public abstract class HDMHotAdd implements IPasswordGetterDelegate {
     public interface IHDMHotAddDelegate {
@@ -37,6 +40,17 @@ public abstract class HDMHotAdd implements IPasswordGetterDelegate {
         public void callServerQRCode();
 
         public void callKeychainHotUEntropy();
+
+    }
+
+
+    public static interface IGenerateHDMKeyChain {
+        public abstract void generateHDMKeyChain(HDMKeychain hdmKeychain);
+
+        public abstract void beginCompleteAddress();
+
+        public abstract void completeAddrees(List<HDMAddress> hdmAddresses);
+
 
     }
 

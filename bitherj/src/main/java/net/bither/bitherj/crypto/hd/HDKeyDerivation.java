@@ -38,7 +38,8 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class HDKeyDerivation {
 
-    private HDKeyDerivation() { }
+    private HDKeyDerivation() {
+    }
 
     /**
      * Child derivation may fail (although with extremely low probability); in such case it is re-attempted.
@@ -54,7 +55,7 @@ public final class HDKeyDerivation {
      * broken by attackers (this is not theoretical, people have had money stolen that way). This method checks
      * that the given seed is at least 64 bits long.
      *
-     * @throws HDDerivationException if generated master key is invalid (private key 0 or >= n).
+     * @throws HDDerivationException    if generated master key is invalid (private key 0 or >= n).
      * @throws IllegalArgumentException if the seed is less than 8 bytes and could be brute forced.
      */
     public static DeterministicKey createMasterPrivateKey(byte[] seed) throws HDDerivationException {
@@ -66,10 +67,10 @@ public final class HDKeyDerivation {
         checkState(i.length == 64, i.length);
         byte[] il = Arrays.copyOfRange(i, 0, 32);
         byte[] ir = Arrays.copyOfRange(i, 32, 64);
-        Arrays.fill(i, (byte)0);
+        Arrays.fill(i, (byte) 0);
         DeterministicKey masterPrivKey = createMasterPrivKeyFromBytes(il, ir);
-        Arrays.fill(il, (byte)0);
-        Arrays.fill(ir, (byte)0);
+        Arrays.fill(il, (byte) 0);
+        Arrays.fill(ir, (byte) 0);
         // Child deterministic keys will chain up to their parents to find the keys.
         masterPrivKey.setCreationTimeSeconds(Utils.currentTimeSeconds());
         return masterPrivKey;
@@ -89,14 +90,14 @@ public final class HDKeyDerivation {
         return new DeterministicKey(ImmutableList.<ChildNumber>of(), chainCode, ECKey.CURVE.getCurve().decodePoint(pubKeyBytes), null, null);
     }
 
-    public static DeterministicKey createMasterPubKeyFromExtendedBytes(byte[] extended){
+    public static DeterministicKey createMasterPubKeyFromExtendedBytes(byte[] extended) {
         checkState(extended.length == 65, extended.length);
         byte[] il = Arrays.copyOfRange(extended, 0, 33);
         byte[] ir = Arrays.copyOfRange(extended, 33, 65);
-        Arrays.fill(extended, (byte)0);
+        Arrays.fill(extended, (byte) 0);
         DeterministicKey key = createMasterPubKeyFromBytes(il, ir);
-        Arrays.fill(il, (byte)0);
-        Arrays.fill(ir, (byte)0);
+        Arrays.fill(il, (byte) 0);
+        Arrays.fill(ir, (byte) 0);
         return key;
     }
 
@@ -124,7 +125,8 @@ public final class HDKeyDerivation {
             try {
                 child = new ChildNumber(child.num() + nAttempts, isHardened);
                 return deriveChildKey(parent, child);
-            } catch (HDDerivationException ignore) { }
+            } catch (HDDerivationException ignore) {
+            }
             nAttempts++;
         }
         throw new HDDerivationException("Maximum number of child derivation attempts reached, this is probably an indication of a bug.");
@@ -133,7 +135,7 @@ public final class HDKeyDerivation {
 
     /**
      * @throws HDDerivationException if private derivation is attempted for a public-only parent key, or
-     * if the resulting derived key is invalid (eg. private key == 0).
+     *                               if the resulting derived key is invalid (eg. private key == 0).
      */
     public static DeterministicKey deriveChildKey(DeterministicKey parent, ChildNumber childNumber) throws HDDerivationException {
         if (parent.isPubKeyOnly()) {
@@ -155,7 +157,7 @@ public final class HDKeyDerivation {
     }
 
     public static RawKeyBytes deriveChildKeyBytesFromPrivate(DeterministicKey parent,
-                                                              ChildNumber childNumber) throws HDDerivationException {
+                                                             ChildNumber childNumber) throws HDDerivationException {
         checkArgument(parent.hasPrivKey(), "Parent key must have private key bytes for this method.");
         byte[] parentPublicKey = ECKey.compressPoint(parent.getPubKeyPoint()).getEncoded();
         assert parentPublicKey.length == 33 : parentPublicKey.length;
@@ -215,7 +217,8 @@ public final class HDKeyDerivation {
                 Ki = Ki.add(G.multiply(additiveInverse));
                 Ki = Ki.add(parent.getPubKeyPoint());
                 break;
-            default: throw new AssertionError();
+            default:
+                throw new AssertionError();
         }
 
         assertNonInfinity(Ki, "Illegal derived key: derived public key equals infinity.");

@@ -19,8 +19,6 @@ package net.bither.bitherj.api;
 import net.bither.bitherj.AbstractApp;
 
 import org.apache.http.client.CookieStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CookieFactory {
 
@@ -40,7 +38,7 @@ public class CookieFactory {
             try {
                 GetCookieApi getCookieApi = new GetCookieApi();
                 getCookieApi.handleHttpPost();
-               // log.debug("getCookieApi");
+                // log.debug("getCookieApi");
             } catch (Exception e) {
                 success = false;
                 e.printStackTrace();

@@ -19,8 +19,10 @@
 package net.bither.bitherj.crypto.mnemonic;
 
 import com.google.common.base.Joiner;
+
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

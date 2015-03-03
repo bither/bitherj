@@ -27,12 +27,13 @@ import org.spongycastle.crypto.digests.SHA512Digest;
 import org.spongycastle.crypto.macs.HMac;
 import org.spongycastle.crypto.params.KeyParameter;
 
-import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import javax.annotation.Nonnull;
 
 /**
  * Static utilities used in BIP 32 Hierarchical Deterministic Wallets (HDW).
@@ -79,9 +80,9 @@ public final class HDUtils {
 
     /**
      * The path is a human-friendly representation of the deterministic path. For example:
-     *
+     * <p/>
      * "44H / 0H / 0H / 1 / 1"
-     *
+     * <p/>
      * Where a letter "H" means hardened key. Spaces are ignored.
      */
     public static List<ChildNumber> parsePath(@Nonnull String path) {

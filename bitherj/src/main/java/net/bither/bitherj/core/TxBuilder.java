@@ -45,7 +45,7 @@ public class TxBuilder {
     }
 
     public Tx buildTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
-        if(Utils.isEmpty(changeAddress)){
+        if (Utils.isEmpty(changeAddress)) {
             changeAddress = address.getAddress();
         }
         long value = 0;
@@ -247,13 +247,12 @@ class TxBuilderDefault implements TxBuilderProtocol {
                         return 1;
                     else
                         return -1;
-                } else if (out1.getOutValue() != out2.getOutValue()){
+                } else if (out1.getOutValue() != out2.getOutValue()) {
                     if (out2.getOutValue() > out1.getOutValue())
                         return 1;
                     else
                         return -1;
-                }
-                else {
+                } else {
                     BigInteger hash1 = new BigInteger(1, out1.getTxHash());
                     BigInteger hash2 = new BigInteger(1, out2.getTxHash());
                     int result = hash1.compareTo(hash2);

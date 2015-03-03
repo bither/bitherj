@@ -72,7 +72,7 @@ public class HDMBId {
         boolean result = uploadHDMBidApi.getResult();
         if (result) {
             encryptedBitherPassword = new EncryptedData(decryptedPassword, password);
-            if(firstHotAddress == null) {
+            if (firstHotAddress == null) {
                 save();
             }
         } else {
@@ -84,7 +84,7 @@ public class HDMBId {
         setSignature(Utils.hexStringToByteArray(signString), password, null);
     }
 
-    public void save(){
+    public void save() {
         AbstractDb.addressProvider.addHDMBId(HDMBId.this, address);
     }
 

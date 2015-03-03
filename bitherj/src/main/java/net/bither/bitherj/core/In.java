@@ -18,7 +18,6 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
-import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.message.Message;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.Utils;

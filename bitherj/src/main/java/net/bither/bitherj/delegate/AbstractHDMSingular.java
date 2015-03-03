@@ -180,7 +180,7 @@ public abstract class AbstractHDMSingular {
         }.start();
     }
 
-    protected void callInServer(AbstratHDMHotAdd.IGenerateHDMKeyChain generateHDMKeyChain) {
+    protected void callInServer(HDMHotAdd.IGenerateHDMKeyChain generateHDMKeyChain) {
         String preSign;
         try {
             preSign = hdmBid.getPreSignString();

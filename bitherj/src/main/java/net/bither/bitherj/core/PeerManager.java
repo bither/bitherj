@@ -232,7 +232,7 @@ public class PeerManager {
                 peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect()));
             }
         }
-        log.info("{} totalpeers", peers.size() );
+        log.info("{} totalpeers", peers.size());
         return peers;
     }
 
@@ -1057,7 +1057,7 @@ public class PeerManager {
         }
     }
 
-    public boolean isSynchronizing(){
+    public boolean isSynchronizing() {
         return synchronizing;
     }
 

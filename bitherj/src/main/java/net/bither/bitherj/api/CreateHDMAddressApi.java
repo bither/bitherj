@@ -22,6 +22,7 @@ import net.bither.bitherj.api.http.HttpsPostResponse;
 import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.utils.Base64;
 import net.bither.bitherj.utils.Utils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

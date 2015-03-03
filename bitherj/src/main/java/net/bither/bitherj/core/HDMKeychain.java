@@ -4,7 +4,6 @@ package net.bither.bitherj.core;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
-import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.api.CreateHDMAddressApi;
 import net.bither.bitherj.crypto.ECKey;

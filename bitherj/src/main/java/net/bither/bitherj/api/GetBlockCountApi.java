@@ -21,15 +21,15 @@ import net.bither.bitherj.api.http.HttpGetResponse;
 
 public class GetBlockCountApi extends HttpGetResponse<Long> {
 
-	public GetBlockCountApi() {
-		setUrl(BitherUrl.BITHER_Q_GETBLOCK_COUNT_URL);
+    public GetBlockCountApi() {
+        setUrl(BitherUrl.BITHER_Q_GETBLOCK_COUNT_URL);
 
-	}
+    }
 
-	@Override
-	public void setResult(String response) throws Exception {
-		this.result = Long.valueOf(response);
+    @Override
+    public void setResult(String response) throws Exception {
+        this.result = Long.valueOf(response);
 
-	}
+    }
 
 }

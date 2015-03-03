@@ -30,14 +30,13 @@ import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
 
-
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 
-public abstract class HDMSingular  {
+public abstract class HDMSingular {
     public static interface HDMSingularUtilDelegate {
         public void setSingularModeAvailable(boolean available);
 
@@ -183,7 +182,7 @@ public abstract class HDMSingular  {
         }.start();
     }
 
-    protected void callInServer(@Nonnull AbstratHDMHotAdd.IGenerateHDMKeyChain generateHDMKeyChainDelegate) {
+    protected void callInServer(@Nonnull HDMHotAdd.IGenerateHDMKeyChain generateHDMKeyChainDelegate) {
         String preSign;
         try {
             preSign = hdmBid.getPreSignString();

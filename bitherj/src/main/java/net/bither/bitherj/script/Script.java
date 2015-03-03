@@ -334,7 +334,7 @@ public class Script {
                 && chunks.get(1).data != null
                 && chunks.get(1).data.length > 2) {
             return chunks.get(0).data;
-        }else {
+        } else {
             throw new ScriptException("Script did not match expected form: " + toString());
         }
     }

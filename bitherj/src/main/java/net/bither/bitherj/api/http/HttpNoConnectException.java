@@ -17,35 +17,35 @@
 package net.bither.bitherj.api.http;
 
 public class HttpNoConnectException extends HttpException {
-	private static final long serialVersionUID = 1L;
-	private String refuseError;
+    private static final long serialVersionUID = 1L;
+    private String refuseError;
 
-	public HttpNoConnectException(String msg, int statusCode) {
-		super(msg, statusCode);
+    public HttpNoConnectException(String msg, int statusCode) {
+        super(msg, statusCode);
 
-	}
+    }
 
-	public HttpNoConnectException(String msg, Exception cause, int statusCode) {
-		super(msg, cause, statusCode);
+    public HttpNoConnectException(String msg, Exception cause, int statusCode) {
+        super(msg, cause, statusCode);
 
-	}
+    }
 
-	public HttpNoConnectException(String msg, Exception cause) {
-		super(msg, cause);
+    public HttpNoConnectException(String msg, Exception cause) {
+        super(msg, cause);
 
-	}
+    }
 
-	public HttpNoConnectException(String msg) {
-		super(msg);
+    public HttpNoConnectException(String msg) {
+        super(msg);
 
-	}
+    }
 
-	public String getRefuseError() {
-		return refuseError;
-	}
+    public String getRefuseError() {
+        return refuseError;
+    }
 
-	public HttpNoConnectException setRefuseError(String refuseError) {
-		this.refuseError = refuseError;
-		return this;
-	}
+    public HttpNoConnectException setRefuseError(String refuseError) {
+        this.refuseError = refuseError;
+        return this;
+    }
 }

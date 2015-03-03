@@ -17,7 +17,6 @@ package net.bither.bitherj.crypto;
 
 import com.lambdaworks.crypto.SCrypt;
 
-import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -125,7 +124,7 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
 
         try {
             // Generate iv - each encryption call has a different iv.
-            byte[] iv=new byte[BLOCK_LENGTH];
+            byte[] iv = new byte[BLOCK_LENGTH];
             secureRandom.nextBytes(iv);
 
             ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, iv);

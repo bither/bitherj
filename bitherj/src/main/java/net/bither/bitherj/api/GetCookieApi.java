@@ -31,27 +31,27 @@ import java.util.List;
 
 public class GetCookieApi extends HttpPostResponse<String> {
 
-	private static final String TIME_STRING = "ts";
+    private static final String TIME_STRING = "ts";
 
-	public GetCookieApi() {
-		setUrl(BitherUrl.BITHER_GET_COOKIE_URL);
-		setHttpType(HttpType.GetBitherCookie);
-	}
+    public GetCookieApi() {
+        setUrl(BitherUrl.BITHER_GET_COOKIE_URL);
+        setHttpType(HttpType.GetBitherCookie);
+    }
 
-	@Override
-	public void setResult(String response) throws Exception {
-		this.result = response;
+    @Override
+    public void setResult(String response) throws Exception {
+        this.result = response;
 
-	}
+    }
 
-	@Override
-	public HttpEntity getHttpEntity() throws Exception {
-		long time = System.currentTimeMillis();
-		time = time / 1000 * 1000 + 215;
-		List<NameValuePair> params = new ArrayList<NameValuePair>();
-		params.add(new BasicNameValuePair(TIME_STRING, Long.toString(time)));
-		return new UrlEncodedFormEntity(params, HTTP.UTF_8);
+    @Override
+    public HttpEntity getHttpEntity() throws Exception {
+        long time = System.currentTimeMillis();
+        time = time / 1000 * 1000 + 215;
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new BasicNameValuePair(TIME_STRING, Long.toString(time)));
+        return new UrlEncodedFormEntity(params, HTTP.UTF_8);
 
-	}
+    }
 
 }

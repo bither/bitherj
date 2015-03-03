@@ -3,13 +3,10 @@ package net.bither.bitherj.api.http;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.api.ConnectHttps;
 
-import javax.net.ssl.HttpsURLConnection;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 
 public abstract class BaseHttpsResponse<T> {
     private static boolean isTrust = false;
