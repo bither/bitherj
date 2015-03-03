@@ -876,7 +876,7 @@ public class Utils {
     }
 
     public static boolean validPassword(CharSequence password) {
-        String pattern = "[0-9,a-z,A-Z]+";
+        String pattern = "[0-9a-zA-Z`~!@#$%^&*()_\\-+=|{}':;',\\[\\].\\\\\"<>/?]+";
         Pattern p = Pattern.compile(pattern);
         Matcher m = p.matcher(password);
         //TODO jjz allow symbols for password
