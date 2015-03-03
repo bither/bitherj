@@ -37,7 +37,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 public abstract class HDMSingular {
-    public static interface HDMSingularUtilDelegate {
+    public static interface HDMSingularDelegate {
         public void setSingularModeAvailable(boolean available);
 
         public void onSingularModeBegin();
@@ -54,7 +54,7 @@ public abstract class HDMSingular {
     }
 
 
-    private HDMSingularUtilDelegate delegate;
+    private HDMSingularDelegate delegate;
 
 
     private boolean running;
@@ -75,7 +75,7 @@ public abstract class HDMSingular {
     private String coldQr;
 
 
-    public HDMSingular(@Nonnull HDMSingularUtilDelegate delegate) {
+    public HDMSingular(@Nonnull HDMSingularDelegate delegate) {
         this.delegate = delegate;
         if (AddressManager.getInstance().getHdmKeychain() == null) {
             delegate.setSingularModeAvailable(true);
