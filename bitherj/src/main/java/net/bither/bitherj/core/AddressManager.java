@@ -429,4 +429,41 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return this.addressHashSet.containsAll(addresses);
     }
 
+
+    public static boolean isPrivateLimit() {
+        int maxPrivateKey = AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD ?
+                BitherjSettings.WATCH_ONLY_ADDRESS_COUNT_LIMIT
+                : BitherjSettings.PRIVATE_KEY_OF_HOT_COUNT_LIMIT;
+        return AddressManager.getInstance().getPrivKeyAddresses() != null
+                && AddressManager.getInstance().getPrivKeyAddresses().size() >= maxPrivateKey;
+    }
+
+    public static boolean isWatchOnlyLimit() {
+        return AddressManager.getInstance().getWatchOnlyAddresses() != null
+                && AddressManager.getInstance().getWatchOnlyAddresses().size() >= BitherjSettings
+                .WATCH_ONLY_ADDRESS_COUNT_LIMIT;
+    }
+
+    public static boolean isHDMKeychainLimit() {
+        if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
+            return AddressManager.getInstance().getHdmKeychain() != null;
+        } else {
+            if (AddressManager.getInstance().getHdmKeychain() == null) {
+                return false;
+            }
+            return AddressManager.getInstance().getHdmKeychain().getAllCompletedAddresses().size() > 0;
+        }
+    }
+
+
+    public static boolean isHDMAddressLimit() {
+        if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
+            return true;
+        }
+        if (AddressManager.getInstance().getHdmKeychain() == null) {
+            return false;
+        }
+        return AddressManager.getInstance().getHdmKeychain().getAllCompletedAddresses().size() >= BitherjSettings.HDM_ADDRESS_PER_SEED_COUNT_LIMIT;
+    }
+
 }
