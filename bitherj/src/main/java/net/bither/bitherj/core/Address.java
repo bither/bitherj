@@ -444,8 +444,9 @@ public class Address implements Comparable<Address> {
         this.alias = alias;
     }
 
-    public void updateAlias() {
-        AbstractDb.addressProvider.updateAlias(getAddress(), getAlias());
+    public void updateAlias(String alias) {
+        this.alias = alias;
+        AbstractDb.addressProvider.updateAlias(getAddress(), this.alias);
     }
 
     public void removeAlias() {
