@@ -8,6 +8,8 @@ import net.bither.bitherj.crypto.PasswordSeed;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 public interface IAddressProvider {
     // password
     public boolean changePassword(CharSequence oldPassword, CharSequence newPassword);
@@ -74,4 +76,7 @@ public interface IAddressProvider {
 
     public void updateSyncComplete(Address address);
 
+    // alias
+    public String getAlias(String address);
+    public void updateAlias(String address, @Nullable String alias);
 }

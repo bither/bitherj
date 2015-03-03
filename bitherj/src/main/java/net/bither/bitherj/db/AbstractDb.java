@@ -91,6 +91,9 @@ public abstract class AbstractDb {
     public static final String CREATE_HDM_BID_SQL = "create table if not exists hdm_bid " +
             "(hdm_bid text not null primary key" +
             ", encrypt_bither_password text not null);";
+    public static final String CREATE_ALIASES_SQL = "create table if not exists aliases " +
+            "(address text not null primary key" +
+            ", alias text not null);";
 
     public static final String CREATE_BLOCK_NO_INDEX = "create index idx_blocks_block_no on blocks (block_no);";
     public static final String CREATE_BLOCK_PREV_INDEX = "create index idx_blocks_block_prev on blocks (block_prev);";
@@ -132,6 +135,7 @@ public abstract class AbstractDb {
         public static final String HDMAddresses = "hdm_addresses";
         public static final String HDM_BID = "hdm_bid";
         public static final String PASSWORD_SEED = "password_seed";
+        public static final String Aliases = "aliases";
     }
 
     public interface BlocksColumns {
@@ -221,5 +225,10 @@ public abstract class AbstractDb {
     public interface HDMBIdColumns {
         public static final String HDM_BID = "hdm_bid";
         public static final String ENCRYPT_BITHER_PASSWORD = "encrypt_bither_password";
+    }
+
+    public interface AliasColumns {
+        public static final String ADDRESS = "address";
+        public static final String ALIAS = "alias";
     }
 }
