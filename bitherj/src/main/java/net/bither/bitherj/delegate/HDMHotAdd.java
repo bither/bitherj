@@ -86,7 +86,7 @@ public abstract class HDMHotAdd implements IPasswordGetterDelegate {
 
     public abstract void xrandomResult();
 
-    protected void initHDMBidFromColdRoot() {
+    public void initHDMBidFromColdRoot() {
         if (hdmBid != null) {
             return;
         }
