@@ -54,6 +54,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         synchronized (lock) {
             initAddress();
             initHDMKeychain();
+            initAlias();
             AbstractApp.addressIsReady = true;
             AbstractApp.notificationService.sendBroadcastAddressLoadCompleteState();
         }
@@ -61,6 +62,25 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
 
     public static AddressManager getInstance() {
         return uniqueInstance;
+    }
+
+    private void initAlias() {
+        Map<String, String> addressAlias = AbstractDb.addressProvider.getAliases();
+        if (addressAlias.size() == 0) {
+            return;
+        }
+        for (Address address : privKeyAddresses) {
+            String alias = addressAlias.get(address.getAddress());
+            address.setAlias(alias);
+        }
+        for (Address address : watchOnlyAddresses) {
+            String alias = addressAlias.get(address.getAddress());
+            address.setAlias(alias);
+        }
+        for (HDMAddress address : hdmKeychain.getAllCompletedAddresses()) {
+            String alias = addressAlias.get(address.getAddress());
+            address.setAlias(alias);
+        }
     }
 
     private void initAddress() {

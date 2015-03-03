@@ -57,6 +57,7 @@ public class Address implements Comparable<Address> {
     private long balance = 0;
     private boolean isFromXRandom;
     private boolean isTrashed = false;
+    private String alias;
 
     public Address(String address, byte[] pubKey, String encryptString, boolean isFromXRandom) {
         this(address, pubKey, AddressManager.getInstance().getSortTime(!Utils.isEmpty(encryptString))
@@ -434,4 +435,21 @@ public class Address implements Comparable<Address> {
         AbstractDb.txProvider.remove(tx.getTxHash());
         return true;
     }
+
+    public String getAlias() {
+        return alias;
+    }
+
+    public void setAlias(String alias) {
+        this.alias = alias;
+    }
+
+    public void updateAlias() {
+        AbstractDb.addressProvider.updateAlias(getAddress(), getAlias());
+    }
+
+    public void removeAlias() {
+        AbstractDb.addressProvider.updateAlias(getAddress(), null);
+    }
+
 }

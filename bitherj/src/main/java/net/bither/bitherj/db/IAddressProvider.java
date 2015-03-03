@@ -7,6 +7,7 @@ import net.bither.bitherj.core.HDMKeychain;
 import net.bither.bitherj.crypto.PasswordSeed;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -78,5 +79,8 @@ public interface IAddressProvider {
 
     // alias
     public String getAlias(String address);
+
+    public Map<String, String> getAliases();
+
     public void updateAlias(String address, @Nullable String alias);
 }
