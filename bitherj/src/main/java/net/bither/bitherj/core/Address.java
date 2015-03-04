@@ -450,6 +450,7 @@ public class Address implements Comparable<Address> {
     }
 
     public void removeAlias() {
+        this.alias = null;
         AbstractDb.addressProvider.updateAlias(getAddress(), null);
     }
 
