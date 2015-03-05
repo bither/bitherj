@@ -120,7 +120,7 @@ public class PrivateKeyUtil {
         if (d.equals(decrypted)) {
             log.info("BIP38 right");
         } else {
-            log.info("BIP38 wrong {}, {}", d.toString(), decrypted.toString());
+            throw new RuntimeException("BIP38 wrong " + d.toString() + " , " + decrypted.toString());
         }
         decrypted.wipe();
         return bip38;
