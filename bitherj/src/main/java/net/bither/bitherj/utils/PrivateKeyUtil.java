@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.utils;
 
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.core.HDMKeychain;
@@ -116,11 +117,14 @@ public class PrivateKeyUtil {
         SecureCharSequence decrypted = getDecryptPrivateKeyString(address.getFullEncryptPrivKey()
                 , password);
         String bip38 = Bip38.encryptNoEcMultiply(password, decrypted.toString());
-        SecureCharSequence d = Bip38.decrypt(bip38, password);
-        if (d.equals(decrypted)) {
-            log.info("BIP38 right");
-        } else {
-            throw new RuntimeException("BIP38 wrong " + d.toString() + " , " + decrypted.toString());
+        if (BitherjSettings.DEV_DEBUG) {
+            SecureCharSequence d = Bip38.decrypt(bip38, password);
+            if (d.equals(decrypted)) {
+                log.info("BIP38 right");
+            } else {
+                throw new RuntimeException("BIP38 wrong " + d.toString() + " , " +
+                        "" + decrypted.toString());
+            }
         }
         decrypted.wipe();
         return bip38;
