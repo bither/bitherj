@@ -65,6 +65,8 @@ public abstract class HDMSingular {
     private byte[] hotMnemonicSeed;
     private byte[] coldMnemonicSeed;
 
+    private EncryptedData encryptedColdMnemonicSeed;
+
     private String hotFirstAddress;
     private byte[] coldRoot;
     private DeterministicKey coldFirst;
@@ -154,10 +156,8 @@ public abstract class HDMSingular {
         coldMnemonicSeed = Arrays.copyOfRange(entropy, 32, 64);
         Utils.wipeBytes(entropy);
         initHotFirst();
-        EncryptedData coldEncryptedMnemonicSeed = new EncryptedData(coldMnemonicSeed, password,
-                xrandom);
-        coldQr = QRCodeUtil.HDM_QR_CODE_FLAG + PrivateKeyUtil.getFullencryptHDMKeyChain(xrandom,
-                coldEncryptedMnemonicSeed.toEncryptedString());
+        encryptedColdMnemonicSeed = new EncryptedData(coldMnemonicSeed, password, xrandom);
+        coldQr = QRCodeUtil.HDM_QR_CODE_FLAG + PrivateKeyUtil.getFullencryptHDMKeyChain(xrandom, encryptedColdMnemonicSeed.toEncryptedString());
     }
 
     public void cold() {
@@ -189,6 +189,7 @@ public abstract class HDMSingular {
         } catch (Exception e) {
             e.printStackTrace();
             password.wipe();
+            wipeCold();
             runOnUIThread(new Runnable() {
                 @Override
                 public void run() {
@@ -203,6 +204,7 @@ public abstract class HDMSingular {
         } catch (Exception e) {
             e.printStackTrace();
             password.wipe();
+            wipeCold();
             runOnUIThread(new Runnable() {
                 @Override
                 public void run() {
@@ -213,9 +215,9 @@ public abstract class HDMSingular {
         }
         try {
             HDMKeychain keychain = new HDMKeychain(hotMnemonicSeed, password);
+            //TODO save  encryptedColdMnemonicSeed.toEncryptedString();
             hdmBid.save();
             generateHDMKeyChainDelegate.generateHDMKeyChain(keychain);
-            //KeyUtil.setHDKeyChain(keychain);
             final int count = keychain.getCanAddHDMCount();
             if (count > 0) {
                 keychain.prepareAddresses(count, password, Arrays.copyOf(coldRoot,
@@ -246,8 +248,10 @@ public abstract class HDMSingular {
             generateHDMKeyChainDelegate.completeAddrees(as);
         } catch (MnemonicException.MnemonicLengthException e) {
             password.wipe();
+            wipeCold();
             throw new RuntimeException(e);
         }
+        wipeCold();
         password.wipe();
         runOnUIThread(new Runnable() {
             @Override
@@ -256,6 +260,10 @@ public abstract class HDMSingular {
             }
         });
 
+    }
+
+    private void wipeCold() {
+        Utils.wipeBytes(coldMnemonicSeed);
     }
 
     private void initHotFirst() {
