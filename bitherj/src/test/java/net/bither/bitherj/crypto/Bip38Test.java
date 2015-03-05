@@ -19,10 +19,12 @@ package net.bither.bitherj.crypto;
 import net.bither.bitherj.crypto.bip38.Bip38;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Utils;
+import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
-import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class Bip38Test {
 

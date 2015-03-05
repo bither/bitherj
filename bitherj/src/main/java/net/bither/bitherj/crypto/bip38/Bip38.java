@@ -57,8 +57,8 @@ public class Bip38 {
      */
     public static String encryptNoEcMultiply(CharSequence passphrase, String base58EncodedPrivateKey) throws InterruptedException, AddressFormatException {
         DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey(base58EncodedPrivateKey);
-        dumpedPrivateKey.clearPrivateKey();
         ECKey key = dumpedPrivateKey.getKey();
+        dumpedPrivateKey.clearPrivateKey();
         byte[] salt = Bip38.calculateScryptSalt(key.toAddress());
         byte[] stretchedKeyMaterial = bip38Stretch1(passphrase, salt, SCRYPT_LENGTH);
         return encryptNoEcMultiply(stretchedKeyMaterial, key, salt);
