@@ -517,17 +517,18 @@ public class HDMKeychain {
         if (isInRecovery()) {
             return true;
         }
+        if (getAllCompletedAddresses().size() == 0) {
+            return true;
+        }
         String backup = AbstractDb.addressProvider.getSingularModeBackup(getHdSeedId());
         if (backup == null) {
             return true;
         }
         EncryptedData encrypted = new EncryptedData(backup);
         byte[] mnemonic = encrypted.decrypt(password);
+        boolean result;
         try {
             byte[] seed = seedFromMnemonic(mnemonic);
-            if (getAllCompletedAddresses().size() == 0) {
-                return true;
-            }
             byte[] pub = getAllCompletedAddresses().get(0).getPubCold();
             DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(seed);
             DeterministicKey purpose = master.deriveHardened(44);
@@ -540,13 +541,15 @@ public class HDMKeychain {
             coinType.wipe();
             account.wipe();
             external.wipe();
-            boolean result = Arrays.equals(first.getPubKey(), pub);
+            Utils.wipeBytes(seed);
+            result = Arrays.equals(first.getPubKey(), pub);
             first.wipe();
-            return result;
         } catch (MnemonicException.MnemonicLengthException e) {
             e.printStackTrace();
-            return false;
+            result = false;
         }
+        Utils.wipeBytes(mnemonic);
+        return result;
     }
 
     public PasswordSeed createPasswordSeed(CharSequence password) {
