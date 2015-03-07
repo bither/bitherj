@@ -670,5 +670,7 @@ public class HDMKeychain {
                 uncompletedAddressCount();
     }
 
-
+    public void setSingularModeBackup(String singularModeBackup) {
+        AbstractDb.addressProvider.setSingularModeBackup(this.hdSeedId, singularModeBackup);
+    }
 }
