@@ -32,6 +32,10 @@ public interface IAddressProvider {
 
     public String getHDMFristAddress(int hdSeedId);
 
+    public String getSingularModeBackup(int hdSeedId);
+
+    public void setSingularModeBackup(int hdSeedId, String singularModeBackup);
+
     public int addHDKey(String encryptSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
 
     public HDMBId getHDMBId();

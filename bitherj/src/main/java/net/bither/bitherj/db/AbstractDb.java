@@ -78,7 +78,8 @@ public abstract class AbstractDb {
             ", encrypt_seed text not null" +
             ", encrypt_hd_seed text" +
             ", hdm_address text not null" +
-            ", is_xrandom integer not null);";
+            ", is_xrandom integer not null" +
+            ", singular_mode_backup text);";
     public static final String CREATE_HDM_ADDRESSES_SQL = "create table if not exists hdm_addresses " +
             "(hd_seed_id integer not null" +
             ", hd_seed_index integer not null" +
@@ -210,6 +211,7 @@ public abstract class AbstractDb {
         public static final String ENCRYPT_HD_SEED = "encrypt_HD_seed";
         public static final String IS_XRANDOM = "is_xrandom";
         public static final String HDM_ADDRESS = "hdm_address";
+        public static final String SINGULAR_MODE_BACKUP = "singular_mode_backup";
     }
 
     public interface HDMAddressesColumns {
