@@ -75,7 +75,7 @@ public class ECKeyTest {
                 Utils.hexStringToByteArray("026fd10f953a13ac14041460cd01eab3d665d140d1c978a01db4bc669bab9a77db"), Utils.hexStringToByteArray("03b5eceb6f5a9a12b8b7fe23ae6297bfdb46aeab39ab0ee89efd4068d251667ae0"));
         byte[] params = Utils.hexStringToByteArray("522102d8ed584a211a9195f0d580617c60398f82f58dcd5b104249737762656e62d52e21026fd10f953a13ac14041460cd01eab3d665d140d1c978a01db4bc669bab9a77db2103b5eceb6f5a9a12b8b7fe23ae6297bfdb46aeab39ab0ee89efd4068d251667ae053ae");
         Tx tx = new Tx(Utils.hexStringToByteArray("010000000196d607b6c1647a1cccd9db40e918627e4d5e190ba56a5663ccef5e1a8ecada0700000000fdfd0000473044022041b2a5f1965b060bbf484218ac1e3b7ced9ec908078ca4565f9c4eef4f0dfec902206c3f3a1320dac89fd1e58627a1208510328d618365dd033d90ce5230c40884fa01483045022100abd2696052faa6e707e02402b7c654d0ab3be7d1d7f14af541abf99eaf16e1fd02205da8e8e2c4a9795046aa4c380e6f1c005e6619b16f7182df37b54405eb28aedc014c69522102d8ed584a211a9195f0d580617c60398f82f58dcd5b104249737762656e62d52e21026fd10f953a13ac14041460cd01eab3d665d140d1c978a01db4bc669bab9a77db2103b5eceb6f5a9a12b8b7fe23ae6297bfdb46aeab39ab0ee89efd4068d251667ae053aeffffffff0128230000000000001976a914f307ea0809f5c60d42482e57dfdd78ed53df580688ac00000000"));
-        List<byte[]> signPubs = tx.getSignPubs(pubKeyS, params);
+        List<byte[]> signPubs = tx.getIns().get(0).getP2SHPubKeys();
         for (byte[] signs : signPubs) {
             boolean isPub = false;
             for (byte[] pubs : pubKeyS) {

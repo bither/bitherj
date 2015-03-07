@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -232,5 +233,10 @@ public class In extends Message {
             return getConnectedOut().getOutValue();
         }
         return 0;
+    }
+
+    public List<byte[]> getP2SHPubKeys() {
+        Script script = new Script(this.getInSignature());
+        return script.getP2SHPubKeys(this.tx, this.inSn);
     }
 }

@@ -1308,6 +1308,7 @@ public class Tx extends Message implements Comparable<Tx> {
         return isSign;
     }
 
+    @Deprecated
     public List<byte[]> getSignPubs(List<byte[]> pubKeys, byte[] params) {
 
         List<byte[]> pubs = new ArrayList<byte[]>();

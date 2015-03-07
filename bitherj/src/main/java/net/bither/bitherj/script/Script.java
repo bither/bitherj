@@ -578,6 +578,58 @@ public class Script {
         }
     }
 
+    public List<byte[]> getP2SHPubKeys(Tx tx, int index) {
+        if (!this.isSendFromMultiSig()) {
+            throw new ScriptException("[Script Error] is not send from multisig");
+        }
+
+        Script scriptPubKey = new Script(this.chunks.get(this.chunks.size() - 1).data);
+        int sigCount = scriptPubKey.chunks.get(0).opcode - 80;
+        int pubKeyCount = scriptPubKey.chunks.get(scriptPubKey.chunks.size() - 2).opcode - 80;
+        if (pubKeyCount < 0 || pubKeyCount > 20) {
+            throw new ScriptException("[Script Error] OP_CHECKMULTISIG(VERIFY) with pubkey count out of range");
+        }
+
+        List<byte[]> pubKeys = new ArrayList<byte[]>();
+
+        for (int i = 0; i < pubKeyCount; i++) {
+            pubKeys.add(scriptPubKey.chunks.get(i + 1).data);
+        }
+
+        if (sigCount < 0 || sigCount > pubKeyCount) {
+            throw new ScriptException("[Script Error] OP_CHECKMULTISIG(VERIFY) with sig count out of range");
+        }
+
+        List<byte[]> sigs = new ArrayList<byte[]>();
+        for (int i = 1; i < sigCount + 1; i++) {
+            sigs.add(this.chunks.get(i).data);
+        }
+
+        List<byte[]> result = new ArrayList<byte[]>();
+        while (sigs.size() > 0) {
+            byte[] pubKey = pubKeys.get(pubKeys.size() - 1);
+            pubKeys.remove(pubKeys.size() - 1);
+
+            byte[] sigBytes = sigs.get(sigs.size() - 1);
+
+            if (sigBytes.length > 0) {
+                TransactionSignature sig = TransactionSignature.decodeFromBitcoin(sigBytes, false);
+                byte[] hash = tx.hashForSignature(index, scriptPubKey.getProgram(), (byte) sig.sighashFlags);
+                boolean sigValid = ECKey.verify(hash, sig, pubKey);
+
+                if (sigValid) {
+                    result.add(pubKey);
+                    sigs.remove(sigs.size() - 1);
+                }
+            }
+            if (sigs.size() > pubKeys.size()) {
+                break;
+            }
+        }
+
+        return result;
+    }
+
     public int getNumberOfBytesRequiredToSpend(boolean isCompressed, @Nullable Script redeemScript) {
         if (isPayToScriptHash()) {
             // scriptSig: <sig> [sig] [sig...] <redeemscript>
