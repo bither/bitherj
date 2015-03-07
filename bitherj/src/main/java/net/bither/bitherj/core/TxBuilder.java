@@ -130,7 +130,7 @@ public class TxBuilder {
         size += inCount * (32 + 4 + 1 + sigScriptSize + 4);
 
         for (Out out : outs) {
-            size += 8 + out.getOutScript().length;
+            size += 8 + 1 + out.getOutScript().length;
         }
         return size;
     }
