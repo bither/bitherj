@@ -227,6 +227,11 @@ public class Tx extends Message implements Comparable<Tx> {
     }
 
     public List<In> getIns() {
+        for (In btIn : this.ins) {
+            if (btIn.getTx() == null) {
+                btIn.setTx(this);
+            }
+        }
         return ins;
     }
 
@@ -235,6 +240,11 @@ public class Tx extends Message implements Comparable<Tx> {
     }
 
     public List<Out> getOuts() {
+        for (Out out : this.outs) {
+            if (out.getTx() == null) {
+                out.setTx(this);
+            }
+        }
         return outs;
     }
 
