@@ -176,6 +176,12 @@ public class PeerManager {
         }
     }
 
+    public void clearPeerAndRestart() {
+        this.stop();
+        AbstractDb.peerProvider.recreate();
+        this.start();
+    }
+
     public long getLastBlockHeight() {
         Block lastBlock = BlockChain.getInstance().lastBlock;
         return lastBlock == null ? 0 : lastBlock.getBlockNo();
