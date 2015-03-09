@@ -191,6 +191,8 @@ public abstract class HDMSingular {
             e.printStackTrace();
             password.wipe();
             wipeCold();
+            isSingularMode = false;
+            running = false;
             runOnUIThread(new Runnable() {
                 @Override
                 public void run() {
@@ -206,6 +208,8 @@ public abstract class HDMSingular {
             e.printStackTrace();
             password.wipe();
             wipeCold();
+            isSingularMode = false;
+            running = false;
             runOnUIThread(new Runnable() {
                 @Override
                 public void run() {
@@ -250,10 +254,13 @@ public abstract class HDMSingular {
         } catch (MnemonicException.MnemonicLengthException e) {
             password.wipe();
             wipeCold();
+            isSingularMode = false;
+            running = false;
             throw new RuntimeException(e);
         }
         wipeCold();
         password.wipe();
+        running = false;
         runOnUIThread(new Runnable() {
             @Override
             public void run() {
