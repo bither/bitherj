@@ -513,6 +513,45 @@ public class HDMKeychain {
         }
     }
 
+    public boolean checkSingularBackupWithPassword(CharSequence password) {
+        if (isInRecovery()) {
+            return true;
+        }
+        if (getAllCompletedAddresses().size() == 0) {
+            return true;
+        }
+        String backup = AbstractDb.addressProvider.getSingularModeBackup(getHdSeedId());
+        if (backup == null) {
+            return true;
+        }
+        EncryptedData encrypted = new EncryptedData(backup);
+        byte[] mnemonic = encrypted.decrypt(password);
+        boolean result;
+        try {
+            byte[] seed = seedFromMnemonic(mnemonic);
+            byte[] pub = getAllCompletedAddresses().get(0).getPubCold();
+            DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(seed);
+            DeterministicKey purpose = master.deriveHardened(44);
+            DeterministicKey coinType = purpose.deriveHardened(0);
+            DeterministicKey account = coinType.deriveHardened(0);
+            DeterministicKey external = account.deriveSoftened(0);
+            DeterministicKey first = external.deriveSoftened(0);
+            master.wipe();
+            purpose.wipe();
+            coinType.wipe();
+            account.wipe();
+            external.wipe();
+            Utils.wipeBytes(seed);
+            result = Arrays.equals(first.getPubKey(), pub);
+            first.wipe();
+        } catch (MnemonicException.MnemonicLengthException e) {
+            e.printStackTrace();
+            result = false;
+        }
+        Utils.wipeBytes(mnemonic);
+        return result;
+    }
+
     public PasswordSeed createPasswordSeed(CharSequence password) {
         if (isInRecovery()) {
             throw new AssertionError("HDM in recovery can not create passwordSeed");
