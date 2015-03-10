@@ -16,17 +16,23 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.api.*;
+import net.bither.bitherj.api.CreateHDMAddressApi;
+import net.bither.bitherj.api.GetHDMBIdRandomApi;
+import net.bither.bitherj.api.RecoveryHDMApi;
+import net.bither.bitherj.api.SignatureHDMApi;
+import net.bither.bitherj.api.UploadHDMBidApi;
 import net.bither.bitherj.core.https.HttpsTest;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.utils.Utils;
+
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class HDMIdTest {
     private static final Logger log = LoggerFactory.getLogger(HDMIdTest.class);
@@ -45,7 +51,7 @@ public class HDMIdTest {
                 decryptedPassword[i] = 0;
             }
 
-            String message = Utils.format(HDMBId.BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), randomKey);
+            String message = Utils.format(HDMBId.BITID_STRING, address, Utils.bytesToHexString(decryptedPassword).toLowerCase(Locale.US), randomKey);
             byte[] hash = Utils.getPreSignMessage(message);
             byte[] signBytes = ecKey.signHash(hash, null);
             UploadHDMBidApi uploadHDMBidApi = new UploadHDMBidApi(address, address, signBytes, decryptedPassword);
@@ -65,9 +71,9 @@ public class HDMIdTest {
                  i++) {
                 HDMAddress.Pubs pubss = pubsList.get(i);
                 pubss.remote = remotePubs.get(i);
-                System.out.println("hot:"+Utils.bytesToHexString(pubss.hot));
-                System.out.println("cold:"+Utils.bytesToHexString(pubss.cold));
-                System.out.println("remote:"+Utils.bytesToHexString(pubss.remote));
+                System.out.println("hot:" + Utils.bytesToHexString(pubss.hot));
+                System.out.println("cold:" + Utils.bytesToHexString(pubss.cold));
+                System.out.println("remote:" + Utils.bytesToHexString(pubss.remote));
                 System.out.println("create,Address:" + pubss.getAddress());
             }
 
@@ -88,7 +94,7 @@ public class HDMIdTest {
             HttpsTest.trust();
             ECKey ecKey = new DumpedPrivateKey("L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1").getKey();
             String address = ecKey.toAddress();
-            System.out.println("eckey:"+address);
+            System.out.println("eckey:" + address);
             byte[] decryptedPassword = new byte[32];
             for (int i = 0; i < decryptedPassword.length; i++) {
                 decryptedPassword[i] = 0;
@@ -96,16 +102,16 @@ public class HDMIdTest {
             GetHDMBIdRandomApi getHDMBIdRandomApi = new GetHDMBIdRandomApi(address);
             getHDMBIdRandomApi.handleHttpGet();
             long randomKey = getHDMBIdRandomApi.getResult();
-            String message = Utils.format(HDMBId.BITID_STRING, address, Utils.bytesToHexString(decryptedPassword), randomKey);
+            String message = Utils.format(HDMBId.BITID_STRING, address, Utils.bytesToHexString(decryptedPassword).toLowerCase(Locale.US), randomKey);
             byte[] hash = Utils.getPreSignMessage(message);
             byte[] signBytes = ecKey.signHash(hash, null);
             RecoveryHDMApi recoveryHDMApi = new RecoveryHDMApi(address, signBytes, decryptedPassword);
             recoveryHDMApi.handleHttpPost();
             List<HDMAddress.Pubs> pubses = recoveryHDMApi.getResult();
             for (HDMAddress.Pubs pubs : pubses) {
-                System.out.println("hot:"+Utils.bytesToHexString(pubs.hot));
-                System.out.println("cold:"+Utils.bytesToHexString(pubs.cold));
-                System.out.println("remote:"+Utils.bytesToHexString(pubs.remote));
+                System.out.println("hot:" + Utils.bytesToHexString(pubs.hot));
+                System.out.println("cold:" + Utils.bytesToHexString(pubs.cold));
+                System.out.println("remote:" + Utils.bytesToHexString(pubs.remote));
                 System.out.println("address:" + pubs.getAddress());
             }
         } catch (Exception e) {

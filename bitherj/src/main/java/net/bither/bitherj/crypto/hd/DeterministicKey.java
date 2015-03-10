@@ -50,10 +50,14 @@ public class DeterministicKey extends ECKey {
     private final DeterministicKey parent;
     private final ImmutableList<ChildNumber> childNumberPath;
 
-    /** 32 bytes */
+    /**
+     * 32 bytes
+     */
     private final byte[] chainCode;
 
-    /** Constructs a key from its components. This is not normally something you should use. */
+    /**
+     * Constructs a key from its components. This is not normally something you should use.
+     */
     public DeterministicKey(ImmutableList<ChildNumber> childNumberPath,
                             byte[] chainCode,
                             ECPoint publicAsPoint,
@@ -78,7 +82,9 @@ public class DeterministicKey extends ECKey {
         this.chainCode = Arrays.copyOf(chainCode, chainCode.length);
     }
 
-    /** Constructs a key from its components. This is not normally something you should use. */
+    /**
+     * Constructs a key from its components. This is not normally something you should use.
+     */
     public DeterministicKey(ImmutableList<ChildNumber> childNumberPath,
                             byte[] chainCode,
                             BigInteger priv,
@@ -110,7 +116,9 @@ public class DeterministicKey extends ECKey {
         return childNumberPath.size();
     }
 
-    /** Returns the last element of the path returned by {@link net.bither.bitherj.crypto.hd.DeterministicKey#getPath()} */
+    /**
+     * Returns the last element of the path returned by {@link net.bither.bitherj.crypto.hd.DeterministicKey#getPath()}
+     */
     public ChildNumber getChildNumber() {
         return getDepth() == 0 ? ChildNumber.ZERO : childNumberPath.get(childNumberPath.size() - 1);
     }
@@ -129,7 +137,9 @@ public class DeterministicKey extends ECKey {
         return new Sha256Hash(getPubKey()).getBytes();
     }
 
-    /** Returns the first 32 bits of the result of {@link #getIdentifier()}. */
+    /**
+     * Returns the first 32 bits of the result of {@link #getIdentifier()}.
+     */
     public byte[] getFingerprint() {
         // TODO: why is this different than armory's fingerprint? BIP 32: "The first 32 bits of the identifier are called the fingerprint."
         return Arrays.copyOfRange(getIdentifier(), 0, 4);
@@ -142,6 +152,7 @@ public class DeterministicKey extends ECKey {
 
     /**
      * Returns private key bytes, padded with zeros to 33 bytes.
+     *
      * @throws IllegalStateException if the private key bytes are missing.
      */
     public byte[] getPrivKeyBytes33() {
@@ -199,7 +210,8 @@ public class DeterministicKey extends ECKey {
     /**
      * Returns this keys {@link net.bither.bitherj.crypto.KeyCrypter} <b>or</b> the keycrypter of its parent key.
      */
-    @Override @Nullable
+    @Override
+    @Nullable
     public KeyCrypter getKeyCrypter() {
         if (keyCrypter != null)
             return keyCrypter;
@@ -295,6 +307,7 @@ public class DeterministicKey extends ECKey {
     /**
      * Returns the private key of this deterministic key. Even if this object isn't storing the private key,
      * it can be re-derived by walking up to the parents if necessary and this is what will happen.
+     *
      * @throws IllegalStateException if the parents are encrypted or a watching chain.
      */
     public BigInteger getPrivKey() {
@@ -350,20 +363,20 @@ public class DeterministicKey extends ECKey {
         Utils.wipeBytes(chainCode);
     }
 
-    public byte[] getPubKeyExtended(){
+    public byte[] getPubKeyExtended() {
         byte[] pub = getPubKey();
         byte[] chainCode = getChainCode();
         byte[] extended = new byte[pub.length + chainCode.length];
-        for(int i = 0; i < pub.length; i++){
+        for (int i = 0; i < pub.length; i++) {
             extended[i] = pub[i];
         }
-        for(int i = 0; i < chainCode.length; i++){
+        for (int i = 0; i < chainCode.length; i++) {
             extended[i + pub.length] = chainCode[i];
         }
         return extended;
     }
 
-    public void wipe(){
+    public void wipe() {
         clearPrivateKey();
         clearChainCode();
         Utils.wipeBytes(pub);

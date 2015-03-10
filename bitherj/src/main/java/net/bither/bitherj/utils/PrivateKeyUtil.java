@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.utils;
 
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.core.HDMKeychain;
@@ -27,6 +28,8 @@ import net.bither.bitherj.crypto.KeyCrypter;
 import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.KeyCrypterScrypt;
 import net.bither.bitherj.crypto.SecureCharSequence;
+import net.bither.bitherj.crypto.bip38.Bip38;
+import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.qrcode.SaltForQRCode;
 
@@ -107,7 +110,24 @@ public class PrivateKeyUtil {
         }
         Utils.wipeBytes(decrypted);
         return new DecryptedECKey(ecKey, privateKeyText);
+    }
 
+    public static String getBIP38PrivateKeyString(Address address, CharSequence password) throws
+            AddressFormatException, InterruptedException {
+        SecureCharSequence decrypted = getDecryptPrivateKeyString(address.getFullEncryptPrivKey()
+                , password);
+        String bip38 = Bip38.encryptNoEcMultiply(password, decrypted.toString());
+        if (BitherjSettings.DEV_DEBUG) {
+            SecureCharSequence d = Bip38.decrypt(bip38, password);
+            if (d.equals(decrypted)) {
+                log.info("BIP38 right");
+            } else {
+                throw new RuntimeException("BIP38 wrong " + d.toString() + " , " +
+                        "" + decrypted.toString());
+            }
+        }
+        decrypted.wipe();
+        return bip38;
     }
 
     public static SecureCharSequence getDecryptPrivateKeyString(String str, CharSequence password) {

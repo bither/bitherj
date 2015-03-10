@@ -19,6 +19,8 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.TxBuilderException;
+import net.bither.bitherj.script.Script;
+import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.Utils;
 
 import java.math.BigInteger;
@@ -43,7 +45,14 @@ public class TxBuilder {
     }
 
     public Tx buildTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
-        if(Utils.isEmpty(changeAddress)){
+        Script scriptPubKey = null;
+        if (address.isHDM()) {
+            scriptPubKey = new Script(address.getPubKey());
+        } else {
+            scriptPubKey = ScriptBuilder.createOutputScript(address.address);
+        }
+
+        if (Utils.isEmpty(changeAddress)) {
             changeAddress = address.getAddress();
         }
         long value = 0;
@@ -64,7 +73,7 @@ public class TxBuilder {
         }
 
         Tx emptyWalletTx = emptyWallet.buildTx(address, changeAddress, unspendTxs, prepareTx(amounts, addresses));
-        if (emptyWalletTx != null && estimationTxSize(emptyWalletTx.getIns().size(), emptyWalletTx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
+        if (emptyWalletTx != null && TxBuilder.estimationTxSize(emptyWalletTx.getIns().size(), scriptPubKey, emptyWalletTx.getOuts(), address.isCompressed()) <= BitherjSettings.MAX_TX_SIZE) {
             return emptyWalletTx;
         } else if (emptyWalletTx != null) {
             throw new TxBuilderException(TxBuilderException.ERR_REACH_MAX_TX_SIZE_LIMIT_CODE);
@@ -80,7 +89,7 @@ public class TxBuilder {
         List<Tx> txs = new ArrayList<Tx>();
         for (TxBuilderProtocol builder : this.txBuilders) {
             Tx tx = builder.buildTx(address, changeAddress, unspendTxs, prepareTx(amounts, addresses));
-            if (tx != null && estimationTxSize(tx.getIns().size(), tx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
+            if (tx != null && TxBuilder.estimationTxSize(tx.getIns().size(), scriptPubKey, tx.getOuts(), address.isCompressed()) <= BitherjSettings.MAX_TX_SIZE) {
                 txs.add(tx);
             } else if (tx != null) {
                 mayMaxTxSize = true;
@@ -106,6 +115,24 @@ public class TxBuilder {
 
     static int estimationTxSize(int inCount, int outCount) {
         return 10 + 149 * inCount + 34 * outCount;
+    }
+
+    static int estimationTxSize(int inCount, Script scriptPubKey, List<Out> outs, boolean isCompressed) {
+        int size = 8 + 2;
+
+        Script redeemScript = null;
+        if (scriptPubKey.isMultiSigRedeem()) {
+            redeemScript = scriptPubKey;
+            scriptPubKey = ScriptBuilder.createP2SHOutputScript(redeemScript);
+        }
+
+        int sigScriptSize = scriptPubKey.getNumberOfBytesRequiredToSpend(isCompressed, redeemScript);
+        size += inCount * (32 + 4 + 1 + sigScriptSize + 4);
+
+        for (Out out : outs) {
+            size += 8 + 1 + out.getOutScript().length;
+        }
+        return size;
     }
 
     static boolean needMinFee(List<Out> amounts) {
@@ -164,6 +191,12 @@ interface TxBuilderProtocol {
 
 class TxBuilderEmptyWallet implements TxBuilderProtocol {
     public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx) {
+        Script scriptPubKey = null;
+        if (address.isHDM()) {
+            scriptPubKey = new Script(address.getPubKey());
+        } else {
+            scriptPubKey = ScriptBuilder.createOutputScript(address.address);
+        }
 
         List<Out> outs = TxBuilder.getCanSpendOuts(unspendTxs);
         List<Out> unspendOuts = TxBuilder.getUnspendOuts(unspendTxs);
@@ -183,13 +216,13 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
             fees = Utils.getFeeBase();
         } else {
             // no fee logic
-            int s = TxBuilder.estimationTxSize(outs.size(), tx.getOuts().size());
+            int s = TxBuilder.estimationTxSize(outs.size(), scriptPubKey, tx.getOuts(), address.isCompressed());
             if (TxBuilder.getCoinDepth(outs) <= TxBuilder.TX_FREE_MIN_PRIORITY * s) {
                 fees = Utils.getFeeBase();
             }
         }
 
-        int size = TxBuilder.estimationTxSize(outs.size(), tx.getOuts().size());
+        int size = TxBuilder.estimationTxSize(outs.size(), scriptPubKey, tx.getOuts(), address.isCompressed());
         if (size > 1000) {
             fees = (size / 1000 + 1) * Utils.getFeeBase();
         }
@@ -214,6 +247,13 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 
 class TxBuilderDefault implements TxBuilderProtocol {
     public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx) {
+        Script scriptPubKey = null;
+        if (address.isHDM()) {
+            scriptPubKey = new Script(address.getPubKey());
+        } else {
+            scriptPubKey = ScriptBuilder.createOutputScript(address.address);
+        }
+
         List<Out> outs = TxBuilder.getUnspendOuts(unspendTxs);
 
         Collections.sort(outs, new Comparator<Out>() {
@@ -227,13 +267,12 @@ class TxBuilderDefault implements TxBuilderProtocol {
                         return 1;
                     else
                         return -1;
-                } else if (out1.getOutValue() != out2.getOutValue()){
+                } else if (out1.getOutValue() != out2.getOutValue()) {
                     if (out2.getOutValue() > out1.getOutValue())
                         return 1;
                     else
                         return -1;
-                }
-                else {
+                } else {
                     BigInteger hash1 = new BigInteger(1, out1.getTxHash());
                     BigInteger hash2 = new BigInteger(1, out2.getTxHash());
                     int result = hash1.compareTo(hash2);
@@ -293,7 +332,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
                     needAtLeastReferenceFee = true;
                     continue;
                 }
-                int s = TxBuilder.estimationTxSize(selectedOuts.size(), tx.getOuts().size());
+                int s = TxBuilder.estimationTxSize(selectedOuts.size(), scriptPubKey, tx.getOuts(), address.isCompressed());
                 if (total - value > Utils.CENT)
                     s += 34;
                 if (TxBuilder.getCoinDepth(selectedOuts) <= TxBuilder.TX_FREE_MIN_PRIORITY * s) {
@@ -342,8 +381,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
                     additionalValueForNextCategory = Utils.getFeeBase() + 1;
                 }
             }
-
-            size += TxBuilder.estimationTxSize(selectedOuts.size(), tx.getOuts().size());
+            size += TxBuilder.estimationTxSize(selectedOuts.size(), scriptPubKey, tx.getOuts(), address.isCompressed());
             if (size / 1000 > lastCalculatedSize / 1000 && Utils.getFeeBase() > 0) {
                 lastCalculatedSize = size;
                 // We need more fees anyway, just try again with the same additional value

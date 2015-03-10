@@ -19,6 +19,7 @@ package net.bither.bitherj.api;
 import net.bither.bitherj.api.http.BitherUrl;
 import net.bither.bitherj.api.http.HttpsGetResponse;
 import net.bither.bitherj.utils.Utils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

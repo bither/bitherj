@@ -57,6 +57,7 @@ public class Address implements Comparable<Address> {
     private long balance = 0;
     private boolean isFromXRandom;
     private boolean isTrashed = false;
+    private String alias;
 
     public Address(String address, byte[] pubKey, String encryptString, boolean isFromXRandom) {
         this(address, pubKey, AddressManager.getInstance().getSortTime(!Utils.isEmpty(encryptString))
@@ -265,8 +266,13 @@ public class Address implements Comparable<Address> {
         return PrivateKeyUtil.formatEncryptPrivateKeyForDb(this.encryptPrivKey);
     }
 
+    public String getFullEncryptPrivKeyOfDb() {
+        return PrivateKeyUtil.getFullencryptPrivateKey(Address.this
+                , this.encryptPrivKey);
+    }
+
     public void recoverFromBackup(String encryptPriv) {
-        AbstractDb.addressProvider.updatePrivateKey(getAddress(),encryptPriv);
+        AbstractDb.addressProvider.updatePrivateKey(getAddress(), encryptPriv);
     }
 
     public String getFullEncryptPrivKey() {
@@ -371,7 +377,7 @@ public class Address implements Comparable<Address> {
     public boolean checkRValues() {
         HashSet<BigInteger> rs = new HashSet<BigInteger>();
         for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
-            if (in.getInSignature() != null) {
+            if (in.getInSignature() != null && !in.isCoinBase()) {
                 Script script = new Script(in.getInSignature());
                 if (script.getFromAddress().equals(this.address)) {
                     for (byte[] data : script.getSigs()) {
@@ -390,7 +396,7 @@ public class Address implements Comparable<Address> {
     public boolean checkRValuesForTx(Tx tx) {
         HashSet<BigInteger> rs = new HashSet<BigInteger>();
         for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
-            if (in.getInSignature() != null) {
+            if (in.getInSignature() != null && !in.isCoinBase()) {
                 Script script = new Script(in.getInSignature());
                 if (script.getFromAddress().equals(this.address)) {
                     for (byte[] data : script.getSigs()) {
@@ -429,4 +435,23 @@ public class Address implements Comparable<Address> {
         AbstractDb.txProvider.remove(tx.getTxHash());
         return true;
     }
+
+    public String getAlias() {
+        return alias;
+    }
+
+    public void setAlias(String alias) {
+        this.alias = alias;
+    }
+
+    public void updateAlias(String alias) {
+        this.alias = alias;
+        AbstractDb.addressProvider.updateAlias(getAddress(), this.alias);
+    }
+
+    public void removeAlias() {
+        this.alias = null;
+        AbstractDb.addressProvider.updateAlias(getAddress(), null);
+    }
+
 }

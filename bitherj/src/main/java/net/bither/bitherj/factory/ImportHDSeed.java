@@ -16,7 +16,6 @@
 
 package net.bither.bitherj.factory;
 
-import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.core.HDMKeychain;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.PasswordSeed;

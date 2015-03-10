@@ -4,6 +4,7 @@ package net.bither.bitherj.core;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.api.CreateHDMAddressApi;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
@@ -105,6 +106,7 @@ public class HDMKeychain {
                 encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
                 firstAddress = getFirstAddressFromSeed(password);
             } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         ECKey k = new ECKey(mnemonicSeed, null);
@@ -457,20 +459,6 @@ public class HDMKeychain {
         return AbstractDb.addressProvider.getEncryptSeed(hdSeedId).toUpperCase();
     }
 
-    public void changePassword(CharSequence oldPassword, CharSequence newPassword) throws
-            MnemonicException.MnemonicLengthException {
-        if (isInRecovery()) {
-            return;
-        }
-        decryptMnemonicSeed(oldPassword);
-        hdSeed = seedFromMnemonic(mnemonicSeed);
-        AbstractDb.addressProvider.setEncryptSeed(getHdSeedId(), new EncryptedData(mnemonicSeed,
-                newPassword, isFromXRandom).toEncryptedString(), new EncryptedData(hdSeed,
-                newPassword, isFromXRandom).toEncryptedString());
-        wipeMnemonicSeed();
-        wipeHDSeed();
-    }
-
     public List<String> getSeedWords(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         decryptMnemonicSeed(password);
@@ -525,6 +513,45 @@ public class HDMKeychain {
         }
     }
 
+    public boolean checkSingularBackupWithPassword(CharSequence password) {
+        if (isInRecovery()) {
+            return true;
+        }
+        if (getAllCompletedAddresses().size() == 0) {
+            return true;
+        }
+        String backup = AbstractDb.addressProvider.getSingularModeBackup(getHdSeedId());
+        if (backup == null) {
+            return true;
+        }
+        EncryptedData encrypted = new EncryptedData(backup);
+        byte[] mnemonic = encrypted.decrypt(password);
+        boolean result;
+        try {
+            byte[] seed = seedFromMnemonic(mnemonic);
+            byte[] pub = getAllCompletedAddresses().get(0).getPubCold();
+            DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(seed);
+            DeterministicKey purpose = master.deriveHardened(44);
+            DeterministicKey coinType = purpose.deriveHardened(0);
+            DeterministicKey account = coinType.deriveHardened(0);
+            DeterministicKey external = account.deriveSoftened(0);
+            DeterministicKey first = external.deriveSoftened(0);
+            master.wipe();
+            purpose.wipe();
+            coinType.wipe();
+            account.wipe();
+            external.wipe();
+            Utils.wipeBytes(seed);
+            result = Arrays.equals(first.getPubKey(), pub);
+            first.wipe();
+        } catch (MnemonicException.MnemonicLengthException e) {
+            e.printStackTrace();
+            result = false;
+        }
+        Utils.wipeBytes(mnemonic);
+        return result;
+    }
+
     public PasswordSeed createPasswordSeed(CharSequence password) {
         if (isInRecovery()) {
             throw new AssertionError("HDM in recovery can not create passwordSeed");
@@ -567,7 +594,7 @@ public class HDMKeychain {
                 password, isFromXRandom).toEncryptedString());
     }
 
-    private static final byte[] seedFromMnemonic(byte[] mnemonicSeed) throws MnemonicException
+    public static final byte[] seedFromMnemonic(byte[] mnemonicSeed) throws MnemonicException
             .MnemonicLengthException {
         MnemonicCode mnemonic = MnemonicCode.instance();
         return mnemonic.toSeed(mnemonic.toMnemonic(mnemonicSeed), "");
@@ -664,7 +691,7 @@ public class HDMKeychain {
                 allCompletedAddresses.addAll(as);
                 if (uncompPubs.size() > 0) {
                     AbstractDb.addressProvider.prepareHDMAddresses(getHdSeedId(), uncompPubs);
-                    for(HDMAddress.Pubs p : uncompPubs){
+                    for (HDMAddress.Pubs p : uncompPubs) {
                         AbstractDb.addressProvider.setHDMPubsRemote(getHdSeedId(), p.index, p.remote);
                     }
                 }
@@ -675,5 +702,14 @@ public class HDMKeychain {
         public boolean isInRecovery() {
             return true;
         }
+    }
+
+    public int getCanAddHDMCount() {
+        return BitherjSettings.HDM_ADDRESS_PER_SEED_PREPARE_COUNT -
+                uncompletedAddressCount();
+    }
+
+    public void setSingularModeBackup(String singularModeBackup) {
+        AbstractDb.addressProvider.setSingularModeBackup(this.hdSeedId, singularModeBackup);
     }
 }

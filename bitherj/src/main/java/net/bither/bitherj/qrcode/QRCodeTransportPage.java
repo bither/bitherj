@@ -63,7 +63,7 @@ public class QRCodeTransportPage {
     }
 
     public static QRCodeTransportPage formatQrCodeTransport(String text) {
-        if (!QRCodeUtil.verifyQrcodeTransport(text)) {
+        if (!QRCodeUtil.verifyBitherQRCode(text)) {
             return null;
         }
         QRCodeTransportPage qrCodetTransportPage = new QRCodeTransportPage();

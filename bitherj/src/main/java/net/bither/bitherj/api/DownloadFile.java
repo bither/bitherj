@@ -18,10 +18,9 @@ package net.bither.bitherj.api;
 
 
 import net.bither.bitherj.AbstractApp;
-import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.api.http.HttpRequestException;
 import net.bither.bitherj.api.http.HttpSetting;
-
+import net.bither.bitherj.utils.Utils;
 
 import org.apache.http.cookie.Cookie;
 

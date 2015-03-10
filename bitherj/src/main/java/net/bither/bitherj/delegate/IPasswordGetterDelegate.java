@@ -14,22 +14,11 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.api;
+package net.bither.bitherj.delegate;
 
-import net.bither.bitherj.api.http.BitherUrl;
-import net.bither.bitherj.api.http.HttpGetResponse;
+public interface IPasswordGetterDelegate {
 
-public class GetBlockCountApi extends HttpGetResponse<Long> {
+    public void beforePasswordDialogShow();
 
-    public GetBlockCountApi() {
-        setUrl(BitherUrl.BITHER_Q_GETBLOCK_COUNT_URL);
-
-    }
-
-    @Override
-    public void setResult(String response) throws Exception {
-        this.result = Long.valueOf(response);
-
-    }
-
+    public void afterPasswordDialogDismiss();
 }

@@ -176,6 +176,12 @@ public class PeerManager {
         }
     }
 
+    public void clearPeerAndRestart() {
+        this.stop();
+        AbstractDb.peerProvider.recreate();
+        this.start();
+    }
+
     public long getLastBlockHeight() {
         Block lastBlock = BlockChain.getInstance().lastBlock;
         return lastBlock == null ? 0 : lastBlock.getBlockNo();
@@ -232,7 +238,7 @@ public class PeerManager {
                 peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect()));
             }
         }
-        log.info("{} totalpeers", peers.size() );
+        log.info("{} totalpeers", peers.size());
         return peers;
     }
 
@@ -1057,7 +1063,7 @@ public class PeerManager {
         }
     }
 
-    public boolean isSynchronizing(){
+    public boolean isSynchronizing() {
         return synchronizing;
     }
 

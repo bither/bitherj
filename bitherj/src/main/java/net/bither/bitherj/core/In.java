@@ -18,7 +18,6 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
-import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.message.Message;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.Utils;
@@ -30,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -221,7 +221,7 @@ public class In extends Message {
     public String getFromAddress() {
         if (getConnectedOut() != null) {
             return getConnectedOut().getOutAddress();
-        } else if (this.getInSignature() != null) {
+        } else if (this.getInSignature() != null && !this.isCoinBase()) {
             Script script = new Script(this.getInSignature());
             return script.getFromAddress();
         }
@@ -233,5 +233,10 @@ public class In extends Message {
             return getConnectedOut().getOutValue();
         }
         return 0;
+    }
+
+    public List<byte[]> getP2SHPubKeys() {
+        Script script = new Script(this.getInSignature());
+        return script.getP2SHPubKeys(this.tx, this.inSn);
     }
 }

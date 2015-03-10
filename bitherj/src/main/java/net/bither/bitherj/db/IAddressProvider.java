@@ -1,12 +1,15 @@
 package net.bither.bitherj.db;
 
 import net.bither.bitherj.core.Address;
-import net.bither.bitherj.core.HDMBId;
 import net.bither.bitherj.core.HDMAddress;
+import net.bither.bitherj.core.HDMBId;
 import net.bither.bitherj.core.HDMKeychain;
 import net.bither.bitherj.crypto.PasswordSeed;
 
 import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 
 public interface IAddressProvider {
     // password
@@ -25,11 +28,13 @@ public interface IAddressProvider {
 
     public void updateEncryptHDSeed(int hdSeedId, String encryptHDSeed);
 
-    public void setEncryptSeed(int hdSeedId, String encryptSeed, String encryptHDSeed);
-
     public boolean isHDSeedFromXRandom(int hdSeedId);
 
     public String getHDMFristAddress(int hdSeedId);
+
+    public String getSingularModeBackup(int hdSeedId);
+
+    public void setSingularModeBackup(int hdSeedId, String singularModeBackup);
 
     public int addHDKey(String encryptSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
 
@@ -38,9 +43,6 @@ public interface IAddressProvider {
 
     public void addHDMBId(HDMBId bitherId, String addressOfPS);
 
-    public void changeHDBIdPassword(HDMBId hdmbId);
-
-    public void changeHDMBIdPassword(String encryptBitherPassword);
 
     public List<HDMAddress> getHDMAddressInUse(HDMKeychain keychain);
 
@@ -79,4 +81,10 @@ public interface IAddressProvider {
 
     public void updateSyncComplete(Address address);
 
+    // alias
+    public String getAlias(String address);
+
+    public Map<String, String> getAliases();
+
+    public void updateAlias(String address, @Nullable String alias);
 }

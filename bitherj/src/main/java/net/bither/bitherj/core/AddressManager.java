@@ -18,18 +18,13 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
-import net.bither.bitherj.crypto.EncryptedData;
-import net.bither.bitherj.crypto.SecureCharSequence;
-import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
-import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,6 +49,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         synchronized (lock) {
             initAddress();
             initHDMKeychain();
+            initAlias();
             AbstractApp.addressIsReady = true;
             AbstractApp.notificationService.sendBroadcastAddressLoadCompleteState();
         }
@@ -63,9 +59,37 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return uniqueInstance;
     }
 
+    private void initAlias() {
+        Map<String, String> addressAlias = AbstractDb.addressProvider.getAliases();
+        if (addressAlias.size() == 0) {
+            return;
+        }
+        for (Address address : privKeyAddresses) {
+            if (addressAlias.containsKey(address.getAddress())) {
+                String alias = addressAlias.get(address.getAddress());
+                address.setAlias(alias);
+            }
+        }
+        for (Address address : watchOnlyAddresses) {
+            if (addressAlias.containsKey(address.getAddress())) {
+                String alias = addressAlias.get(address.getAddress());
+                address.setAlias(alias);
+            }
+        }
+        if (hdmKeychain != null) {
+            for (HDMAddress address : hdmKeychain.getAllCompletedAddresses()) {
+                if (addressAlias.containsKey(address.getAddress())) {
+                    String alias = addressAlias.get(address.getAddress());
+                    address.setAlias(alias);
+                }
+            }
+        }
+    }
+
     private void initAddress() {
         List<Address> addressList = AbstractDb.addressProvider.getAddresses();
         for (Address address : addressList) {
+
             if (address.hasPrivKey()) {
                 if (address.isTrashed()) {
                     this.trashAddresses.add(address);
@@ -427,6 +451,43 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             addresses = AbstractDb.txProvider.getInAddresses(tx);
         }
         return this.addressHashSet.containsAll(addresses);
+    }
+
+
+    public static boolean isPrivateLimit() {
+        int maxPrivateKey = AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD ?
+                BitherjSettings.WATCH_ONLY_ADDRESS_COUNT_LIMIT
+                : BitherjSettings.PRIVATE_KEY_OF_HOT_COUNT_LIMIT;
+        return AddressManager.getInstance().getPrivKeyAddresses() != null
+                && AddressManager.getInstance().getPrivKeyAddresses().size() >= maxPrivateKey;
+    }
+
+    public static boolean isWatchOnlyLimit() {
+        return AddressManager.getInstance().getWatchOnlyAddresses() != null
+                && AddressManager.getInstance().getWatchOnlyAddresses().size() >= BitherjSettings
+                .WATCH_ONLY_ADDRESS_COUNT_LIMIT;
+    }
+
+    public static boolean isHDMKeychainLimit() {
+        if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
+            return AddressManager.getInstance().getHdmKeychain() != null;
+        } else {
+            if (AddressManager.getInstance().getHdmKeychain() == null) {
+                return false;
+            }
+            return AddressManager.getInstance().getHdmKeychain().getAllCompletedAddresses().size() > 0;
+        }
+    }
+
+
+    public static boolean isHDMAddressLimit() {
+        if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
+            return true;
+        }
+        if (AddressManager.getInstance().getHdmKeychain() == null) {
+            return false;
+        }
+        return AddressManager.getInstance().getHdmKeychain().getAllCompletedAddresses().size() >= BitherjSettings.HDM_ADDRESS_PER_SEED_COUNT_LIMIT;
     }
 
 }

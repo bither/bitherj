@@ -72,4 +72,10 @@ public class EncryptedData {
         return saltForQRCode.isCompressed();
     }
 
+    public static String changePwd(String encryptStr, CharSequence oldPassword, CharSequence newPassword) {
+        EncryptedData encrypted = new EncryptedData(encryptStr);
+        return new EncryptedData(encrypted.decrypt(oldPassword), newPassword).toEncryptedString();
+    }
+
+
 }

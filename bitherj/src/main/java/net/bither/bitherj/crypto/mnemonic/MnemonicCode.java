@@ -35,6 +35,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 
 /**
@@ -60,11 +61,11 @@ public abstract class MnemonicCode {
 
     private static MnemonicCode instance;
 
-    public static void setInstance(MnemonicCode i){
+    public static void setInstance(MnemonicCode i) {
         instance = i;
     }
 
-    public static MnemonicCode instance(){
+    public static MnemonicCode instance() {
         return instance;
     }
 
@@ -105,7 +106,7 @@ public abstract class MnemonicCode {
         // If a wordListDigest is supplied check to make sure it matches.
         if (wordListDigest != null) {
             byte[] digest = md.digest();
-            String hexdigest = Utils.bytesToHexString(digest);
+            String hexdigest = Utils.bytesToHexString(digest).toLowerCase(Locale.US);
             if (!hexdigest.equals(wordListDigest)) {
                 throw new IllegalArgumentException("wordlist digest mismatch");
             }

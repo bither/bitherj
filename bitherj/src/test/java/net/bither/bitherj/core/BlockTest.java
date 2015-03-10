@@ -16,13 +16,14 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.core.Block;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.Utils;
 import org.junit.Test;
 
 import java.util.Arrays;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BlockTest {
     @Test

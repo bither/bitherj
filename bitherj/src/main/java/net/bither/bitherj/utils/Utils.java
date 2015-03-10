@@ -27,7 +27,7 @@ import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.exception.AddressFormatException;
 
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
-import org.spongycastle.util.encoders.*;
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -271,7 +271,7 @@ public class Utils {
             hexChars[j * 2] = hexArray[v >>> 4];
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
         }
-        return new String(hexChars);
+        return new String(hexChars).toUpperCase(Locale.US);
     }
 
 
@@ -889,9 +889,10 @@ public class Utils {
     }
 
     public static boolean validPassword(CharSequence password) {
-        String pattern = "[0-9,a-z,A-Z]+";
+        String pattern = "[0-9a-zA-Z`~!@#$%^&*()_\\-+=|{}':;',\\[\\].\\\\\"<>/?]+";
         Pattern p = Pattern.compile(pattern);
         Matcher m = p.matcher(password);
+        //TODO jjz allow symbols for password
         return m.matches();
     }
 
@@ -977,6 +978,21 @@ public class Utils {
             String str = strs[i];
             if (!Utils.isEmpty(str)) {
                 if (i < strs.length - 1) {
+                    result = result + str + spiltStr;
+                } else {
+                    result = result + str;
+                }
+            }
+        }
+        return result;
+    }
+
+    public static String joinString(List<String> strs, String spiltStr) {
+        String result = "";
+        for (int i = 0; i < strs.size(); i++) {
+            String str = strs.get(i);
+            if (!Utils.isEmpty(str)) {
+                if (i < strs.size() - 1) {
                     result = result + str + spiltStr;
                 } else {
                     result = result + str;

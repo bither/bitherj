@@ -99,7 +99,7 @@ public class GenericUtils {
                 throw new IllegalArgumentException("cannot handle precision/shift: " + precision
                         + "/" + shift);
             }
-            int coin = (ONE_BTC_INT / (int)Math.floor(Math.pow(10, shift)));
+            int coin = (ONE_BTC_INT / (int) Math.floor(Math.pow(10, shift)));
             final long absValue = Math.abs(value);
             final long coins = absValue / coin;
             final int satoshis = (int) (absValue % coin);

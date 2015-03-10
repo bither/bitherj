@@ -18,19 +18,20 @@
 
 package net.bither.bitherj.crypto.mnemonic;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
 /**
  * <p>This is a clean-room implementation of PBKDF2 using RFC 2898 as a reference.</p>
- *
+ * <p/>
  * <p>RFC 2898: http://tools.ietf.org/html/rfc2898#section-5.2</p>
- *
+ * <p/>
  * <p>This code passes all RFC 6070 test vectors: http://tools.ietf.org/html/rfc6070</p>
- *
+ * <p/>
  * <p>http://cryptofreek.org/2012/11/29/pbkdf2-pure-java-implementation/<br>
  * Modified to use SHA-512 - Ken Sedgwick ken@bonsai.com</p>
  */

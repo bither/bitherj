@@ -78,7 +78,8 @@ public abstract class AbstractDb {
             ", encrypt_seed text not null" +
             ", encrypt_hd_seed text" +
             ", hdm_address text not null" +
-            ", is_xrandom integer not null);";
+            ", is_xrandom integer not null" +
+            ", singular_mode_backup text);";
     public static final String CREATE_HDM_ADDRESSES_SQL = "create table if not exists hdm_addresses " +
             "(hd_seed_id integer not null" +
             ", hd_seed_index integer not null" +
@@ -91,6 +92,9 @@ public abstract class AbstractDb {
     public static final String CREATE_HDM_BID_SQL = "create table if not exists hdm_bid " +
             "(hdm_bid text not null primary key" +
             ", encrypt_bither_password text not null);";
+    public static final String CREATE_ALIASES_SQL = "create table if not exists aliases " +
+            "(address text not null primary key" +
+            ", alias text not null);";
 
     public static final String CREATE_BLOCK_NO_INDEX = "create index idx_blocks_block_no on blocks (block_no);";
     public static final String CREATE_BLOCK_PREV_INDEX = "create index idx_blocks_block_prev on blocks (block_prev);";
@@ -132,6 +136,7 @@ public abstract class AbstractDb {
         public static final String HDMAddresses = "hdm_addresses";
         public static final String HDM_BID = "hdm_bid";
         public static final String PASSWORD_SEED = "password_seed";
+        public static final String Aliases = "aliases";
     }
 
     public interface BlocksColumns {
@@ -206,6 +211,7 @@ public abstract class AbstractDb {
         public static final String ENCRYPT_HD_SEED = "encrypt_HD_seed";
         public static final String IS_XRANDOM = "is_xrandom";
         public static final String HDM_ADDRESS = "hdm_address";
+        public static final String SINGULAR_MODE_BACKUP = "singular_mode_backup";
     }
 
     public interface HDMAddressesColumns {
@@ -221,5 +227,10 @@ public abstract class AbstractDb {
     public interface HDMBIdColumns {
         public static final String HDM_BID = "hdm_bid";
         public static final String ENCRYPT_BITHER_PASSWORD = "encrypt_bither_password";
+    }
+
+    public interface AliasColumns {
+        public static final String ADDRESS = "address";
+        public static final String ALIAS = "alias";
     }
 }

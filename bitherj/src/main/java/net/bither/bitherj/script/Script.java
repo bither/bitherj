@@ -254,6 +254,33 @@ public class Script {
         return isPayToScriptHash();
     }
 
+    public boolean isSendFromMultiSig() {
+        boolean result = this.chunks.get(0).opcode == OP_0;
+        for (int i = 1; i < this.chunks.size(); i++) {
+
+            result &= this.chunks.get(i).data != null && this.chunks.get(i).data.length > 2;
+        }
+        if (result) {
+            try {
+                Script multiSigRedeem = new Script(this.chunks.get(this.chunks.size() - 1).data);
+                result &= multiSigRedeem.isMultiSigRedeem();
+            } catch (ScriptException ex) {
+                result = false;
+            }
+        }
+        return result;
+    }
+
+    public boolean isMultiSigRedeem() {
+        boolean result = OP_1 <= this.chunks.get(0).opcode && this.chunks.get(0).opcode <= OP_16;
+        for (int i = 1; i < this.chunks.size() - 2; i++) {
+            result &= this.chunks.get(i).data != null && this.chunks.get(i).data.length > 2;
+        }
+        result &= OP_1 <= this.chunks.get(this.chunks.size() - 2).opcode && this.chunks.get(this.chunks.size() - 2).opcode <= OP_16;
+        result &= this.chunks.get(this.chunks.size() - 1).opcode == OP_CHECKMULTISIG;
+        return result;
+    }
+
     /**
      * If a program matches the standard template DUP HASH160 <pubkey hash> EQUALVERIFY CHECKSIG
      * then this function retrieves the third element, otherwise it throws a ScriptException.<p>
@@ -307,7 +334,7 @@ public class Script {
                 && chunks.get(1).data != null
                 && chunks.get(1).data.length > 2) {
             return chunks.get(0).data;
-        }else {
+        } else {
             throw new ScriptException("Script did not match expected form: " + toString());
         }
     }
@@ -546,6 +573,85 @@ public class Script {
             // scriptSig: <sig> <pubkey>
             int uncompressedPubKeySize = 65;
             return SIG_SIZE + (pubKey != null ? pubKey.getPubKey().length : uncompressedPubKeySize);
+        } else {
+            throw new IllegalStateException("Unsupported script type");
+        }
+    }
+
+    public List<byte[]> getP2SHPubKeys(Tx tx, int index) {
+        if (!this.isSendFromMultiSig()) {
+            throw new ScriptException("[Script Error] is not send from multisig");
+        }
+
+        Script scriptPubKey = new Script(this.chunks.get(this.chunks.size() - 1).data);
+        int sigCount = scriptPubKey.chunks.get(0).opcode - 80;
+        int pubKeyCount = scriptPubKey.chunks.get(scriptPubKey.chunks.size() - 2).opcode - 80;
+        if (pubKeyCount < 0 || pubKeyCount > 20) {
+            throw new ScriptException("[Script Error] OP_CHECKMULTISIG(VERIFY) with pubkey count out of range");
+        }
+
+        List<byte[]> pubKeys = new ArrayList<byte[]>();
+
+        for (int i = 0; i < pubKeyCount; i++) {
+            pubKeys.add(scriptPubKey.chunks.get(i + 1).data);
+        }
+
+        if (sigCount < 0 || sigCount > pubKeyCount) {
+            throw new ScriptException("[Script Error] OP_CHECKMULTISIG(VERIFY) with sig count out of range");
+        }
+
+        List<byte[]> sigs = new ArrayList<byte[]>();
+        for (int i = 1; i < sigCount + 1; i++) {
+            sigs.add(this.chunks.get(i).data);
+        }
+
+        List<byte[]> result = new ArrayList<byte[]>();
+        while (sigs.size() > 0) {
+            byte[] pubKey = pubKeys.get(pubKeys.size() - 1);
+            pubKeys.remove(pubKeys.size() - 1);
+
+            byte[] sigBytes = sigs.get(sigs.size() - 1);
+
+            if (sigBytes.length > 0) {
+                TransactionSignature sig = TransactionSignature.decodeFromBitcoin(sigBytes, false);
+                byte[] hash = tx.hashForSignature(index, scriptPubKey.getProgram(), (byte) sig.sighashFlags);
+                boolean sigValid = ECKey.verify(hash, sig, pubKey);
+
+                if (sigValid) {
+                    result.add(pubKey);
+                    sigs.remove(sigs.size() - 1);
+                }
+            }
+            if (sigs.size() > pubKeys.size()) {
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    public int getNumberOfBytesRequiredToSpend(boolean isCompressed, @Nullable Script redeemScript) {
+        if (isPayToScriptHash()) {
+            // scriptSig: <sig> [sig] [sig...] <redeemscript>
+            checkArgument(redeemScript != null, "P2SH script requires redeemScript to be spent");
+            // for N of M CHECKMULTISIG redeem script we will need N signatures to spend
+            ScriptChunk nChunk = redeemScript.getChunks().get(0);
+            int n = Script.decodeFromOpN(nChunk.opcode);
+            return n * SIG_SIZE + getProgram().length;
+        } else if (isSentToMultiSig()) {
+            // scriptSig: OP_0 <sig> [sig] [sig...]
+            // for N of M CHECKMULTISIG script we will need N signatures to spend
+            ScriptChunk nChunk = chunks.get(0);
+            int n = Script.decodeFromOpN(nChunk.opcode);
+            return n * SIG_SIZE + 1;
+        } else if (isSentToRawPubKey()) {
+            // scriptSig: <sig>
+            return SIG_SIZE;
+        } else if (isSentToAddress()) {
+            // scriptSig: <sig> <pubkey>
+            int uncompressedPubKeySize = 65;
+            int compressedPubKeySize = 33;
+            return SIG_SIZE + (isCompressed ? compressedPubKeySize : uncompressedPubKeySize);
         } else {
             throw new IllegalStateException("Unsupported script type");
         }

@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.api;
+package net.bither.bitherj.delegate;
 
-import net.bither.bitherj.api.http.BitherUrl;
-import net.bither.bitherj.api.http.HttpGetResponse;
+import net.bither.bitherj.crypto.SecureCharSequence;
 
-public class GetBlockCountApi extends HttpGetResponse<Long> {
+/**
+ * Created by nn on 15/2/15.
+ */
+public interface IPasswordGetter {
 
-    public GetBlockCountApi() {
-        setUrl(BitherUrl.BITHER_Q_GETBLOCK_COUNT_URL);
+    public void setPassword(SecureCharSequence password);
 
-    }
+    public boolean hasPassword();
 
-    @Override
-    public void setResult(String response) throws Exception {
-        this.result = Long.valueOf(response);
+    public SecureCharSequence getPassword();
 
-    }
-
+    public void wipe();
 }
