@@ -66,7 +66,7 @@ public abstract class HDMHotAdd implements IPasswordGetterDelegate {
 
     public boolean hdmKeychainLimit;
 
-    public HDMSingular singularUtil;
+    public HDMSingular singular;
 
     public HDMHotAdd(IHDMHotAddDelegate delegate) {
         this.delegate = delegate;
