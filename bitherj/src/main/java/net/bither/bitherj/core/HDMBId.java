@@ -8,7 +8,6 @@ import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.Utils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,6 +129,10 @@ public class HDMBId {
 
 
     public byte[] decryptHDMBIdPassword(CharSequence password) {
+        HDMBId hdmbId = AbstractDb.addressProvider.getHDMBId();
+        if (!Utils.isEmpty(hdmbId.getEncryptedBitherPasswordString())) {
+            encryptedBitherPassword = new EncryptedData(hdmbId.getEncryptedBitherPasswordString());
+        }
         decryptedPassword = encryptedBitherPassword.decrypt(password);
         return decryptedPassword;
     }
