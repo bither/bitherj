@@ -89,7 +89,7 @@ public class HDMBId {
     }
 
     public void save(String addressOfPS) {
-        AbstractDb.addressProvider.addHDMBId(HDMBId.this, addressOfPS);
+        AbstractDb.addressProvider.addAndUpdateHDMBId(HDMBId.this, addressOfPS);
     }
 
     public List<HDMAddress.Pubs> recoverHDM(String signString, CharSequence secureCharSequence) throws Exception {
@@ -108,7 +108,7 @@ public class HDMBId {
         String address = k.toAddress();
         k.clearPrivateKey();
         encryptedBitherPassword = new EncryptedData(decryptedPassword, secureCharSequence);
-        AbstractDb.addressProvider.addHDMBId(HDMBId.this, address);
+        AbstractDb.addressProvider.addAndUpdateHDMBId(HDMBId.this, address);
         return result;
 
 

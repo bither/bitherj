@@ -41,7 +41,7 @@ public interface IAddressProvider {
     public HDMBId getHDMBId();
 
 
-    public void addHDMBId(HDMBId bitherId, String addressOfPS);
+    public void addAndUpdateHDMBId(HDMBId bitherId, String addressOfPS);
 
 
     public List<HDMAddress> getHDMAddressInUse(HDMKeychain keychain);
