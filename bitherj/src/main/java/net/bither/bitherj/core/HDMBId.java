@@ -57,7 +57,8 @@ public class HDMBId {
 
     }
 
-    public void setSignature(byte[] signed, CharSequence password, String firstHotAddress) throws Exception {
+    public String setSignatureAndGetAddressOfAddressOfSp(byte[] signed, CharSequence password, String firstHotAddress) throws Exception {
+        String addressOfSP = null;
         String message = getBitidString();
         byte[] hash = Utils.getPreSignMessage(message);
         ECKey key = ECKey.signedMessageToKey(hash, signed);
@@ -71,20 +72,24 @@ public class HDMBId {
         boolean result = uploadHDMBidApi.getResult();
         if (result) {
             encryptedBitherPassword = new EncryptedData(decryptedPassword, password);
+            ECKey k = new ECKey(decryptedPassword, null);
+            addressOfSP = k.toAddress();
+            k.clearPrivateKey();
             if (firstHotAddress == null) {
-                save();
+                save(addressOfSP);
             }
         } else {
             throw new HttpException("UploadHDMBidApi error");
         }
+        return addressOfSP;
     }
 
     public void setSignature(String signString, CharSequence password) throws Exception {
-        setSignature(Utils.hexStringToByteArray(signString), password, null);
+        setSignatureAndGetAddressOfAddressOfSp(Utils.hexStringToByteArray(signString), password, null);
     }
 
-    public void save() {
-        AbstractDb.addressProvider.addHDMBId(HDMBId.this, address);
+    public void save(String addressOfPS) {
+        AbstractDb.addressProvider.addHDMBId(HDMBId.this, addressOfPS);
     }
 
     public List<HDMAddress.Pubs> recoverHDM(String signString, CharSequence secureCharSequence) throws Exception {
