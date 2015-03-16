@@ -132,7 +132,7 @@ public class UpgradeAddressUtil {
     }
 
 
-    public static boolean upgradeAddress() {
+    public static boolean upgradeAddress() throws Exception {
         boolean success = true;
         List<Address> addressList = new ArrayList<Address>();
         addressList.addAll(initPrivateKeyListByDesc());
