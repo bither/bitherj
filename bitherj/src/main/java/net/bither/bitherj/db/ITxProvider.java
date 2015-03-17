@@ -92,5 +92,5 @@ public interface ITxProvider {
 
     public int needCompleteInSignature(String address);
 
-    public void clearAllTx() throws Exception;
+    public void clearAllTx();
 }

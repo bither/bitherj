@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.utils;
 
+import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
@@ -143,7 +144,9 @@ public class UpgradeAddressUtil {
             address.setSyncComplete(false);
             AddressManager.getInstance().addAddress(address);
         }
-        AbstractDb.txProvider.clearAllTx();
+        if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.HOT) {
+            AbstractDb.txProvider.clearAllTx();
+        }
         return success;
     }
 
