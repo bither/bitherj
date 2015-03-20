@@ -323,6 +323,9 @@ public class PeerManager {
                 @Override
                 public void run() {
                     peer.connectSucceed();
+                    if (!doneSyncFromSPV() && getLastBlockHeight() >= peer.getVersionLastBlockHeight()) {
+                        AbstractApp.notificationService.sendBroadcastSyncSPVFinished(true);
+                    }
                     if (connected.get() && ((downloadingPeer != null && downloadingPeer
                             .getVersionLastBlockHeight() >= peer.getVersionLastBlockHeight()) ||
                             getLastBlockHeight() >= peer.getVersionLastBlockHeight())) {
