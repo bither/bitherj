@@ -141,8 +141,6 @@ public class BitherjSettings {
         }
     }
 
-    public enum AddressType {
-        Normal, TxTooMuch, SpecialAddress
-    }
+
 
 }

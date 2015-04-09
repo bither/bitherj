@@ -30,7 +30,7 @@ public class HttpSetting {
      */
     public static final int HTTP_SO_TIMEOUT = 80 * 1000;
 
-    public final static String SPECIAL_TYPE = "special_type";
+
 
     // enum
     public enum HttpType {
