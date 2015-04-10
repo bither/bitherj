@@ -467,6 +467,18 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 && AddressManager.getInstance().getWatchOnlyAddresses().size() >= AbstractApp.bitherjSetting.watchOnlyAddressCountLimit();
     }
 
+    public static int canAddPrivateKeyCount() {
+        int max;
+        if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
+            max = AbstractApp.bitherjSetting.watchOnlyAddressCountLimit() - AddressManager.getInstance()
+                    .getAllAddresses().size();
+        } else {
+            max = AbstractApp.bitherjSetting.privateKeyOfHotCountLimit() - AddressManager.getInstance()
+                    .getPrivKeyAddresses().size();
+        }
+        return max;
+    }
+
     public static boolean isHDMKeychainLimit() {
         if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
             return AddressManager.getInstance().getHdmKeychain() != null;
