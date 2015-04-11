@@ -456,16 +456,27 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
 
     public static boolean isPrivateLimit() {
         int maxPrivateKey = AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD ?
-                BitherjSettings.WATCH_ONLY_ADDRESS_COUNT_LIMIT
-                : BitherjSettings.PRIVATE_KEY_OF_HOT_COUNT_LIMIT;
+                AbstractApp.bitherjSetting.watchOnlyAddressCountLimit()
+                : AbstractApp.bitherjSetting.privateKeyOfHotCountLimit();
         return AddressManager.getInstance().getPrivKeyAddresses() != null
                 && AddressManager.getInstance().getPrivKeyAddresses().size() >= maxPrivateKey;
     }
 
     public static boolean isWatchOnlyLimit() {
         return AddressManager.getInstance().getWatchOnlyAddresses() != null
-                && AddressManager.getInstance().getWatchOnlyAddresses().size() >= BitherjSettings
-                .WATCH_ONLY_ADDRESS_COUNT_LIMIT;
+                && AddressManager.getInstance().getWatchOnlyAddresses().size() >= AbstractApp.bitherjSetting.watchOnlyAddressCountLimit();
+    }
+
+    public static int canAddPrivateKeyCount() {
+        int max;
+        if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
+            max = AbstractApp.bitherjSetting.watchOnlyAddressCountLimit() - AddressManager.getInstance()
+                    .getAllAddresses().size();
+        } else {
+            max = AbstractApp.bitherjSetting.privateKeyOfHotCountLimit() - AddressManager.getInstance()
+                    .getPrivKeyAddresses().size();
+        }
+        return max;
     }
 
     public static boolean isHDMKeychainLimit() {
@@ -487,7 +498,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         if (AddressManager.getInstance().getHdmKeychain() == null) {
             return false;
         }
-        return AddressManager.getInstance().getHdmKeychain().getAllCompletedAddresses().size() >= BitherjSettings.HDM_ADDRESS_PER_SEED_COUNT_LIMIT;
+        return AddressManager.getInstance().getHdmKeychain().getAllCompletedAddresses().size()
+                >= AbstractApp.bitherjSetting.hdmAddressPerSeedCount();
     }
 
 }

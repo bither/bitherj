@@ -22,27 +22,47 @@ import org.apache.http.client.CookieStore;
 
 import java.io.File;
 
-public interface ISetting {
+public abstract class ISetting {
 
-    public BitherjSettings.AppMode getAppMode();
+    private static final int HDM_ADDRESS_PER_SEED_COUNT_LIMIT = 100;
+    private static final int HDM_ADDRESS_PER_SEED_PREPARE_COUNT = 100;
+    private static final int WATCH_ONLY_ADDRESS_COUNT_LIMIT = 150;
+    private static final int PRIVATE_KEY_OF_HOT_COUNT_LIMIT = 50;
 
-    public boolean getBitherjDoneSyncFromSpv();
+    public abstract BitherjSettings.AppMode getAppMode();
 
-    public void setBitherjDoneSyncFromSpv(boolean isDone);
+    public abstract boolean getBitherjDoneSyncFromSpv();
 
-    public boolean getDownloadSpvFinish();
+    public abstract void setBitherjDoneSyncFromSpv(boolean isDone);
 
-    public void setDownloadSpvFinish(boolean finish);
+    public abstract boolean getDownloadSpvFinish();
 
-    public QRCodeUtil.QRQuality getQRQuality();
+    public abstract void setDownloadSpvFinish(boolean finish);
 
-    public BitherjSettings.TransactionFeeMode getTransactionFeeMode();
+    public abstract QRCodeUtil.QRQuality getQRQuality();
 
-    public File getPrivateDir(String dirName);
+    public abstract BitherjSettings.TransactionFeeMode getTransactionFeeMode();
 
-    public boolean isApplicationRunInForeground();
+    public abstract File getPrivateDir(String dirName);
 
-    public CookieStore getCookieStore();
+    public abstract boolean isApplicationRunInForeground();
 
+    public abstract CookieStore getCookieStore();
+
+    public int hdmAddressPerSeedCount() {
+        return HDM_ADDRESS_PER_SEED_COUNT_LIMIT;
+    }
+
+    public int hdmAddressPerSeedPrepareCount() {
+        return HDM_ADDRESS_PER_SEED_PREPARE_COUNT;
+    }
+
+    public int watchOnlyAddressCountLimit() {
+        return WATCH_ONLY_ADDRESS_COUNT_LIMIT;
+    }
+
+    public int privateKeyOfHotCountLimit() {
+        return PRIVATE_KEY_OF_HOT_COUNT_LIMIT;
+    }
 
 }

@@ -19,10 +19,8 @@ package net.bither.bitherj.utils;
 
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
-import net.bither.bitherj.BitherjSettings.AddressType;
 import net.bither.bitherj.api.BitherMytransactionsApi;
 import net.bither.bitherj.api.GetInSignaturesApi;
-import net.bither.bitherj.api.http.HttpSetting;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.core.Block;
@@ -179,23 +177,7 @@ public class TransactionsUtil {
     }
 
 
-    public static AddressType checkAddress(List<String> addressList) throws Exception {
-        for (String address : addressList) {
-            BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(address.toString());
-            bitherMytransactionsApi.handleHttpGet();
-            String result = bitherMytransactionsApi.getResult();
-            JSONObject json = new JSONObject(result);
-            if (!json.isNull(HttpSetting.SPECIAL_TYPE)) {
-                int specialType = json.getInt(HttpSetting.SPECIAL_TYPE);
-                if (specialType == 0) {
-                    return AddressType.SpecialAddress;
-                } else {
-                    return AddressType.TxTooMuch;
-                }
-            }
-        }
-        return AddressType.Normal;
-    }
+
 
     public static void getMyTxFromBither() throws Exception {
         if (AbstractApp.bitherjSetting.getAppMode() != BitherjSettings.AppMode.HOT) {

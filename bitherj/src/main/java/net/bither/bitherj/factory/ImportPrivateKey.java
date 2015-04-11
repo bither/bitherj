@@ -16,9 +16,6 @@
 
 package net.bither.bitherj.factory;
 
-import net.bither.bitherj.AbstractApp;
-import net.bither.bitherj.BitherjSettings;
-import net.bither.bitherj.BitherjSettings.AddressType;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
@@ -27,7 +24,6 @@ import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.PrivateKeyUtil;
-import net.bither.bitherj.utils.TransactionsUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,11 +74,7 @@ public abstract class ImportPrivateKey {
             } else {
                 List<String> addressList = new ArrayList<String>();
                 addressList.add(ecKey.toAddress());
-                if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.HOT) {
-                    return checkAddress(ecKey, addressList);
-                } else {
-                    return addECKey(ecKey);
-                }
+                return addECKey(ecKey);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -97,16 +89,6 @@ public abstract class ImportPrivateKey {
 
     }
 
-    private Address checkAddress(ECKey ecKey, List<String> addressList) {
-        try {
-            AddressType addressType = TransactionsUtil.checkAddress(addressList);
-            return handlerResult(ecKey, addressType);
-        } catch (Exception e) {
-            importError(NETWORK_FAILED);
-            return null;
-        }
-
-    }
 
     private Address addECKey(ECKey ecKey) {
         String encryptedPrivateString;
@@ -143,23 +125,6 @@ public abstract class ImportPrivateKey {
 
         }
 
-    }
-
-    private Address handlerResult(ECKey ecKey
-            , AddressType addressType) {
-        Address address = null;
-        switch (addressType) {
-            case Normal:
-                address = addECKey(ecKey);
-                break;
-            case SpecialAddress:
-                importError(CONTAIN_SPECIAL_ADDRESS);
-                break;
-            case TxTooMuch:
-                importError(TX_TOO_MUCH);
-                break;
-        }
-        return address;
     }
 
 
