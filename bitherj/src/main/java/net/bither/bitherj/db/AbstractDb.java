@@ -106,15 +106,22 @@ public abstract class AbstractDb {
 
     //hd account
     public static final String CREATE_HD_ACCOUNT = "create table if not exists  hd_account " +
-            "( external_index integer" +
-            ", internal_index integer" +
-            ", first_internal_index INTEGER);";
+            "(  encrypt_seed text not null" +
+            ", encrypt_hd_seed text" +
+            ", hd_address text not null" +
+            ", external_pub text not null" +
+            ", internal_pub text not null" +
+            ", is_xrandom integer not null" +
+            ", issued_external_index integer" +
+            ", issued_internal_index integer);";
 
     public static final String CREATE_HD_ACCOUNT_ADDRESSES = "create table if not exists account_addresses " +
-            "(account_path integer not null" +
+            "( hd_account_id integer not null primary key autoincrement" +
+            ", account_root integer not null" +
             ", index integer not null" +
             ", address text not null" +
-            ", primary key (account_path,index,address));";
+            ", pub text not null" +
+            ", primary key (address));";
 
 
     public static final String CREATE_HD_ACCOUNT_TX = "create table if not exists account_txs " +
@@ -238,6 +245,7 @@ public abstract class AbstractDb {
         public static final String OUT_VALUE = "out_value";
         public static final String OUT_STATUS = "out_status";
         public static final String OUT_ADDRESS = "out_address";
+        public static final String BELONG_ACCOUNT = "belong_account";
     }
 
     public interface PeersColumns {
@@ -294,38 +302,28 @@ public abstract class AbstractDb {
     }
 
     //hd account
-    public interface AccountInsColumns {
-        public static final String TX_HASH = "tx_hash";
-        public static final String IN_SN = "in_sn";
-        public static final String PREV_TX_HASH = "prev_tx_hash";
-        public static final String PREV_OUT_SN = "prev_out_sn";
-        public static final String IN_SIGNATURE = "in_signature";
-        public static final String IN_SEQUENCE = "in_sequence";
-    }
-
-    public interface AccountOutsColumns {
-        public static final String TX_HASH = "tx_hash";
-        public static final String OUT_SN = "out_sn";
-        public static final String OUT_SCRIPT = "out_script";
-        public static final String OUT_VALUE = "out_value";
-        public static final String OUT_STATUS = "out_status";
-        public static final String OUT_ADDRESS = "out_address";
-        public static final String BELONG_ACCOUNT = "belong_account";
-
-    }
 
     public interface HDAccountColumns {
-        public static final String EXTERNAL_INDEX = "external_index";
-        public static final String INTERNAL_INDEX = "internal_index";
-        public static final String FIRST_INTERNAL_INDEX = "first_internal_index";
+        public static final String ENCRYPT_SEED = "encrypt_seed";
+        public static final String ENCRYPT_HD_SEED = "encrypt_HD_seed";
+        public static final String HD_ACCOUNT_ID = "hd_account_id";
+        public static final String IS_XRANDOM = "is_xrandom";
+        public static final String HD_ADDRESS = "hd_address";
+        public static final String ISSUED_EXTERNAL_INDEX = "issued_external_index";
+        public static final String ISSUED_INTERNAL_INDEX = "issued_internal_index";
+        public static final String EXTERNAL_PUB = "external_pub";
+        public static final String INTERNAL_PUB = "internal_pub";
+
 
     }
 
     public interface HDAccountAddresses {
-        public static final String ACCOUNT_PATH = "account_path";
+        public static final String ACCOUNT_ROOT = "account_root";
         public static final String INDEX = "index";
         public static final String ADDRESS = "address";
+        public static final String PUB = "pub";
 
     }
+
 
 }
