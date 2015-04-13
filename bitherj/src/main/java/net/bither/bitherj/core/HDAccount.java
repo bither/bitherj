@@ -18,24 +18,18 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
-import net.bither.bitherj.crypto.KeyCrypterException;
-import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
-import net.bither.bitherj.exception.PasswordException;
-import net.bither.bitherj.utils.PrivateKeyUtil;
-import net.bither.bitherj.utils.Utils;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
 
 public abstract class HDAccount extends AbstractHD {
     private transient byte[] mnemonicSeed;
     private transient byte[] hdSeed;
     private boolean isFromXRandom;
-    private int hdAccountId = -1;
-    private int issuedExternalIndex;
-    private int issuedInternalIndex;
+
+    //    private int issuedExternalIndex;
+//    private int issuedInternalIndex;
     private byte[] externalPub;
     private byte[] internalPub;
     private String externalAddress;
@@ -59,8 +53,8 @@ public abstract class HDAccount extends AbstractHD {
 
         wipeMnemonicSeed();
 
-        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
-                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
+//        hdSeedId = AbstractDb.hdAccountProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
+//                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address, null, null);
 
     }
 
@@ -87,19 +81,19 @@ public abstract class HDAccount extends AbstractHD {
         k.clearPrivateKey();
         wipeHDSeed();
         wipeMnemonicSeed();
-        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
-                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
+//        hdSeedId = AbstractDb.hdAccountProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
+//                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
 
     }
 
 
     @Override
     protected String getEncryptedHDSeed() {
-        return null;
+        return AbstractDb.hdAccountProvider.getEncryptHDSeed(hdSeedId);
     }
 
     @Override
     protected String getEncryptedMnemonicSeed() {
-        return null;
+        return AbstractDb.hdAccountProvider.getEncryptHDSeed(hdSeedId);
     }
 }

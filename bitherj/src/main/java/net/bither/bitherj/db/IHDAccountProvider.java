@@ -18,6 +18,38 @@
 
 package net.bither.bitherj.db;
 
+import net.bither.bitherj.core.Tx;
+
+import java.util.HashMap;
+import java.util.List;
+
 public interface IHDAccountProvider {
-    public int addHDKey(String encryptSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
+
+    public int addHDKey(String encryptSeed, String encryptHdSeed
+            , String firstAddress, boolean isXrandom, String addressOfPS
+            , byte[] externalPub, byte[] internalPub);
+
+    public int externalIssuedIndex();
+
+    public int internalIssuedIndex();
+
+    public byte[] getExternalPub();
+
+    public byte[] getInternalPub();
+
+    public String externalAddress();
+
+    public List<HashMap<String, byte[]>> getAddressPub();
+
+    public List<Tx> getUnspentTxs();
+
+    public void addTx(Tx tx);
+
+    public void addTxs(List<Tx> txList);
+
+    public String getEncryptSeed(int hdSeedId);
+
+    public String getEncryptHDSeed(int hdSeedId);
+
+
 }

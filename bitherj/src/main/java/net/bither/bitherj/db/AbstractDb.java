@@ -111,14 +111,13 @@ public abstract class AbstractDb {
             ", hd_address text not null" +
             ", external_pub text not null" +
             ", internal_pub text not null" +
-            ", is_xrandom integer not null" +
-            ", issued_external_index integer" +
-            ", issued_internal_index integer);";
+            ", is_xrandom integer not null);";
 
     public static final String CREATE_HD_ACCOUNT_ADDRESSES = "create table if not exists account_addresses " +
             "( hd_account_id integer not null primary key autoincrement" +
             ", account_root integer not null" +
             ", index integer not null" +
+            ", is_issued integer not null" +
             ", address text not null" +
             ", pub text not null" +
             ", primary key (address));";
@@ -195,6 +194,7 @@ public abstract class AbstractDb {
 
         //hd account
         public static final String HD_ACCOUNT = "hd_account";
+
         public static final String ACCOUNT_ADDRESS = "account_addresses";
         public static final String ACCOUNT_TXS = "account_txs";
         public static final String ACCOUNT_OUTS = "account_outs";
@@ -304,13 +304,11 @@ public abstract class AbstractDb {
     //hd account
 
     public interface HDAccountColumns {
+        public static final String HD_ACCOUNT_ID = "hd_account_id";
         public static final String ENCRYPT_SEED = "encrypt_seed";
         public static final String ENCRYPT_HD_SEED = "encrypt_HD_seed";
-        public static final String HD_ACCOUNT_ID = "hd_account_id";
         public static final String IS_XRANDOM = "is_xrandom";
         public static final String HD_ADDRESS = "hd_address";
-        public static final String ISSUED_EXTERNAL_INDEX = "issued_external_index";
-        public static final String ISSUED_INTERNAL_INDEX = "issued_internal_index";
         public static final String EXTERNAL_PUB = "external_pub";
         public static final String INTERNAL_PUB = "internal_pub";
 
@@ -320,8 +318,10 @@ public abstract class AbstractDb {
     public interface HDAccountAddresses {
         public static final String ACCOUNT_ROOT = "account_root";
         public static final String INDEX = "index";
+        public static final String IS_ISSUED = "is_issued";
         public static final String ADDRESS = "address";
         public static final String PUB = "pub";
+
 
     }
 
