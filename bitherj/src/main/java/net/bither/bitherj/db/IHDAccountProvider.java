@@ -18,6 +18,7 @@
 
 package net.bither.bitherj.db;
 
+import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.Tx;
 
 import java.util.HashMap;
@@ -28,6 +29,10 @@ public interface IHDAccountProvider {
     public int addHDKey(String encryptSeed, String encryptHdSeed
             , String firstAddress, boolean isXrandom, String addressOfPS
             , byte[] externalPub, byte[] internalPub);
+
+    public void addExternalAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);
+
+    public void addInternalAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);
 
     public int externalIssuedIndex();
 

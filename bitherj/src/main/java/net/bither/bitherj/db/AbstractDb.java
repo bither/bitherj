@@ -312,7 +312,6 @@ public abstract class AbstractDb {
         public static final String EXTERNAL_PUB = "external_pub";
         public static final String INTERNAL_PUB = "internal_pub";
 
-
     }
 
     public interface HDAccountAddresses {

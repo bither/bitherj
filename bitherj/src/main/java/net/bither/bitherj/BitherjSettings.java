@@ -34,6 +34,8 @@ public class BitherjSettings {
     public static final int COMPRESS_OUT_NUM = 5;
     public static final int TX_PAGE_SIZE = 20;
 
+    public static final String DONATE_ADDRESS = "1BitherUnNvB2NsfxMnbS35kS3DTPr7PW5";
+
     /**
      * The alert signing key originally owned by Satoshi, and now passed on to Gavin along with a few others.
      */

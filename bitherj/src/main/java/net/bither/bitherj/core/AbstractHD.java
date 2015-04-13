@@ -68,15 +68,35 @@ public abstract class AbstractHD {
     protected DeterministicKey externalChainRoot(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         DeterministicKey master = masterKey(password);
+        return externalChainRoot(master);
+    }
+
+    protected DeterministicKey externalChainRoot(DeterministicKey master) {
+        return getAccount(master, 0);
+
+    }
+
+    protected DeterministicKey internalChainRoot(CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        DeterministicKey master = masterKey(password);
+        return internalChainRoot(master);
+    }
+
+    protected DeterministicKey internalChainRoot(DeterministicKey master) {
+        return getAccount(master, 1);
+
+    }
+
+    private DeterministicKey getAccount(DeterministicKey master, int index) {
         DeterministicKey purpose = master.deriveHardened(44);
         DeterministicKey coinType = purpose.deriveHardened(0);
         DeterministicKey account = coinType.deriveHardened(0);
-        DeterministicKey external = account.deriveSoftened(0);
-        master.wipe();
+        DeterministicKey external = account.deriveSoftened(index);
         purpose.wipe();
         coinType.wipe();
         account.wipe();
         return external;
+
     }
 
 
