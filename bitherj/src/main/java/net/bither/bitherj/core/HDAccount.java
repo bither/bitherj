@@ -16,7 +16,20 @@
 
 package net.bither.bitherj.core;
 
-public class HDAccount {
+import net.bither.bitherj.crypto.ECKey;
+import net.bither.bitherj.crypto.EncryptedData;
+import net.bither.bitherj.crypto.KeyCrypterException;
+import net.bither.bitherj.crypto.hd.DeterministicKey;
+import net.bither.bitherj.crypto.mnemonic.MnemonicException;
+import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.exception.PasswordException;
+import net.bither.bitherj.utils.PrivateKeyUtil;
+import net.bither.bitherj.utils.Utils;
+
+import java.security.SecureRandom;
+import java.util.ArrayList;
+
+public abstract class HDAccount extends AbstractHD {
     private transient byte[] mnemonicSeed;
     private transient byte[] hdSeed;
     private boolean isFromXRandom;
@@ -27,4 +40,66 @@ public class HDAccount {
     private byte[] internalPub;
     private String externalAddress;
 
+    public HDAccount(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        this.mnemonicSeed = mnemonicSeed;
+        String firstAddress = null;
+        EncryptedData encryptedMnemonicSeed = null;
+        EncryptedData encryptedHDSeed = null;
+        ECKey k = new ECKey(mnemonicSeed, null);
+        String address = k.toAddress();
+        k.clearPrivateKey();
+
+        hdSeed = seedFromMnemonic(mnemonicSeed);
+        encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
+        encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
+        firstAddress = getFirstAddressFromSeed(password);
+
+        wipeHDSeed();
+
+        wipeMnemonicSeed();
+
+        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
+                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
+
+    }
+
+    // Create With Random
+    public HDAccount(SecureRandom random, CharSequence password) {
+        isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
+        mnemonicSeed = new byte[32];
+        String firstAddress = null;
+        EncryptedData encryptedMnemonicSeed = null;
+        EncryptedData encryptedHDSeed = null;
+        while (firstAddress == null) {
+            try {
+                random.nextBytes(mnemonicSeed);
+                hdSeed = seedFromMnemonic(mnemonicSeed);
+                encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
+                encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
+                firstAddress = getFirstAddressFromSeed(password);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        ECKey k = new ECKey(mnemonicSeed, null);
+        String address = k.toAddress();
+        k.clearPrivateKey();
+        wipeHDSeed();
+        wipeMnemonicSeed();
+        hdSeedId = AbstractDb.addressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
+                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
+
+    }
+
+
+    @Override
+    protected String getEncryptedHDSeed() {
+        return null;
+    }
+
+    @Override
+    protected String getEncryptedMnemonicSeed() {
+        return null;
+    }
 }

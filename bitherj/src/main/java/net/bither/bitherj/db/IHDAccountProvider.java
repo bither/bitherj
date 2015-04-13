@@ -19,4 +19,5 @@
 package net.bither.bitherj.db;
 
 public interface IHDAccountProvider {
+    public int addHDKey(String encryptSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
 }
