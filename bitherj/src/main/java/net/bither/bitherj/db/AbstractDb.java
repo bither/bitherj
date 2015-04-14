@@ -115,7 +115,7 @@ public abstract class AbstractDb {
 
     public static final String CREATE_HD_ACCOUNT_ADDRESSES = "create table if not exists account_addresses " +
             "( hd_account_id integer not null primary key autoincrement" +
-            ", account_root integer not null" +
+            ", path_type integer not null" +
             ", index integer not null" +
             ", is_issued integer not null" +
             ", address text not null" +
@@ -315,7 +315,7 @@ public abstract class AbstractDb {
     }
 
     public interface HDAccountAddressesColumns {
-        public static final String ACCOUNT_ROOT = "account_root";
+        public static final String PATH_TYPE = "path_type";
         public static final String INDEX = "index";
         public static final String IS_ISSUED = "is_issued";
         public static final String ADDRESS = "address";

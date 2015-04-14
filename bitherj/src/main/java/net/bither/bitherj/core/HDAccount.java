@@ -147,18 +147,17 @@ public abstract class HDAccount extends AbstractHD {
     }
 
     public String getReceivingAddress() {
-        //TODO
-        return null;
+        return AbstractDb.hdAccountProvider.externalAddress();
     }
 
     public int issuedInternalIndex() {
-        //TODO
-        return 0;
+
+        return AbstractDb.hdAccountProvider.issuedInternalIndex();
     }
 
     public int issuedExternalIndex() {
-        //TODO
-        return 0;
+        return AbstractDb.hdAccountProvider.issuedExternalIndex();
+
     }
 
     public void onNewTx(Tx tx) {
@@ -172,8 +171,8 @@ public abstract class HDAccount extends AbstractHD {
     }
 
     public List<HDAccountAddress> getRelatedHDAccountAddressForTx(Tx tx) {
-        //TODO
-        return new ArrayList<HDAccountAddress>();
+
+        return AbstractDb.hdAccountProvider.getRelatedHDAccountAddressForTx(tx);
     }
 
     public Tx newTx(String toAddress, long amount, CharSequence password) {

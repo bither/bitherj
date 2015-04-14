@@ -31,11 +31,15 @@ public interface IHDAccountProvider {
 
     public void addInternalAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);
 
-    public int externalIssuedIndex();
+    public int issuedExternalIndex();
 
-    public int internalIssuedIndex();
+    public int issuedInternalIndex();
 
     public String externalAddress();
+
+    public List<HDAccount.HDAccountAddress> getRelatedHDAccountAddressForTx(Tx tx);
+
+    public List<Integer> getHDAccountSeeds();
 
     public List<HDAccount.HDAccountAddress> getAddressPub();
 
