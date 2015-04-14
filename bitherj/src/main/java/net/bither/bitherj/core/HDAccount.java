@@ -49,7 +49,6 @@ public abstract class HDAccount extends AbstractHD {
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         EncryptedData encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
         initHDAccount(encryptedMnemonicSeed, encryptedHDSeed, firstAddress);
-
     }
 
     // Create With Random
@@ -94,9 +93,9 @@ public abstract class HDAccount extends AbstractHD {
             byte[] subExternalPub = externalRoot.deriveSoftened(i).getPubKey();
             byte[] subInternalPub = internalRoot.deriveSoftened(i).getPubKey();
             HDAccountAddress externalAddress = new HDAccountAddress(subExternalPub
-                    , TernalRootType.EXTERNAL_ROOT_PATH, i, false);
+                    , PathType.EXTERNAL_ROOT_PATH, i, false);
             HDAccountAddress internalAddress = new HDAccountAddress(subInternalPub
-                    , TernalRootType.INTERNAL_ROOT_PATH, i, false);
+                    , PathType.INTERNAL_ROOT_PATH, i, false);
             externalAddresses.add(externalAddress);
             internalAddresses.add(internalAddress);
         }
@@ -147,26 +146,69 @@ public abstract class HDAccount extends AbstractHD {
         return AbstractDb.addressProvider.getHDAccountEncryptMnmonicSeed(hdSeedId);
     }
 
+    public String getReceivingAddress() {
+        //TODO
+        return null;
+    }
+
+    public int issuedInternalIndex() {
+        //TODO
+        return 0;
+    }
+
+    public int issuedExternalIndex() {
+        //TODO
+        return 0;
+    }
+
+    public void onNewTx(Tx tx) {
+        List<HDAccountAddress> relatedAddresses = getRelatedHDAccountAddressForTx(tx);
+        if (relatedAddresses.size() > 0) {
+            //TODO new tx
+            for (HDAccountAddress a : relatedAddresses) {
+
+            }
+        }
+    }
+
+    public List<HDAccountAddress> getRelatedHDAccountAddressForTx(Tx tx) {
+        //TODO
+        return new ArrayList<HDAccountAddress>();
+    }
+
+    public Tx newTx(String toAddress, long amount, CharSequence password) {
+        return newTx(new String[]{toAddress}, new long[]{amount}, password);
+    }
+
+    public Tx newTx(String[] toAddresses, long[] amounts, CharSequence password) {
+        //TODO
+        return null;
+    }
+
+    public boolean commitTx(Tx tx) {
+        //TODO add to db and broadcast
+        return false;
+    }
+
     public static class HDAccountAddress {
         private String address;
         private byte[] pub;
         private int index;
-        private TernalRootType accountRoot;
+        private PathType pathType;
 
         private boolean isIssued;
 
-        public HDAccountAddress(byte[] pub, TernalRootType accountRoot, int index, boolean isIssued) {
-            this(Utils.toAddress(Utils.sha256hash160(pub)), pub, accountRoot, index, isIssued);
+        public HDAccountAddress(byte[] pub, PathType pathType, int index, boolean isIssued) {
+            this(Utils.toAddress(Utils.sha256hash160(pub)), pub, pathType, index, isIssued);
 
         }
 
-        public HDAccountAddress(String address, byte[] pub, TernalRootType accountRoot, int index, boolean isIssued) {
+        public HDAccountAddress(String address, byte[] pub, PathType pathType, int index, boolean isIssued) {
             this.pub = pub;
             this.address = address;
-            this.accountRoot = accountRoot;
+            this.pathType = pathType;
             this.index = index;
             this.isIssued = isIssued;
-
         }
 
         public String getAddress() {
@@ -181,8 +223,8 @@ public abstract class HDAccount extends AbstractHD {
             return index;
         }
 
-        public TernalRootType getAccountRoot() {
-            return accountRoot;
+        public PathType getPathType() {
+            return pathType;
         }
 
         public boolean isIssued() {

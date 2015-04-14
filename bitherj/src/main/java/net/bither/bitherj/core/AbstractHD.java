@@ -33,11 +33,11 @@ import java.util.List;
 
 public abstract class AbstractHD {
 
-    public enum TernalRootType {
+    public enum PathType {
         EXTERNAL_ROOT_PATH(0), INTERNAL_ROOT_PATH(1);
         private int value;
 
-        TernalRootType(int value) {
+        PathType(int value) {
             this.value = value;
         }
 
@@ -48,12 +48,12 @@ public abstract class AbstractHD {
 
     }
 
-    public static TernalRootType getTernalRootType(int value) {
+    public static PathType getTernalRootType(int value) {
         switch (value) {
             case 0:
-                return TernalRootType.EXTERNAL_ROOT_PATH;
+                return PathType.EXTERNAL_ROOT_PATH;
             default:
-                return TernalRootType.INTERNAL_ROOT_PATH;
+                return PathType.INTERNAL_ROOT_PATH;
         }
     }
 
@@ -97,7 +97,7 @@ public abstract class AbstractHD {
     }
 
     protected DeterministicKey externalChainRoot(DeterministicKey master) {
-        return getAccount(master, TernalRootType.EXTERNAL_ROOT_PATH);
+        return getAccount(master, PathType.EXTERNAL_ROOT_PATH);
 
     }
 
@@ -108,15 +108,15 @@ public abstract class AbstractHD {
     }
 
     protected DeterministicKey internalChainRoot(DeterministicKey master) {
-        return getAccount(master, TernalRootType.INTERNAL_ROOT_PATH);
+        return getAccount(master, PathType.INTERNAL_ROOT_PATH);
 
     }
 
-    private DeterministicKey getAccount(DeterministicKey master, TernalRootType ternalRootType) {
+    private DeterministicKey getAccount(DeterministicKey master, PathType pathType) {
         DeterministicKey purpose = master.deriveHardened(44);
         DeterministicKey coinType = purpose.deriveHardened(0);
         DeterministicKey account = coinType.deriveHardened(0);
-        DeterministicKey external = account.deriveSoftened(ternalRootType.getValue());
+        DeterministicKey external = account.deriveSoftened(pathType.getValue());
         purpose.wipe();
         coinType.wipe();
         account.wipe();
