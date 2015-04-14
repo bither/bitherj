@@ -31,7 +31,7 @@ import java.util.List;
 
 public abstract class HDAccount extends AbstractHD {
 
-    private int HD_ACCOUNT_COUNT = 100;
+    private int LOOK_AHEAD_SIZE = 100;
 
 
     private transient byte[] mnemonicSeed;
@@ -89,7 +89,9 @@ public abstract class HDAccount extends AbstractHD {
         DeterministicKey internalRoot = HDKeyDerivation.createMasterPrivateKey(internalPub);
         List<HDAccountAddress> externalAddresses = new ArrayList<HDAccountAddress>();
         List<HDAccountAddress> internalAddresses = new ArrayList<HDAccountAddress>();
-        for (int i = 0; i < HD_ACCOUNT_COUNT; i++) {
+        for (int i = 0;
+             i < LOOK_AHEAD_SIZE;
+             i++) {
             byte[] subExternalPub = externalRoot.deriveSoftened(i).getPubKey();
             byte[] subInternalPub = internalRoot.deriveSoftened(i).getPubKey();
             HDAccountAddress externalAddress = new HDAccountAddress(subExternalPub
@@ -140,6 +142,27 @@ public abstract class HDAccount extends AbstractHD {
         return AbstractDb.addressProvider.getHDAccountEncryptSeed(hdSeedId);
     }
 
+    private void supplyEnoughKeys() {
+        int lackOfExternal = LOOK_AHEAD_SIZE - (allGeneratedExternalAddressCount() -
+                issuedExternalIndex());
+        if (lackOfExternal > 0) {
+            supplyNewExternalKey(lackOfExternal);
+        }
+
+        int lackOfInternal = LOOK_AHEAD_SIZE - (allGeneratedInternalAddressCount() -
+                issuedInternalIndex());
+        if (lackOfInternal > 0) {
+            supplyNewInternalKey(lackOfInternal);
+        }
+    }
+
+    private void supplyNewInternalKey(int count) {
+
+    }
+
+    private void supplyNewExternalKey(int count) {
+
+    }
 
     @Override
     protected String getEncryptedMnemonicSeed() {
@@ -161,17 +184,27 @@ public abstract class HDAccount extends AbstractHD {
         return 0;
     }
 
+    private int allGeneratedInternalAddressCount() {
+        return 0;
+    }
+
+    private int allGeneratedExternalAddressCount() {
+        return 0;
+    }
+
     public void onNewTx(Tx tx) {
-        List<HDAccountAddress> relatedAddresses = getRelatedHDAccountAddressForTx(tx);
+        List<HDAccountAddress> relatedAddresses = addTxIfRelated(tx);
         if (relatedAddresses.size() > 0) {
             //TODO new tx
             for (HDAccountAddress a : relatedAddresses) {
+                if (a.pathType == PathType.EXTERNAL_ROOT_PATH) {
 
+                }
             }
         }
     }
 
-    public List<HDAccountAddress> getRelatedHDAccountAddressForTx(Tx tx) {
+    public List<HDAccountAddress> addTxIfRelated(Tx tx) {
         //TODO
         return new ArrayList<HDAccountAddress>();
     }
