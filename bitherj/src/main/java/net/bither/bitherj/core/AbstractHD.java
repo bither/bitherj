@@ -48,6 +48,14 @@ public abstract class AbstractHD {
 
     }
 
+    public static TernalRootType getTernalRootType(int value) {
+        switch (value) {
+            case 0:
+                return TernalRootType.EXTERNAL_ROOT_PATH;
+            default:
+                return TernalRootType.INTERNAL_ROOT_PATH;
+        }
+    }
 
     protected transient byte[] mnemonicSeed;
     protected transient byte[] hdSeed;

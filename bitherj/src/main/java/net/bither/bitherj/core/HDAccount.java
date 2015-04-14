@@ -147,7 +147,7 @@ public abstract class HDAccount extends AbstractHD {
         return AbstractDb.addressProvider.getHDAccountEncryptMnmonicSeed(hdSeedId);
     }
 
-    public class HDAccountAddress {
+    public static class HDAccountAddress {
         private String address;
         private byte[] pub;
         private int index;
@@ -156,8 +156,13 @@ public abstract class HDAccount extends AbstractHD {
         private boolean isIssued;
 
         public HDAccountAddress(byte[] pub, TernalRootType accountRoot, int index, boolean isIssued) {
+            this(Utils.toAddress(Utils.sha256hash160(pub)), pub, accountRoot, index, isIssued);
+
+        }
+
+        public HDAccountAddress(String address, byte[] pub, TernalRootType accountRoot, int index, boolean isIssued) {
             this.pub = pub;
-            this.address = Utils.toAddress(Utils.sha256hash160(pub));
+            this.address = address;
             this.accountRoot = accountRoot;
             this.index = index;
             this.isIssued = isIssued;

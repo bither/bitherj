@@ -27,7 +27,6 @@ import java.util.List;
 public interface IHDAccountProvider {
 
 
-
     public void addExternalAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);
 
     public void addInternalAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);
@@ -36,19 +35,15 @@ public interface IHDAccountProvider {
 
     public int internalIssuedIndex();
 
-
-
     public String externalAddress();
 
-    public List<HashMap<String, byte[]>> getAddressPub();
+    public List<HDAccount.HDAccountAddress> getAddressPub();
 
     public List<Tx> getUnspentTxs();
 
     public void addTx(Tx tx);
 
     public void addTxs(List<Tx> txList);
-
-
 
 
 }
