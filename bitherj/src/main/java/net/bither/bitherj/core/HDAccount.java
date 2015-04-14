@@ -194,18 +194,17 @@ public abstract class HDAccount extends AbstractHD {
     public void onNewTx(Tx tx) {
         List<HDAccountAddress> relatedAddresses = addTxIfRelated(tx);
         if (relatedAddresses.size() > 0) {
-            //TODO new tx
             for (HDAccountAddress a : relatedAddresses) {
                 if (a.pathType == PathType.EXTERNAL_ROOT_PATH) {
 
                 }
             }
+            supplyEnoughKeys();
         }
     }
 
     public List<HDAccountAddress> addTxIfRelated(Tx tx) {
-        //TODO
-        return new ArrayList<HDAccountAddress>();
+        return AbstractDb.hdAccountProvider.addTx(tx);
     }
 
     public Tx newTx(String toAddress, long amount, CharSequence password) {

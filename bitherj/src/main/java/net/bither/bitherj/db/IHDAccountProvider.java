@@ -37,7 +37,6 @@ public interface IHDAccountProvider {
 
     public String externalAddress();
 
-    public List<HDAccount.HDAccountAddress> getRelatedHDAccountAddressForTx(Tx tx);
 
     public List<Integer> getHDAccountSeeds();
 
@@ -45,7 +44,7 @@ public interface IHDAccountProvider {
 
     public List<Tx> getUnspentTxs();
 
-    public void addTx(Tx tx);
+    public List<HDAccount.HDAccountAddress> addTx(Tx tx);
 
     public void addTxs(List<Tx> txList);
 
