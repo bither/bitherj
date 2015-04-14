@@ -27,8 +27,13 @@ import net.bither.bitherj.utils.Utils;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.List;
 
 public abstract class HDAccount extends AbstractHD {
+
+    private int HD_ACCOUNT_COUNT = 100;
+
+
     private transient byte[] mnemonicSeed;
     private transient byte[] hdSeed;
     private boolean isFromXRandom;
@@ -79,11 +84,31 @@ public abstract class HDAccount extends AbstractHD {
         DeterministicKey externalKey = externalChainRoot(master);
         byte[] internalPub = internalKey.getPubKeyExtended();
         byte[] externalPub = externalKey.getPubKeyExtended();
+
+        DeterministicKey externalRoot = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                (externalPub);
+        DeterministicKey internalRoot = HDKeyDerivation.createMasterPrivateKey(internalPub);
+        List<HDAccountAddress> externalAddresses = new ArrayList<HDAccountAddress>();
+        List<HDAccountAddress> internalAddresses = new ArrayList<HDAccountAddress>();
+        for (int i = 0; i < HD_ACCOUNT_COUNT; i++) {
+            byte[] subExternalPub = externalRoot.deriveSoftened(i).getPubKey();
+            byte[] subInternalPub = internalRoot.deriveSoftened(i).getPubKey();
+            HDAccountAddress externalAddress = new HDAccountAddress(subExternalPub
+                    , TernalRootType.EXTERNAL_ROOT_PATH, i, false);
+            HDAccountAddress internalAddress = new HDAccountAddress(subInternalPub
+                    , TernalRootType.INTERNAL_ROOT_PATH, i, false);
+            externalAddresses.add(externalAddress);
+            internalAddresses.add(internalAddress);
+        }
         internalKey.wipe();
         externalKey.wipe();
         wipeHDSeed();
         wipeMnemonicSeed();
-        hdSeedId = AbstractDb.hdAccountProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
+        Utils.wipeBytes(internalPub);
+        Utils.wipeBytes(externalPub);
+        AbstractDb.hdAccountProvider.addExternalAddress(externalAddresses);
+        AbstractDb.hdAccountProvider.addInternalAddress(internalAddresses);
+        hdSeedId = AbstractDb.addressProvider.addHDAccount(encryptedMnemonicSeed.toEncryptedString(),
                 encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address
                 , externalPub, internalPub);
 
@@ -104,35 +129,38 @@ public abstract class HDAccount extends AbstractHD {
     }
 
     public byte[] getInternalPub() {
-        return AbstractDb.hdAccountProvider.getInternalPub();
+        return AbstractDb.addressProvider.getInternalPub(hdSeedId);
     }
 
     public byte[] getExternalPub() {
-        return AbstractDb.hdAccountProvider.getExternalPub();
+        return AbstractDb.addressProvider.getExternalPub(hdSeedId);
     }
 
     @Override
     protected String getEncryptedHDSeed() {
-        return AbstractDb.hdAccountProvider.getEncryptHDSeed(hdSeedId);
+        return AbstractDb.addressProvider.getHDAccountEncryptSeed(hdSeedId);
     }
 
 
     @Override
     protected String getEncryptedMnemonicSeed() {
-        return AbstractDb.hdAccountProvider.getEncryptHDSeed(hdSeedId);
+        return AbstractDb.addressProvider.getHDAccountEncryptMnmonicSeed(hdSeedId);
     }
 
     public class HDAccountAddress {
         private String address;
         private byte[] pub;
         private int index;
-        private int accountRoot;
+        private TernalRootType accountRoot;
 
-        public HDAccountAddress(byte[] pub, int accountRoot, int index) {
+        private boolean isIssued;
+
+        public HDAccountAddress(byte[] pub, TernalRootType accountRoot, int index, boolean isIssued) {
             this.pub = pub;
             this.address = Utils.toAddress(Utils.sha256hash160(pub));
             this.accountRoot = accountRoot;
             this.index = index;
+            this.isIssued = isIssued;
 
         }
 
@@ -148,8 +176,12 @@ public abstract class HDAccount extends AbstractHD {
             return index;
         }
 
-        public int getAccountRoot() {
+        public TernalRootType getAccountRoot() {
             return accountRoot;
+        }
+
+        public boolean isIssued() {
+            return isIssued;
         }
 
 

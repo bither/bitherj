@@ -314,7 +314,7 @@ public abstract class AbstractDb {
 
     }
 
-    public interface HDAccountAddresses {
+    public interface HDAccountAddressesColumns {
         public static final String ACCOUNT_ROOT = "account_root";
         public static final String INDEX = "index";
         public static final String IS_ISSUED = "is_issued";

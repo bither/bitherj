@@ -32,6 +32,23 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 public abstract class AbstractHD {
+
+    public enum TernalRootType {
+        EXTERNAL_ROOT_PATH(0), INTERNAL_ROOT_PATH(1);
+        private int value;
+
+        TernalRootType(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return this.value;
+        }
+
+
+    }
+
+
     protected transient byte[] mnemonicSeed;
     protected transient byte[] hdSeed;
     protected int hdSeedId = -1;
@@ -72,7 +89,7 @@ public abstract class AbstractHD {
     }
 
     protected DeterministicKey externalChainRoot(DeterministicKey master) {
-        return getAccount(master, 0);
+        return getAccount(master, TernalRootType.EXTERNAL_ROOT_PATH);
 
     }
 
@@ -83,15 +100,15 @@ public abstract class AbstractHD {
     }
 
     protected DeterministicKey internalChainRoot(DeterministicKey master) {
-        return getAccount(master, 1);
+        return getAccount(master, TernalRootType.INTERNAL_ROOT_PATH);
 
     }
 
-    private DeterministicKey getAccount(DeterministicKey master, int index) {
+    private DeterministicKey getAccount(DeterministicKey master, TernalRootType ternalRootType) {
         DeterministicKey purpose = master.deriveHardened(44);
         DeterministicKey coinType = purpose.deriveHardened(0);
         DeterministicKey account = coinType.deriveHardened(0);
-        DeterministicKey external = account.deriveSoftened(index);
+        DeterministicKey external = account.deriveSoftened(ternalRootType.getValue());
         purpose.wipe();
         coinType.wipe();
         account.wipe();
@@ -128,7 +145,7 @@ public abstract class AbstractHD {
         decryptMnemonicSeed(password);
         hdSeed = seedFromMnemonic(mnemonicSeed);
         wipeMnemonicSeed();
-        AbstractDb.addressProvider.updateEncryptHDSeed(getHdSeedId(), new EncryptedData(hdSeed,
+        AbstractDb.addressProvider.updateEncrypttMnmonicSeed(getHdSeedId(), new EncryptedData(hdSeed,
                 password, isFromXRandom).toEncryptedString());
     }
 

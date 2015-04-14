@@ -8,7 +8,6 @@ import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.api.CreateHDMAddressApi;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
-import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
@@ -16,7 +15,6 @@ import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
-import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.PrivateKeyUtil;
@@ -376,7 +374,7 @@ public class HDMKeychain extends AbstractHD {
         if (isInRecovery()) {
             throw new AssertionError("recover mode hdm keychain do not have encrypted hd seed");
         }
-        String encrypted = AbstractDb.addressProvider.getEncryptHDSeed(hdSeedId);
+        String encrypted = AbstractDb.addressProvider.getEncryptMnmonicSeed(hdSeedId);
         if (encrypted == null) {
             return null;
         }
@@ -484,7 +482,7 @@ public class HDMKeychain extends AbstractHD {
     public boolean isInRecovery() {
         return Utils.compareString(AbstractDb.addressProvider.getEncryptSeed(hdSeedId),
                 HDMKeychainRecover.RecoverPlaceHolder) ||
-                Utils.compareString(AbstractDb.addressProvider.getEncryptHDSeed(hdSeedId),
+                Utils.compareString(AbstractDb.addressProvider.getEncryptMnmonicSeed(hdSeedId),
                         HDMKeychainRecover.RecoverPlaceHolder) ||
                 Utils.compareString(getFirstAddressFromDb(), HDMKeychainRecover.RecoverPlaceHolder);
     }

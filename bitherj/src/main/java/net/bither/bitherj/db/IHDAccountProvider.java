@@ -26,9 +26,7 @@ import java.util.List;
 
 public interface IHDAccountProvider {
 
-    public int addHDKey(String encryptSeed, String encryptHdSeed
-            , String firstAddress, boolean isXrandom, String addressOfPS
-            , byte[] externalPub, byte[] internalPub);
+
 
     public void addExternalAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);
 
@@ -38,9 +36,7 @@ public interface IHDAccountProvider {
 
     public int internalIssuedIndex();
 
-    public byte[] getExternalPub();
 
-    public byte[] getInternalPub();
 
     public String externalAddress();
 
@@ -52,9 +48,7 @@ public interface IHDAccountProvider {
 
     public void addTxs(List<Tx> txList);
 
-    public String getEncryptSeed(int hdSeedId);
 
-    public String getEncryptHDSeed(int hdSeedId);
 
 
 }

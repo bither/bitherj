@@ -20,13 +20,26 @@ public interface IAddressProvider {
     public boolean hasPasswordSeed();
 
     //hd
+
+    public int addHDAccount(String encryptSeed, String encryptHdSeed
+            , String firstAddress, boolean isXrandom, String addressOfPS
+            , byte[] externalPub, byte[] internalPub);
+
+    public byte[] getExternalPub(int hdSeedId);
+
+    public byte[] getInternalPub(int hdSeedId);
+
+    public String getHDAccountEncryptSeed(int hdSeedId);
+
+    public String getHDAccountEncryptMnmonicSeed(int hdSeedId);
+
     public List<Integer> getHDSeeds();
 
     public String getEncryptSeed(int hdSeedId);
 
-    public String getEncryptHDSeed(int hdSeedId);
+    public String getEncryptMnmonicSeed(int hdSeedId);
 
-    public void updateEncryptHDSeed(int hdSeedId, String encryptHDSeed);
+    public void updateEncrypttMnmonicSeed(int hdSeedId, String encryptMnmonicSeed);
 
     public boolean isHDSeedFromXRandom(int hdSeedId);
 
