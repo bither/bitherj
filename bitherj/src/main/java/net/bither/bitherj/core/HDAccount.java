@@ -33,10 +33,6 @@ public abstract class HDAccount extends AbstractHD {
 
     private int LOOK_AHEAD_SIZE = 100;
 
-
-    private transient byte[] mnemonicSeed;
-    private transient byte[] hdSeed;
-    private boolean isFromXRandom;
     private byte[] externalPub;
     private byte[] internalPub;
     private String externalAddress;
@@ -81,19 +77,13 @@ public abstract class HDAccount extends AbstractHD {
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
         DeterministicKey internalKey = internalChainRoot(master);
         DeterministicKey externalKey = externalChainRoot(master);
-        byte[] internalPub = internalKey.getPubKeyExtended();
-        byte[] externalPub = externalKey.getPubKeyExtended();
-
-        DeterministicKey externalRoot = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
-                (externalPub);
-        DeterministicKey internalRoot = HDKeyDerivation.createMasterPrivateKey(internalPub);
         List<HDAccountAddress> externalAddresses = new ArrayList<HDAccountAddress>();
         List<HDAccountAddress> internalAddresses = new ArrayList<HDAccountAddress>();
         for (int i = 0;
              i < LOOK_AHEAD_SIZE;
              i++) {
-            byte[] subExternalPub = externalRoot.deriveSoftened(i).getPubKey();
-            byte[] subInternalPub = internalRoot.deriveSoftened(i).getPubKey();
+            byte[] subExternalPub = externalKey.deriveSoftened(i).getPubKey();
+            byte[] subInternalPub = internalKey.deriveSoftened(i).getPubKey();
             HDAccountAddress externalAddress = new HDAccountAddress(subExternalPub
                     , PathType.EXTERNAL_ROOT_PATH, i, false);
             HDAccountAddress internalAddress = new HDAccountAddress(subInternalPub
@@ -101,18 +91,16 @@ public abstract class HDAccount extends AbstractHD {
             externalAddresses.add(externalAddress);
             internalAddresses.add(internalAddress);
         }
-        internalKey.wipe();
-        externalKey.wipe();
         wipeHDSeed();
         wipeMnemonicSeed();
-        Utils.wipeBytes(internalPub);
-        Utils.wipeBytes(externalPub);
         AbstractDb.hdAccountProvider.addExternalAddress(externalAddresses);
         AbstractDb.hdAccountProvider.addInternalAddress(internalAddresses);
-        hdSeedId = AbstractDb.addressProvider.addHDAccount(encryptedMnemonicSeed.toEncryptedString(),
-                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address
-                , externalPub, internalPub);
-
+        hdSeedId = AbstractDb.addressProvider.addHDAccount(encryptedMnemonicSeed
+                .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
+                isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
+                        .getPubKeyExtended());
+        internalKey.wipe();
+        externalKey.wipe();
     }
 
     public HDAccount() {
@@ -157,11 +145,31 @@ public abstract class HDAccount extends AbstractHD {
     }
 
     private void supplyNewInternalKey(int count) {
-
+        DeterministicKey root = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                (getInternalPub());
+        int firstIndex = allGeneratedInternalAddressCount();
+        ArrayList<HDAccountAddress> as = new ArrayList<HDAccountAddress>();
+        for (int i = firstIndex;
+             i < firstIndex + count;
+             i++) {
+            as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), PathType
+                    .INTERNAL_ROOT_PATH, i, false));
+        }
+        AbstractDb.hdAccountProvider.addInternalAddress(as);
     }
 
     private void supplyNewExternalKey(int count) {
-
+        DeterministicKey root = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                (getExternalPub());
+        int firstIndex = allGeneratedExternalAddressCount();
+        ArrayList<HDAccountAddress> as = new ArrayList<HDAccountAddress>();
+        for (int i = firstIndex;
+             i < firstIndex + count;
+             i++) {
+            as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), PathType
+                    .EXTERNAL_ROOT_PATH, i, false));
+        }
+        AbstractDb.hdAccountProvider.addExternalAddress(as);
     }
 
     @Override
@@ -184,21 +192,47 @@ public abstract class HDAccount extends AbstractHD {
     }
 
     private int allGeneratedInternalAddressCount() {
+        //TODO
         return 0;
     }
 
     private int allGeneratedExternalAddressCount() {
+        //TODO
         return 0;
     }
 
+    private HDAccountAddress addressForPath(PathType type, int index) {
+        assert index < (type == PathType.EXTERNAL_ROOT_PATH ? allGeneratedExternalAddressCount()
+                : allGeneratedInternalAddressCount());
+        //TODO read from db
+        return null;
+    }
+
     public void onNewTx(Tx tx) {
+        //TODO new tx maybe return some information
         List<HDAccountAddress> relatedAddresses = addTxIfRelated(tx);
         if (relatedAddresses.size() > 0) {
+
+            int maxInternal = -1, maxExternal = -1;
             for (HDAccountAddress a : relatedAddresses) {
                 if (a.pathType == PathType.EXTERNAL_ROOT_PATH) {
-
+                    if (a.index > maxExternal) {
+                        maxExternal = a.index;
+                    }
+                } else {
+                    if (a.index > maxInternal) {
+                        maxInternal = a.index;
+                    }
                 }
             }
+
+            if (maxExternal > issuedExternalIndex()) {
+                updateIssuedExternalIndex(maxExternal);
+            }
+            if (maxInternal > issuedInternalIndex()) {
+                updateIssuedInternalIndex(maxInternal);
+            }
+
             supplyEnoughKeys();
         }
     }
@@ -216,9 +250,25 @@ public abstract class HDAccount extends AbstractHD {
         return null;
     }
 
-    public boolean commitTx(Tx tx) {
-        //TODO add to db and broadcast
-        return false;
+    private void updateIssuedInternalIndex(int index) {
+        //TODO update db
+    }
+
+    private void updateIssuedExternalIndex(int index) {
+        //TODO update db
+    }
+
+    public int elementCountForBloomFilter() {
+        return allGeneratedInternalAddressCount() * 2 + allGeneratedExternalAddressCount() * 2;
+    }
+
+    public void addElementsForBloomFilter(BloomFilter filter) {
+        //TODO get all generated addresses
+        List<HDAccountAddress> as = new ArrayList<HDAccountAddress>();
+        for (HDAccountAddress a : as) {
+            filter.insert(a.getPub());
+            filter.insert(Utils.sha256hash160(a.getPub()));
+        }
     }
 
     public static class HDAccountAddress {
