@@ -116,9 +116,7 @@ public class PeerManager {
                 publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
             }
         }
-        List<Tx> publishedTxsOfHDAccount =
-                AddressManager.getInstance().getHdAccount().getPublishedTxs();
-        for (Tx tx : publishedTxsOfHDAccount) {
+        for (Tx tx : AbstractDb.hdAccountProvider.getPublishedTxs()) {
             if (tx.getBlockNo() == Tx.TX_UNCONFIRMED) {
                 publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
             }

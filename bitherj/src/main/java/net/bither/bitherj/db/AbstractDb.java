@@ -106,7 +106,8 @@ public abstract class AbstractDb {
 
     //hd account
     public static final String CREATE_HD_ACCOUNT = "create table if not exists  hd_account " +
-            "(  encrypt_seed text not null" +
+            "( hd_account_id integer not null primary key autoincrement" +
+            ", encrypt_seed text not null" +
             ", encrypt_hd_seed text" +
             ", hd_address text not null" +
             ", external_pub text not null" +
@@ -114,9 +115,8 @@ public abstract class AbstractDb {
             ", is_xrandom integer not null);";
 
     public static final String CREATE_HD_ACCOUNT_ADDRESSES = "create table if not exists account_addresses " +
-            "( hd_account_id integer not null primary key autoincrement" +
-            ", path_type integer not null" +
-            ", index integer not null" +
+            "(path_type integer not null" +
+            ", address_index integer not null" +
             ", is_issued integer not null" +
             ", address text not null" +
             ", pub text not null" +
@@ -196,7 +196,7 @@ public abstract class AbstractDb {
         public static final String HD_ACCOUNT = "hd_account";
 
         public static final String ACCOUNT_ADDRESS = "account_addresses";
-       
+
 
     }
 
@@ -314,7 +314,7 @@ public abstract class AbstractDb {
 
     public interface HDAccountAddressesColumns {
         public static final String PATH_TYPE = "path_type";
-        public static final String INDEX = "index";
+        public static final String ADDRESS_INDEX = "address_index";
         public static final String IS_ISSUED = "is_issued";
         public static final String ADDRESS = "address";
         public static final String PUB = "pub";
