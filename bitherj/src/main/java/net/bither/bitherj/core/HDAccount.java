@@ -204,11 +204,10 @@ public abstract class HDAccount extends AbstractHD {
         return null;
     }
 
-    public void onNewTx(Tx tx) {
+    public boolean onNewTx(Tx tx) {
         //TODO new tx maybe return some information
         List<HDAccountAddress> relatedAddresses = getRelatedAddressesForTx(tx);
         if (relatedAddresses.size() > 0) {
-
             int maxInternal = -1, maxExternal = -1;
             for (HDAccountAddress a : relatedAddresses) {
                 if (a.pathType == PathType.EXTERNAL_ROOT_PATH) {
@@ -230,7 +229,9 @@ public abstract class HDAccount extends AbstractHD {
             }
 
             supplyEnoughKeys();
+            return true;
         }
+        return false;
     }
 
     public boolean isTxRelated(Tx tx){
