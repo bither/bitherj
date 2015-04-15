@@ -18,20 +18,25 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
+import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.exception.TxBuilderException;
+import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class HDAccount extends AbstractHD {
 
-    private int LOOK_AHEAD_SIZE = 100;
+    private static final int LOOK_AHEAD_SIZE = 100;
 
     public HDAccount(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
@@ -240,13 +245,76 @@ public class HDAccount extends AbstractHD {
         return new ArrayList<HDAccountAddress>();
     }
 
-    public Tx newTx(String toAddress, long amount, CharSequence password) {
-        return newTx(new String[]{toAddress}, new long[]{amount}, password);
+    public Tx newTx(String toAddress, Long amount, CharSequence password) throws
+            TxBuilderException, MnemonicException.MnemonicLengthException {
+        return newTx(new String[]{toAddress}, new Long[]{amount}, password);
     }
 
-    public Tx newTx(String[] toAddresses, long[] amounts, CharSequence password) {
-        //TODO hddb:
-        return null;
+    public Tx newTx(String[] toAddresses, Long[] amounts, CharSequence password) throws
+            TxBuilderException, MnemonicException.MnemonicLengthException {
+        //TODO hddb: get all unspent outputs from db
+        List<Out> outs = new ArrayList<Out>();
+
+        Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(), Arrays
+                .asList(amounts), Arrays.asList(toAddresses));
+        List<HDAccountAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
+        assert signingAddresses.size() == tx.getIns().size();
+
+        DeterministicKey master = masterKey(password);
+        if (master == null) {
+            return null;
+        }
+        DeterministicKey purpose = master.deriveHardened(44);
+        DeterministicKey coinType = purpose.deriveHardened(0);
+        DeterministicKey account = coinType.deriveHardened(0);
+        DeterministicKey external = account.deriveSoftened(PathType.EXTERNAL_ROOT_PATH.getValue());
+        DeterministicKey internal = account.deriveSoftened(PathType.INTERNAL_ROOT_PATH.getValue());
+        master.wipe();
+        purpose.wipe();
+        coinType.wipe();
+        account.wipe();
+
+        HashMap<String, DeterministicKey> addressToKeyMap = new HashMap<String, DeterministicKey>
+                (signingAddresses.size());
+        for (HDAccountAddress a : signingAddresses) {
+            if (addressToKeyMap.containsKey(a.getAddress())) {
+                continue;
+            }
+            if (a.getPathType() == PathType.EXTERNAL_ROOT_PATH) {
+                addressToKeyMap.put(a.getAddress(), external.deriveSoftened(a.index));
+            } else {
+                addressToKeyMap.put(a.getAddress(), internal.deriveSoftened(a.index));
+            }
+        }
+        external.wipe();
+        internal.wipe();
+
+        List<byte[]> unsignedHashes = tx.getUnsignedInHashes();
+        ArrayList<byte[]> signatures = new ArrayList<byte[]>();
+
+        for (int i = 0;
+             i < signingAddresses.size();
+             i++) {
+            HDAccountAddress a = signingAddresses.get(i);
+            byte[] unsigned = unsignedHashes.get(i);
+            DeterministicKey key = addressToKeyMap.get(a.getAddress());
+            assert key != null;
+            TransactionSignature signature = new TransactionSignature(key.sign(unsigned, null),
+                    TransactionSignature.SigHash.ALL, false);
+            signatures.add(ScriptBuilder.createInputScript(signature, key).getProgram());
+        }
+        tx.signWithSignatures(signatures);
+
+        for (DeterministicKey key : addressToKeyMap.values()) {
+            key.wipe();
+        }
+
+        return tx;
+    }
+
+    private List<HDAccountAddress> getSigningAddressesForInputs(List<In> inputs) {
+        //TODO hddb: get all signing addresses for tx inputs. pubkey is not needed. each index in inputs must has one hdAccountAddress
+        return new ArrayList<HDAccountAddress>();
     }
 
     private void updateIssuedInternalIndex(int index) {
@@ -255,6 +323,10 @@ public class HDAccount extends AbstractHD {
 
     private void updateIssuedExternalIndex(int index) {
         AbstractDb.hdAccountProvider.updateIssuedExternalIndex(index);
+    }
+
+    private String getNewChangeAddress() {
+        return addressForPath(PathType.INTERNAL_ROOT_PATH, issuedInternalIndex() + 1).getAddress();
     }
 
     public int elementCountForBloomFilter() {

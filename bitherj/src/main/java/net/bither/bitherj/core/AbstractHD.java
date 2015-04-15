@@ -125,7 +125,7 @@ public abstract class AbstractHD {
     }
 
 
-    private DeterministicKey masterKey(CharSequence password) throws MnemonicException
+    protected DeterministicKey masterKey(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         long begin = System.currentTimeMillis();
         decryptHDSeed(password);
