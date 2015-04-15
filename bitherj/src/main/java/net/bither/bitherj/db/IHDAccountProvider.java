@@ -23,6 +23,7 @@ import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.Tx;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public interface IHDAccountProvider {
@@ -38,9 +39,10 @@ public interface IHDAccountProvider {
 
     public String externalAddress();
 
+    public HashSet<String> getAllAddress();
+
     public HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index);
 
-    public List<Integer> getHDAccountSeeds();
 
 
     public List<byte[]> getPubs(AbstractHD.PathType pathType);
@@ -55,4 +57,11 @@ public interface IHDAccountProvider {
 
     public boolean belongAccount(List<String> addresses);
 
+    public int txCount();
+
+    public long getConfirmedBanlance();
+
+    public List<Tx> getUnconfirmedTx();
+
+    public Tx getTxDetailByTxHash(byte[] txHash);
 }

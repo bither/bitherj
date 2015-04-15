@@ -123,7 +123,7 @@ public abstract class AbstractDb {
             ", primary key (address));";
 
 
-    public static final String CREATE_HD_ACCOUNT_TX = "create table if not exists account_txs " +
+    public static final String CREATE_HD_ACCOUNT_TX = "create table if not exists txs " +
             "(tx_hash text primary key" +
             ", tx_ver integer" +
             ", tx_locktime integer" +
@@ -131,7 +131,7 @@ public abstract class AbstractDb {
             ", block_no integer" +
             ", source integer);";
 
-    public static final String CREATE_HD_ACCOUNT_OUT = "create table if not exists account_outs " +
+    public static final String CREATE_HD_ACCOUNT_OUT = "create table if not exists outs " +
             "(tx_hash text not null" +
             ", out_sn integer not null" +
             ", out_script text not null" +
@@ -141,7 +141,7 @@ public abstract class AbstractDb {
             ", belong_account integer not null" +
             ", primary key (tx_hash, out_sn));";
 
-    public static final String CREATE_HD_ACCOUNT_IN = "create table if not exists account_ins " +
+    public static final String CREATE_HD_ACCOUNT_IN = "create table if not exists ins " +
             "(tx_hash text not null" +
             ", in_sn integer not null" +
             ", prev_tx_hash text" +
@@ -196,9 +196,7 @@ public abstract class AbstractDb {
         public static final String HD_ACCOUNT = "hd_account";
 
         public static final String ACCOUNT_ADDRESS = "account_addresses";
-        public static final String ACCOUNT_TXS = "account_txs";
-        public static final String ACCOUNT_OUTS = "account_outs";
-        public static final String ACCOUNT_INS = "account_ins";
+       
 
     }
 

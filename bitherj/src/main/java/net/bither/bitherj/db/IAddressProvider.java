@@ -32,6 +32,7 @@ public interface IAddressProvider {
     public String getHDAccountEncryptSeed(int hdSeedId);
 
     public String getHDAccountEncryptMnmonicSeed(int hdSeedId);
+    public List<Integer> getHDAccountSeeds();
 
     public List<Integer> getHDSeeds();
 

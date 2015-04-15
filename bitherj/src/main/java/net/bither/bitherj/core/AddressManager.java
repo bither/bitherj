@@ -108,7 +108,10 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     }
 
     private void initHDAccount() {
-        //TODO hddb: init HDAccount
+        List<Integer> seeds = AbstractDb.addressProvider.getHDAccountSeeds();
+        if (seeds.size() > 0) {
+            hdAccount = new HDAccount(seeds.get(0));
+        }
     }
 
     public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {
@@ -441,19 +444,22 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     }
 
     public Tx compressTx(Tx tx) {
-        if (!isSendFromMe(tx) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
+        if (!isSendFromMe(tx) &&
+                (hdAccount == null || !hdAccount.isSendFromMe(tx))
+                && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
             List<Out> outList = new ArrayList<Out>();
+            HashSet<String> hdAddresses = new HashSet<String>();
+            if (hasHDAccount()) {
+                hdAddresses = hdAccount.getAllAddress();
+            }
             for (Out out : tx.getOuts()) {
                 String outAddress = out.getOutAddress();
-                if (addressHashSet.contains(outAddress)) {
+                if (addressHashSet.contains(outAddress)
+                        || hdAddresses.contains(outAddress)) {
                     outList.add(out);
                 }
             }
-            if (hasHDAccount()) {
-                List<HDAccount.HDAccountAddress> relatedHDAddresses = getHdAccount()
-                        .getRelatedAddressesForTx(tx);
-                //TODO hddb: compress Tx should consider HD Account
-            }
+
             tx.setOuts(outList);
         }
         return tx;

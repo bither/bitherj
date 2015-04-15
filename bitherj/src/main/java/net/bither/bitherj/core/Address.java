@@ -153,7 +153,7 @@ public class Address implements Comparable<Address> {
             }
 
             if (tx.getBlockNo() == Tx.TX_UNCONFIRMED
-                    && (this.isIntersects(spent, spentOut) || this.isIntersects(inHashes, invalidTx))) {
+                    && (Utils.isIntersects(spent, spentOut) || Utils.isIntersects(inHashes, invalidTx))) {
                 invalidTx.add(tx.getTxHash());
                 continue;
             }
@@ -181,12 +181,6 @@ public class Address implements Comparable<Address> {
         return balance;
     }
 
-    private boolean isIntersects(Set set1, Set set2) {
-        Set result = new HashSet();
-        result.addAll(set1);
-        result.retainAll(set2);
-        return !result.isEmpty();
-    }
 
     public long getBalance() {
         return balance;

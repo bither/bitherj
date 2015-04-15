@@ -31,12 +31,16 @@ import net.bither.bitherj.utils.Utils;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class HDAccount extends AbstractHD {
 
     private static final int LOOK_AHEAD_SIZE = 100;
+    private long balance = 0;
 
     public HDAccount(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
@@ -104,14 +108,11 @@ public class HDAccount extends AbstractHD {
         externalKey.wipe();
     }
 
-    public HDAccount() {
-        initFromDb();
+    public HDAccount(int seedId) {
+        this.hdSeedId = seedId;
+        updateBalance();
+        ;
     }
-
-    private void initFromDb() {
-
-    }
-
 
     public String getFullEncryptPrivKey() {
         String encryptPrivKey = getEncryptedMnemonicSeed();
@@ -240,9 +241,73 @@ public class HDAccount extends AbstractHD {
         return getRelatedAddressesForTx(tx).size() > 0;
     }
 
+    public int txCount() {
+        return AbstractDb.hdAccountProvider.txCount();
+    }
+
+    public void updateBalance() {
+        this.balance = AbstractDb.hdAccountProvider.getConfirmedBanlance()
+                + calculateUnconfirmedBalance();
+    }
+
+
+    private long calculateUnconfirmedBalance() {
+        long balance = 0;
+
+        List<Tx> txs = AbstractDb.hdAccountProvider.getUnconfirmedTx();
+        Collections.sort(txs);
+
+        Set<byte[]> invalidTx = new HashSet<byte[]>();
+        Set<OutPoint> spentOut = new HashSet<OutPoint>();
+        Set<OutPoint> unspendOut = new HashSet<OutPoint>();
+
+        for (int i = txs.size() - 1; i >= 0; i--) {
+            Set<OutPoint> spent = new HashSet<OutPoint>();
+            Tx tx = txs.get(i);
+
+            Set<byte[]> inHashes = new HashSet<byte[]>();
+            for (In in : tx.getIns()) {
+                spent.add(new OutPoint(in.getPrevTxHash(), in.getPrevOutSn()));
+                inHashes.add(in.getPrevTxHash());
+            }
+
+            if (tx.getBlockNo() == Tx.TX_UNCONFIRMED
+                    && (Utils.isIntersects(spent, spentOut) || Utils.isIntersects(inHashes, invalidTx))) {
+                invalidTx.add(tx.getTxHash());
+                continue;
+            }
+
+            spentOut.addAll(spent);
+            HashSet<String> addressSet = AbstractDb.hdAccountProvider.getAllAddress();
+            for (Out out : tx.getOuts()) {
+                if (addressSet.contains(out.getOutAddress())) {
+                    unspendOut.add(new OutPoint(tx.getTxHash(), out.getOutSn()));
+                    balance += out.getOutValue();
+                }
+            }
+            spent.clear();
+            spent.addAll(unspendOut);
+            spent.retainAll(spentOut);
+            for (OutPoint o : spent) {
+                Tx tx1 = AbstractDb.hdAccountProvider.getTxDetailByTxHash(o.getTxHash());
+                unspendOut.remove(o);
+                for (Out out : tx1.getOuts()) {
+                    if (out.getOutSn() == o.getOutSn()) {
+                        balance -= out.getOutValue();
+                    }
+                }
+            }
+        }
+        return balance;
+    }
+
     public List<HDAccountAddress> getRelatedAddressesForTx(Tx tx) {
         //TODO hddb: from db
         return new ArrayList<HDAccountAddress>();
+    }
+
+    public HashSet<String> getAllAddress() {
+        return AbstractDb.hdAccountProvider.getAllAddress();
     }
 
     public Tx newTx(String toAddress, Long amount, CharSequence password) throws
