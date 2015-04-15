@@ -33,10 +33,6 @@ public abstract class HDAccount extends AbstractHD {
 
     private int LOOK_AHEAD_SIZE = 100;
 
-    private byte[] externalPub;
-    private byte[] internalPub;
-    private String externalAddress;
-
     public HDAccount(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         this.mnemonicSeed = mnemonicSeed;
@@ -66,7 +62,6 @@ public abstract class HDAccount extends AbstractHD {
             }
         }
         initHDAccount(encryptedMnemonicSeed, encryptedHDSeed, firstAddress);
-
     }
 
     private void initHDAccount(EncryptedData encryptedMnemonicSeed,
@@ -77,6 +72,7 @@ public abstract class HDAccount extends AbstractHD {
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
         DeterministicKey internalKey = internalChainRoot(master);
         DeterministicKey externalKey = externalChainRoot(master);
+        master.wipe();
         List<HDAccountAddress> externalAddresses = new ArrayList<HDAccountAddress>();
         List<HDAccountAddress> internalAddresses = new ArrayList<HDAccountAddress>();
         for (int i = 0;
@@ -210,7 +206,7 @@ public abstract class HDAccount extends AbstractHD {
 
     public void onNewTx(Tx tx) {
         //TODO new tx maybe return some information
-        List<HDAccountAddress> relatedAddresses = addTxIfRelated(tx);
+        List<HDAccountAddress> relatedAddresses = getRelatedAddressesForTx(tx);
         if (relatedAddresses.size() > 0) {
 
             int maxInternal = -1, maxExternal = -1;
@@ -237,8 +233,13 @@ public abstract class HDAccount extends AbstractHD {
         }
     }
 
-    public List<HDAccountAddress> addTxIfRelated(Tx tx) {
-        return AbstractDb.hdAccountProvider.addTx(tx);
+    public boolean isTxRelated(Tx tx){
+        return getRelatedAddressesForTx(tx).size() > 0;
+    }
+
+    public List<HDAccountAddress> getRelatedAddressesForTx(Tx tx){
+        //TODO from db
+        return new ArrayList<HDAccountAddress>();
     }
 
     public Tx newTx(String toAddress, long amount, CharSequence password) {
@@ -281,7 +282,6 @@ public abstract class HDAccount extends AbstractHD {
 
         public HDAccountAddress(byte[] pub, PathType pathType, int index, boolean isIssued) {
             this(Utils.toAddress(Utils.sha256hash160(pub)), pub, pathType, index, isIssued);
-
         }
 
         public HDAccountAddress(String address, byte[] pub, PathType pathType, int index, boolean isIssued) {
@@ -311,7 +311,5 @@ public abstract class HDAccount extends AbstractHD {
         public boolean isIssued() {
             return isIssued;
         }
-
-
     }
 }
