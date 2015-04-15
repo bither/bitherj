@@ -210,7 +210,7 @@ public class HDAccount extends AbstractHD {
     public boolean onNewTx(Tx tx) {
         List<HDAccountAddress> relatedAddresses = getRelatedAddressesForTx(tx);
         if (relatedAddresses.size() > 0) {
-            //TODO hddb: should add this tx to db now
+            AbstractDb.hdAccountProvider.addTx(tx);
             int maxInternal = -1, maxExternal = -1;
             for (HDAccountAddress a : relatedAddresses) {
                 if (a.pathType == PathType.EXTERNAL_ROOT_PATH) {
@@ -278,7 +278,7 @@ public class HDAccount extends AbstractHD {
             }
 
             spentOut.addAll(spent);
-            HashSet<String> addressSet = AbstractDb.hdAccountProvider.getAllAddress();
+            HashSet<String> addressSet = getAllAddress();
             for (Out out : tx.getOuts()) {
                 if (addressSet.contains(out.getOutAddress())) {
                     unspendOut.add(new OutPoint(tx.getTxHash(), out.getOutSn()));
@@ -302,8 +302,24 @@ public class HDAccount extends AbstractHD {
     }
 
     public List<HDAccountAddress> getRelatedAddressesForTx(Tx tx) {
-        //TODO hddb: from db
-        return new ArrayList<HDAccountAddress>();
+        List<String> outAddressList = new ArrayList<String>();
+        List<HDAccountAddress> hdAccountAddressList = new ArrayList<HDAccountAddress>();
+        for (Out out : tx.getOuts()) {
+            String outAddress = out.getOutAddress();
+            outAddressList.add(outAddress);
+        }
+        List<HDAccountAddress> belongAccountOfOutList = AbstractDb.hdAccountProvider.belongAccount(outAddressList);
+        if (belongAccountOfOutList != null
+                && belongAccountOfOutList.size() > 0) {
+            hdAccountAddressList.addAll(belongAccountOfOutList);
+        }
+
+        List<HDAccountAddress> belongAccountOfInList = getAddressFromIn(tx);
+        if (belongAccountOfInList != null && belongAccountOfInList.size() > 0) {
+            hdAccountAddressList.addAll(belongAccountOfInList);
+        }
+
+        return hdAccountAddressList;
     }
 
     public HashSet<String> getAllAddress() {
@@ -317,8 +333,7 @@ public class HDAccount extends AbstractHD {
 
     public Tx newTx(String[] toAddresses, Long[] amounts, CharSequence password) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
-        //TODO hddb: get all unspent outputs from db
-        List<Out> outs = new ArrayList<Out>();
+        List<Out> outs = AbstractDb.hdAccountProvider.getUnspendOut();
 
         Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(), Arrays
                 .asList(amounts), Arrays.asList(toAddresses));
@@ -380,12 +395,16 @@ public class HDAccount extends AbstractHD {
     }
 
     private List<HDAccountAddress> getSigningAddressesForInputs(List<In> inputs) {
-        //TODO hddb: get all signing addresses for tx inputs. pubkey is not needed. each index in inputs must has one hdAccountAddress
-        return new ArrayList<HDAccountAddress>();
+        return AbstractDb.hdAccountProvider.getSigningAddressesForInputs(inputs);
     }
 
 
     public boolean isSendFromMe(Tx tx) {
+        List<HDAccountAddress> hdAccountAddressList = getAddressFromIn(tx);
+        return hdAccountAddressList.size() > 0;
+    }
+
+    private List<HDAccountAddress> getAddressFromIn(Tx tx) {
         boolean canParseFromScript = true;
         List<String> fromAddress = new ArrayList<String>();
         for (In in : tx.getIns()) {
@@ -397,13 +416,14 @@ public class HDAccount extends AbstractHD {
                 break;
             }
         }
-        List<String> addresses = null;
+        List<String> addresses;
         if (canParseFromScript) {
             addresses = fromAddress;
         } else {
             addresses = AbstractDb.hdAccountProvider.getInAddresses(tx);
         }
-        return AbstractDb.hdAccountProvider.belongAccount(addresses);
+        List<HDAccountAddress> hdAccountAddressList = AbstractDb.hdAccountProvider.belongAccount(addresses);
+        return hdAccountAddressList;
     }
 
     private void updateIssuedInternalIndex(int index) {
@@ -434,6 +454,10 @@ public class HDAccount extends AbstractHD {
             filter.insert(Utils.sha256hash160(pub));
         }
 
+    }
+
+    public List<Tx> getPublishedTxs() {
+        return AbstractDb.hdAccountProvider.getPublishedTxs();
     }
 
     public static class HDAccountAddress {

@@ -20,6 +20,8 @@ package net.bither.bitherj.db;
 
 import net.bither.bitherj.core.AbstractHD;
 import net.bither.bitherj.core.HDAccount;
+import net.bither.bitherj.core.In;
+import net.bither.bitherj.core.Out;
 import net.bither.bitherj.core.Tx;
 
 import java.util.HashMap;
@@ -41,13 +43,15 @@ public interface IHDAccountProvider {
 
     public HashSet<String> getAllAddress();
 
-    public HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index);
 
+    public HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index);
 
 
     public List<byte[]> getPubs(AbstractHD.PathType pathType);
 
     public List<Tx> getUnspentTxs();
+
+    public List<Out> getUnspendOut();
 
     public List<HDAccount.HDAccountAddress> addTx(Tx tx);
 
@@ -55,7 +59,7 @@ public interface IHDAccountProvider {
 
     public List<String> getInAddresses(Tx tx);
 
-    public boolean belongAccount(List<String> addresses);
+    public List<HDAccount.HDAccountAddress> belongAccount(List<String> addresses);
 
     public int txCount();
 
@@ -64,4 +68,7 @@ public interface IHDAccountProvider {
     public List<Tx> getUnconfirmedTx();
 
     public Tx getTxDetailByTxHash(byte[] txHash);
+
+    public List<HDAccount.HDAccountAddress> getSigningAddressesForInputs(List<In> inList);
+    public List<Tx> getPublishedTxs();
 }

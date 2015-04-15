@@ -116,7 +116,14 @@ public class PeerManager {
                 publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
             }
         }
-        //TODO hddb: published tx should consider hd account
+        List<Tx> publishedTxsOfHDAccount =
+                AddressManager.getInstance().getHdAccount().getPublishedTxs();
+        for (Tx tx : publishedTxsOfHDAccount) {
+            if (tx.getBlockNo() == Tx.TX_UNCONFIRMED) {
+                publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
+            }
+
+        }
     }
 
     public boolean isConnected() {
