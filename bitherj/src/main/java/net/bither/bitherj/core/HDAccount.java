@@ -274,37 +274,39 @@ public class HDAccount extends AbstractHD {
         coinType.wipe();
         account.wipe();
 
-        HashMap<String, DeterministicKey> addressToKeyMap = new HashMap<String, DeterministicKey>
-                (signingAddresses.size());
-        for (HDAccountAddress a : signingAddresses) {
-            if (addressToKeyMap.containsKey(a.getAddress())) {
-                continue;
-            }
-            if (a.getPathType() == PathType.EXTERNAL_ROOT_PATH) {
-                addressToKeyMap.put(a.getAddress(), external.deriveSoftened(a.index));
-            } else {
-                addressToKeyMap.put(a.getAddress(), internal.deriveSoftened(a.index));
-            }
-        }
-        external.wipe();
-        internal.wipe();
 
         List<byte[]> unsignedHashes = tx.getUnsignedInHashes();
+        assert unsignedHashes.size() == signingAddresses.size();
         ArrayList<byte[]> signatures = new ArrayList<byte[]>();
+        HashMap<String, DeterministicKey> addressToKeyMap = new HashMap<String, DeterministicKey>
+                (signingAddresses.size());
 
         for (int i = 0;
              i < signingAddresses.size();
              i++) {
             HDAccountAddress a = signingAddresses.get(i);
             byte[] unsigned = unsignedHashes.get(i);
+
+            if (!addressToKeyMap.containsKey(a.getAddress())) {
+                if (a.getPathType() == PathType.EXTERNAL_ROOT_PATH) {
+                    addressToKeyMap.put(a.getAddress(), external.deriveSoftened(a.index));
+                } else {
+                    addressToKeyMap.put(a.getAddress(), internal.deriveSoftened(a.index));
+                }
+            }
+
             DeterministicKey key = addressToKeyMap.get(a.getAddress());
             assert key != null;
+
             TransactionSignature signature = new TransactionSignature(key.sign(unsigned, null),
                     TransactionSignature.SigHash.ALL, false);
             signatures.add(ScriptBuilder.createInputScript(signature, key).getProgram());
         }
+
         tx.signWithSignatures(signatures);
 
+        external.wipe();
+        internal.wipe();
         for (DeterministicKey key : addressToKeyMap.values()) {
             key.wipe();
         }
