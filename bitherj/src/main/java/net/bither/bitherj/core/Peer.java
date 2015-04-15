@@ -838,6 +838,7 @@ public class Peer extends PeerSocketHandler {
         }
         InventoryMessage m = new InventoryMessage();
         m.addTransaction(AbstractDb.txProvider.getTxDetailByTxHash(txHash.getBytes()));
+        //TODO hddb: the above method may need to get tx detail from hd account as well
         log.info("Peer {} send inv with tx {}", getPeerAddress().getHostAddress(),
                 Utils.hashToString(txHash.getBytes()));
         sendMessage(m);

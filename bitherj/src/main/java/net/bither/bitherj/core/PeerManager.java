@@ -116,7 +116,7 @@ public class PeerManager {
                 publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
             }
         }
-        //TODO published tx should consider hd account
+        //TODO hddb: published tx should consider hd account
     }
 
     public boolean isConnected() {

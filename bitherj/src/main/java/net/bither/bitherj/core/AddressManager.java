@@ -108,7 +108,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
     }
 
     private void initHDAccount() {
-        //TODO init HDAccount
+        //TODO hddb: init HDAccount
     }
 
     public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {
@@ -452,7 +452,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             if (hasHDAccount()) {
                 List<HDAccount.HDAccountAddress> relatedHDAddresses = getHdAccount()
                         .getRelatedAddressesForTx(tx);
-                //TODO compress Tx should consider HD Account
+                //TODO hddb: compress Tx should consider HD Account
             }
             tx.setOuts(outList);
         }
@@ -477,7 +477,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         } else {
             addresses = AbstractDb.txProvider.getInAddresses(tx);
         }
-        //TODO isSendFromMe should consider HD Account
+        //TODO hddb: isSendFromMe should consider HD Account
         return this.addressHashSet.containsAll(addresses);
     }
 

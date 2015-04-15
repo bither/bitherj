@@ -188,7 +188,6 @@ public class HDAccount extends AbstractHD {
     }
 
     private int allGeneratedInternalAddressCount() {
-
         return AbstractDb.hdAccountProvider.allGeneratedInternalAddressCount();
     }
 
@@ -205,7 +204,7 @@ public class HDAccount extends AbstractHD {
     public boolean onNewTx(Tx tx) {
         List<HDAccountAddress> relatedAddresses = getRelatedAddressesForTx(tx);
         if (relatedAddresses.size() > 0) {
-            //TODO should add this tx to db now
+            //TODO hddb: should add this tx to db now
             int maxInternal = -1, maxExternal = -1;
             for (HDAccountAddress a : relatedAddresses) {
                 if (a.pathType == PathType.EXTERNAL_ROOT_PATH) {
@@ -236,8 +235,8 @@ public class HDAccount extends AbstractHD {
         return getRelatedAddressesForTx(tx).size() > 0;
     }
 
-    public List<HDAccountAddress> getRelatedAddressesForTx(Tx tx) {
-        //TODO from db
+    public List<HDAccountAddress> getRelatedAddressesForTx(Tx tx){
+        //TODO hddb: from db
         return new ArrayList<HDAccountAddress>();
     }
 
@@ -246,7 +245,7 @@ public class HDAccount extends AbstractHD {
     }
 
     public Tx newTx(String[] toAddresses, long[] amounts, CharSequence password) {
-        //TODO
+        //TODO hddb:
         return null;
     }
 
