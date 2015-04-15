@@ -18,6 +18,7 @@
 
 package net.bither.bitherj.db;
 
+import net.bither.bitherj.core.AbstractHD;
 import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.Tx;
 
@@ -35,12 +36,21 @@ public interface IHDAccountProvider {
 
     public int issuedInternalIndex();
 
+    public int allGeneratedInternalAddressCount();
+
+    public int allGeneratedExternalAddressCount();
+
+    public void updateIssuedInternalIndex(int index);
+
+    public void updateIssuedExternalIndex(int index);
+
     public String externalAddress();
 
+    public HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index);
 
     public List<Integer> getHDAccountSeeds();
 
-    public List<HDAccount.HDAccountAddress> getAddressPub();
+    public List<HDAccount.HDAccountAddress> getAllHDAddress();
 
     public List<Tx> getUnspentTxs();
 
