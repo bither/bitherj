@@ -29,7 +29,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class HDAccount extends AbstractHD {
+public class HDAccount extends AbstractHD {
 
     private int LOOK_AHEAD_SIZE = 100;
 
@@ -205,9 +205,9 @@ public abstract class HDAccount extends AbstractHD {
     }
 
     public boolean onNewTx(Tx tx) {
-        //TODO new tx maybe return some information
         List<HDAccountAddress> relatedAddresses = getRelatedAddressesForTx(tx);
         if (relatedAddresses.size() > 0) {
+            //TODO should add this tx to db now
             int maxInternal = -1, maxExternal = -1;
             for (HDAccountAddress a : relatedAddresses) {
                 if (a.pathType == PathType.EXTERNAL_ROOT_PATH) {
