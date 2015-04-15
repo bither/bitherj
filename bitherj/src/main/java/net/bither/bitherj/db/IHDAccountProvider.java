@@ -28,21 +28,13 @@ import java.util.List;
 public interface IHDAccountProvider {
 
 
-    public void addExternalAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);
+    public void addAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);
 
-    public void addInternalAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);
+    public int issuedIndex(AbstractHD.PathType pathType);
 
-    public int issuedExternalIndex();
+    public int allGeneratedAddressCount(AbstractHD.PathType pathType);
 
-    public int issuedInternalIndex();
-
-    public int allGeneratedInternalAddressCount();
-
-    public int allGeneratedExternalAddressCount();
-
-    public void updateIssuedInternalIndex(int index);
-
-    public void updateIssuedExternalIndex(int index);
+    public void updateIssuedIndex(AbstractHD.PathType pathType, int index);
 
     public String externalAddress();
 
@@ -50,7 +42,8 @@ public interface IHDAccountProvider {
 
     public List<Integer> getHDAccountSeeds();
 
-    public List<HDAccount.HDAccountAddress> getAllHDAddress();
+
+    public List<byte[]> getPubs(AbstractHD.PathType pathType);
 
     public List<Tx> getUnspentTxs();
 
@@ -58,5 +51,8 @@ public interface IHDAccountProvider {
 
     public void addTxs(List<Tx> txList);
 
+    public List<String> getInAddresses(Tx tx);
+
+    public boolean belongAccount(List<String> addresses);
 
 }

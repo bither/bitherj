@@ -477,7 +477,6 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         } else {
             addresses = AbstractDb.txProvider.getInAddresses(tx);
         }
-        //TODO hddb: isSendFromMe should consider HD Account
         return this.addressHashSet.containsAll(addresses);
     }
 
