@@ -108,7 +108,7 @@ public abstract class AbstractDb {
     public static final String CREATE_HD_ACCOUNT = "create table if not exists  hd_account " +
             "( hd_account_id integer not null primary key autoincrement" +
             ", encrypt_seed text not null" +
-            ", encrypt_hd_seed text" +
+            ", encrypt_mnemonic_seed text" +
             ", hd_address text not null" +
             ", external_pub text not null" +
             ", internal_pub text not null" +
@@ -305,7 +305,7 @@ public abstract class AbstractDb {
     public interface HDAccountColumns {
         public static final String HD_ACCOUNT_ID = "hd_account_id";
         public static final String ENCRYPT_SEED = "encrypt_seed";
-        public static final String ENCRYPT_MNMONIC_SEED = "encrypt_hd_seed";
+        public static final String ENCRYPT_MNMONIC_SEED = "encrypt_mnemonic_seed";
         public static final String IS_XRANDOM = "is_xrandom";
         public static final String HD_ADDRESS = "hd_address";
         public static final String EXTERNAL_PUB = "external_pub";

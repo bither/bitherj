@@ -21,7 +21,7 @@ public interface IAddressProvider {
 
     //hd
 
-    public int addHDAccount(String encryptSeed, String encryptHdSeed
+    public int addHDAccount(String encryptSeed, String encryptedMnemonicSeed
             , String firstAddress, boolean isXrandom, String addressOfPS
             , byte[] externalPub, byte[] internalPub);
 
@@ -32,6 +32,7 @@ public interface IAddressProvider {
     public String getHDAccountEncryptSeed(int hdSeedId);
 
     public String getHDAccountEncryptMnmonicSeed(int hdSeedId);
+
     public List<Integer> getHDAccountSeeds();
 
     public List<Integer> getHDSeeds();
