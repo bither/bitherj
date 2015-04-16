@@ -114,7 +114,6 @@ public class HDAccount extends AbstractHD {
     public HDAccount(int seedId) {
         this.hdSeedId = seedId;
         updateBalance();
-        ;
     }
 
     public String getFullEncryptPrivKey() {
@@ -383,6 +382,7 @@ public class HDAccount extends AbstractHD {
         }
 
         tx.signWithSignatures(signatures);
+        assert tx.verifySignatures();
 
         external.wipe();
         internal.wipe();
