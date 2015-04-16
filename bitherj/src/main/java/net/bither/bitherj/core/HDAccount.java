@@ -47,10 +47,10 @@ public class HDAccount extends AbstractHD {
         this.mnemonicSeed = mnemonicSeed;
         hdSeed = seedFromMnemonic(mnemonicSeed);
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
-        String firstAddress = getFirstAddressFromSeed(password);
+
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         EncryptedData encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
-        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, firstAddress);
+        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed);
     }
 
     // Create With Random
@@ -68,22 +68,26 @@ public class HDAccount extends AbstractHD {
                 encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
                 encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
                 master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
-                firstAddress = getFirstAddressFromSeed(password);
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, firstAddress);
+        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed);
     }
 
     private void initHDAccount(DeterministicKey master, EncryptedData encryptedMnemonicSeed,
-                               EncryptedData encryptedHDSeed, String firstAddress) {
+                               EncryptedData encryptedHDSeed) {
+        String firstAddress;
         ECKey k = new ECKey(hdSeed, null);
         String address = k.toAddress();
         k.clearPrivateKey();
-
-        DeterministicKey internalKey = internalChainRoot(master);
-        DeterministicKey externalKey = externalChainRoot(master);
+        DeterministicKey accountKey = getAccount(master);
+        DeterministicKey internalKey = getChainRootKey(accountKey, PathType.INTERNAL_ROOT_PATH);
+        DeterministicKey externalKey = getChainRootKey(accountKey, PathType.EXTERNAL_ROOT_PATH);
+        DeterministicKey key = externalKey.deriveSoftened(0);
+        firstAddress = key.toAddress();
+        accountKey.wipe();
         master.wipe();
         List<HDAccountAddress> externalAddresses = new ArrayList<HDAccountAddress>();
         List<HDAccountAddress> internalAddresses = new ArrayList<HDAccountAddress>();
@@ -349,9 +353,9 @@ public class HDAccount extends AbstractHD {
         if (master == null) {
             return null;
         }
-
-        DeterministicKey external = externalChainRoot(master);
-        DeterministicKey internal = internalChainRoot(master);
+        DeterministicKey accountKey = getAccount(master);
+        DeterministicKey external = getChainRootKey(accountKey, PathType.EXTERNAL_ROOT_PATH);
+        DeterministicKey internal = getChainRootKey(accountKey, PathType.INTERNAL_ROOT_PATH);
         master.wipe();
         List<byte[]> unsignedHashes = tx.getUnsignedInHashes();
         assert unsignedHashes.size() == signingAddresses.size();

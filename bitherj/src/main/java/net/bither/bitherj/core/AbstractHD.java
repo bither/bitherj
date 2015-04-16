@@ -70,58 +70,17 @@ public abstract class AbstractHD {
     protected abstract String getEncryptedMnemonicSeed();
 
 
-    protected String getFirstAddressFromSeed(CharSequence password) {
-        DeterministicKey key = getExternalKey(0, password);
-        String address = Utils.toAddress(key.getPubKeyHash());
-        key.wipe();
-        return address;
+    protected DeterministicKey getChainRootKey(DeterministicKey accountKey, PathType pathType) {
+        return accountKey.deriveSoftened(pathType.getValue());
     }
 
-    public DeterministicKey getExternalKey(int index, CharSequence password) {
-        try {
-            DeterministicKey externalChainRoot = externalChainRoot(password);
-            DeterministicKey key = externalChainRoot.deriveSoftened(index);
-            externalChainRoot.wipe();
-            return key;
-        } catch (KeyCrypterException e) {
-            throw new PasswordException(e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected DeterministicKey externalChainRoot(CharSequence password) throws MnemonicException
-            .MnemonicLengthException {
-        DeterministicKey master = masterKey(password);
-        return externalChainRoot(master);
-    }
-
-    protected DeterministicKey externalChainRoot(DeterministicKey master) {
-        return getAccount(master, PathType.EXTERNAL_ROOT_PATH);
-
-    }
-
-    protected DeterministicKey internalChainRoot(CharSequence password) throws MnemonicException
-            .MnemonicLengthException {
-        DeterministicKey master = masterKey(password);
-        return internalChainRoot(master);
-    }
-
-    protected DeterministicKey internalChainRoot(DeterministicKey master) {
-        return getAccount(master, PathType.INTERNAL_ROOT_PATH);
-
-    }
-
-    private DeterministicKey getAccount(DeterministicKey master, PathType pathType) {
+    protected DeterministicKey getAccount(DeterministicKey master) {
         DeterministicKey purpose = master.deriveHardened(44);
         DeterministicKey coinType = purpose.deriveHardened(0);
         DeterministicKey account = coinType.deriveHardened(0);
-        DeterministicKey external = account.deriveSoftened(pathType.getValue());
         purpose.wipe();
         coinType.wipe();
-        account.wipe();
-        return external;
-
+        return account;
     }
 
 

@@ -8,6 +8,7 @@ import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.api.CreateHDMAddressApi;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
+import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
@@ -15,6 +16,7 @@ import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.PrivateKeyUtil;
@@ -48,8 +50,6 @@ public class HDMKeychain extends AbstractHD {
 
     private static final Logger log = LoggerFactory.getLogger(HDMKeychain.class);
 
-    private transient byte[] mnemonicSeed;
-    private transient byte[] hdSeed;
 
     protected ArrayList<HDMAddress> allCompletedAddresses;
     private Collection<HDMAddress> addressesInUse;
@@ -175,6 +175,31 @@ public class HDMKeychain extends AbstractHD {
         }
     }
 
+    private String getFirstAddressFromSeed(CharSequence password) {
+        DeterministicKey key = getExternalKey(0, password);
+        String address = Utils.toAddress(key.getPubKeyHash());
+        key.wipe();
+        return address;
+    }
+
+    public DeterministicKey getExternalKey(int index, CharSequence password) {
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey externalChainRoot = getChainRootKey(accountKey, PathType.EXTERNAL_ROOT_PATH);
+            DeterministicKey key = externalChainRoot.deriveSoftened(index);
+            master.wipe();
+            accountKey.wipe();
+            externalChainRoot.wipe();
+            return key;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     public int prepareAddresses(int count, CharSequence password, byte[] coldExternalRootPub) {
         DeterministicKey externalRootHot;
         DeterministicKey externalRootCold = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
@@ -299,6 +324,14 @@ public class HDMKeychain extends AbstractHD {
         }
     }
 
+    private DeterministicKey externalChainRoot(CharSequence password) throws MnemonicException.MnemonicLengthException {
+        DeterministicKey master = masterKey(password);
+        DeterministicKey accountKey = getAccount(master);
+        DeterministicKey externalKey = getChainRootKey(accountKey, PathType.EXTERNAL_ROOT_PATH);
+        master.wipe();
+        accountKey.wipe();
+        return externalKey;
+    }
 
     public byte[] getExternalChainRootPubExtended(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
