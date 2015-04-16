@@ -175,29 +175,7 @@ public class HDMKeychain extends AbstractHD {
         }
     }
 
-    private String getFirstAddressFromSeed(CharSequence password) {
-        DeterministicKey key = getExternalKey(0, password);
-        String address = Utils.toAddress(key.getPubKeyHash());
-        key.wipe();
-        return address;
-    }
 
-    public DeterministicKey getExternalKey(int index, CharSequence password) {
-        try {
-            DeterministicKey master = masterKey(password);
-            DeterministicKey accountKey = getAccount(master);
-            DeterministicKey externalChainRoot = getChainRootKey(accountKey, PathType.EXTERNAL_ROOT_PATH);
-            DeterministicKey key = externalChainRoot.deriveSoftened(index);
-            master.wipe();
-            accountKey.wipe();
-            externalChainRoot.wipe();
-            return key;
-        } catch (KeyCrypterException e) {
-            throw new PasswordException(e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
 
     public int prepareAddresses(int count, CharSequence password, byte[] coldExternalRootPub) {

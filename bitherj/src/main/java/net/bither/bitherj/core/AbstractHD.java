@@ -138,6 +138,30 @@ public abstract class AbstractHD {
         return isFromXRandom;
     }
 
+    protected String getFirstAddressFromSeed(CharSequence password) {
+        DeterministicKey key = getExternalKey(0, password);
+        String address = Utils.toAddress(key.getPubKeyHash());
+        key.wipe();
+        return address;
+    }
+
+    public DeterministicKey getExternalKey(int index, CharSequence password) {
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey externalChainRoot = getChainRootKey(accountKey, PathType.EXTERNAL_ROOT_PATH);
+            DeterministicKey key = externalChainRoot.deriveSoftened(index);
+            master.wipe();
+            accountKey.wipe();
+            externalChainRoot.wipe();
+            return key;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     protected void wipeHDSeed() {
         if (hdSeed == null) {
             return;

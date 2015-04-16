@@ -69,7 +69,7 @@ public class HDAccount extends AbstractHD {
                 encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
                 encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
                 master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
-
+                firstAddress = getFirstAddressFromSeed(password);
             } catch (Exception e) {
                 e.printStackTrace();
             }
