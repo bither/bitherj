@@ -353,6 +353,10 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         }
     }
 
+    public void setHdAccount(HDAccount hdAccount) {
+        this.hdAccount = hdAccount;
+    }
+
     public void setHDMKeychain(HDMKeychain keychain) {
         synchronized (lock) {
             if (hdmKeychain != null && hdmKeychain != keychain) {

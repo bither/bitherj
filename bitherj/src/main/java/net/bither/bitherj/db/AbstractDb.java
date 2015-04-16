@@ -114,13 +114,14 @@ public abstract class AbstractDb {
             ", internal_pub text not null" +
             ", is_xrandom integer not null);";
 
-    public static final String CREATE_HD_ACCOUNT_ADDRESSES = "create table if not exists account_addresses " +
+    public static final String CREATE_HD_ACCOUNT_ADDRESSES = "create table if not exists hd_account_addresses " +
             "(path_type integer not null" +
             ", address_index integer not null" +
             ", is_issued integer not null" +
             ", address text not null" +
             ", pub text not null" +
-            ", primary key (address));";
+            ", is_synced integer not null" +
+            ", primary key (address,path_type,address_index));";
 
 
     public static final String CREATE_HD_ACCOUNT_TX = "create table if not exists txs " +
@@ -195,7 +196,7 @@ public abstract class AbstractDb {
         //hd account
         public static final String HD_ACCOUNT = "hd_account";
 
-        public static final String ACCOUNT_ADDRESS = "account_addresses";
+        public static final String HD_ACCOUNT_ADDRESS = "hd_account_addresses";
 
 
     }
@@ -318,6 +319,7 @@ public abstract class AbstractDb {
         public static final String IS_ISSUED = "is_issued";
         public static final String ADDRESS = "address";
         public static final String PUB = "pub";
+        public static final String IS_SYNCED = "is_synced";
 
 
     }

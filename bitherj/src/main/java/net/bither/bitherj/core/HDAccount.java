@@ -45,8 +45,8 @@ public class HDAccount extends AbstractHD {
     public HDAccount(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         this.mnemonicSeed = mnemonicSeed;
-        String firstAddress = getFirstAddressFromSeed(password);
         hdSeed = seedFromMnemonic(mnemonicSeed);
+        String firstAddress = getFirstAddressFromSeed(password);
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         EncryptedData encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
         initHDAccount(encryptedMnemonicSeed, encryptedHDSeed, firstAddress);
@@ -90,9 +90,9 @@ public class HDAccount extends AbstractHD {
             byte[] subExternalPub = externalKey.deriveSoftened(i).getPubKey();
             byte[] subInternalPub = internalKey.deriveSoftened(i).getPubKey();
             HDAccountAddress externalAddress = new HDAccountAddress(subExternalPub
-                    , PathType.EXTERNAL_ROOT_PATH, i, false);
+                    , PathType.EXTERNAL_ROOT_PATH, i);
             HDAccountAddress internalAddress = new HDAccountAddress(subInternalPub
-                    , PathType.INTERNAL_ROOT_PATH, i, false);
+                    , PathType.INTERNAL_ROOT_PATH, i);
             externalAddresses.add(externalAddress);
             internalAddresses.add(internalAddress);
         }
@@ -155,7 +155,7 @@ public class HDAccount extends AbstractHD {
              i < firstIndex + count;
              i++) {
             as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), PathType
-                    .INTERNAL_ROOT_PATH, i, false));
+                    .INTERNAL_ROOT_PATH, i));
         }
         AbstractDb.hdAccountProvider.addAddress(as);
     }
@@ -169,7 +169,7 @@ public class HDAccount extends AbstractHD {
              i < firstIndex + count;
              i++) {
             as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), PathType
-                    .EXTERNAL_ROOT_PATH, i, false));
+                    .EXTERNAL_ROOT_PATH, i));
         }
         AbstractDb.hdAccountProvider.addAddress(as);
     }
@@ -465,19 +465,20 @@ public class HDAccount extends AbstractHD {
         private byte[] pub;
         private int index;
         private PathType pathType;
-
+        private boolean isSynced;
         private boolean isIssued;
 
-        public HDAccountAddress(byte[] pub, PathType pathType, int index, boolean isIssued) {
-            this(Utils.toAddress(Utils.sha256hash160(pub)), pub, pathType, index, isIssued);
+        public HDAccountAddress(byte[] pub, PathType pathType, int index) {
+            this(Utils.toAddress(Utils.sha256hash160(pub)), pub, pathType, index, false, true);
         }
 
-        public HDAccountAddress(String address, byte[] pub, PathType pathType, int index, boolean isIssued) {
+        public HDAccountAddress(String address, byte[] pub, PathType pathType, int index, boolean isIssued, boolean isSynced) {
             this.pub = pub;
             this.address = address;
             this.pathType = pathType;
             this.index = index;
             this.isIssued = isIssued;
+            this.isSynced = isSynced;
         }
 
         public String getAddress() {
@@ -498,6 +499,10 @@ public class HDAccount extends AbstractHD {
 
         public boolean isIssued() {
             return isIssued;
+        }
+
+        public boolean isSynced() {
+            return isSynced;
         }
     }
 }
