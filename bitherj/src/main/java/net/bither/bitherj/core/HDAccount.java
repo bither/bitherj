@@ -55,7 +55,7 @@ public class HDAccount extends AbstractHD {
     // Create With Random
     public HDAccount(SecureRandom random, CharSequence password) {
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
-        mnemonicSeed = new byte[32];
+        mnemonicSeed = new byte[16];
         String firstAddress = null;
         EncryptedData encryptedMnemonicSeed = null;
         EncryptedData encryptedHDSeed = null;
