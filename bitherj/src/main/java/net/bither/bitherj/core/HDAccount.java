@@ -39,6 +39,8 @@ import java.util.Set;
 
 public class HDAccount extends AbstractHD {
 
+    public static final String HDAccountPlaceHolder = "HDAccount";
+
     private static final int LOOK_AHEAD_SIZE = 100;
 
     private long balance = 0;
