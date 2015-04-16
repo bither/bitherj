@@ -134,6 +134,9 @@ public abstract class AbstractHD {
         return words;
     }
 
+    public boolean isFromXRandom(){
+        return isFromXRandom;
+    }
 
     protected void wipeHDSeed() {
         if (hdSeed == null) {

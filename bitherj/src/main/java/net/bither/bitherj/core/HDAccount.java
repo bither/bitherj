@@ -40,6 +40,7 @@ import java.util.Set;
 public class HDAccount extends AbstractHD {
 
     private static final int LOOK_AHEAD_SIZE = 100;
+
     private long balance = 0;
 
     public HDAccount(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
@@ -189,6 +190,10 @@ public class HDAccount extends AbstractHD {
 
     public String getReceivingAddress() {
         return AbstractDb.hdAccountProvider.externalAddress();
+    }
+
+    public String getShortReceivingAddress(){
+        return Utils.shortenAddress(getReceivingAddress());
     }
 
     public int issuedInternalIndex() {
@@ -457,6 +462,20 @@ public class HDAccount extends AbstractHD {
             filter.insert(Utils.sha256hash160(pub));
         }
 
+    }
+
+    public long getBalance() {
+        return balance;
+    }
+
+    public boolean isSyncComplete() {
+        //TODO hddb: is sync complete
+        return true;
+    }
+
+    public List<Tx> getRecentlyTxsWithConfirmationCntLessThan(int confirmationCnt, int limit) {
+        //TODO hddb: getRecentlyTxsWithConfirmationCntLessThan
+        return new ArrayList<Tx>();
     }
 
     public List<Tx> getPublishedTxs() {
