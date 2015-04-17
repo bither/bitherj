@@ -201,6 +201,10 @@ public class TransactionsUtil {
                 int storeBlockHeight = storedBlock.getBlockNo();
                 hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(
                         pathType, addressIndex);
+                if (hdAccountAddress.isSynced()) {
+                    addressIndex++;
+                    continue;
+                }
                 List<Tx> transactions = new ArrayList<Tx>();
                 int apiBlockCount = 0;
                 int txSum = 0;
@@ -242,6 +246,7 @@ public class TransactionsUtil {
                     hasTx = true;
                 } else {
                     hasTx = false;
+                    AbstractDb.hdAccountProvider.updateSyncdForIndex(pathType, addressIndex);
                 }
             }
             addressIndex++;

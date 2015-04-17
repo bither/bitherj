@@ -151,6 +151,14 @@ public abstract class AbstractDb {
             ", in_sequence integer" +
             ", primary key (tx_hash, in_sn));";
 
+
+    // hd Account index
+    public static final String CREATE_HD_ACCOUNT_ADDRESS_INDEX = "create index idx_hd_address_address on hd_account_addresses (address);";
+    public static final String CREATE_HD_ACCOUNT_OUT_OUT_ADDRESS_INDEX = "create index idx_out_out_address on outs (out_address);";
+    public static final String CREATE_HD_ACCOUNT_TX_BLOCK_NO_INDEX = "create index idx_tx_block_no on txs (block_no);";
+    public static final String CREATE_HD_ACCOUNT_IN_PREV_TX_HASH_INDEX = "create index idx_in_prev_tx_hash on ins (prev_tx_hash);";
+
+
     public static IBlockProvider blockProvider;
     public static IPeerProvider peerProvider;
     public static ITxProvider txProvider;

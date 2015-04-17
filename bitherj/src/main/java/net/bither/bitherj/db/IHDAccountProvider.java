@@ -79,6 +79,12 @@ public interface IHDAccountProvider {
 
     public void updateSyncdComplete(HDAccount.HDAccountAddress address);
 
+    public void setSyncdNotComplete();
+
+    public void updateSyncdForIndex(AbstractHD.PathType pathType, int index);
+
+    public void clearAllTx();
+
     public long sentFromAddress(byte[] txHash);
 
     public List<Tx> getTxAndDetailByAddress(int page);
