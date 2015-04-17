@@ -21,7 +21,7 @@ public interface IAddressProvider {
 
     //hd
 
-    public int addHDAccount(String encryptSeed, String encryptedMnemonicSeed
+    public int addHDAccount(String encryptedMnemonicSeed, String encryptSeed
             , String firstAddress, boolean isXrandom, String addressOfPS
             , byte[] externalPub, byte[] internalPub);
 
@@ -102,4 +102,6 @@ public interface IAddressProvider {
     public Map<String, String> getAliases();
 
     public void updateAlias(String address, @Nullable String alias);
+
+    public String getHDFristAddress(int hdSeedId);
 }

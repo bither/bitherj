@@ -19,6 +19,7 @@ package net.bither.bitherj.utils;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
+import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.HDMKeychain;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
@@ -196,11 +197,17 @@ public class PrivateKeyUtil {
         HDMKeychain keychain = AddressManager.getInstance().getHdmKeychain();
         if (keychain != null) {
             if (Utils.isEmpty(content)) {
-                content += QRCodeUtil.HDM_QR_CODE_FLAG
-                        + keychain.getFullEncryptPrivKey();
+                content += keychain.getQRCodeFullEncryptPrivKey();
             } else {
-                content += QRCodeUtil.QR_CODE_SPLIT + QRCodeUtil.HDM_QR_CODE_FLAG
-                        + keychain.getFullEncryptPrivKey();
+                content += QRCodeUtil.QR_CODE_SPLIT + keychain.getQRCodeFullEncryptPrivKey();
+            }
+        }
+        HDAccount hdAccount = AddressManager.getInstance().getHdAccount();
+        if (hdAccount != null) {
+            if (Utils.isEmpty(content)) {
+                content += hdAccount.getQRCodeFullEncryptPrivKey();
+            } else {
+                content += QRCodeUtil.QR_CODE_SPLIT + hdAccount.getQRCodeFullEncryptPrivKey();
             }
         }
 

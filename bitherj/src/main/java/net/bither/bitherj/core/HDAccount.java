@@ -24,6 +24,7 @@ import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.TxBuilderException;
+import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
@@ -82,7 +83,7 @@ public class HDAccount extends AbstractHD {
     private void initHDAccount(DeterministicKey master, EncryptedData encryptedMnemonicSeed,
                                EncryptedData encryptedHDSeed) {
         String firstAddress;
-        ECKey k = new ECKey(hdSeed, null);
+        ECKey k = new ECKey(mnemonicSeed, null);
         String address = k.toAddress();
         k.clearPrivateKey();
         DeterministicKey accountKey = getAccount(master);
@@ -110,8 +111,8 @@ public class HDAccount extends AbstractHD {
         wipeMnemonicSeed();
         AbstractDb.hdAccountProvider.addAddress(externalAddresses);
         AbstractDb.hdAccountProvider.addAddress(internalAddresses);
-        hdSeedId = AbstractDb.addressProvider.addHDAccount(encryptedHDSeed.toEncryptedString(), encryptedMnemonicSeed
-                        .toEncryptedString(), firstAddress,
+        hdSeedId = AbstractDb.addressProvider.addHDAccount(encryptedMnemonicSeed
+                        .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
                 isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
                         .getPubKeyExtended());
         internalKey.wipe();
@@ -128,6 +129,10 @@ public class HDAccount extends AbstractHD {
         return PrivateKeyUtil.getFullencryptHDMKeyChain(isFromXRandom, encryptPrivKey);
     }
 
+    public String getQRCodeFullEncryptPrivKey() {
+        return QRCodeUtil.HD_QR_CODE_FLAG + getFullEncryptPrivKey();
+    }
+
     public byte[] getInternalPub() {
         return AbstractDb.addressProvider.getInternalPub(hdSeedId);
     }
@@ -136,6 +141,9 @@ public class HDAccount extends AbstractHD {
         return AbstractDb.addressProvider.getExternalPub(hdSeedId);
     }
 
+    public String getFirstAddressFromDb() {
+        return AbstractDb.addressProvider.getHDFristAddress(hdSeedId);
+    }
 
     private void supplyEnoughKeys() {
         int lackOfExternal = LOOK_AHEAD_SIZE - (allGeneratedExternalAddressCount() -
