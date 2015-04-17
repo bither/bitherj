@@ -1252,6 +1252,9 @@ public class Tx extends Message implements Comparable<Tx> {
     }
 
     public long deltaAmountFrom(Address address) {
+        if(address instanceof HDAccount){
+            return deltaAmountFrom((HDAccount)address);
+        }
         long receive = 0;
         for (Out out : this.outs) {
             if (Utils.compareString(address.getAddress(), out.getOutAddress())) {
