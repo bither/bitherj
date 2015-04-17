@@ -531,16 +531,21 @@ public class HDAccount extends Address {
         return hdAccountAddressList;
     }
 
-    private void updateIssuedInternalIndex(int index) {
+    public void updateIssuedInternalIndex(int index) {
         AbstractDb.hdAccountProvider.updateIssuedIndex(AbstractHD.PathType.INTERNAL_ROOT_PATH, index);
     }
 
-    private void updateIssuedExternalIndex(int index) {
+    public void updateIssuedExternalIndex(int index) {
         AbstractDb.hdAccountProvider.updateIssuedIndex(AbstractHD.PathType.EXTERNAL_ROOT_PATH, index);
     }
 
     private String getNewChangeAddress() {
         return addressForPath(AbstractHD.PathType.INTERNAL_ROOT_PATH, issuedInternalIndex() + 1).getAddress();
+    }
+
+
+    public void updateSyncComplete(HDAccountAddress accountAddress) {
+        AbstractDb.hdAccountProvider.updateSyncdComplete(accountAddress);
     }
 
     public int elementCountForBloomFilter() {
