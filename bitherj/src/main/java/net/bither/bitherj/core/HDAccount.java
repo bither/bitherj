@@ -194,7 +194,7 @@ public class HDAccount extends AbstractHD {
         return AbstractDb.hdAccountProvider.externalAddress();
     }
 
-    public String getShortReceivingAddress(){
+    public String getShortReceivingAddress() {
         return Utils.shortenAddress(getReceivingAddress());
     }
 
@@ -471,13 +471,17 @@ public class HDAccount extends AbstractHD {
     }
 
     public boolean isSyncComplete() {
-        //TODO hddb: is sync complete
-        return true;
+        int unsyncedAddressCount = AbstractDb.hdAccountProvider.unSyncedAddressCount();
+        return unsyncedAddressCount == 0;
     }
 
     public List<Tx> getRecentlyTxsWithConfirmationCntLessThan(int confirmationCnt, int limit) {
-        //TODO hddb: getRecentlyTxsWithConfirmationCntLessThan
-        return new ArrayList<Tx>();
+        List<Tx> txList = new ArrayList<Tx>();
+        int blockNo = BlockChain.getInstance().getLastBlock().getBlockNo() - confirmationCnt + 1;
+        for (Tx tx : AbstractDb.hdAccountProvider.getRecentlyTxsByAddress(blockNo, limit)) {
+            txList.add(tx);
+        }
+        return txList;
     }
 
     public List<Tx> getPublishedTxs() {

@@ -70,5 +70,10 @@ public interface IHDAccountProvider {
     public Tx getTxDetailByTxHash(byte[] txHash);
 
     public List<HDAccount.HDAccountAddress> getSigningAddressesForInputs(List<In> inList);
+
     public List<Tx> getPublishedTxs();
+
+    public List<Tx> getRecentlyTxsByAddress(int greateThanBlockNo, int limit);
+
+    public int unSyncedAddressCount();
 }
