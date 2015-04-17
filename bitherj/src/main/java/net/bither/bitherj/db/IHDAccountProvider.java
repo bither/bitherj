@@ -76,4 +76,10 @@ public interface IHDAccountProvider {
     public List<Tx> getRecentlyTxsByAddress(int greateThanBlockNo, int limit);
 
     public int unSyncedAddressCount();
+
+    public void updateSyncdComplete(HDAccount.HDAccountAddress address);
+
+    public long sentFromAddress(byte[] txHash);
+
+    public List<Tx> getTxAndDetailByAddress(int page);
 }

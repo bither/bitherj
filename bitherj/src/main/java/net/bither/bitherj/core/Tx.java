@@ -45,6 +45,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -1261,9 +1262,16 @@ public class Tx extends Message implements Comparable<Tx> {
         return receive - sent;
     }
 
-    public long deltaAmountFrom(HDAccount account){
-        //TODO hddb: deltaAmountFrom account
-        return 0;
+    public long deltaAmountFrom(HDAccount account) {
+        long receive = 0;
+        HashSet<String> hashSet = AbstractDb.hdAccountProvider.getAllAddress();
+        for (Out out : this.outs) {
+            if (hashSet.contains(out.getOutAddress())) {
+                receive += out.getOutValue();
+            }
+        }
+        long sent = AbstractDb.hdAccountProvider.sentFromAddress(getTxHash());
+        return receive - sent;
     }
 
     public int getConfirmationCount() {

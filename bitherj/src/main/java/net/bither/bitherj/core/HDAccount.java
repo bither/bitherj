@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.core;
 
+import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.TransactionSignature;
@@ -145,7 +146,7 @@ public class HDAccount extends AbstractHD {
         return AbstractDb.addressProvider.getHDFristAddress(hdSeedId);
     }
 
-    private void supplyEnoughKeys() {
+    public void supplyEnoughKeys() {
         int lackOfExternal = LOOK_AHEAD_SIZE - (allGeneratedExternalAddressCount() -
                 issuedExternalIndex());
         if (lackOfExternal > 0) {
@@ -260,13 +261,33 @@ public class HDAccount extends AbstractHD {
         return false;
     }
 
+
     public boolean isTxRelated(Tx tx) {
         return getRelatedAddressesForTx(tx).size() > 0;
     }
 
-    public List<Tx> getTxs(int page){
-        //TODO hddb: get txs for page
-        return new ArrayList<Tx>();
+    public boolean initTxs(List<Tx> txs) {
+        AbstractDb.txProvider.addTxs(txs);
+        if (txs.size() > 0) {
+            notificatTx(null, Tx.TxNotificationType.txFromApi);
+        }
+        return true;
+    }
+
+    public void notificatTx(Tx tx, Tx.TxNotificationType txNotificationType) {
+        long deltaBalance = getDeltaBalance();
+        AbstractApp.notificationService.notificatTx(HDAccount.HDAccountPlaceHolder
+                , tx, txNotificationType, deltaBalance);
+    }
+
+    private long getDeltaBalance() {
+        long oldBalance = this.balance;
+        this.updateBalance();
+        return this.balance - oldBalance;
+    }
+
+    public List<Tx> getTxs(int page) {
+        return AbstractDb.hdAccountProvider.getTxAndDetailByAddress(page);
     }
 
     public int txCount() {
@@ -449,11 +470,16 @@ public class HDAccount extends AbstractHD {
         return hdAccountAddressList;
     }
 
-    private void updateIssuedInternalIndex(int index) {
+    public void updateSyncComplete(HDAccountAddress address) {
+        AbstractDb.hdAccountProvider.updateSyncdComplete(address);
+
+    }
+
+    public void updateIssuedInternalIndex(int index) {
         AbstractDb.hdAccountProvider.updateIssuedIndex(PathType.INTERNAL_ROOT_PATH, index);
     }
 
-    private void updateIssuedExternalIndex(int index) {
+    public void updateIssuedExternalIndex(int index) {
         AbstractDb.hdAccountProvider.updateIssuedIndex(PathType.EXTERNAL_ROOT_PATH, index);
     }
 
@@ -545,5 +571,14 @@ public class HDAccount extends AbstractHD {
         public boolean isSynced() {
             return isSynced;
         }
+
+        public void setIssued(boolean isIssued) {
+            this.isIssued = isIssued;
+        }
+
+        public void setSynced(boolean isSynced) {
+            this.isSynced = isSynced;
+        }
+
     }
 }

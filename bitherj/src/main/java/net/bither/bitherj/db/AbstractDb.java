@@ -121,7 +121,7 @@ public abstract class AbstractDb {
             ", address text not null" +
             ", pub text not null" +
             ", is_synced integer not null" +
-            ", primary key (address,path_type,address_index));";
+            ", primary key (address));";
 
 
     public static final String CREATE_HD_ACCOUNT_TX = "create table if not exists txs " +
