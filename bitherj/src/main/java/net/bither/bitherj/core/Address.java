@@ -59,9 +59,13 @@ public class Address implements Comparable<Address> {
     private boolean isTrashed = false;
     private String alias;
 
+    public Address(){
+        super();
+    }
+
     public Address(String address, byte[] pubKey, String encryptString, boolean isFromXRandom) {
-        this(address, pubKey, AddressManager.getInstance().getSortTime(!Utils.isEmpty(encryptString))
-                , false, isFromXRandom, false, encryptString);
+        this(address, pubKey, AddressManager.getInstance().getSortTime(!Utils.isEmpty
+                (encryptString)), false, isFromXRandom, false, encryptString);
 
     }
 
@@ -261,8 +265,7 @@ public class Address implements Comparable<Address> {
     }
 
     public String getFullEncryptPrivKeyOfDb() {
-        return PrivateKeyUtil.getFullencryptPrivateKey(Address.this
-                , this.encryptPrivKey);
+        return PrivateKeyUtil.getFullencryptPrivateKey(Address.this, this.encryptPrivKey);
     }
 
     public void recoverFromBackup(String encryptPriv) {
@@ -428,6 +431,10 @@ public class Address implements Comparable<Address> {
     public boolean removeTx(Tx tx) {
         AbstractDb.txProvider.remove(tx.getTxHash());
         return true;
+    }
+
+    public boolean isHDAccount(){
+        return this instanceof HDAccount;
     }
 
     public String getAlias() {

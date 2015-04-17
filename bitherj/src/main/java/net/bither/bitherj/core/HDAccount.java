@@ -18,16 +18,22 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
+import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
+import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -38,7 +44,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class HDAccount extends AbstractHD {
+public class HDAccount extends Address {
 
     public static final String HDAccountPlaceHolder = "HDAccount";
 
@@ -46,8 +52,65 @@ public class HDAccount extends AbstractHD {
 
     private long balance = 0;
 
+
+    protected transient byte[] mnemonicSeed;
+    protected transient byte[] hdSeed;
+    protected int hdSeedId = -1;
+    protected boolean isFromXRandom;
+
+    private static final Logger log = LoggerFactory.getLogger(HDAccount.class);
+
+    protected String getFirstAddressFromSeed(CharSequence password) {
+        DeterministicKey key = getExternalKey(0, password);
+        String address = Utils.toAddress(key.getPubKeyHash());
+        key.wipe();
+        return address;
+    }
+
+    public DeterministicKey getExternalKey(int index, CharSequence password) {
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey externalChainRoot = getChainRootKey(accountKey, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+            DeterministicKey key = externalChainRoot.deriveSoftened(index);
+            master.wipe();
+            accountKey.wipe();
+            externalChainRoot.wipe();
+            return key;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected void wipeHDSeed() {
+        if (hdSeed == null) {
+            return;
+        }
+        Utils.wipeBytes(hdSeed);
+    }
+
+    protected void wipeMnemonicSeed() {
+        if (mnemonicSeed == null) {
+            return;
+        }
+        Utils.wipeBytes(mnemonicSeed);
+    }
+
+    public int getHdSeedId() {
+        return hdSeedId;
+    }
+
+    public static final byte[] seedFromMnemonic(byte[] mnemonicSeed) throws MnemonicException
+            .MnemonicLengthException {
+        MnemonicCode mnemonic = MnemonicCode.instance();
+        return mnemonic.toSeed(mnemonic.toMnemonic(mnemonicSeed), "");
+    }
+
     public HDAccount(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
+        super();
         this.mnemonicSeed = mnemonicSeed;
         hdSeed = seedFromMnemonic(mnemonicSeed);
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
@@ -87,8 +150,8 @@ public class HDAccount extends AbstractHD {
         String address = k.toAddress();
         k.clearPrivateKey();
         DeterministicKey accountKey = getAccount(master);
-        DeterministicKey internalKey = getChainRootKey(accountKey, PathType.INTERNAL_ROOT_PATH);
-        DeterministicKey externalKey = getChainRootKey(accountKey, PathType.EXTERNAL_ROOT_PATH);
+        DeterministicKey internalKey = getChainRootKey(accountKey, AbstractHD.PathType.INTERNAL_ROOT_PATH);
+        DeterministicKey externalKey = getChainRootKey(accountKey, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
         DeterministicKey key = externalKey.deriveSoftened(0);
         firstAddress = key.toAddress();
         accountKey.wipe();
@@ -101,9 +164,9 @@ public class HDAccount extends AbstractHD {
             byte[] subExternalPub = externalKey.deriveSoftened(i).getPubKey();
             byte[] subInternalPub = internalKey.deriveSoftened(i).getPubKey();
             HDAccountAddress externalAddress = new HDAccountAddress(subExternalPub
-                    , PathType.EXTERNAL_ROOT_PATH, i);
+                    , AbstractHD.PathType.EXTERNAL_ROOT_PATH, i);
             HDAccountAddress internalAddress = new HDAccountAddress(subInternalPub
-                    , PathType.INTERNAL_ROOT_PATH, i);
+                    , AbstractHD.PathType.INTERNAL_ROOT_PATH, i);
             externalAddresses.add(externalAddress);
             internalAddresses.add(internalAddress);
         }
@@ -167,7 +230,7 @@ public class HDAccount extends AbstractHD {
         for (int i = firstIndex;
              i < firstIndex + count;
              i++) {
-            as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), PathType
+            as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD.PathType
                     .INTERNAL_ROOT_PATH, i));
         }
         AbstractDb.hdAccountProvider.addAddress(as);
@@ -181,51 +244,50 @@ public class HDAccount extends AbstractHD {
         for (int i = firstIndex;
              i < firstIndex + count;
              i++) {
-            as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), PathType
+            as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD.PathType
                     .EXTERNAL_ROOT_PATH, i));
         }
         AbstractDb.hdAccountProvider.addAddress(as);
     }
 
-    @Override
     protected String getEncryptedMnemonicSeed() {
         return AbstractDb.addressProvider.getHDAccountEncryptMnmonicSeed(hdSeedId);
     }
 
-
-    @Override
     protected String getEncryptedHDSeed() {
         return AbstractDb.addressProvider.getHDAccountEncryptSeed(hdSeedId);
     }
 
-    public String getReceivingAddress() {
+    public String getAddress() {
         return AbstractDb.hdAccountProvider.externalAddress();
     }
 
-    public String getShortReceivingAddress() {
-        return Utils.shortenAddress(getReceivingAddress());
+    public String getShortAddress() {
+        return Utils.shortenAddress(getAddress());
     }
 
     public int issuedInternalIndex() {
 
-        return AbstractDb.hdAccountProvider.issuedIndex(PathType.INTERNAL_ROOT_PATH);
+        return AbstractDb.hdAccountProvider.issuedIndex(AbstractHD.PathType.INTERNAL_ROOT_PATH);
     }
 
     public int issuedExternalIndex() {
-        return AbstractDb.hdAccountProvider.issuedIndex(PathType.EXTERNAL_ROOT_PATH);
+        return AbstractDb.hdAccountProvider.issuedIndex(AbstractHD.PathType.EXTERNAL_ROOT_PATH);
 
     }
 
     private int allGeneratedInternalAddressCount() {
-        return AbstractDb.hdAccountProvider.allGeneratedAddressCount(PathType.INTERNAL_ROOT_PATH);
+        return AbstractDb.hdAccountProvider.allGeneratedAddressCount(AbstractHD.PathType
+                .INTERNAL_ROOT_PATH);
     }
 
     private int allGeneratedExternalAddressCount() {
-        return AbstractDb.hdAccountProvider.allGeneratedAddressCount(PathType.EXTERNAL_ROOT_PATH);
+        return AbstractDb.hdAccountProvider.allGeneratedAddressCount(AbstractHD.PathType
+                .EXTERNAL_ROOT_PATH);
     }
 
-    private HDAccountAddress addressForPath(PathType type, int index) {
-        assert index < (type == PathType.EXTERNAL_ROOT_PATH ? allGeneratedExternalAddressCount()
+    private HDAccountAddress addressForPath(AbstractHD.PathType type, int index) {
+        assert index < (type == AbstractHD.PathType.EXTERNAL_ROOT_PATH ? allGeneratedExternalAddressCount()
                 : allGeneratedInternalAddressCount());
         return AbstractDb.hdAccountProvider.addressForPath(type, index);
     }
@@ -236,7 +298,7 @@ public class HDAccount extends AbstractHD {
             AbstractDb.hdAccountProvider.addTx(tx);
             int maxInternal = -1, maxExternal = -1;
             for (HDAccountAddress a : relatedAddresses) {
-                if (a.pathType == PathType.EXTERNAL_ROOT_PATH) {
+                if (a.pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
                     if (a.index > maxExternal) {
                         maxExternal = a.index;
                     }
@@ -277,7 +339,6 @@ public class HDAccount extends AbstractHD {
         this.balance = AbstractDb.hdAccountProvider.getConfirmedBanlance()
                 + calculateUnconfirmedBalance();
     }
-
 
     private long calculateUnconfirmedBalance() {
         long balance = 0;
@@ -374,8 +435,8 @@ public class HDAccount extends AbstractHD {
             return null;
         }
         DeterministicKey accountKey = getAccount(master);
-        DeterministicKey external = getChainRootKey(accountKey, PathType.EXTERNAL_ROOT_PATH);
-        DeterministicKey internal = getChainRootKey(accountKey, PathType.INTERNAL_ROOT_PATH);
+        DeterministicKey external = getChainRootKey(accountKey, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+        DeterministicKey internal = getChainRootKey(accountKey, AbstractHD.PathType.INTERNAL_ROOT_PATH);
         master.wipe();
         List<byte[]> unsignedHashes = tx.getUnsignedInHashes();
         assert unsignedHashes.size() == signingAddresses.size();
@@ -390,7 +451,7 @@ public class HDAccount extends AbstractHD {
             byte[] unsigned = unsignedHashes.get(i);
 
             if (!addressToKeyMap.containsKey(a.getAddress())) {
-                if (a.getPathType() == PathType.EXTERNAL_ROOT_PATH) {
+                if (a.getPathType() == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
                     addressToKeyMap.put(a.getAddress(), external.deriveSoftened(a.index));
                 } else {
                     addressToKeyMap.put(a.getAddress(), internal.deriveSoftened(a.index));
@@ -450,15 +511,15 @@ public class HDAccount extends AbstractHD {
     }
 
     private void updateIssuedInternalIndex(int index) {
-        AbstractDb.hdAccountProvider.updateIssuedIndex(PathType.INTERNAL_ROOT_PATH, index);
+        AbstractDb.hdAccountProvider.updateIssuedIndex(AbstractHD.PathType.INTERNAL_ROOT_PATH, index);
     }
 
     private void updateIssuedExternalIndex(int index) {
-        AbstractDb.hdAccountProvider.updateIssuedIndex(PathType.EXTERNAL_ROOT_PATH, index);
+        AbstractDb.hdAccountProvider.updateIssuedIndex(AbstractHD.PathType.EXTERNAL_ROOT_PATH, index);
     }
 
     private String getNewChangeAddress() {
-        return addressForPath(PathType.INTERNAL_ROOT_PATH, issuedInternalIndex() + 1).getAddress();
+        return addressForPath(AbstractHD.PathType.INTERNAL_ROOT_PATH, issuedInternalIndex() + 1).getAddress();
     }
 
     public int elementCountForBloomFilter() {
@@ -466,12 +527,12 @@ public class HDAccount extends AbstractHD {
     }
 
     public void addElementsForBloomFilter(BloomFilter filter) {
-        List<byte[]> pubs = AbstractDb.hdAccountProvider.getPubs(PathType.EXTERNAL_ROOT_PATH);
+        List<byte[]> pubs = AbstractDb.hdAccountProvider.getPubs(AbstractHD.PathType.EXTERNAL_ROOT_PATH);
         for (byte[] pub : pubs) {
             filter.insert(pub);
             filter.insert(Utils.sha256hash160(pub));
         }
-        pubs = AbstractDb.hdAccountProvider.getPubs(PathType.INTERNAL_ROOT_PATH);
+        pubs = AbstractDb.hdAccountProvider.getPubs(AbstractHD.PathType.INTERNAL_ROOT_PATH);
         for (byte[] pub : pubs) {
             filter.insert(pub);
             filter.insert(Utils.sha256hash160(pub));
@@ -501,19 +562,112 @@ public class HDAccount extends AbstractHD {
         return AbstractDb.hdAccountProvider.getPublishedTxs();
     }
 
+    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses){
+        throw new RuntimeException("use newTx() for hdAccount");
+    }
+
+    public boolean checkRValues() {
+        //TODO hddb: checkRValues for hd account
+        return true;
+    }
+
+    public boolean hasPrivKey() {
+        return true;
+    }
+
+    public long getSortTime() {
+        return 0;
+    }
+
+    public String getEncryptPrivKeyOfDb() {
+        return null;
+    }
+
+    public String getFullEncryptPrivKeyOfDb() {
+        return null;
+    }
+
+    protected DeterministicKey getChainRootKey(DeterministicKey accountKey, AbstractHD.PathType pathType) {
+        return accountKey.deriveSoftened(pathType.getValue());
+    }
+
+    protected DeterministicKey getAccount(DeterministicKey master) {
+        DeterministicKey purpose = master.deriveHardened(44);
+        DeterministicKey coinType = purpose.deriveHardened(0);
+        DeterministicKey account = coinType.deriveHardened(0);
+        purpose.wipe();
+        coinType.wipe();
+        return account;
+    }
+
+
+    protected DeterministicKey masterKey(CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        long begin = System.currentTimeMillis();
+        decryptHDSeed(password);
+        DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
+        wipeHDSeed();
+        log.info("hdm keychain decrypt time: {}", System.currentTimeMillis() - begin);
+        return master;
+    }
+
+    protected void decryptHDSeed(CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        if (hdSeedId < 0 || password == null) {
+            return;
+        }
+        String encryptedHDSeed = getEncryptedHDSeed();
+        if (Utils.isEmpty(encryptedHDSeed)) {
+            initHDSeedFromMnemonicSeed(password);
+        } else {
+            hdSeed = new EncryptedData(encryptedHDSeed).decrypt(password);
+        }
+    }
+
+    private void initHDSeedFromMnemonicSeed(CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        decryptMnemonicSeed(password);
+        hdSeed = seedFromMnemonic(mnemonicSeed);
+        wipeMnemonicSeed();
+        AbstractDb.addressProvider.updateEncrypttMnmonicSeed(getHdSeedId(), new EncryptedData(hdSeed,
+                password, isFromXRandom).toEncryptedString());
+    }
+
+    public void decryptMnemonicSeed(CharSequence password) throws KeyCrypterException {
+        if (hdSeedId < 0) {
+            return;
+        }
+        String encrypted = getEncryptedMnemonicSeed();
+        if (!Utils.isEmpty(encrypted)) {
+            mnemonicSeed = new EncryptedData(encrypted).decrypt(password);
+        }
+    }
+
+    public List<String> getSeedWords(CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        decryptMnemonicSeed(password);
+        List<String> words = MnemonicCode.instance().toMnemonic(mnemonicSeed);
+        wipeMnemonicSeed();
+        return words;
+    }
+
+    public boolean isFromXRandom(){
+        return isFromXRandom;
+    }
+
     public static class HDAccountAddress {
         private String address;
         private byte[] pub;
         private int index;
-        private PathType pathType;
+        private AbstractHD.PathType pathType;
         private boolean isSynced;
         private boolean isIssued;
 
-        public HDAccountAddress(byte[] pub, PathType pathType, int index) {
+        public HDAccountAddress(byte[] pub, AbstractHD.PathType pathType, int index) {
             this(Utils.toAddress(Utils.sha256hash160(pub)), pub, pathType, index, false, true);
         }
 
-        public HDAccountAddress(String address, byte[] pub, PathType pathType, int index, boolean isIssued, boolean isSynced) {
+        public HDAccountAddress(String address, byte[] pub, AbstractHD.PathType pathType, int index, boolean isIssued, boolean isSynced) {
             this.pub = pub;
             this.address = address;
             this.pathType = pathType;
@@ -534,7 +688,7 @@ public class HDAccount extends AbstractHD {
             return index;
         }
 
-        public PathType getPathType() {
+        public AbstractHD.PathType getPathType() {
             return pathType;
         }
 
