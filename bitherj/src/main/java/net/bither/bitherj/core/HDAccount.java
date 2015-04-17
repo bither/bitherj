@@ -597,6 +597,11 @@ public class HDAccount extends Address {
         return true;
     }
 
+    public boolean checkRValuesForTx(Tx tx) {
+        //TODO hddb: checkRValues tx for hd account
+        return true;
+    }
+
     public boolean hasPrivKey() {
         return true;
     }
