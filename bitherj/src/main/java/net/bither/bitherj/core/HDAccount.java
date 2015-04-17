@@ -264,6 +264,11 @@ public class HDAccount extends AbstractHD {
         return getRelatedAddressesForTx(tx).size() > 0;
     }
 
+    public List<Tx> getTxs(int page){
+        //TODO hddb: get txs for page
+        return new ArrayList<Tx>();
+    }
+
     public int txCount() {
         return AbstractDb.hdAccountProvider.txCount();
     }

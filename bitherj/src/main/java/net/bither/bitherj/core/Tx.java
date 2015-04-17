@@ -1261,6 +1261,11 @@ public class Tx extends Message implements Comparable<Tx> {
         return receive - sent;
     }
 
+    public long deltaAmountFrom(HDAccount account){
+        //TODO hddb: deltaAmountFrom account
+        return 0;
+    }
+
     public int getConfirmationCount() {
         return Math.max(0, BlockChain.getInstance().getLastBlock().getBlockNo() - getBlockNo() + 1);
     }
