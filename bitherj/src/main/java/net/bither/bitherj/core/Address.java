@@ -371,51 +371,6 @@ public class Address implements Comparable<Address> {
         return AbstractDb.txProvider.needCompleteInSignature(this.address);
     }
 
-    public boolean checkRValues() {
-        HashSet<BigInteger> rs = new HashSet<BigInteger>();
-        for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
-            if (in.getInSignature() != null && !in.isCoinBase()) {
-                Script script = new Script(in.getInSignature());
-                if (script.getFromAddress().equals(this.address)) {
-                    for (byte[] data : script.getSigs()) {
-                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
-                        BigInteger i = new BigInteger(signature.r.toByteArray());
-                        if (rs.contains(i))
-                            return false;
-                        rs.add(i);
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    public boolean checkRValuesForTx(Tx tx) {
-        HashSet<BigInteger> rs = new HashSet<BigInteger>();
-        for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
-            if (in.getInSignature() != null && !in.isCoinBase()) {
-                Script script = new Script(in.getInSignature());
-                if (script.getFromAddress().equals(this.address)) {
-                    for (byte[] data : script.getSigs()) {
-                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
-                        rs.add(new BigInteger(signature.r.toByteArray()));
-                    }
-                }
-            }
-        }
-        for (In in : tx.getIns()) {
-            Script script = new Script(in.getInSignature());
-            for (byte[] data : script.getSigs()) {
-                TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
-                BigInteger i = new BigInteger(signature.r.toByteArray());
-                if (rs.contains(i))
-                    return false;
-                rs.add(i);
-            }
-        }
-        return true;
-    }
-
     public long totalReceive() {
         return AbstractDb.txProvider.totalReceive(getAddress());
     }

@@ -299,30 +299,4 @@ public class TransactionsUtil {
         }
 
     }
-
-    public static Thread completeInputsForAddressInBackground(final Address address) {
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                completeInputsForAddress(address);
-            }
-        };
-        thread.setPriority(Thread.MIN_PRIORITY);
-        thread.start();
-        return thread;
-    }
-
-    public static void completeInputsForAddress(Address address) {
-        try {
-            int fromBlock = address.needCompleteInSignature();
-            while (fromBlock > 0) {
-                GetInSignaturesApi api = new GetInSignaturesApi(address.getAddress(), fromBlock);
-                api.handleHttpGet();
-                address.completeInSignature(getInSignatureFromBither(api.getResult()));
-                fromBlock = address.needCompleteInSignature();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }

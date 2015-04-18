@@ -604,16 +604,6 @@ public class HDAccount extends Address {
         throw new RuntimeException("use newTx() for hdAccount");
     }
 
-    public boolean checkRValues() {
-        //TODO hddb: checkRValues for hd account
-        return true;
-    }
-
-    public boolean checkRValuesForTx(Tx tx) {
-        //TODO hddb: checkRValues tx for hd account
-        return true;
-    }
-
     public boolean hasPrivKey() {
         return true;
     }
