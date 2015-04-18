@@ -295,40 +295,34 @@ public class HDAccount extends Address {
         return AbstractDb.hdAccountProvider.addressForPath(type, index);
     }
 
-    public boolean onNewTx(Tx tx, Tx.TxNotificationType txNotificationType) {
-        List<HDAccountAddress> relatedAddresses = getRelatedAddressesForTx(tx);
-        if (relatedAddresses.size() > 0) {
-            AbstractDb.txProvider.add(tx);
-            //TODO hddb: when to send notification?
-            long deltaBalance = getDeltaBalance();
-            if (deltaBalance != 0) {
-                AbstractApp.notificationService.notificatTx(HDAccountPlaceHolder, tx,
-                        txNotificationType, deltaBalance);
-            }
-            int maxInternal = -1, maxExternal = -1;
-            for (HDAccountAddress a : relatedAddresses) {
-                if (a.pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-                    if (a.index > maxExternal) {
-                        maxExternal = a.index;
-                    }
-                } else {
-                    if (a.index > maxInternal) {
-                        maxInternal = a.index;
-                    }
+    public void onNewTx(Tx tx, List<HDAccount.HDAccountAddress> relatedAddresses, Tx.TxNotificationType txNotificationType) {
+
+        long deltaBalance = getDeltaBalance();
+        AbstractApp.notificationService.notificatTx(HDAccountPlaceHolder, tx,
+                txNotificationType, deltaBalance);
+        int maxInternal = -1, maxExternal = -1;
+        for (HDAccountAddress a : relatedAddresses) {
+            if (a.pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
+                if (a.index > maxExternal) {
+                    maxExternal = a.index;
+                }
+            } else {
+                if (a.index > maxInternal) {
+                    maxInternal = a.index;
                 }
             }
-
-            if (maxExternal > issuedExternalIndex()) {
-                updateIssuedExternalIndex(maxExternal);
-            }
-            if (maxInternal > issuedInternalIndex()) {
-                updateIssuedInternalIndex(maxInternal);
-            }
-
-            supplyEnoughKeys();
-            return true;
         }
-        return false;
+
+        if (maxExternal > issuedExternalIndex()) {
+            updateIssuedExternalIndex(maxExternal);
+        }
+        if (maxInternal > issuedInternalIndex()) {
+            updateIssuedInternalIndex(maxInternal);
+        }
+
+        supplyEnoughKeys();
+
+
     }
 
 
