@@ -295,10 +295,14 @@ public class HDAccount extends Address {
         return AbstractDb.hdAccountProvider.addressForPath(type, index);
     }
 
-    public boolean onNewTx(Tx tx) {
+    public boolean onNewTx(Tx tx, Tx.TxNotificationType txNotificationType) {
         List<HDAccountAddress> relatedAddresses = getRelatedAddressesForTx(tx);
         if (relatedAddresses.size() > 0) {
             AbstractDb.hdAccountProvider.addTx(tx);
+            //TODO hddb: when to send notification?
+            long deltaBalance = getDeltaBalance();
+            AbstractApp.notificationService.notificatTx(HDAccountPlaceHolder, tx,
+                    txNotificationType, deltaBalance);
             int maxInternal = -1, maxExternal = -1;
             for (HDAccountAddress a : relatedAddresses) {
                 if (a.pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {

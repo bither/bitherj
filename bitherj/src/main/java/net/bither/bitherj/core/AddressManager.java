@@ -153,7 +153,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             }
         }
         if (hasHDAccount()) {
-            isRegister = getHdAccount().onNewTx(tx) || isRegister;
+            isRegister = getHdAccount().onNewTx(tx, txNotificationType) || isRegister;
         }
         return isRegister;
     }
