@@ -88,4 +88,5 @@ public interface IHDAccountProvider {
     public long sentFromAddress(byte[] txHash);
 
     public List<Tx> getTxAndDetailByAddress(int page);
+    public void confirmTx(int blockNo, List<byte[]> txHashes);
 }

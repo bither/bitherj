@@ -293,6 +293,7 @@ public class PeerManager {
             // update all tx in db
             log.info("update {} txs confirmation", txHashes.size());
             AbstractDb.txProvider.confirmTx(height, txHashes);
+            AbstractDb.hdAccountProvider.confirmTx(height, txHashes);
             // update all address 's tx and balance
             for (Address address : AddressManager.getInstance().getAllAddresses()) {
                 address.setBlockHeight(txHashes, height);
