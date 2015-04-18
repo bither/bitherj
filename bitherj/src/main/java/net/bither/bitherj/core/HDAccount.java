@@ -212,14 +212,14 @@ public class HDAccount extends Address {
     }
 
     public void supplyEnoughKeys() {
-        int lackOfExternal = LOOK_AHEAD_SIZE - (allGeneratedExternalAddressCount() -
-                issuedExternalIndex());
+        int lackOfExternal = issuedExternalIndex() + 1 + LOOK_AHEAD_SIZE -
+                allGeneratedExternalAddressCount();
         if (lackOfExternal > 0) {
             supplyNewExternalKey(lackOfExternal);
         }
 
-        int lackOfInternal = LOOK_AHEAD_SIZE - (allGeneratedInternalAddressCount() -
-                issuedInternalIndex());
+        int lackOfInternal = issuedInternalIndex() + 1 + LOOK_AHEAD_SIZE -
+                allGeneratedInternalAddressCount();
         if (lackOfInternal > 0) {
             supplyNewInternalKey(lackOfInternal);
         }
@@ -237,6 +237,7 @@ public class HDAccount extends Address {
                     .INTERNAL_ROOT_PATH, i));
         }
         AbstractDb.hdAccountProvider.addAddress(as);
+        log.info("HD supplied {} internal addresses", as.size());
     }
 
     private void supplyNewExternalKey(int count) {
@@ -251,6 +252,7 @@ public class HDAccount extends Address {
                     .EXTERNAL_ROOT_PATH, i));
         }
         AbstractDb.hdAccountProvider.addAddress(as);
+        log.info("HD supplied {} external addresses", as.size());
     }
 
     protected String getEncryptedMnemonicSeed() {
