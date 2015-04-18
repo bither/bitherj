@@ -296,10 +296,10 @@ public class HDAccount extends Address {
     }
 
     public void onNewTx(Tx tx, List<HDAccount.HDAccountAddress> relatedAddresses, Tx.TxNotificationType txNotificationType) {
+        if (relatedAddresses == null || relatedAddresses.size() == 0) {
+            return;
+        }
 
-        long deltaBalance = getDeltaBalance();
-        AbstractApp.notificationService.notificatTx(HDAccountPlaceHolder, tx,
-                txNotificationType, deltaBalance);
         int maxInternal = -1, maxExternal = -1;
         for (HDAccountAddress a : relatedAddresses) {
             if (a.pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
@@ -322,7 +322,9 @@ public class HDAccount extends Address {
 
         supplyEnoughKeys();
 
-
+        long deltaBalance = getDeltaBalance();
+        AbstractApp.notificationService.notificatTx(HDAccountPlaceHolder, tx, txNotificationType,
+                deltaBalance);
     }
 
 

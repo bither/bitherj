@@ -196,6 +196,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 needNotifityAddressList.add(hdAccountAddress);
             }
         }
+
         if (needNotifityAddressList.size() > 0) {
             getHdAccount().onNewTx(tx, needNotifityAddressList, txNotificationType);
         }
