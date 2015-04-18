@@ -314,10 +314,10 @@ public class HDAccount extends Address {
         }
 
         log.info("HD on new tx issued ex {}, issued in {}", maxExternal, maxInternal);
-        if (maxExternal > issuedExternalIndex()) {
+        if (maxExternal >= 0 && maxExternal > issuedExternalIndex()) {
             updateIssuedExternalIndex(maxExternal);
         }
-        if (maxInternal > issuedInternalIndex()) {
+        if (maxInternal >= 0 && maxInternal > issuedInternalIndex()) {
             updateIssuedInternalIndex(maxInternal);
         }
 
