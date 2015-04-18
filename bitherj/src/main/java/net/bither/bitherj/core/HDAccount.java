@@ -301,8 +301,10 @@ public class HDAccount extends Address {
             AbstractDb.hdAccountProvider.addTx(tx);
             //TODO hddb: when to send notification?
             long deltaBalance = getDeltaBalance();
-            AbstractApp.notificationService.notificatTx(HDAccountPlaceHolder, tx,
-                    txNotificationType, deltaBalance);
+            if (deltaBalance != 0) {
+                AbstractApp.notificationService.notificatTx(HDAccountPlaceHolder, tx,
+                        txNotificationType, deltaBalance);
+            }
             int maxInternal = -1, maxExternal = -1;
             for (HDAccountAddress a : relatedAddresses) {
                 if (a.pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
