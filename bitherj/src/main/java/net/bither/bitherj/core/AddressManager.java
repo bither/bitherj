@@ -16,9 +16,11 @@
 
 package net.bither.bitherj.core;
 
+import com.sun.deploy.util.StringUtils;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
@@ -582,4 +584,18 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 >= AbstractApp.bitherjSetting.hdmAddressPerSeedCount();
     }
 
+    public HashMap<String, Address> getNeededPrivKeyAddresses(Tx tx) {
+        HashMap<String, Address> result = new HashMap<String, Address>();
+        for (In in : tx.getIns()) {
+            Script pubKeyScript = new Script(in.getPrevOutScript());
+            String address = pubKeyScript.getToAddress();
+            for (Address privKey : this.getPrivKeyAddresses()) {
+                if (Utils.compareString(address, privKey.address)) {
+                    result.put(address, privKey);
+                    break;
+                }
+            }
+        }
+        return result;
+    }
 }

@@ -42,11 +42,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -800,6 +796,124 @@ public class Tx extends Message implements Comparable<Tx> {
         for (int i = 0;
              i < ins.size();
              i++) {
+            if (signatures[i] == null) {
+                continue;
+            }
+            In input = ins.get(i);
+//            final TransactionOutput connectedOutput = input.getOutpoint().getConnectedOutput();
+//            checkNotNull(connectedOutput);  // Quiet static analysis: is never null here but
+//            cannot be statically proven
+            Script scriptPubKey = new Script(input.getPrevOutScript()); //connectedOutput
+            // .getScriptPubKey();
+            if (scriptPubKey.isSentToAddress()) {
+                input.setInSignature(ScriptBuilder.createInputScript(signatures[i],
+                        signingKeys[i]).getProgram());
+            } else if (scriptPubKey.isSentToRawPubKey()) {
+                input.setInSignature(ScriptBuilder.createInputScript(signatures[i]).getProgram());
+            } else {
+                // Should be unreachable - if we don't recognize the type of script we're trying
+                // to sign for, we should
+                // have failed above when fetching the key to sign with.
+                throw new RuntimeException("Do not understand script type: " + scriptPubKey);
+            }
+        }
+        for (ECKey key : signingKeys) {
+            if (key != null) {
+                key.clearPrivateKey();
+            }
+        }
+
+        // Every input is now complete.
+    }
+
+    public synchronized void signInputs(TransactionSignature.SigHash hashType, HashMap<String, Address> addressMap,
+                                        CharSequence password) throws ScriptException {
+        checkState(ins.size() > 0);
+        checkState(outs.size() > 0);
+
+        // I don't currently have an easy way to test other modes work,
+        // as the official client does not use them.
+        checkArgument(hashType == TransactionSignature.SigHash.ALL,
+                "Only SIGHASH_ALL is currently supported");
+
+        // The transaction is signed with the input scripts empty except for the input we are
+        // signing. In the case
+        // where addInput has been used to set up a new transaction, they are already all empty.
+        // The input being signed
+        // has to have the connected OUTPUT program in it when the hash is calculated!
+        //
+        // Note that each input may be claiming an output sent to a different key. So we have to
+        // look at the outputs
+        // to figure out which key to sign with.
+
+        TransactionSignature[] signatures = new TransactionSignature[ins.size()];
+        ECKey[] signingKeys = new ECKey[ins.size()];
+        for (int i = 0; i < ins.size(); i++) {
+            In input = ins.get(i);
+            // We don't have the connected output, we assume it was signed already and move on
+            // todo:
+//            if (input.getOutpoint().getConnectedOutput() == null) {
+//                log.warn("Missing connected output, assuming input {} is already signed.", i);
+//                continue;
+//            }
+            try {
+                // We assume if its already signed, its hopefully got a SIGHASH type that will
+                // not invalidate when
+                // we sign missing pieces (to check this would require either assuming any
+                // signatures are signing
+                // standard output types or a way to get processed signatures out of script
+                // execution)
+                // todo:
+//                input.getScriptSig().correctlySpends(this, i,
+//  input.getOutpoint().getConnectedOutput().getScriptPubKey(), true);
+                log.warn("Input {} already correctly spends output, " +
+                        "" + "assuming SIGHASH type used will be safe and skipping signing.", i);
+                // all need to sign
+//                continue;
+            } catch (ScriptException e) {
+                // Expected.
+            }
+            if (input.getInSignature() == null || input.getInSignature().length != 0) {
+                log.warn("Re-signing an already signed transaction! Be sure this is what you " +
+                        "want" + ".");
+            }
+            // Find the signing key we'll need to use.
+            Script pubKeyScript = new Script(input.getPrevOutScript());
+            ECKey key = PrivateKeyUtil.getECKeyFromSingleString(addressMap.get(pubKeyScript.getToAddress()).getFullEncryptPrivKey(), password);
+            //input.getOutpoint().getConnectedKey(address);
+            // This assert should never fire. If it does, it means the wallet is inconsistent.
+            checkNotNull(key, "Transaction exists in wallet that we cannot redeem: %s",
+                    input.getPrevTxHash());
+            // Keep the key around for the script creation step below.
+            signingKeys[i] = key;
+            KeyParameter assKey = key.getKeyCrypter().deriveKey(password);
+            // The anyoneCanPay feature isn't used at the moment.
+            boolean anyoneCanPay = false;
+            byte[] connectedPubKeyScript = input.getPrevOutScript();//input.getOutpoint()
+            // .getConnectedPubKeyScript();
+            if (key.hasPrivKey() || key.isEncrypted()) {
+                signatures[i] = calculateSignature(i, key, assKey, connectedPubKeyScript,
+                        hashType, anyoneCanPay);
+            } else {
+                // Create a dummy signature to ensure the transaction is of the correct size when
+                // we try to ensure
+                // the right fee-per-kb is attached. If the wallet doesn't have the privkey,
+                // the user is assumed to
+                // be doing something special and that they will replace the dummy signature with
+                // a real one later.
+                signatures[i] = TransactionSignature.dummy();
+            }
+        }
+
+        // Now we have calculated each signature, go through and create the scripts. Reminder:
+        // the script consists:
+        // 1) For pay-to-address outputs: a signature (over a hash of the simplified transaction)
+        // and the complete
+        //    public key needed to sign for the connected output. The output script checks the
+        // provided pubkey hashes
+        //    to the address and then checks the signature.
+        // 2) For pay-to-key outputs: just a signature.
+        for (int i = 0; i < ins.size(); i++) {
             if (signatures[i] == null) {
                 continue;
             }
