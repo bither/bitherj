@@ -684,6 +684,24 @@ public class HDAccount extends Address {
         return words;
     }
 
+    public boolean checkWithPassword(CharSequence password) {
+        try {
+            decryptHDSeed(password);
+            decryptMnemonicSeed(password);
+            byte[] hdCopy = Arrays.copyOf(hdSeed, hdSeed.length);
+            boolean hdSeedSafe = Utils.compareString(getFirstAddressFromDb(),
+                    getFirstAddressFromSeed(null));
+            boolean mnemonicSeedSafe = Arrays.equals(seedFromMnemonic(mnemonicSeed), hdCopy);
+            Utils.wipeBytes(hdCopy);
+            wipeHDSeed();
+            wipeMnemonicSeed();
+            return hdSeedSafe && mnemonicSeedSafe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean isFromXRandom() {
         return isFromXRandom;
     }
