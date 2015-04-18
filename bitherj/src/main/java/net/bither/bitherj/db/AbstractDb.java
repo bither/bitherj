@@ -31,6 +31,7 @@ public abstract class AbstractDb {
             ", out_value integer not null" +
             ", out_status integer not null" +
             ", out_address text" +
+            ", hd_account_id integer " +
             ", primary key (tx_hash, out_sn));";
 
     public static final String CREATE_INS_SQL = "create table if not exists ins " +
@@ -123,40 +124,8 @@ public abstract class AbstractDb {
             ", is_synced integer not null" +
             ", primary key (address));";
 
-
-    public static final String CREATE_HD_ACCOUNT_TX = "create table if not exists txs " +
-            "(tx_hash text primary key" +
-            ", tx_ver integer" +
-            ", tx_locktime integer" +
-            ", tx_time integer" +
-            ", block_no integer" +
-            ", source integer);";
-
-    public static final String CREATE_HD_ACCOUNT_OUT = "create table if not exists outs " +
-            "(tx_hash text not null" +
-            ", out_sn integer not null" +
-            ", out_script text not null" +
-            ", out_value integer not null" +
-            ", out_status integer not null" +
-            ", out_address text" +
-            ", belong_account integer not null" +
-            ", primary key (tx_hash, out_sn));";
-
-    public static final String CREATE_HD_ACCOUNT_IN = "create table if not exists ins " +
-            "(tx_hash text not null" +
-            ", in_sn integer not null" +
-            ", prev_tx_hash text" +
-            ", prev_out_sn integer" +
-            ", in_signature text" +
-            ", in_sequence integer" +
-            ", primary key (tx_hash, in_sn));";
-
-
     // hd Account index
     public static final String CREATE_HD_ACCOUNT_ADDRESS_INDEX = "create index idx_hd_address_address on hd_account_addresses (address);";
-    public static final String CREATE_HD_ACCOUNT_OUT_OUT_ADDRESS_INDEX = "create index idx_out_out_address on outs (out_address);";
-    public static final String CREATE_HD_ACCOUNT_TX_BLOCK_NO_INDEX = "create index idx_tx_block_no on txs (block_no);";
-    public static final String CREATE_HD_ACCOUNT_IN_PREV_TX_HASH_INDEX = "create index idx_in_prev_tx_hash on ins (prev_tx_hash);";
 
 
     public static IBlockProvider blockProvider;
@@ -252,7 +221,7 @@ public abstract class AbstractDb {
         public static final String OUT_VALUE = "out_value";
         public static final String OUT_STATUS = "out_status";
         public static final String OUT_ADDRESS = "out_address";
-        public static final String BELONG_ACCOUNT = "belong_account";
+        public static final String HD_ACCOUNT_ID = "hd_account_id";
     }
 
     public interface PeersColumns {

@@ -360,9 +360,6 @@ public class Tx extends Message implements Comparable<Tx> {
         } else {
             Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             if (preTx == null) {
-                preTx = AbstractDb.hdAccountProvider.getTxDetailByTxHash(in.getPrevTxHash());
-            }
-            if (preTx == null) {
                 return null;
             }
             for (Out out : preTx.getOuts()) {
@@ -388,9 +385,6 @@ public class Tx extends Message implements Comparable<Tx> {
         long amount = 0;
         for (In in : getIns()) {
             Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
-            if (preTx == null) {
-                preTx = AbstractDb.hdAccountProvider.getTxDetailByTxHash(in.getPrevTxHash());
-            }
             boolean hasOut = false;
             for (Out out : preTx.getOuts()) {
                 if (in.getPrevOutSn() == out.getOutSn()) {
@@ -1393,7 +1387,7 @@ public class Tx extends Message implements Comparable<Tx> {
                 receive += out.getOutValue();
             }
         }
-        long sent = AbstractDb.hdAccountProvider.sentFromAddress(getTxHash());
+        long sent = AbstractDb.hdAccountProvider.sentFromAccount(account.getHdSeedId(), getTxHash());
         return receive - sent;
     }
 

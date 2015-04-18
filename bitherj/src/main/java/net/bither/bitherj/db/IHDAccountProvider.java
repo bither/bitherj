@@ -46,47 +46,34 @@ public interface IHDAccountProvider {
 
     public HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index);
 
-
     public List<byte[]> getPubs(AbstractHD.PathType pathType);
 
-    public List<Tx> getUnspentTxs();
-
-    public List<Out> getUnspendOut();
-
-    public List<HDAccount.HDAccountAddress> addTx(Tx tx);
-
-    public void addTxs(List<Tx> txList);
-
-    public List<String> getInAddresses(Tx tx);
-
     public List<HDAccount.HDAccountAddress> belongAccount(List<String> addresses);
-
-    public int txCount();
-
-    public long getConfirmedBanlance();
-
-    public List<Tx> getUnconfirmedTx();
-
-    public Tx getTxDetailByTxHash(byte[] txHash);
-
-    public List<HDAccount.HDAccountAddress> getSigningAddressesForInputs(List<In> inList);
-
-    public List<Tx> getPublishedTxs();
-
-    public List<Tx> getRecentlyTxsByAddress(int greateThanBlockNo, int limit);
-
-    public int unSyncedAddressCount();
 
     public void updateSyncdComplete(HDAccount.HDAccountAddress address);
 
     public void setSyncdNotComplete();
 
+    public int unSyncedAddressCount();
+
     public void updateSyncdForIndex(AbstractHD.PathType pathType, int index);
 
-    public void clearAllTx();
+    public List<HDAccount.HDAccountAddress> getSigningAddressesForInputs(List<In> inList);
 
-    public long sentFromAddress(byte[] txHash);
 
-    public List<Tx> getTxAndDetailByAddress(int page);
-    public void confirmTx(int blockNo, List<byte[]> txHashes);
+    //todo hdAccountAddress <-> addressesTX
+
+    public int hdAccountTxCount();
+
+    public long getHDAccountConfirmedBanlance(int hdAccountId);
+
+    public List<Tx> getHDAccountUnconfirmedTx();
+
+    public long sentFromAccount(int hdAccountId, byte[] txHash);
+
+    public List<Tx> getTxAndDetailByHDAccount(int page);
+
+    public List<Out> getUnspendOutByHDAccount(int hdAccountId);
+
+    public List<Tx> getRecentlyTxsByAccount(int greateThanBlockNo, int limit);
 }

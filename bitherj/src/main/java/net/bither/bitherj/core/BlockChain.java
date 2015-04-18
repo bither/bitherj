@@ -289,7 +289,6 @@ public class BlockChain {
         this.addBlocks(blocks);
         for (Block block : blocks) {
             AbstractDb.txProvider.confirmTx(block.getBlockNo(), block.getTxHashes());
-            AbstractDb.hdAccountProvider.confirmTx(block.getBlockNo(), block.getTxHashes());
         }
         this.lastBlock = blocks.get(blocks.size() - 1);
         return blocks.size();

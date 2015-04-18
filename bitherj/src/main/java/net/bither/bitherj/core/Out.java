@@ -42,9 +42,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Out extends Message {
 
-    public enum OutType {
-        NORMAL, BELONG_HD_ACCOUNT, NO_BELONG_HD_ACCOUNT
-    }
 
     private static final Logger log = LoggerFactory.getLogger(Out.class);
 
@@ -56,9 +53,8 @@ public class Out extends Message {
     private String outAddress;
     private long coinDepth;
 
-    private OutType outType = OutType.NORMAL;
+    private int hdAccountId = -1;
     private Tx tx;
-
 
 
     public Out() {
@@ -220,12 +216,12 @@ public class Out extends Message {
         }
     }
 
-    public OutType getOutType() {
-        return outType;
+    public int getHDAccountId() {
+        return hdAccountId;
     }
 
-    public void setOutType(OutType outType) {
-        this.outType = outType;
+    public void setHDAccountId(int hdAccountId) {
+        this.hdAccountId = hdAccountId;
     }
 
     public byte[] getOutpointData() {

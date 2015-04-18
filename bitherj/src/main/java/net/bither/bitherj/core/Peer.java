@@ -839,7 +839,7 @@ public class Peer extends PeerSocketHandler {
         InventoryMessage m = new InventoryMessage();
         Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(txHash.getBytes());
         if (tx == null) {
-            tx = AbstractDb.hdAccountProvider.getTxDetailByTxHash(txHash.getBytes());
+            tx = AbstractDb.txProvider.getTxDetailByTxHash(txHash.getBytes());
         }
         if (tx == null) {
             return;
