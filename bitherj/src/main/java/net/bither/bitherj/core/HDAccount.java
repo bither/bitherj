@@ -460,6 +460,7 @@ public class HDAccount extends Address {
         DeterministicKey accountKey = getAccount(master);
         DeterministicKey external = getChainRootKey(accountKey, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
         DeterministicKey internal = getChainRootKey(accountKey, AbstractHD.PathType.INTERNAL_ROOT_PATH);
+        accountKey.wipe();
         master.wipe();
         List<byte[]> unsignedHashes = tx.getUnsignedInHashes();
         assert unsignedHashes.size() == signingAddresses.size();
