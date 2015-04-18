@@ -116,12 +116,7 @@ public class PeerManager {
                 publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
             }
         }
-        for (Tx tx : AbstractDb.hdAccountProvider.getPublishedTxs()) {
-            if (tx.getBlockNo() == Tx.TX_UNCONFIRMED) {
-                publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
-            }
-
-        }
+        
     }
 
     public boolean isConnected() {
@@ -293,7 +288,6 @@ public class PeerManager {
             // update all tx in db
             log.info("update {} txs confirmation", txHashes.size());
             AbstractDb.txProvider.confirmTx(height, txHashes);
-            AbstractDb.hdAccountProvider.confirmTx(height, txHashes);
             // update all address 's tx and balance
             for (Address address : AddressManager.getInstance().getAllAddresses()) {
                 address.setBlockHeight(txHashes, height);

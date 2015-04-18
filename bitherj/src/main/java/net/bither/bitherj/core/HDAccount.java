@@ -298,7 +298,7 @@ public class HDAccount extends Address {
     public boolean onNewTx(Tx tx) {
         List<HDAccountAddress> relatedAddresses = getRelatedAddressesForTx(tx);
         if (relatedAddresses.size() > 0) {
-            AbstractDb.hdAccountProvider.addTx(tx);
+            AbstractDb.txProvider.add(tx);
             int maxInternal = -1, maxExternal = -1;
             for (HDAccountAddress a : relatedAddresses) {
                 if (a.pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
@@ -331,7 +331,7 @@ public class HDAccount extends Address {
     }
 
     public boolean initTxs(List<Tx> txs) {
-        AbstractDb.hdAccountProvider.addTxs(txs);
+        AbstractDb.txProvider.addTxs(txs);
         if (txs.size() > 0) {
             notificatTx(null, Tx.TxNotificationType.txFromApi);
         }
@@ -351,22 +351,22 @@ public class HDAccount extends Address {
     }
 
     public List<Tx> getTxs(int page) {
-        return AbstractDb.hdAccountProvider.getTxAndDetailByAddress(page);
+        return AbstractDb.hdAccountProvider.getTxAndDetailByHDAccount(page);
     }
 
     public int txCount() {
-        return AbstractDb.hdAccountProvider.txCount();
+        return AbstractDb.hdAccountProvider.hdAccountTxCount();
     }
 
     public void updateBalance() {
-        this.balance = AbstractDb.hdAccountProvider.getConfirmedBanlance()
+        this.balance = AbstractDb.hdAccountProvider.getHDAccountConfirmedBanlance(hdSeedId)
                 + calculateUnconfirmedBalance();
     }
 
     private long calculateUnconfirmedBalance() {
         long balance = 0;
 
-        List<Tx> txs = AbstractDb.hdAccountProvider.getUnconfirmedTx();
+        List<Tx> txs = AbstractDb.hdAccountProvider.getHDAccountUnconfirmedTx();
         Collections.sort(txs);
 
         Set<byte[]> invalidTx = new HashSet<byte[]>();
@@ -401,7 +401,7 @@ public class HDAccount extends Address {
             spent.addAll(unspendOut);
             spent.retainAll(spentOut);
             for (OutPoint o : spent) {
-                Tx tx1 = AbstractDb.hdAccountProvider.getTxDetailByTxHash(o.getTxHash());
+                Tx tx1 = AbstractDb.txProvider.getTxDetailByTxHash(o.getTxHash());
                 unspendOut.remove(o);
                 for (Out out : tx1.getOuts()) {
                     if (out.getOutSn() == o.getOutSn()) {
@@ -446,7 +446,7 @@ public class HDAccount extends Address {
 
     public Tx newTx(String[] toAddresses, Long[] amounts, CharSequence password) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
-        List<Out> outs = AbstractDb.hdAccountProvider.getUnspendOut();
+        List<Out> outs = AbstractDb.hdAccountProvider.getUnspendOutByHDAccount(hdSeedId);
 
         Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(), Arrays
                 .asList(amounts), Arrays.asList(toAddresses));
@@ -527,7 +527,7 @@ public class HDAccount extends Address {
         if (canParseFromScript) {
             addresses = fromAddress;
         } else {
-            addresses = AbstractDb.hdAccountProvider.getInAddresses(tx);
+            addresses = AbstractDb.txProvider.getInAddresses(tx);
         }
         List<HDAccountAddress> hdAccountAddressList = AbstractDb.hdAccountProvider.belongAccount(addresses);
         return hdAccountAddressList;
@@ -580,14 +580,10 @@ public class HDAccount extends Address {
     public List<Tx> getRecentlyTxsWithConfirmationCntLessThan(int confirmationCnt, int limit) {
         List<Tx> txList = new ArrayList<Tx>();
         int blockNo = BlockChain.getInstance().getLastBlock().getBlockNo() - confirmationCnt + 1;
-        for (Tx tx : AbstractDb.hdAccountProvider.getRecentlyTxsByAddress(blockNo, limit)) {
+        for (Tx tx : AbstractDb.hdAccountProvider.getRecentlyTxsByAccount(blockNo, limit)) {
             txList.add(tx);
         }
         return txList;
-    }
-
-    public List<Tx> getPublishedTxs() {
-        return AbstractDb.hdAccountProvider.getPublishedTxs();
     }
 
     public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses) {
