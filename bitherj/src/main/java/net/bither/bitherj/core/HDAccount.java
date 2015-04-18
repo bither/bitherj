@@ -146,6 +146,14 @@ public class HDAccount extends Address {
         initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed);
     }
 
+    public HDAccount(EncryptedData encryptedMnemonicSeed, CharSequence password)
+            throws MnemonicException.MnemonicLengthException {
+        mnemonicSeed = encryptedMnemonicSeed.decrypt(password);
+        hdSeed = seedFromMnemonic(mnemonicSeed);
+        isFromXRandom = encryptedMnemonicSeed.isXRandom();
+        EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
+    }
+
     private void initHDAccount(DeterministicKey master, EncryptedData encryptedMnemonicSeed,
                                EncryptedData encryptedHDSeed) {
         String firstAddress;
