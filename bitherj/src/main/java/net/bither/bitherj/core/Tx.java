@@ -364,6 +364,9 @@ public class Tx extends Message implements Comparable<Tx> {
         } else {
             Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
             if (preTx == null) {
+                preTx = AbstractDb.hdAccountProvider.getTxDetailByTxHash(in.getPrevTxHash());
+            }
+            if (preTx == null) {
                 return null;
             }
             for (Out out : preTx.getOuts()) {
@@ -389,6 +392,9 @@ public class Tx extends Message implements Comparable<Tx> {
         long amount = 0;
         for (In in : getIns()) {
             Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
+            if (preTx == null) {
+                preTx = AbstractDb.hdAccountProvider.getTxDetailByTxHash(in.getPrevTxHash());
+            }
             boolean hasOut = false;
             for (Out out : preTx.getOuts()) {
                 if (in.getPrevOutSn() == out.getOutSn()) {
@@ -1226,34 +1232,34 @@ public class Tx extends Message implements Comparable<Tx> {
         return amount;
     }
 
-    public long amountSentFrom(Address address) {
-        long amount = 0;
-        for (In in : this.ins) {
-            Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
-            int n = in.getPrevOutSn();
-            for (Out out : tx.getOuts()) {
-                if (n == out.getOutSn() && Utils.compareString(address.getAddress(),
-                        out.getOutAddress())) {
-                    amount += tx.outs.get(n).getOutValue();
-                }
-            }
-        }
-        return amount;
-    }
+//    public long amountSentFrom(Address address) {
+//        long amount = 0;
+//        for (In in : this.ins) {
+//            Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
+//            int n = in.getPrevOutSn();
+//            for (Out out : tx.getOuts()) {
+//                if (n == out.getOutSn() && Utils.compareString(address.getAddress(),
+//                        out.getOutAddress())) {
+//                    amount += tx.outs.get(n).getOutValue();
+//                }
+//            }
+//        }
+//        return amount;
+//    }
 
-    public long amountSentTo(Address address) {
-        long amount = 0;
-        for (Out out : this.outs) {
-            if (Utils.compareString(address.getAddress(), out.getOutAddress())) {
-                amount += out.getOutValue();
-            }
-        }
-        return amount;
-    }
+//    public long amountSentTo(Address address) {
+//        long amount = 0;
+//        for (Out out : this.outs) {
+//            if (Utils.compareString(address.getAddress(), out.getOutAddress())) {
+//                amount += out.getOutValue();
+//            }
+//        }
+//        return amount;
+//    }
 
     public long deltaAmountFrom(Address address) {
-        if(address instanceof HDAccount){
-            return deltaAmountFrom((HDAccount)address);
+        if (address instanceof HDAccount) {
+            return deltaAmountFrom((HDAccount) address);
         }
         long receive = 0;
         for (Out out : this.outs) {
