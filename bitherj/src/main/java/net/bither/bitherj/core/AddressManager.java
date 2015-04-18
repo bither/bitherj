@@ -16,7 +16,7 @@
 
 package net.bither.bitherj.core;
 
-import com.sun.deploy.util.StringUtils;
+
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.db.AbstractDb;
