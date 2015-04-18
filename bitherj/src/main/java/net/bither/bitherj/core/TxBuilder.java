@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 public class TxBuilder {
     private static TxBuilder uniqueInstance = new TxBuilder();
@@ -54,6 +53,15 @@ public class TxBuilder {
 
         if (value > getAmount(unspendOuts)) {
             throw new TxBuilderException.TxBuilderNotEnoughMoneyException(value - TxBuilder.getAmount(unspendOuts));
+        }
+
+        Tx emptyWalletTx = emptyWallet.buildTx(changeAddress, unspendOuts, prepareTx(amounts,
+                addresses));
+        if (emptyWalletTx != null && TxBuilder.estimationTxSize(emptyWalletTx.getIns().size(),
+                emptyWalletTx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
+            return emptyWalletTx;
+        } else if (emptyWalletTx != null) {
+            throw new TxBuilderException(TxBuilderException.ERR_REACH_MAX_TX_SIZE_LIMIT_CODE);
         }
 
         for (long amount : amounts) {
@@ -286,7 +294,49 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 
     @Override
     public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx) {
-        return null;
+        List<Out> outs = unspendOuts;
+
+        long value = 0;
+        for (Out out : tx.getOuts()) {
+            value += out.getOutValue();
+        }
+        boolean needMinFee = TxBuilder.needMinFee(tx.getOuts());
+
+        if (value != TxBuilder.getAmount(unspendOuts) || value != TxBuilder.getAmount(outs)) {
+            return null;
+        }
+
+        long fees = 0;
+        if (needMinFee) {
+            fees = Utils.getFeeBase();
+        } else {
+            // no fee logic
+            int s = TxBuilder.estimationTxSize(outs.size(), tx.getOuts().size());
+            if (TxBuilder.getCoinDepth(outs) <= TxBuilder.TX_FREE_MIN_PRIORITY * s) {
+                fees = Utils.getFeeBase();
+            }
+        }
+
+        int size = TxBuilder.estimationTxSize(outs.size(), tx.getOuts().size());
+        if (size > 1000) {
+            fees = (size / 1000 + 1) * Utils.getFeeBase();
+        }
+
+        // note : like bitcoinj, empty wallet will not check min output
+        if (fees > 0) {
+            Out lastOut = tx.getOuts().get(tx.getOuts().size() - 1);
+            if (lastOut.getOutValue() > fees) {
+                lastOut.setOutValue(lastOut.getOutValue() - fees);
+            } else {
+                return null;
+            }
+        }
+        for (Out out : outs) {
+            tx.addInput(out);
+        }
+
+        tx.setSource(Tx.SourceType.self.getValue());
+        return tx;
     }
 }
 
