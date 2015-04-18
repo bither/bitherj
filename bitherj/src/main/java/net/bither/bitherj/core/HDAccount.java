@@ -313,6 +313,7 @@ public class HDAccount extends Address {
             }
         }
 
+        log.info("HD on new tx issued ex {}, issued in {}", maxExternal, maxInternal);
         if (maxExternal > issuedExternalIndex()) {
             updateIssuedExternalIndex(maxExternal);
         }
