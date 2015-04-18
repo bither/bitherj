@@ -556,6 +556,7 @@ public class Peer extends PeerSocketHandler {
                     exceptionCaught(new Exception("Peer " + getPeerAddress().getHostAddress() + " is junking us. Drop it."));
                     return;
                 }
+                return;
             }
 
 
