@@ -38,6 +38,8 @@ import net.bither.bitherj.qrcode.QRCodeUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +50,7 @@ import java.util.Map;
 
 public class TransactionsUtil {
 
-
+    private static final Logger log = LoggerFactory.getLogger(TransactionsUtil.class);
     private static final String TX = "tx";
     private static final String BLOCK_COUNT = "block_count";
     private static final String TX_CNT = "tx_cnt";
@@ -201,6 +203,11 @@ public class TransactionsUtil {
                 int storeBlockHeight = storedBlock.getBlockNo();
                 hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(
                         pathType, addressIndex);
+                if (hdAccountAddress == null) {
+                    hasTx = false;
+                    log.warn("AccountAddress", "address is null path {} ,index {}", pathType, addressIndex);
+                    continue;
+                }
                 if (hdAccountAddress.isSyncedComplete()) {
                     addressIndex++;
                     continue;
