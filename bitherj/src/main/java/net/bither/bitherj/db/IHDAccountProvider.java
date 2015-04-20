@@ -24,7 +24,6 @@ import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.Out;
 import net.bither.bitherj.core.Tx;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -41,6 +40,7 @@ public interface IHDAccountProvider {
 
     public String externalAddress();
 
+    //TODO To optimize the query
     public HashSet<String> getAllAddress();
 
 
@@ -59,9 +59,6 @@ public interface IHDAccountProvider {
     public void updateSyncdForIndex(AbstractHD.PathType pathType, int index);
 
     public List<HDAccount.HDAccountAddress> getSigningAddressesForInputs(List<In> inList);
-
-
-    //todo hdAccountAddress <-> addressesTX
 
     public int hdAccountTxCount();
 
