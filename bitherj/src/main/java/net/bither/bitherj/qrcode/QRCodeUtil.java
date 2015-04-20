@@ -107,7 +107,7 @@ public class QRCodeUtil {
     }
 
     public static boolean verifyBitherQRCode(String text) {
-        Pattern pattern = Pattern.compile("[^0-9a-zA-Z/\\+-]");
+        Pattern pattern = Pattern.compile("[^0-9a-zA-Z/\\+%-]");
         Matcher matcher = pattern.matcher(text);
         boolean verifyNewVersion = true;
         boolean verifyOldVersion = true;

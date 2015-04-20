@@ -37,6 +37,7 @@ public abstract class ImportHDSeed {
     public static final int PASSWORD_WRONG = 3;
     public static final int IMPORT_FAILED = 4;
 
+    public static final int NOT_HD_ACCOUNT_SEED = 5;
     private String content;
     private List<String> worlds;
     protected SecureCharSequence password;
@@ -98,6 +99,7 @@ public abstract class ImportHDSeed {
     public HDAccount importHDAccount() {
         switch (importPrivateKeyType) {
             case HDSeedQRCode:
+
                 if (content.indexOf(QRCodeUtil.HD_QR_CODE_FLAG) == 0) {
                     String keyString = content.substring(1);
                     String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keyString);
@@ -109,7 +111,7 @@ public abstract class ImportHDSeed {
                     }
                     try {
                         return new HDAccount(new EncryptedData(encreyptString)
-                                , password);
+                                , password, false);
                     } catch (Exception e) {
                         importError(IMPORT_FAILED);
                         e.printStackTrace();
@@ -117,13 +119,13 @@ public abstract class ImportHDSeed {
                     }
 
                 } else {
-                    importError(NOT_HDM_COLD_SEED);
+                    importError(NOT_HD_ACCOUNT_SEED);
                     return null;
                 }
             case HDSeedPhrase:
                 try {
                     byte[] mnemonicCodeSeed = MnemonicCode.instance().toEntropy(worlds);
-                    HDAccount hdAccount = new HDAccount(mnemonicCodeSeed, password);
+                    HDAccount hdAccount = new HDAccount(mnemonicCodeSeed, password, false);
                     return hdAccount;
                 } catch (Exception e) {
                     e.printStackTrace();

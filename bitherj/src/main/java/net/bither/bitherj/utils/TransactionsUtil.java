@@ -201,7 +201,7 @@ public class TransactionsUtil {
                 int storeBlockHeight = storedBlock.getBlockNo();
                 hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(
                         pathType, addressIndex);
-                if (hdAccountAddress.isSynced()) {
+                if (hdAccountAddress.isSyncedComplete()) {
                     addressIndex++;
                     continue;
                 }
@@ -233,7 +233,7 @@ public class TransactionsUtil {
                 transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
                 Collections.sort(transactions, new ComparatorTx());
                 AddressManager.getInstance().getHdAccount().initTxs(transactions);
-                hdAccountAddress.setSynced(true);
+                hdAccountAddress.setSyncedComplete(true);
                 AddressManager.getInstance().getHdAccount().updateSyncComplete(hdAccountAddress);
 
                 if (transactions.size() > 0) {
@@ -242,7 +242,7 @@ public class TransactionsUtil {
                     } else {
                         AddressManager.getInstance().getHdAccount().updateIssuedInternalIndex(addressIndex);
                     }
-                    AddressManager.getInstance().getHdAccount().supplyEnoughKeys();
+                    AddressManager.getInstance().getHdAccount().supplyEnoughKeys(false);
                     hasTx = true;
                 } else {
                     hasTx = false;

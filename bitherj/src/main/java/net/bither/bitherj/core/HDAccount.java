@@ -111,6 +111,11 @@ public class HDAccount extends Address {
 
     public HDAccount(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
+        this(mnemonicSeed, password, true);
+    }
+
+    public HDAccount(byte[] mnemonicSeed, CharSequence password, boolean isSyncedComplete) throws MnemonicException
+            .MnemonicLengthException {
         super();
         this.mnemonicSeed = mnemonicSeed;
         hdSeed = seedFromMnemonic(mnemonicSeed);
@@ -118,7 +123,7 @@ public class HDAccount extends Address {
 
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         EncryptedData encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
-        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed);
+        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, isSyncedComplete);
     }
 
     // Create With Random
@@ -143,19 +148,23 @@ public class HDAccount extends Address {
                 e.printStackTrace();
             }
         }
-        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed);
+        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, true);
     }
 
-    public HDAccount(EncryptedData encryptedMnemonicSeed, CharSequence password)
+    //use in import
+    public HDAccount(EncryptedData encryptedMnemonicSeed, CharSequence password, boolean isSyncedComplete)
             throws MnemonicException.MnemonicLengthException {
         mnemonicSeed = encryptedMnemonicSeed.decrypt(password);
         hdSeed = seedFromMnemonic(mnemonicSeed);
         isFromXRandom = encryptedMnemonicSeed.isXRandom();
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
+        DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
+        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, isSyncedComplete);
+
     }
 
     private void initHDAccount(DeterministicKey master, EncryptedData encryptedMnemonicSeed,
-                               EncryptedData encryptedHDSeed) {
+                               EncryptedData encryptedHDSeed, boolean isSyncedComplete) {
         String firstAddress;
         ECKey k = new ECKey(mnemonicSeed, null);
         String address = k.toAddress();
@@ -175,9 +184,9 @@ public class HDAccount extends Address {
             byte[] subExternalPub = externalKey.deriveSoftened(i).getPubKey();
             byte[] subInternalPub = internalKey.deriveSoftened(i).getPubKey();
             HDAccountAddress externalAddress = new HDAccountAddress(subExternalPub
-                    , AbstractHD.PathType.EXTERNAL_ROOT_PATH, i);
+                    , AbstractHD.PathType.EXTERNAL_ROOT_PATH, i, isSyncedComplete);
             HDAccountAddress internalAddress = new HDAccountAddress(subInternalPub
-                    , AbstractHD.PathType.INTERNAL_ROOT_PATH, i);
+                    , AbstractHD.PathType.INTERNAL_ROOT_PATH, i, isSyncedComplete);
             externalAddresses.add(externalAddress);
             internalAddresses.add(internalAddress);
         }
@@ -219,21 +228,21 @@ public class HDAccount extends Address {
         return AbstractDb.addressProvider.getHDFristAddress(hdSeedId);
     }
 
-    public void supplyEnoughKeys() {
+    public void supplyEnoughKeys(boolean isSyncedComplete) {
         int lackOfExternal = issuedExternalIndex() + 1 + LOOK_AHEAD_SIZE -
                 allGeneratedExternalAddressCount();
         if (lackOfExternal > 0) {
-            supplyNewExternalKey(lackOfExternal);
+            supplyNewExternalKey(lackOfExternal, isSyncedComplete);
         }
 
         int lackOfInternal = issuedInternalIndex() + 1 + LOOK_AHEAD_SIZE -
                 allGeneratedInternalAddressCount();
         if (lackOfInternal > 0) {
-            supplyNewInternalKey(lackOfInternal);
+            supplyNewInternalKey(lackOfInternal, isSyncedComplete);
         }
     }
 
-    private void supplyNewInternalKey(int count) {
+    private void supplyNewInternalKey(int count, boolean isSyncedComplete) {
         DeterministicKey root = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                 (getInternalPub());
         int firstIndex = allGeneratedInternalAddressCount();
@@ -242,13 +251,13 @@ public class HDAccount extends Address {
              i < firstIndex + count;
              i++) {
             as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD.PathType
-                    .INTERNAL_ROOT_PATH, i));
+                    .INTERNAL_ROOT_PATH, i, isSyncedComplete));
         }
         AbstractDb.hdAccountProvider.addAddress(as);
         log.info("HD supplied {} internal addresses", as.size());
     }
 
-    private void supplyNewExternalKey(int count) {
+    private void supplyNewExternalKey(int count, boolean isSyncedComplete) {
         DeterministicKey root = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                 (getExternalPub());
         int firstIndex = allGeneratedExternalAddressCount();
@@ -257,7 +266,7 @@ public class HDAccount extends Address {
              i < firstIndex + count;
              i++) {
             as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD.PathType
-                    .EXTERNAL_ROOT_PATH, i));
+                    .EXTERNAL_ROOT_PATH, i, isSyncedComplete));
         }
         AbstractDb.hdAccountProvider.addAddress(as);
         log.info("HD supplied {} external addresses", as.size());
@@ -331,7 +340,7 @@ public class HDAccount extends Address {
             updateIssuedInternalIndex(maxInternal);
         }
 
-        supplyEnoughKeys();
+        supplyEnoughKeys(true);
 
         long deltaBalance = getDeltaBalance();
         AbstractApp.notificationService.notificatTx(HDAccountPlaceHolder, tx, txNotificationType,
@@ -711,20 +720,20 @@ public class HDAccount extends Address {
         private byte[] pub;
         private int index;
         private AbstractHD.PathType pathType;
-        private boolean isSynced;
+        private boolean isSyncedComplete;
         private boolean isIssued;
 
-        public HDAccountAddress(byte[] pub, AbstractHD.PathType pathType, int index) {
-            this(Utils.toAddress(Utils.sha256hash160(pub)), pub, pathType, index, false, true);
+        public HDAccountAddress(byte[] pub, AbstractHD.PathType pathType, int index, boolean isSyncedComplete) {
+            this(Utils.toAddress(Utils.sha256hash160(pub)), pub, pathType, index, false, isSyncedComplete);
         }
 
-        public HDAccountAddress(String address, byte[] pub, AbstractHD.PathType pathType, int index, boolean isIssued, boolean isSynced) {
+        public HDAccountAddress(String address, byte[] pub, AbstractHD.PathType pathType, int index, boolean isIssued, boolean isSyncedComplete) {
             this.pub = pub;
             this.address = address;
             this.pathType = pathType;
             this.index = index;
             this.isIssued = isIssued;
-            this.isSynced = isSynced;
+            this.isSyncedComplete = isSyncedComplete;
         }
 
         public String getAddress() {
@@ -747,16 +756,16 @@ public class HDAccount extends Address {
             return isIssued;
         }
 
-        public boolean isSynced() {
-            return isSynced;
+        public boolean isSyncedComplete() {
+            return isSyncedComplete;
         }
 
         public void setIssued(boolean isIssued) {
             this.isIssued = isIssued;
         }
 
-        public void setSynced(boolean isSynced) {
-            this.isSynced = isSynced;
+        public void setSyncedComplete(boolean isSynced) {
+            this.isSyncedComplete = isSynced;
         }
 
     }
