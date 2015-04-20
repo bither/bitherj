@@ -137,8 +137,6 @@ public class HDAccount extends Address {
         while (firstAddress == null) {
             try {
                 random.nextBytes(mnemonicSeed);
-                //encryptedHDSeed = new EncryptedData("98210DCBD6331F4371B53CF7B3888C9DC7B4D76D777FD5992A8005843FF1E7A36EBF148AA45439A63B8420349AC4521A9C744C6534F8D7D54715AFA5E87146CFE5572787B87A4A24DB48276B4C636AE6/C58FFCFDA591331C8A0B850FCC5343A3/215AD99CF59A36CA");
-                // hdSeed = encryptedHDSeed.decrypt(password);
                 hdSeed = seedFromMnemonic(mnemonicSeed);
                 encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
                 encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
