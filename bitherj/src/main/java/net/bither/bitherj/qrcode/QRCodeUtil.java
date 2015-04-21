@@ -44,6 +44,7 @@ public class QRCodeUtil {
     public static final String XRANDOM_FLAG = "+";
     public static final String OLD_QR_CODE_SPLIT = ":";
     public static final String HDM_QR_CODE_FLAG = "-";
+    public static final String HD_QR_CODE_FLAG = "%";
 
 
     public static String[] splitString(String str) {
@@ -106,7 +107,7 @@ public class QRCodeUtil {
     }
 
     public static boolean verifyBitherQRCode(String text) {
-        Pattern pattern = Pattern.compile("[^0-9a-zA-Z/\\+-]");
+        Pattern pattern = Pattern.compile("[^0-9a-zA-Z/\\+%-]");
         Matcher matcher = pattern.matcher(text);
         boolean verifyNewVersion = true;
         boolean verifyOldVersion = true;

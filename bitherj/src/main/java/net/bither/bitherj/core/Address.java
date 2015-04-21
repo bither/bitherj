@@ -59,9 +59,13 @@ public class Address implements Comparable<Address> {
     private boolean isTrashed = false;
     private String alias;
 
+    public Address(){
+        super();
+    }
+
     public Address(String address, byte[] pubKey, String encryptString, boolean isFromXRandom) {
-        this(address, pubKey, AddressManager.getInstance().getSortTime(!Utils.isEmpty(encryptString))
-                , false, isFromXRandom, false, encryptString);
+        this(address, pubKey, AddressManager.getInstance().getSortTime(!Utils.isEmpty
+                (encryptString)), false, isFromXRandom, false, encryptString);
 
     }
 
@@ -153,7 +157,7 @@ public class Address implements Comparable<Address> {
             }
 
             if (tx.getBlockNo() == Tx.TX_UNCONFIRMED
-                    && (this.isIntersects(spent, spentOut) || this.isIntersects(inHashes, invalidTx))) {
+                    && (Utils.isIntersects(spent, spentOut) || Utils.isIntersects(inHashes, invalidTx))) {
                 invalidTx.add(tx.getTxHash());
                 continue;
             }
@@ -181,12 +185,6 @@ public class Address implements Comparable<Address> {
         return balance;
     }
 
-    private boolean isIntersects(Set set1, Set set2) {
-        Set result = new HashSet();
-        result.addAll(set1);
-        result.retainAll(set2);
-        return !result.isEmpty();
-    }
 
     public long getBalance() {
         return balance;
@@ -200,7 +198,7 @@ public class Address implements Comparable<Address> {
 
     public void notificatTx(Tx tx, Tx.TxNotificationType txNotificationType) {
         long deltaBalance = getDeltaBalance();
-        AbstractApp.notificationService.notificatTx(this, tx, txNotificationType, deltaBalance);
+        AbstractApp.notificationService.notificatTx(getAddress(), tx, txNotificationType, deltaBalance);
     }
 
     public void setBlockHeight(List<byte[]> txHashes, int height) {
@@ -267,8 +265,7 @@ public class Address implements Comparable<Address> {
     }
 
     public String getFullEncryptPrivKeyOfDb() {
-        return PrivateKeyUtil.getFullencryptPrivateKey(Address.this
-                , this.encryptPrivKey);
+        return PrivateKeyUtil.getFullencryptPrivateKey(Address.this, this.encryptPrivKey);
     }
 
     public void recoverFromBackup(String encryptPriv) {
@@ -374,51 +371,6 @@ public class Address implements Comparable<Address> {
         return AbstractDb.txProvider.needCompleteInSignature(this.address);
     }
 
-    public boolean checkRValues() {
-        HashSet<BigInteger> rs = new HashSet<BigInteger>();
-        for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
-            if (in.getInSignature() != null && !in.isCoinBase()) {
-                Script script = new Script(in.getInSignature());
-                if (script.getFromAddress().equals(this.address)) {
-                    for (byte[] data : script.getSigs()) {
-                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
-                        BigInteger i = new BigInteger(signature.r.toByteArray());
-                        if (rs.contains(i))
-                            return false;
-                        rs.add(i);
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    public boolean checkRValuesForTx(Tx tx) {
-        HashSet<BigInteger> rs = new HashSet<BigInteger>();
-        for (In in : AbstractDb.txProvider.getRelatedIn(this.address)) {
-            if (in.getInSignature() != null && !in.isCoinBase()) {
-                Script script = new Script(in.getInSignature());
-                if (script.getFromAddress().equals(this.address)) {
-                    for (byte[] data : script.getSigs()) {
-                        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
-                        rs.add(new BigInteger(signature.r.toByteArray()));
-                    }
-                }
-            }
-        }
-        for (In in : tx.getIns()) {
-            Script script = new Script(in.getInSignature());
-            for (byte[] data : script.getSigs()) {
-                TransactionSignature signature = TransactionSignature.decodeFromBitcoin(data, false);
-                BigInteger i = new BigInteger(signature.r.toByteArray());
-                if (rs.contains(i))
-                    return false;
-                rs.add(i);
-            }
-        }
-        return true;
-    }
-
     public long totalReceive() {
         return AbstractDb.txProvider.totalReceive(getAddress());
     }
@@ -434,6 +386,10 @@ public class Address implements Comparable<Address> {
     public boolean removeTx(Tx tx) {
         AbstractDb.txProvider.remove(tx.getTxHash());
         return true;
+    }
+
+    public boolean isHDAccount(){
+        return this instanceof HDAccount;
     }
 
     public String getAlias() {

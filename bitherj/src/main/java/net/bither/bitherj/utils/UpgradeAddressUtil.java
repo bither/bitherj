@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.utils;
 
+import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
@@ -132,7 +133,7 @@ public class UpgradeAddressUtil {
     }
 
 
-    public static boolean upgradeAddress() {
+    public static boolean upgradeAddress() throws Exception {
         boolean success = true;
         List<Address> addressList = new ArrayList<Address>();
         addressList.addAll(initPrivateKeyListByDesc());
@@ -143,7 +144,9 @@ public class UpgradeAddressUtil {
             address.setSyncComplete(false);
             AddressManager.getInstance().addAddress(address);
         }
-        AbstractDb.txProvider.clearAllTx();
+        if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.HOT) {
+            AbstractDb.txProvider.clearAllTx();
+        }
         return success;
     }
 

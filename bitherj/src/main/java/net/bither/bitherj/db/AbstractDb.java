@@ -31,6 +31,7 @@ public abstract class AbstractDb {
             ", out_value integer not null" +
             ", out_status integer not null" +
             ", out_address text" +
+            ", hd_account_id integer " +
             ", primary key (tx_hash, out_sn));";
 
     public static final String CREATE_INS_SQL = "create table if not exists ins " +
@@ -104,16 +105,42 @@ public abstract class AbstractDb {
     public static final String CREATE_TX_BLOCK_NO_INDEX = "create index idx_tx_block_no on txs (block_no);";
     public static final String CREATE_IN_PREV_TX_HASH_INDEX = "create index idx_in_prev_tx_hash on ins (prev_tx_hash);";
 
+    //hd account
+    public static final String CREATE_HD_ACCOUNT = "create table if not exists  hd_account " +
+            "( hd_account_id integer not null primary key autoincrement" +
+            ", encrypt_seed text not null" +
+            ", encrypt_mnemonic_seed text" +
+            ", hd_address text not null" +
+            ", external_pub text not null" +
+            ", internal_pub text not null" +
+            ", is_xrandom integer not null);";
+
+    public static final String CREATE_HD_ACCOUNT_ADDRESSES = "create table if not exists hd_account_addresses " +
+            "(path_type integer not null" +
+            ", address_index integer not null" +
+            ", is_issued integer not null" +
+            ", address text not null" +
+            ", pub text not null" +
+            ", is_synced integer not null" +
+            ", primary key (address));";
+
+    // hd Account index
+    public static final String CREATE_HD_ACCOUNT_ADDRESS_INDEX = "create index idx_hd_address_address on hd_account_addresses (address);";
+
+
     public static IBlockProvider blockProvider;
     public static IPeerProvider peerProvider;
     public static ITxProvider txProvider;
     public static IAddressProvider addressProvider;
+    public static IHDAccountProvider hdAccountProvider;
 
     public void construct() {
         blockProvider = initBlockProvider();
         peerProvider = initPeerProvider();
         txProvider = initTxProvider();
         addressProvider = initAddressProvider();
+        hdAccountProvider = initHDAccountProvider();
+
     }
 
     public abstract IBlockProvider initBlockProvider();
@@ -124,20 +151,33 @@ public abstract class AbstractDb {
 
     public abstract IAddressProvider initAddressProvider();
 
+    public abstract IHDAccountProvider initHDAccountProvider();
+
     public interface Tables {
+
         public static final String BLOCKS = "blocks";
         public static final String TXS = "txs";
         public static final String ADDRESSES_TXS = "addresses_txs";
         public static final String INS = "ins";
         public static final String OUTS = "outs";
         public static final String PEERS = "peers";
+
+        //address
         public static final String Addresses = "addresses";
-        public static final String HDSeeds = "hd_seeds";
-        public static final String HDMAddresses = "hdm_addresses";
+        public static final String HDSEEDS = "hd_seeds";
+        public static final String HDMADDRESSES = "hdm_addresses";
         public static final String HDM_BID = "hdm_bid";
         public static final String PASSWORD_SEED = "password_seed";
-        public static final String Aliases = "aliases";
+        public static final String ALIASES = "aliases";
+
+        //hd account
+        public static final String HD_ACCOUNT = "hd_account";
+
+        public static final String HD_ACCOUNT_ADDRESS = "hd_account_addresses";
+
+
     }
+
 
     public interface BlocksColumns {
         public static final String BLOCK_NO = "block_no";
@@ -181,6 +221,7 @@ public abstract class AbstractDb {
         public static final String OUT_VALUE = "out_value";
         public static final String OUT_STATUS = "out_status";
         public static final String OUT_ADDRESS = "out_address";
+        public static final String HD_ACCOUNT_ID = "hd_account_id";
     }
 
     public interface PeersColumns {
@@ -195,6 +236,8 @@ public abstract class AbstractDb {
         public static final String PASSWORD_SEED = "password_seed";
     }
 
+    //address
+
     public interface AddressesColumns {
         public static final String ADDRESS = "address";
         public static final String ENCRYPT_PRIVATE_KEY = "encrypt_private_key";
@@ -208,7 +251,7 @@ public abstract class AbstractDb {
     public interface HDSeedsColumns {
         public static final String HD_SEED_ID = "hd_seed_id";
         public static final String ENCRYPT_SEED = "encrypt_seed";
-        public static final String ENCRYPT_HD_SEED = "encrypt_HD_seed";
+        public static final String ENCRYPT_MNMONIC_SEED = "encrypt_hd_seed";
         public static final String IS_XRANDOM = "is_xrandom";
         public static final String HDM_ADDRESS = "hdm_address";
         public static final String SINGULAR_MODE_BACKUP = "singular_mode_backup";
@@ -233,4 +276,30 @@ public abstract class AbstractDb {
         public static final String ADDRESS = "address";
         public static final String ALIAS = "alias";
     }
+
+    //hd account
+
+    public interface HDAccountColumns {
+        public static final String HD_ACCOUNT_ID = "hd_account_id";
+        public static final String ENCRYPT_SEED = "encrypt_seed";
+        public static final String ENCRYPT_MNMONIC_SEED = "encrypt_mnemonic_seed";
+        public static final String IS_XRANDOM = "is_xrandom";
+        public static final String HD_ADDRESS = "hd_address";
+        public static final String EXTERNAL_PUB = "external_pub";
+        public static final String INTERNAL_PUB = "internal_pub";
+
+    }
+
+    public interface HDAccountAddressesColumns {
+        public static final String PATH_TYPE = "path_type";
+        public static final String ADDRESS_INDEX = "address_index";
+        public static final String IS_ISSUED = "is_issued";
+        public static final String ADDRESS = "address";
+        public static final String PUB = "pub";
+        public static final String IS_SYNCED = "is_synced";
+
+
+    }
+
+
 }

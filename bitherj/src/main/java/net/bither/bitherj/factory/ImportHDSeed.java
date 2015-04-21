@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.factory;
 
+import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.HDMKeychain;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.PasswordSeed;
@@ -28,7 +29,7 @@ import java.util.List;
 
 public abstract class ImportHDSeed {
     public enum ImportHDSeedType {
-        HDMColdSeedQRCode, HDMColdPhrase
+        HDMColdSeedQRCode, HDMColdPhrase, HDSeedQRCode, HDSeedPhrase
     }
 
     public static final int PASSWORD_IS_DIFFEREND_LOCAL = 0;
@@ -36,6 +37,7 @@ public abstract class ImportHDSeed {
     public static final int PASSWORD_WRONG = 3;
     public static final int IMPORT_FAILED = 4;
 
+    public static final int NOT_HD_ACCOUNT_SEED = 5;
     private String content;
     private List<String> worlds;
     protected SecureCharSequence password;
@@ -51,7 +53,7 @@ public abstract class ImportHDSeed {
         this.worlds = worlds;
     }
 
-    public HDMKeychain importHDSeed() {
+    public HDMKeychain importHDMKeychain() {
         switch (this.importPrivateKeyType) {
             case HDMColdSeedQRCode:
                 if (content.indexOf(QRCodeUtil.HDM_QR_CODE_FLAG) == 0) {
@@ -89,6 +91,47 @@ public abstract class ImportHDSeed {
                 }
                 return null;
 
+        }
+        return null;
+
+    }
+
+    public HDAccount importHDAccount() {
+        switch (importPrivateKeyType) {
+            case HDSeedQRCode:
+
+                if (content.indexOf(QRCodeUtil.HD_QR_CODE_FLAG) == 0) {
+                    String keyString = content.substring(1);
+                    String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keyString);
+                    String encreyptString = Utils.joinString(new String[]{passwordSeeds[0], passwordSeeds[1], passwordSeeds[2]}, QRCodeUtil.QR_CODE_SPLIT);
+                    PasswordSeed passwordSeed = PasswordSeed.getPasswordSeed();
+                    if (passwordSeed != null && !passwordSeed.checkPassword(password)) {
+                        importError(PASSWORD_IS_DIFFEREND_LOCAL);
+                        return null;
+                    }
+                    try {
+                        return new HDAccount(new EncryptedData(encreyptString)
+                                , password, false);
+                    } catch (Exception e) {
+                        importError(IMPORT_FAILED);
+                        e.printStackTrace();
+                        return null;
+                    }
+
+                } else {
+                    importError(NOT_HD_ACCOUNT_SEED);
+                    return null;
+                }
+            case HDSeedPhrase:
+                try {
+                    byte[] mnemonicCodeSeed = MnemonicCode.instance().toEntropy(worlds);
+                    HDAccount hdAccount = new HDAccount(mnemonicCodeSeed, password, false);
+                    return hdAccount;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    importError(IMPORT_FAILED);
+                }
+                return null;
         }
         return null;
 

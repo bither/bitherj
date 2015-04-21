@@ -116,7 +116,7 @@ public class PeerManager {
                 publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
             }
         }
-
+        
     }
 
     public boolean isConnected() {
@@ -323,6 +323,9 @@ public class PeerManager {
                 @Override
                 public void run() {
                     peer.connectSucceed();
+                    if (!doneSyncFromSPV() && getLastBlockHeight() >= peer.getVersionLastBlockHeight()) {
+                        AbstractApp.notificationService.sendBroadcastSyncSPVFinished(true);
+                    }
                     if (connected.get() && ((downloadingPeer != null && downloadingPeer
                             .getVersionLastBlockHeight() >= peer.getVersionLastBlockHeight()) ||
                             getLastBlockHeight() >= peer.getVersionLastBlockHeight())) {
@@ -438,8 +441,8 @@ public class PeerManager {
                 }
                 int previousConnectedCount = connectedPeers.size();
                 connectedPeers.remove(peer);
-                log.info("Peer disconnected {} , remaining {} peers , reason: " + reason,
-                        peer.getPeerAddress().getHostAddress(), connectedPeers.size());
+                log.info("Peer disconnected {} , remaining {} peers , reason: " + reason, peer
+                        .getPeerAddress().getHostAddress(), connectedPeers.size());
                 if (previousConnectedCount > 0 && connectedPeers.size() == 0) {
                     connected.set(false);
                     sendConnectedChangeBroadcast();
@@ -846,7 +849,9 @@ public class PeerManager {
                 }
             }
             List<Address> addresses = AddressManager.getInstance().getAllAddresses();
-            bloomFilterElementCount = addresses.size() * 2 + outs.size() + 100;
+            bloomFilterElementCount = addresses.size() * 2 + outs.size() + (AddressManager
+                    .getInstance().hasHDAccount() ? AddressManager.getInstance().getHdAccount()
+                    .elementCountForBloomFilter() : 0) + 100;
 
             BloomFilter filter = new BloomFilter(bloomFilterElementCount, filterFpRate, tweak,
                     BloomFilter.BloomUpdate.UPDATE_ALL);
@@ -871,6 +876,11 @@ public class PeerManager {
                     filter.insert(outpoint);
                 }
             }
+
+            if (AddressManager.getInstance().hasHDAccount()) {
+                AddressManager.getInstance().getHdAccount().addElementsForBloomFilter(filter);
+            }
+
             bloomFilter = filter;
         }
         return bloomFilter;

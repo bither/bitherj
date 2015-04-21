@@ -41,6 +41,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Out extends Message {
+
+
     private static final Logger log = LoggerFactory.getLogger(Out.class);
 
     private byte[] txHash;
@@ -50,7 +52,56 @@ public class Out extends Message {
     private OutStatus outStatus = OutStatus.unspent;
     private String outAddress;
     private long coinDepth;
+
+    private int hdAccountId = -1;
     private Tx tx;
+
+
+    public Out() {
+
+    }
+
+    public Out(Tx tx, byte[] msg, int offset) {
+        super(msg, offset);
+        this.tx = tx;
+        this.txHash = this.tx.getTxHash();
+    }
+
+    public Out(Tx parent, long value, String to) {
+        this(parent, value, ScriptBuilder.createOutputScript(to).getProgram());
+    }
+
+    public Out(Tx parent, long value, ECKey to) {
+        this(parent, value, ScriptBuilder.createOutputScript(to).getProgram());
+    }
+
+//    public Out(Tx parent, BigInteger value, byte[] scriptBytes) {
+//        super();
+//        // Negative values obviously make no sense, except for -1 which is used as a sentinel value when calculating
+//        // SIGHASH_SINGLE signatures, so unfortunately we have to allow that here.
+//        checkArgument(value.compareTo(BigInteger.ZERO) >= 0 || value.equals(Utils.NEGATIVE_ONE), "Negative values not allowed");
+//        checkArgument(value.compareTo(BitherjSettings.MAX_MONEY) < 0, "Values larger than MAX_MONEY not allowed");
+//        this.value = value;
+//        this.outScript = scriptBytes;
+//        this.tx = parent;
+////        availableForSpending = true;
+//        length = 8 + VarInt.sizeOf(scriptBytes.length) + scriptBytes.length;
+//    }
+
+    public Out(Tx parent, long value, byte[] scriptBytes) {
+        super();
+        // Negative values obviously make no sense, except for -1 which is used as a sentinel value when calculating
+        // SIGHASH_SINGLE signatures, so unfortunately we have to allow that here.
+        checkArgument(value >= 0 || value == -1, "Negative values not allowed");
+        checkArgument(value < BitherjSettings.MAX_MONEY, "Values larger than MAX_MONEY not allowed");
+        this.outValue = value;
+        this.outScript = scriptBytes;
+        this.tx = parent;
+        this.txHash = this.tx.getTxHash();
+//        availableForSpending = true;
+        length = 8 + VarInt.sizeOf(scriptBytes.length) + scriptBytes.length;
+    }
+
 
     public byte[] getTxHash() {
         return txHash;
@@ -165,49 +216,12 @@ public class Out extends Message {
         }
     }
 
-    public Out() {
-
+    public int getHDAccountId() {
+        return hdAccountId;
     }
 
-    public Out(Tx tx, byte[] msg, int offset) {
-        super(msg, offset);
-        this.tx = tx;
-        this.txHash = this.tx.getTxHash();
-    }
-
-    public Out(Tx parent, long value, String to) {
-        this(parent, value, ScriptBuilder.createOutputScript(to).getProgram());
-    }
-
-    public Out(Tx parent, long value, ECKey to) {
-        this(parent, value, ScriptBuilder.createOutputScript(to).getProgram());
-    }
-
-//    public Out(Tx parent, BigInteger value, byte[] scriptBytes) {
-//        super();
-//        // Negative values obviously make no sense, except for -1 which is used as a sentinel value when calculating
-//        // SIGHASH_SINGLE signatures, so unfortunately we have to allow that here.
-//        checkArgument(value.compareTo(BigInteger.ZERO) >= 0 || value.equals(Utils.NEGATIVE_ONE), "Negative values not allowed");
-//        checkArgument(value.compareTo(BitherjSettings.MAX_MONEY) < 0, "Values larger than MAX_MONEY not allowed");
-//        this.value = value;
-//        this.outScript = scriptBytes;
-//        this.tx = parent;
-////        availableForSpending = true;
-//        length = 8 + VarInt.sizeOf(scriptBytes.length) + scriptBytes.length;
-//    }
-
-    public Out(Tx parent, long value, byte[] scriptBytes) {
-        super();
-        // Negative values obviously make no sense, except for -1 which is used as a sentinel value when calculating
-        // SIGHASH_SINGLE signatures, so unfortunately we have to allow that here.
-        checkArgument(value >= 0 || value == -1, "Negative values not allowed");
-        checkArgument(value < BitherjSettings.MAX_MONEY, "Values larger than MAX_MONEY not allowed");
-        this.outValue = value;
-        this.outScript = scriptBytes;
-        this.tx = parent;
-        this.txHash = this.tx.getTxHash();
-//        availableForSpending = true;
-        length = 8 + VarInt.sizeOf(scriptBytes.length) + scriptBytes.length;
+    public void setHDAccountId(int hdAccountId) {
+        this.hdAccountId = hdAccountId;
     }
 
     public byte[] getOutpointData() {

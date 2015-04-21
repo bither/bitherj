@@ -556,6 +556,7 @@ public class Peer extends PeerSocketHandler {
                     exceptionCaught(new Exception("Peer " + getPeerAddress().getHostAddress() + " is junking us. Drop it."));
                     return;
                 }
+                return;
             }
 
 
@@ -837,7 +838,14 @@ public class Peer extends PeerSocketHandler {
             return;
         }
         InventoryMessage m = new InventoryMessage();
-        m.addTransaction(AbstractDb.txProvider.getTxDetailByTxHash(txHash.getBytes()));
+        Tx tx = AbstractDb.txProvider.getTxDetailByTxHash(txHash.getBytes());
+        if (tx == null) {
+            tx = AbstractDb.txProvider.getTxDetailByTxHash(txHash.getBytes());
+        }
+        if (tx == null) {
+            return;
+        }
+        m.addTransaction(tx);
         log.info("Peer {} send inv with tx {}", getPeerAddress().getHostAddress(),
                 Utils.hashToString(txHash.getBytes()));
         sendMessage(m);

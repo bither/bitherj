@@ -26,7 +26,6 @@ import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
-import net.bither.bitherj.db.IAddressProvider;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
@@ -202,8 +201,9 @@ public abstract class HDMSingular {
             return;
         }
         byte[] sig = coldFirst.signHash(Utils.hexStringToByteArray(preSign), null);
+        String addressOfSP = null;
         try {
-            hdmBid.setSignature(sig, password, hotFirstAddress);
+            addressOfSP = hdmBid.setSignatureAndGetAddressOfAddressOfSp(sig, password, hotFirstAddress);
         } catch (Exception e) {
             e.printStackTrace();
             password.wipe();
@@ -221,7 +221,7 @@ public abstract class HDMSingular {
         try {
             HDMKeychain keychain = new HDMKeychain(hotMnemonicSeed, password);
             keychain.setSingularModeBackup(encryptedColdMnemonicSeed.toEncryptedString());
-            hdmBid.save();
+            hdmBid.save(addressOfSP);
             generateHDMKeyChainDelegate.generateHDMKeyChain(keychain);
             final int count = keychain.getCanAddHDMCount();
             if (count > 0) {

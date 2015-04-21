@@ -19,14 +19,14 @@ package net.bither.bitherj.utils;
 
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
-import net.bither.bitherj.BitherjSettings.AddressType;
 import net.bither.bitherj.api.BitherMytransactionsApi;
 import net.bither.bitherj.api.GetInSignaturesApi;
-import net.bither.bitherj.api.http.HttpSetting;
+import net.bither.bitherj.core.AbstractHD;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.core.Block;
 import net.bither.bitherj.core.BlockChain;
+import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.Tx;
@@ -38,6 +38,8 @@ import net.bither.bitherj.qrcode.QRCodeUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +50,7 @@ import java.util.Map;
 
 public class TransactionsUtil {
 
-
+    private static final Logger log = LoggerFactory.getLogger(TransactionsUtil.class);
     private static final String TX = "tx";
     private static final String BLOCK_COUNT = "block_count";
     private static final String TX_CNT = "tx_cnt";
@@ -179,33 +181,91 @@ public class TransactionsUtil {
     }
 
 
-    public static AddressType checkAddress(List<String> addressList) throws Exception {
-        for (String address : addressList) {
-            BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(address.toString());
-            bitherMytransactionsApi.handleHttpGet();
-            String result = bitherMytransactionsApi.getResult();
-            JSONObject json = new JSONObject(result);
-            if (!json.isNull(HttpSetting.SPECIAL_TYPE)) {
-                int specialType = json.getInt(HttpSetting.SPECIAL_TYPE);
-                if (specialType == 0) {
-                    return AddressType.SpecialAddress;
-                } else {
-                    return AddressType.TxTooMuch;
-                }
-            }
-        }
-        return AddressType.Normal;
-    }
-
     public static void getMyTxFromBither() throws Exception {
         if (AbstractApp.bitherjSetting.getAppMode() != BitherjSettings.AppMode.HOT) {
             return;
         }
+        getTxForAddress();
+        if (AddressManager.getInstance().getHdAccount() != null) {
+            getTxForHDAccount();
 
-        Block storedBlock = BlockChain.getInstance().getLastBlock();
-        int storeBlockHeight = storedBlock.getBlockNo();
+        }
 
+    }
+
+    private static void getTxForHDAccount() throws Exception {
+        for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
+            HDAccount.HDAccountAddress hdAccountAddress;
+            boolean hasTx = true;
+            int addressIndex = 0;
+            while (hasTx) {
+                Block storedBlock = BlockChain.getInstance().getLastBlock();
+                int storeBlockHeight = storedBlock.getBlockNo();
+                hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(
+                        pathType, addressIndex);
+                if (hdAccountAddress == null) {
+                    hasTx = false;
+                    log.warn("AccountAddress", "address is null path {} ,index {}", pathType, addressIndex);
+                    continue;
+                }
+                if (hdAccountAddress.isSyncedComplete()) {
+                    addressIndex++;
+                    continue;
+                }
+                List<Tx> transactions = new ArrayList<Tx>();
+                int apiBlockCount = 0;
+                int txSum = 0;
+                boolean needGetTxs = true;
+                int page = 1;
+                while (needGetTxs) {
+                    BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
+                            hdAccountAddress.getAddress(), page);
+                    bitherMytransactionsApi.handleHttpGet();
+                    String txResult = bitherMytransactionsApi.getResult();
+                    JSONObject jsonObject = new JSONObject(txResult);
+                    if (!jsonObject.isNull(BLOCK_COUNT)) {
+                        apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
+                    }
+                    int txCnt = jsonObject.getInt(TX_CNT);
+                    List<Tx> temp = TransactionsUtil.getTransactionsFromBither(
+                            jsonObject, storeBlockHeight);
+                    transactions.addAll(temp);
+                    txSum = txSum + transactions.size();
+                    needGetTxs = txSum < txCnt;
+                    page++;
+                }
+                if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
+                    BlockChain.getInstance().rollbackBlock(apiBlockCount);
+                }
+                transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
+                Collections.sort(transactions, new ComparatorTx());
+                AddressManager.getInstance().getHdAccount().initTxs(transactions);
+                hdAccountAddress.setSyncedComplete(true);
+                AddressManager.getInstance().getHdAccount().updateSyncComplete(hdAccountAddress);
+
+                if (transactions.size() > 0) {
+                    if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
+                        AddressManager.getInstance().getHdAccount().updateIssuedExternalIndex(addressIndex);
+                    } else {
+                        AddressManager.getInstance().getHdAccount().updateIssuedInternalIndex(addressIndex);
+                    }
+                    AddressManager.getInstance().getHdAccount().supplyEnoughKeys(false);
+                    hasTx = true;
+                } else {
+                    hasTx = false;
+                    AbstractDb.hdAccountProvider.updateSyncdForIndex(pathType, addressIndex);
+                }
+            }
+            addressIndex++;
+        }
+
+
+    }
+
+    private static void getTxForAddress() throws Exception {
         for (Address address : AddressManager.getInstance().getAllAddresses()) {
+            Block storedBlock = BlockChain.getInstance().getLastBlock();
+            int storeBlockHeight = storedBlock.getBlockNo();
             if (!address.isSyncComplete()) {
                 List<Tx> transactions = new ArrayList<Tx>();
                 int apiBlockCount = 0;
@@ -244,31 +304,6 @@ public class TransactionsUtil {
                 }
             }
         }
-    }
 
-    public static Thread completeInputsForAddressInBackground(final Address address) {
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                completeInputsForAddress(address);
-            }
-        };
-        thread.setPriority(Thread.MIN_PRIORITY);
-        thread.start();
-        return thread;
-    }
-
-    public static void completeInputsForAddress(Address address) {
-        try {
-            int fromBlock = address.needCompleteInSignature();
-            while (fromBlock > 0) {
-                GetInSignaturesApi api = new GetInSignaturesApi(address.getAddress(), fromBlock);
-                api.handleHttpGet();
-                address.completeInSignature(getInSignatureFromBither(api.getResult()));
-                fromBlock = address.needCompleteInSignature();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }

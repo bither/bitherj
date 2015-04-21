@@ -48,8 +48,10 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -1044,6 +1046,14 @@ public class Utils {
 
 
     }
+
+    public static boolean isIntersects(Set set1, Set set2) {
+        Set result = new HashSet();
+        result.addAll(set1);
+        result.retainAll(set2);
+        return !result.isEmpty();
+    }
+
 
 
 }

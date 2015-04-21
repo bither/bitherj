@@ -30,16 +30,11 @@ public class BitherjSettings {
     public static final int PROTOCOL_VERSION = 70001;
     public static final int MIN_PROTO_VERSION = 70001;
 
-
-    public static final int HDM_ADDRESS_PER_SEED_COUNT_LIMIT = 100;
-    public static final int HDM_ADDRESS_PER_SEED_PREPARE_COUNT = 100;
-    public static final int WATCH_ONLY_ADDRESS_COUNT_LIMIT = 150;
-    public static final int PRIVATE_KEY_OF_HOT_COUNT_LIMIT = 50;
-
-
     public static final int MAX_TX_SIZE = 100000;
     public static final int COMPRESS_OUT_NUM = 5;
     public static final int TX_PAGE_SIZE = 20;
+
+    public static final String DONATE_ADDRESS = "1BitherUnNvB2NsfxMnbS35kS3DTPr7PW5";
 
     /**
      * The alert signing key originally owned by Satoshi, and now passed on to Gavin along with a few others.
@@ -141,8 +136,6 @@ public class BitherjSettings {
         }
     }
 
-    public enum AddressType {
-        Normal, TxTooMuch, SpecialAddress
-    }
+
 
 }

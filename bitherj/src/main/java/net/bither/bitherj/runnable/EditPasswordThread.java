@@ -57,12 +57,11 @@ public class EditPasswordThread extends Thread {
 
     public boolean editPassword(SecureCharSequence oldPassword, SecureCharSequence newPassword) {
         try {
-            AbstractDb.addressProvider.changePassword(oldPassword, newPassword);
+            return AbstractDb.addressProvider.changePassword(oldPassword, newPassword);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-        return true;
     }
 
 }
