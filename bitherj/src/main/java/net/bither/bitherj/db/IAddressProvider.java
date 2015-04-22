@@ -37,9 +37,9 @@ public interface IAddressProvider {
 
     public List<Integer> getHDSeeds();
 
-    public String getEncryptSeed(int hdSeedId);
+    public String getEncryptMnemonicSeed(int hdSeedId);
 
-    public String getEncryptMnmonicSeed(int hdSeedId);
+    public String getEncryptHDSeed(int hdSeedId);
 
     public void updateEncrypttMnmonicSeed(int hdSeedId, String encryptMnmonicSeed);
 
@@ -51,7 +51,7 @@ public interface IAddressProvider {
 
     public void setSingularModeBackup(int hdSeedId, String singularModeBackup);
 
-    public int addHDKey(String encryptSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
+    public int addHDKey(String encryptedMnemonicSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
 
     public HDMBId getHDMBId();
 
