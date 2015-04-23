@@ -410,7 +410,7 @@ public class HDAccount extends Address {
             }
 
             spentOut.addAll(spent);
-            HashSet<String> addressSet = getAllAddress();
+            HashSet<String> addressSet = getBelongAccountAddresses(tx.getOutAddressList());
             for (Out out : tx.getOuts()) {
                 if (addressSet.contains(out.getOutAddress())) {
                     unspendOut.add(new OutPoint(tx.getTxHash(), out.getOutSn()));
@@ -454,8 +454,8 @@ public class HDAccount extends Address {
         return hdAccountAddressList;
     }
 
-    public HashSet<String> getAllAddress() {
-        return AbstractDb.hdAccountProvider.getAllAddress();
+    public HashSet<String> getBelongAccountAddresses(List<String> addressList) {
+        return AbstractDb.hdAccountProvider.getBelongAccountAddresses(addressList);
     }
 
     public Tx newTx(String toAddress, Long amount, CharSequence password) throws

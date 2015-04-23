@@ -40,8 +40,8 @@ public interface IHDAccountProvider {
 
     public String externalAddress();
 
-    //TODO To optimize the query
-    public HashSet<String> getAllAddress();
+
+    public HashSet<String> getBelongAccountAddresses(List<String> addressList);
 
 
     public HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index);

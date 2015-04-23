@@ -484,7 +484,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         for (Tx tx : txList) {
             if (!isSendFromHDAccount(tx, txHashList) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
-                HashSet<String> addressHashSet = AbstractDb.hdAccountProvider.getAllAddress();
+                HashSet<String> addressHashSet = AbstractDb.hdAccountProvider.
+                        getBelongAccountAddresses(tx.getOutAddressList());
                 for (Out out : tx.getOuts()) {
                     if (addressHashSet.contains(out.getOutAddress())) {
                         outList.add(out);
@@ -540,14 +541,14 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 (hdAccount == null || !hdAccount.isSendFromMe(tx))
                 && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
             List<Out> outList = new ArrayList<Out>();
-            HashSet<String> hdAddresses = new HashSet<String>();
+            HashSet<String> hdAddressesSet = new HashSet<String>();
             if (hasHDAccount()) {
-                hdAddresses = hdAccount.getAllAddress();
+                hdAddressesSet = hdAccount.getBelongAccountAddresses(tx.getOutAddressList());
             }
             for (Out out : tx.getOuts()) {
                 String outAddress = out.getOutAddress();
                 if (addressHashSet.contains(outAddress)
-                        || hdAddresses.contains(outAddress)) {
+                        || hdAddressesSet.contains(outAddress)) {
                     outList.add(out);
                 }
             }

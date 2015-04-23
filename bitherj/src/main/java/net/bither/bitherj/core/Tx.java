@@ -1381,7 +1381,7 @@ public class Tx extends Message implements Comparable<Tx> {
 
     public long deltaAmountFrom(HDAccount account) {
         long receive = 0;
-        HashSet<String> hashSet = AbstractDb.hdAccountProvider.getAllAddress();
+        HashSet<String> hashSet = account.getBelongAccountAddresses(getOutAddressList());
         for (Out out : this.outs) {
             if (hashSet.contains(out.getOutAddress())) {
                 receive += out.getOutValue();
@@ -1389,6 +1389,18 @@ public class Tx extends Message implements Comparable<Tx> {
         }
         long sent = AbstractDb.hdAccountProvider.sentFromAccount(account.getHdSeedId(), getTxHash());
         return receive - sent;
+    }
+
+    public List<String> getOutAddressList() {
+        List<String> outAddressList = new ArrayList<String>();
+        for (Out out : this.outs) {
+            String outAddress = out.getOutAddress();
+            if (!Utils.isEmpty(outAddress)) {
+                outAddressList.add(outAddress);
+            }
+
+        }
+        return outAddressList;
     }
 
     public int getConfirmationCount() {
