@@ -25,6 +25,8 @@ public interface IAddressProvider {
             , String firstAddress, boolean isXrandom, String addressOfPS
             , byte[] externalPub, byte[] internalPub);
 
+    public String getHDFristAddress(int hdSeedId);
+
     public byte[] getExternalPub(int hdSeedId);
 
     public byte[] getInternalPub(int hdSeedId);
@@ -103,5 +105,5 @@ public interface IAddressProvider {
 
     public void updateAlias(String address, @Nullable String alias);
 
-    public String getHDFristAddress(int hdSeedId);
+
 }
