@@ -145,7 +145,9 @@ public class UpgradeAddressUtil {
             AddressManager.getInstance().addAddress(address);
         }
         if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.HOT) {
-            AbstractDb.txProvider.clearAllTx();
+            if (addressList.size() > 0) {
+                AbstractDb.txProvider.clearAllTx();
+            }
         }
         return success;
     }
