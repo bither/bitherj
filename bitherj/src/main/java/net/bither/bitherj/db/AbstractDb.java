@@ -127,6 +127,8 @@ public abstract class AbstractDb {
     // hd Account index
     public static final String CREATE_HD_ACCOUNT_ADDRESS_INDEX = "create index idx_hd_address_address on hd_account_addresses (address);";
 
+    //add hd_accont_id for outs
+    public static final String ADD_HD_ACCOUNT_ID_FOR_OUTS = "alter table outs add column hd_account_id integer;";
 
     public static IBlockProvider blockProvider;
     public static IPeerProvider peerProvider;
