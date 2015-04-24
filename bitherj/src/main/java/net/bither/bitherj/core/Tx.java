@@ -1403,6 +1403,28 @@ public class Tx extends Message implements Comparable<Tx> {
         return outAddressList;
     }
 
+    public List<String> getInAddresses() {
+        boolean canParseFromScript = true;
+        List<String> fromAddress = new ArrayList<String>();
+        for (In in : getIns()) {
+            String address = in.getFromAddress();
+            if (address != null) {
+                fromAddress.add(address);
+            } else {
+                canParseFromScript = false;
+                break;
+            }
+        }
+        List<String> addresses;
+        if (canParseFromScript) {
+            addresses = fromAddress;
+        } else {
+            addresses = AbstractDb.txProvider.getInAddresses(Tx.this);
+        }
+        return addresses;
+
+    }
+
     public int getConfirmationCount() {
         return Math.max(0, BlockChain.getInstance().getLastBlock().getBlockNo() - getBlockNo() + 1);
     }
