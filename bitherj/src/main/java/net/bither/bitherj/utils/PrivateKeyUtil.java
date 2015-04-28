@@ -28,6 +28,7 @@ import net.bither.bitherj.crypto.EncryptedPrivateKey;
 import net.bither.bitherj.crypto.KeyCrypter;
 import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.KeyCrypterScrypt;
+import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.crypto.bip38.Bip38;
 import net.bither.bitherj.exception.AddressFormatException;
@@ -46,6 +47,9 @@ import java.util.List;
 
 public class PrivateKeyUtil {
     private static final Logger log = LoggerFactory.getLogger(PrivateKeyUtil.class);
+
+
+    public static String BACKUP_KEY_SPLIT_MUTILKEY_STRING = "\n";
 
 
     public static String getEncryptedString(ECKey ecKey) {
@@ -354,6 +358,45 @@ public class PrivateKeyUtil {
             strings[2] = Utils.bytesToHexString(saltForQRCode.getQrCodeSalt()).toUpperCase();
         }
         return Utils.joinString(strings, QRCodeUtil.QR_CODE_SPLIT);
+    }
+
+    public static String getBackupPrivateKeyStr() {
+        String backupString = "";
+        for (Address address : AddressManager.getInstance().getPrivKeyAddresses()) {
+            if (address != null) {
+                PasswordSeed passwordSeed = new PasswordSeed(address.getAddress(), address.getFullEncryptPrivKey());
+                backupString = backupString
+                        + passwordSeed.toPasswordSeedString()
+                        + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
+
+            }
+        }
+        HDMKeychain keychain = AddressManager.getInstance().getHdmKeychain();
+        if (keychain != null) {
+            try {
+                if (!keychain.isInRecovery()) {
+                    String address = keychain.getFirstAddressFromDb();
+                    backupString += QRCodeUtil.HDM_QR_CODE_FLAG + Base58.bas58ToHexWithAddress(address)
+                            + QRCodeUtil.QR_CODE_SPLIT
+                            + keychain.getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
+                }
+            } catch (AddressFormatException e) {
+                e.printStackTrace();
+            }
+        }
+        HDAccount hdAccount = AddressManager.getInstance().getHdAccount();
+        if (hdAccount != null) {
+            try {
+                String address = hdAccount.getFirstAddressFromDb();
+                backupString += QRCodeUtil.HD_QR_CODE_FLAG + Base58.bas58ToHexWithAddress(address)
+                        + QRCodeUtil.QR_CODE_SPLIT
+                        + hdAccount.getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
+            } catch (AddressFormatException e) {
+                e.printStackTrace();
+            }
+        }
+        return backupString;
+
     }
 
 }
