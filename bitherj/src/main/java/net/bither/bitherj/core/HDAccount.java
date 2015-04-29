@@ -201,6 +201,7 @@ public class HDAccount extends Address {
 
     public HDAccount(int seedId) {
         this.hdSeedId = seedId;
+        this.isFromXRandom = AbstractDb.addressProvider.hdAccountIsXRandom(seedId);
         updateBalance();
     }
 

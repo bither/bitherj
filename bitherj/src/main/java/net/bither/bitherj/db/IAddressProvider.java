@@ -35,6 +35,8 @@ public interface IAddressProvider {
 
     public String getHDAccountEncryptMnmonicSeed(int hdSeedId);
 
+    public boolean hdAccountIsXRandom(int seedId);
+
     public List<Integer> getHDAccountSeeds();
 
     public List<Integer> getHDSeeds();
