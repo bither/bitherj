@@ -70,6 +70,8 @@ public interface IHDAccountProvider {
 
     public List<Tx> getTxAndDetailByHDAccount(int page);
 
+    public List<Tx> getTxAndDetailByHDAccount();
+
     public List<Out> getUnspendOutByHDAccount(int hdAccountId);
 
     public List<Tx> getRecentlyTxsByAccount(int greateThanBlockNo, int limit);

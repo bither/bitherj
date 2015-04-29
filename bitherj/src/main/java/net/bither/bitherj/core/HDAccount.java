@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.Set;
 
 public class HDAccount extends Address {
-
     public static final String HDAccountPlaceHolder = "HDAccount";
 
     private static final int LOOK_AHEAD_SIZE = 100;
@@ -372,6 +371,11 @@ public class HDAccount extends Address {
 
     public List<Tx> getTxs(int page) {
         return AbstractDb.hdAccountProvider.getTxAndDetailByHDAccount(page);
+    }
+
+    @Override
+    public List<Tx> getTxs() {
+        return AbstractDb.hdAccountProvider.getTxAndDetailByHDAccount();
     }
 
     public int txCount() {
