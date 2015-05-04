@@ -48,6 +48,12 @@ import java.util.Set;
 public class HDAccount extends Address {
     public static final String HDAccountPlaceHolder = "HDAccount";
 
+    public interface HDAccountGenerationDelegate {
+        void onHDAccountGenerationProgress(double progress);
+    }
+
+    private static final double GenerationPreStartProgress = 0.01;
+
     private static final int LOOK_AHEAD_SIZE = 100;
 
     private long balance = 0;
@@ -122,11 +128,13 @@ public class HDAccount extends Address {
 
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         EncryptedData encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
-        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, isSyncedComplete);
+
+        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, isSyncedComplete, null);
     }
 
     // Create With Random
-    public HDAccount(SecureRandom random, CharSequence password) {
+    public HDAccount(SecureRandom random, CharSequence password, HDAccountGenerationDelegate
+            generationDelegate) {
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
         mnemonicSeed = new byte[16];
         String firstAddress = null;
@@ -145,7 +153,7 @@ public class HDAccount extends Address {
                 e.printStackTrace();
             }
         }
-        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, true);
+        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, true, generationDelegate);
     }
 
     //use in import
@@ -156,12 +164,18 @@ public class HDAccount extends Address {
         isFromXRandom = encryptedMnemonicSeed.isXRandom();
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
-        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, isSyncedComplete);
+        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, isSyncedComplete, null);
 
     }
 
     private void initHDAccount(DeterministicKey master, EncryptedData encryptedMnemonicSeed,
-                               EncryptedData encryptedHDSeed, boolean isSyncedComplete) {
+                               EncryptedData encryptedHDSeed, boolean isSyncedComplete,
+                               HDAccountGenerationDelegate generationDelegate) {
+        double progress = 0;
+        if (generationDelegate != null) {
+            generationDelegate.onHDAccountGenerationProgress(progress);
+        }
+
         String firstAddress;
         ECKey k = new ECKey(mnemonicSeed, null);
         String address = k.toAddress();
@@ -173,19 +187,36 @@ public class HDAccount extends Address {
         firstAddress = key.toAddress();
         accountKey.wipe();
         master.wipe();
+
+        progress += GenerationPreStartProgress;
+        if (generationDelegate != null) {
+            generationDelegate.onHDAccountGenerationProgress(progress);
+        }
+
+        double itemProgress = (1.0 - GenerationPreStartProgress) / (LOOK_AHEAD_SIZE * 2);
+
         List<HDAccountAddress> externalAddresses = new ArrayList<HDAccountAddress>();
         List<HDAccountAddress> internalAddresses = new ArrayList<HDAccountAddress>();
         for (int i = 0;
              i < LOOK_AHEAD_SIZE;
              i++) {
             byte[] subExternalPub = externalKey.deriveSoftened(i).getPubKey();
+            HDAccountAddress externalAddress = new HDAccountAddress(subExternalPub, AbstractHD
+                    .PathType.EXTERNAL_ROOT_PATH, i, isSyncedComplete);
+            externalAddresses.add(externalAddress);
+            progress += itemProgress;
+            if (generationDelegate != null) {
+                generationDelegate.onHDAccountGenerationProgress(progress);
+            }
+
             byte[] subInternalPub = internalKey.deriveSoftened(i).getPubKey();
-            HDAccountAddress externalAddress = new HDAccountAddress(subExternalPub
-                    , AbstractHD.PathType.EXTERNAL_ROOT_PATH, i, isSyncedComplete);
             HDAccountAddress internalAddress = new HDAccountAddress(subInternalPub
                     , AbstractHD.PathType.INTERNAL_ROOT_PATH, i, isSyncedComplete);
-            externalAddresses.add(externalAddress);
             internalAddresses.add(internalAddress);
+            progress += itemProgress;
+            if (generationDelegate != null) {
+                generationDelegate.onHDAccountGenerationProgress(progress);
+            }
         }
         wipeHDSeed();
         wipeMnemonicSeed();
