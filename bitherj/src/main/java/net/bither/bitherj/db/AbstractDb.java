@@ -96,6 +96,9 @@ public abstract class AbstractDb {
     public static final String CREATE_ALIASES_SQL = "create table if not exists aliases " +
             "(address text not null primary key" +
             ", alias text not null);";
+    public static final String CREATE_VANITY_ADDRESS_SQL = "create table if not exists vanity_address " +
+            "(address text not null primary key" +
+            " , vanity_len integer );";
 
     public static final String CREATE_BLOCK_NO_INDEX = "create index idx_blocks_block_no on blocks (block_no);";
     public static final String CREATE_BLOCK_PREV_INDEX = "create index idx_blocks_block_prev on blocks (block_prev);";
@@ -171,6 +174,7 @@ public abstract class AbstractDb {
         public static final String HDM_BID = "hdm_bid";
         public static final String PASSWORD_SEED = "password_seed";
         public static final String ALIASES = "aliases";
+        public static final String VANITY_ADDRESS = "vanity_address";
 
         //hd account
         public static final String HD_ACCOUNT = "hd_account";
@@ -301,6 +305,11 @@ public abstract class AbstractDb {
         public static final String IS_SYNCED = "is_synced";
 
 
+    }
+
+    public interface VanityAddressColumns {
+        public static final String ADDRESS = "address";
+        public static final String VANITY_LEN = "vanity_len";
     }
 
 

@@ -53,7 +53,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             initAddress();
             initHDMKeychain();
             initHDAccount();
-            initAlias();
+            initAliasAndVanityLen();
             AbstractApp.addressIsReady = true;
             AbstractApp.notificationService.sendBroadcastAddressLoadCompleteState();
         }
@@ -63,21 +63,32 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return uniqueInstance;
     }
 
-    private void initAlias() {
+    private void initAliasAndVanityLen() {
         Map<String, String> addressAlias = AbstractDb.addressProvider.getAliases();
-        if (addressAlias.size() == 0) {
+        Map<String, Integer> vanityAddresses = AbstractDb.addressProvider.getVanitylens();
+        if (addressAlias.size() == 0 && vanityAddresses.size() == 0) {
             return;
         }
         for (Address address : privKeyAddresses) {
-            if (addressAlias.containsKey(address.getAddress())) {
-                String alias = addressAlias.get(address.getAddress());
+            String addressStr = address.getAddress();
+            if (addressAlias.containsKey(addressStr)) {
+                String alias = addressAlias.get(addressStr);
                 address.setAlias(alias);
+            }
+            if (vanityAddresses.containsKey(addressStr)) {
+                int vanityLen = vanityAddresses.get(addressStr);
+                address.setVanityLen(vanityLen);
             }
         }
         for (Address address : watchOnlyAddresses) {
-            if (addressAlias.containsKey(address.getAddress())) {
-                String alias = addressAlias.get(address.getAddress());
+            String addressStr = address.getAddress();
+            if (addressAlias.containsKey(addressStr)) {
+                String alias = addressAlias.get(addressStr);
                 address.setAlias(alias);
+            }
+            if (vanityAddresses.containsKey(addressStr)) {
+                int vanityLen = vanityAddresses.get(addressStr);
+                address.setVanityLen(vanityLen);
             }
         }
         if (hdmKeychain != null) {

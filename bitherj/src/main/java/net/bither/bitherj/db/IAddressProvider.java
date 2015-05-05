@@ -107,5 +107,12 @@ public interface IAddressProvider {
 
     public void updateAlias(String address, @Nullable String alias);
 
+    //vanity_len
+    public int getVanityLen(String address);
+
+    public Map<String, Integer> getVanitylens();
+
+    public void updateVaitylen(String address, int vanitylen);
+
 
 }
