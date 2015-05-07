@@ -15,7 +15,7 @@ We use Bitherj in our Bither Wallet which alse open source on github [bither-and
 
 ## Donation
 
-Donate : 1BsTwoMaX3aYx9Nc8GdgHZzzAGmG669bC3
+Donate : 1BitherUnNvB2NsfxMnbS35kS3DTPr7PW5
 
 ## Website
 
