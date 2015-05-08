@@ -112,7 +112,7 @@ public class Peer extends PeerSocketHandler {
     private long syncStartPeerBlockNo;
     private int synchronisingBlockCount;
 
-    private List<Block> syncBlocks;
+    private List<Block> syncBlocks; // todo: this cache is no use
     private List<Sha256Hash> syncBlockHashes;
 
 
@@ -499,7 +499,7 @@ public class Peer extends PeerSocketHandler {
                 if (this.syncBlockHashes.size() == 0) {
                     PeerManager.instance().relayedBlocks(this, this.syncBlocks);
                     this.syncBlocks.clear();
-                } else if (this.syncBlocks.size() >= 100) {
+                } else if (this.syncBlocks.size() >= 1) {
                     PeerManager.instance().relayedBlocks(this, this.syncBlocks);
                     this.syncBlocks.clear();
                 }
@@ -537,7 +537,7 @@ public class Peer extends PeerSocketHandler {
                     if (this.syncBlockHashes.size() == 0) {
                         PeerManager.instance().relayedBlocks(this, this.syncBlocks);
                         this.syncBlocks.clear();
-                    } else if (this.syncBlocks.size() >= 100) {
+                    } else if (this.syncBlocks.size() >= 1) {
                         PeerManager.instance().relayedBlocks(this, this.syncBlocks);
                         this.syncBlocks.clear();
                     }
