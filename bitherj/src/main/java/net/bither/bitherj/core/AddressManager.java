@@ -176,7 +176,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             }
             isRegister = true;
         } else {
-            List<String> inAddresses = AbstractDb.txProvider.getInAddresses(compressedTx);
+            List<String> inAddresses = compressedTx.getInAddresses();
             for (String address : inAddresses) {
                 if (addressHashSet.contains(address)) {
                     needNotifyAddressHashSet.add(address);
