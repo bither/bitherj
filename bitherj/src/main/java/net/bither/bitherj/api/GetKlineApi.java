@@ -23,24 +23,17 @@ import net.bither.bitherj.utils.Utils;
 
 public class GetKlineApi extends HttpGetResponse<String> {
 
-    private BitherjSettings.KlineTimeType klineTimeType;
-    private BitherjSettings.MarketType marketType;
 
     public GetKlineApi(BitherjSettings.MarketType marketType, BitherjSettings.KlineTimeType klineTimeType) {
 
-        this.klineTimeType = klineTimeType;
-        this.marketType = marketType;
         String url = Utils.format(BitherUrl.BITHER_KLINE_URL,
-                marketType.getValue(), klineTimeType.getValue());
+                BitherjSettings.getMarketValue(marketType), klineTimeType.getValue());
         setUrl(url);
 
     }
 
     @Override
     public void setResult(String response) throws Exception {
-//        JSONArray jsonArray = new JSONArray(response);
-//        this.result = ChartsUtil.formatJsonArray(this.marketType,
-//                this.klineTimeType, jsonArray);
         this.result = response;
 
     }

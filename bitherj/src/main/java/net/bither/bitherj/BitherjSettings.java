@@ -110,17 +110,60 @@ public class BitherjSettings {
     }
 
     public enum MarketType {
-        BITSTAMP(1), BTCE(2), HUOBI(3), OKCOIN(4), BTCCHINA(5), CHBTC(6), BITFINEX(7),
-        MARKET796(8);
-        private int mVal;
+        BITSTAMP, BTCE, BTCCHINA, OKCOIN, HUOBI, CHBTC, BTCTRADE, BITFINEX,
+        COINBASE, MARKET796;
 
-        private MarketType(int val) {
-            this.mVal = val;
-        }
 
-        public int getValue() {
-            return this.mVal;
+    }
+
+    public static MarketType getMarketType(int value) {
+        switch (value) {
+            case 2:
+                return MarketType.BTCE;
+            case 3:
+                return MarketType.HUOBI;
+            case 4:
+                return MarketType.OKCOIN;
+            case 5:
+                return MarketType.BTCCHINA;
+            case 6:
+                return MarketType.CHBTC;
+            case 7:
+                return MarketType.BITFINEX;
+            case 8:
+                return MarketType.MARKET796;
+            case 9:
+                return MarketType.COINBASE;
+            case 10:
+                return MarketType.BTCTRADE;
         }
+        return MarketType.BITSTAMP;
+    }
+
+    public static int getMarketValue(MarketType marketType) {
+        switch (marketType) {
+            case BTCE:
+                return 2;
+            case HUOBI:
+                return 3;
+            case OKCOIN:
+                return 4;
+            case BTCCHINA:
+                return 5;
+            case CHBTC:
+                return 6;
+            case BITFINEX:
+                return 7;
+            case MARKET796:
+                return 8;
+            case COINBASE:
+                return 9;
+            case BTCTRADE:
+                return 10;
+
+
+        }
+        return 1;
     }
 
     public enum KlineTimeType {
@@ -135,7 +178,6 @@ public class BitherjSettings {
             return this.mVal;
         }
     }
-
 
 
 }

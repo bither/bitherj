@@ -26,7 +26,7 @@ public class GetExchangeTrendApi extends HttpGetResponse<String> {
 
     public GetExchangeTrendApi(BitherjSettings.MarketType marketType) {
         String url = Utils.format(BitherUrl.BITHER_TREND_URL,
-                marketType.getValue());
+                BitherjSettings.getMarketValue(marketType));
         setUrl(url);
 
     }

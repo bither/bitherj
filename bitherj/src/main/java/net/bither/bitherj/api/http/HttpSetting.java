@@ -31,7 +31,6 @@ public class HttpSetting {
     public static final int HTTP_SO_TIMEOUT = 80 * 1000;
 
 
-
     // enum
     public enum HttpType {
         BitherApi, OtherApi, GetBitherCookie

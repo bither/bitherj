@@ -116,7 +116,7 @@ public class PeerManager {
                 publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
             }
         }
-        
+
     }
 
     public boolean isConnected() {

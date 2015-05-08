@@ -1,13 +1,13 @@
 /**
  * Copyright 2013 Jim Burton.
  * Copyright 2014 Andreas Schildbach
- *
+ * <p/>
  * Licensed under the MIT license (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *    http://opensource.org/licenses/mit-license.php
- *
+ * <p/>
+ * http://opensource.org/licenses/mit-license.php
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,10 +19,6 @@ package net.bither.bitherj.crypto;
 
 import junit.framework.Assert;
 
-import net.bither.bitherj.AbstractApp;
-import net.bither.bitherj.crypto.EncryptedPrivateKey;
-import net.bither.bitherj.crypto.KeyCrypterException;
-import net.bither.bitherj.crypto.KeyCrypterScrypt;
 import net.bither.bitherj.utils.Utils;
 
 import org.junit.Test;
