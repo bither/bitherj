@@ -132,16 +132,19 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             // double spend with confirmed tx
             return false;
         }
-
+       // long begin = System.currentTimeMillis();
+        List<String> inAddresses = tx.getInAddresses();
+       // log.info("getInAddresses time : {} ,ins:{}", (System.currentTimeMillis() - begin), tx.getIns().size());
         boolean isRegister = false;
-        Tx compressedTx = compressTx(tx);
+        Tx compressedTx = compressTx(tx, inAddresses);
         HashSet<String> needNotifyAddressHashSet = new HashSet<String>();
         HashSet<String> needNotifyHDAccountHS = new HashSet<String>();
         List<HDAccount.HDAccountAddress> relatedAddresses = new ArrayList<HDAccount.HDAccountAddress>();
         HashSet<String> relatedAddressesHS = new HashSet<String>();
 
+
         if (hdAccount != null) {
-            relatedAddresses = hdAccount.getRelatedAddressesForTx(compressedTx);
+            relatedAddresses = hdAccount.getRelatedAddressesForTx(compressedTx, inAddresses);
         }
 
         for (HDAccount.HDAccountAddress hdAccountAddress : relatedAddresses) {
@@ -176,7 +179,6 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             }
             isRegister = true;
         } else {
-            List<String> inAddresses = compressedTx.getInAddresses();
             for (String address : inAddresses) {
                 if (addressHashSet.contains(address)) {
                     needNotifyAddressHashSet.add(address);
@@ -214,14 +216,14 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return isRegister;
     }
 
-    public boolean isTxRelated(Tx tx) {
+    public boolean isTxRelated(Tx tx, List<String> inAddresses) {
         for (Address address : this.getAllAddresses()) {
             if (isAddressContainsTx(address.getAddress(), tx)) {
                 return true;
             }
         }
         if (hasHDAccount()) {
-            return getHdAccount().isTxRelated(tx);
+            return getHdAccount().isTxRelated(tx, inAddresses);
         }
         return false;
     }
@@ -547,9 +549,9 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return hdAccountAddressList.size() > 0;
     }
 
-    public Tx compressTx(Tx tx) {
-        if (!isSendFromMe(tx) &&
-                (hdAccount == null || !hdAccount.isSendFromMe(tx))
+    public Tx compressTx(Tx tx, List<String> inAddresses) {
+        if (!isSendFromMe(tx, inAddresses) &&
+                (hdAccount == null || !hdAccount.isSendFromMe(inAddresses))
                 && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
             List<Out> outList = new ArrayList<Out>();
             HashSet<String> hdAddressesSet = new HashSet<String>();
@@ -569,8 +571,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return tx;
     }
 
-    private boolean isSendFromMe(Tx tx) {
-        List<String> addresses = tx.getInAddresses();
+    private boolean isSendFromMe(Tx tx, List<String> addresses) {
         return this.addressHashSet.containsAll(addresses);
     }
 

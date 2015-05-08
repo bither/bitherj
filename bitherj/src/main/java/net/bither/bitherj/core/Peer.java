@@ -548,7 +548,7 @@ public class Peer extends PeerSocketHandler {
         } else {
             log.info("peer[{}:{}] receive tx {}", this.peerAddress.getHostAddress(),
                     this.peerPort, Utils.hashToString(tx.getTxHash()));
-            if (AddressManager.getInstance().isTxRelated(tx)) {
+            if (AddressManager.getInstance().isTxRelated(tx, tx.getInAddresses())) {
                 unrelatedTxRelayCount = 0;
             } else {
                 unrelatedTxRelayCount++;

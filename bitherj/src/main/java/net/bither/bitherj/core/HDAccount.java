@@ -377,8 +377,8 @@ public class HDAccount extends Address {
     }
 
 
-    public boolean isTxRelated(Tx tx) {
-        return getRelatedAddressesForTx(tx).size() > 0;
+    public boolean isTxRelated(Tx tx, List<String> inAddresses) {
+        return getRelatedAddressesForTx(tx, inAddresses).size() > 0;
     }
 
     public boolean initTxs(List<Tx> txs) {
@@ -469,7 +469,7 @@ public class HDAccount extends Address {
         return balance;
     }
 
-    public List<HDAccountAddress> getRelatedAddressesForTx(Tx tx) {
+    public List<HDAccountAddress> getRelatedAddressesForTx(Tx tx, List<String> inAddresses) {
         List<String> outAddressList = new ArrayList<String>();
         List<HDAccountAddress> hdAccountAddressList = new ArrayList<HDAccountAddress>();
         for (Out out : tx.getOuts()) {
@@ -482,7 +482,7 @@ public class HDAccount extends Address {
             hdAccountAddressList.addAll(belongAccountOfOutList);
         }
 
-        List<HDAccountAddress> belongAccountOfInList = getAddressFromIn(tx);
+        List<HDAccountAddress> belongAccountOfInList = getAddressFromIn(inAddresses);
         if (belongAccountOfInList != null && belongAccountOfInList.size() > 0) {
             hdAccountAddressList.addAll(belongAccountOfInList);
         }
@@ -563,13 +563,13 @@ public class HDAccount extends Address {
     }
 
 
-    public boolean isSendFromMe(Tx tx) {
-        List<HDAccountAddress> hdAccountAddressList = getAddressFromIn(tx);
+    public boolean isSendFromMe(List<String> addresses) {
+        List<HDAccountAddress> hdAccountAddressList = getAddressFromIn(addresses);
         return hdAccountAddressList.size() > 0;
     }
 
-    private List<HDAccountAddress> getAddressFromIn(Tx tx) {
-        List<String> addresses = tx.getInAddresses();
+    private List<HDAccountAddress> getAddressFromIn(List<String> addresses) {
+
         List<HDAccountAddress> hdAccountAddressList = AbstractDb.hdAccountProvider.belongAccount(addresses);
         return hdAccountAddressList;
     }
