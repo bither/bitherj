@@ -67,6 +67,10 @@ public class Peer extends PeerSocketHandler {
 
     private static final int MAX_UNRELATED_TX_RELAY_COUNT = 1000;
 
+    private static final int GET_BLOCK_DATA_PIECE_SIZE = 10;
+
+    private static final int MAX_PEER_MANAGER_WAITING_TASK_COUNT = 2;
+
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
     private static final int TimeOutDelay = 7000;
 
@@ -102,6 +106,7 @@ public class Peer extends PeerSocketHandler {
     private final HashSet<Sha256Hash> currentTxHashes, knownTxHashes, requestedBlockHashes;
     private final LinkedHashSet<Sha256Hash> currentBlockHashes;
     private final HashMap<Sha256Hash, HashSet<Tx>> needToRequestDependencyDict;
+    private final ArrayList<Sha256Hash> invBlockHashes;
     private Block currentFilteredBlock;
     private VersionMessage versionMessage;
     private boolean bloomFilterSent;
@@ -127,6 +132,7 @@ public class Peer extends PeerSocketHandler {
         knownTxHashes = new HashSet<Sha256Hash>();
         requestedBlockHashes = new HashSet<Sha256Hash>();
         needToRequestDependencyDict = new HashMap<Sha256Hash, HashSet<Tx>>();
+        invBlockHashes = new ArrayList<Sha256Hash>();
         incrementalBlockHeight = 0;
         unrelatedTxRelayCount = 0;
         nonce = new Random().nextLong();
@@ -166,8 +172,8 @@ public class Peer extends PeerSocketHandler {
         if (state == State.Disconnected) {
             return;
         } else {
-            log.info("peer[{}:{}] call disconnect", this.peerAddress.getHostAddress(),
-                    this.peerPort);
+            log.info("peer[{}:{}] call disconnect", this.peerAddress.getHostAddress(), this
+                    .peerPort);
             state = State.Disconnected;
             close();
         }
@@ -396,42 +402,49 @@ public class Peer extends PeerSocketHandler {
             }
         }
 
+        blockHashSha256Hashs.removeAll(invBlockHashes);
+
         log.info(getPeerAddress().getHostAddress() + " got inv with " + items.size() + " items "
                 + txHashSha256Hashs.size() + " tx " + blockHashSha256Hashs.size() + " block");
 
         if (txHashSha256Hashs.size() > 10000) {
             return;
         }
-        // to improve chain download performance, if we received 500 block hashes,
-        // we request the next 500 block hashes
-        // immediately before sending the getdata request
-        if (blockHashSha256Hashs.size() >= 500) {
-            sendGetBlocksMessage(Arrays.asList(new Sha256Hash[]{blockHashSha256Hashs.get
-                    (blockHashSha256Hashs.size() - 1), blockHashSha256Hashs.get(0)}), null);
-        }
+
+        invBlockHashes.addAll(blockHashSha256Hashs);
 
         txHashSha256Hashs.removeAll(knownTxHashes);
         knownTxHashes.addAll(txHashSha256Hashs);
 
-        if (txHashSha256Hashs.size() + blockHashSha256Hashs.size() > 0) {
-            if (PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) {
-                sendGetDataMessageWithTxHashesAndBlockHashes(txHashSha256Hashs, blockHashSha256Hashs);
+        sendGetBlocksDataNextPiece(txHashSha256Hashs);
 
-                // Each merkle block the remote peer sends us is followed by a set of tx messages for
-                // that block. We send a ping
-                // to get a pong reply after the block and all its tx are sent,
-                // indicating that there are no more tx messages
-                if (blockHashSha256Hashs.size() == 1) {
-                    ping();
-                }
-            } else {
-                sendGetDataMessageWithTxHashesAndBlockHashes(txHashSha256Hashs, new ArrayList<Sha256Hash>());
-            }
+        if ((PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) &&
+                blockHashSha256Hashs.size() == 1) {
+            ping();
         }
 
         if (blockHashSha256Hashs.size() > 0) {
+            this.increaseBlockNo(blockHashSha256Hashs.size());
+        }
+    }
+
+    private void sendGetBlocksDataNextPiece() {
+        sendGetBlocksDataNextPiece(new ArrayList<Sha256Hash>());
+    }
+
+    private void sendGetBlocksDataNextPiece(List<Sha256Hash> withTxHashes) {
+        List<Sha256Hash> blockHashesPiece = invBlockHashes.subList(0, Math.min(invBlockHashes
+                .size(), GET_BLOCK_DATA_PIECE_SIZE));
+        invBlockHashes.removeAll(blockHashesPiece);
+        if (blockHashesPiece.size() > 0) {
+            if (PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) {
+                sendGetDataMessageWithTxHashesAndBlockHashes(blockHashesPiece, withTxHashes);
+            } else if (withTxHashes.size() > 0) {
+                sendGetDataMessageWithTxHashesAndBlockHashes(withTxHashes, new
+                        ArrayList<Sha256Hash>());
+            }
             //remember blockHashes in case we need to refetch them with an updated bloom filter
-            currentBlockHashes.addAll(blockHashSha256Hashs);
+            currentBlockHashes.addAll(blockHashesPiece);
             if (currentBlockHashes.size() > MAX_GETDATA_HASHES) {
                 Iterator iterator = currentBlockHashes.iterator();
                 while (iterator.hasNext() && currentBlockHashes.size() > MAX_GETDATA_HASHES / 2) {
@@ -439,15 +452,11 @@ public class Peer extends PeerSocketHandler {
                 }
             }
             if (this.synchronising) {
-                this.syncBlockHashes.addAll(blockHashSha256Hashs);
+                this.syncBlockHashes.addAll(blockHashesPiece);
             }
-
-            this.increaseBlockNo(blockHashSha256Hashs.size());
+        } else if (withTxHashes.size() > 0) {
+            sendGetDataMessageWithTxHashesAndBlockHashes(withTxHashes, new ArrayList<Sha256Hash>());
         }
-
-//        if(blockHashSha256Hashs.size() == 1){
-//            incrementalBlockHeight ++;
-//        }
     }
 
     private void increaseBlockNo(int blockCount) {
@@ -508,7 +517,19 @@ public class Peer extends PeerSocketHandler {
             }
         }
         if (currentBlockHashes.size() == 0) {
-            sendGetBlocksMessage(Arrays.asList(new byte[][]{block.getBlockHash(), BlockChain.getInstance().getBlockLocatorArray().get(0)}), null);
+            while (PeerManager.instance().waitingTaskCount() >
+                    MAX_PEER_MANAGER_WAITING_TASK_COUNT) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                }
+            }
+            if (invBlockHashes.size() > 0) {
+                sendGetBlocksDataNextPiece();
+            } else {
+                sendGetBlocksMessage(Arrays.asList(new byte[][]{block.getBlockHash(), BlockChain
+                        .getInstance().getBlockLocatorArray().get(0)}), null);
+            }
         }
     }
 
