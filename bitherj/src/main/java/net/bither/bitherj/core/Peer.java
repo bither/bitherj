@@ -524,8 +524,10 @@ public class Peer extends PeerSocketHandler {
                     MAX_PEER_MANAGER_WAITING_TASK_COUNT) {
                 try {
                     if (!waitingLoged) {
-                        log.info("Peer {} waiting for PeerManager task count {}", peerAddress
-                                .getHostAddress(), PeerManager.instance().waitingTaskCount());
+                        if (BitherjSettings.LOG_DEBUG) {
+                            log.info("Peer {} waiting for PeerManager task count {}", peerAddress
+                                    .getHostAddress(), PeerManager.instance().waitingTaskCount());
+                        }
                         waitingLoged = true;
                     }
                     Thread.sleep(PEER_MANAGER_MAX_TASK_CHECKING_INTERVAL);
