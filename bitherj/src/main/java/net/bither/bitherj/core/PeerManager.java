@@ -498,8 +498,8 @@ public class PeerManager {
         executor.submit(new Runnable() {
             @Override
             public void run() {
-                boolean isRel = AddressManager.getInstance().registerTx(tx,
-                        Tx.TxNotificationType.txReceive);
+                boolean isRel = AddressManager.getInstance().registerTx(tx, Tx.TxNotificationType
+                        .txReceive);
                 if (isRel) {
                     boolean isAlreadyInDb = AbstractDb.txProvider.isExist(tx.getTxHash());
 
@@ -902,6 +902,13 @@ public class PeerManager {
 
     public Peer getDownloadingPeer() {
         return downloadingPeer;
+    }
+
+    public int waitingTaskCount() {
+        if (executor == null || executor.getQueue() == null) {
+            return 0;
+        }
+        return executor.getQueue().size();
     }
 
     static class PeerManagerExecutorService extends ThreadPoolExecutor {
