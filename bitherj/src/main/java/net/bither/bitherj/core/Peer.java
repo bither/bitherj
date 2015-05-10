@@ -436,13 +436,15 @@ public class Peer extends PeerSocketHandler {
         List<Sha256Hash> blockHashesPiece = invBlockHashes.subList(0, Math.min(invBlockHashes
                 .size(), GET_BLOCK_DATA_PIECE_SIZE));
         invBlockHashes.removeAll(blockHashesPiece);
+
+        if (PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) {
+            sendGetDataMessageWithTxHashesAndBlockHashes(withTxHashes, blockHashesPiece);
+        } else if (withTxHashes.size() > 0) {
+            sendGetDataMessageWithTxHashesAndBlockHashes(withTxHashes, new
+                    ArrayList<Sha256Hash>());
+        }
+
         if (blockHashesPiece.size() > 0) {
-            if (PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) {
-                sendGetDataMessageWithTxHashesAndBlockHashes(blockHashesPiece, withTxHashes);
-            } else if (withTxHashes.size() > 0) {
-                sendGetDataMessageWithTxHashesAndBlockHashes(withTxHashes, new
-                        ArrayList<Sha256Hash>());
-            }
             //remember blockHashes in case we need to refetch them with an updated bloom filter
             currentBlockHashes.addAll(blockHashesPiece);
             if (currentBlockHashes.size() > MAX_GETDATA_HASHES) {
@@ -454,8 +456,6 @@ public class Peer extends PeerSocketHandler {
             if (this.synchronising) {
                 this.syncBlockHashes.addAll(blockHashesPiece);
             }
-        } else if (withTxHashes.size() > 0) {
-            sendGetDataMessageWithTxHashesAndBlockHashes(withTxHashes, new ArrayList<Sha256Hash>());
         }
     }
 
