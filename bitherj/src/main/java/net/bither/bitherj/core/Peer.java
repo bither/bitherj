@@ -524,7 +524,7 @@ public class Peer extends PeerSocketHandler {
                     MAX_PEER_MANAGER_WAITING_TASK_COUNT) {
                 try {
                     if (!waitingLoged) {
-                        log.debug("Peer {} waiting for PeerManager task count {}", peerAddress
+                        log.info("Peer {} waiting for PeerManager task count {}", peerAddress
                                 .getHostAddress(), PeerManager.instance().waitingTaskCount());
                         waitingLoged = true;
                     }
