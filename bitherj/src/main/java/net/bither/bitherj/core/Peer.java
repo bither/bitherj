@@ -520,7 +520,7 @@ public class Peer extends PeerSocketHandler {
             while (PeerManager.instance().waitingTaskCount() >
                     MAX_PEER_MANAGER_WAITING_TASK_COUNT) {
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                 }
             }
