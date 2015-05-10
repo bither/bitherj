@@ -71,6 +71,8 @@ public class Peer extends PeerSocketHandler {
 
     private static final int MAX_PEER_MANAGER_WAITING_TASK_COUNT = 2;
 
+    private static final int PEER_MANAGER_MAX_TASK_CHECKING_INTERVAL = 100;
+
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
     private static final int TimeOutDelay = 7000;
 
@@ -517,10 +519,16 @@ public class Peer extends PeerSocketHandler {
             }
         }
         if (currentBlockHashes.size() == 0) {
+            boolean waitingLoged = false;
             while (PeerManager.instance().waitingTaskCount() >
                     MAX_PEER_MANAGER_WAITING_TASK_COUNT) {
                 try {
-                    Thread.sleep(100);
+                    if (!waitingLoged) {
+                        log.debug("Peer {} waiting for PeerManager task count {}", peerAddress
+                                .getHostAddress(), PeerManager.instance().waitingTaskCount());
+                        waitingLoged = true;
+                    }
+                    Thread.sleep(PEER_MANAGER_MAX_TASK_CHECKING_INTERVAL);
                 } catch (InterruptedException e) {
                 }
             }
