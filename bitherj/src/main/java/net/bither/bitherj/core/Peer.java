@@ -435,8 +435,8 @@ public class Peer extends PeerSocketHandler {
     }
 
     private void sendGetBlocksDataNextPiece(List<Sha256Hash> withTxHashes) {
-        List<Sha256Hash> blockHashesPiece = invBlockHashes.subList(0, Math.min(invBlockHashes
-                .size(), GET_BLOCK_DATA_PIECE_SIZE));
+        List<Sha256Hash> blockHashesPiece = new ArrayList<Sha256Hash>(invBlockHashes.subList(0,
+                Math.min(invBlockHashes.size(), GET_BLOCK_DATA_PIECE_SIZE)));
         invBlockHashes.removeAll(blockHashesPiece);
 
         if (PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) {
