@@ -67,9 +67,9 @@ public class Peer extends PeerSocketHandler {
 
     private static final int MAX_UNRELATED_TX_RELAY_COUNT = 1000;
 
-    private static final int GET_BLOCK_DATA_PIECE_SIZE = 10;
+    private static final int GET_BLOCK_DATA_PIECE_SIZE = 5;
 
-    private static final int MAX_PEER_MANAGER_WAITING_TASK_COUNT = 2;
+    private static final int MAX_PEER_MANAGER_WAITING_TASK_COUNT = 0;
 
     private static final int PEER_MANAGER_MAX_TASK_CHECKING_INTERVAL = 100;
 
