@@ -911,15 +911,12 @@ public class Utils {
     }
 
     public static boolean validBicoinAddress(String str) {
-        final Pattern PATTERN_BITCOIN_ADDRESS = Pattern.compile("["
-                + new String(Base58.ALPHABET) + "]{20,40}");
-        if (PATTERN_BITCOIN_ADDRESS.matcher(str).matches()) {
-            try {
-                Base58.decodeChecked(str);
-                return true;
-            } catch (final AddressFormatException x) {
-                x.printStackTrace();
-            }
+        try {
+            int addressHeader = getAddressHeader(str);
+            return (addressHeader == BitherjSettings.p2shHeader
+                    || addressHeader == BitherjSettings.addressHeader);
+        } catch (final AddressFormatException x) {
+            x.printStackTrace();
         }
         return false;
     }
