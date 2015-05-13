@@ -67,6 +67,8 @@ public class Peer extends PeerSocketHandler {
 
     private static final int MAX_UNRELATED_TX_RELAY_COUNT = 1000;
 
+    private static final int BLOOMFILTER_UPDATE_BLOCK_INTERVAL = 100;
+
     private static final int GET_BLOCK_DATA_PIECE_SIZE = 5;
 
     private static final int MAX_PEER_MANAGER_WAITING_TASK_COUNT = 0;
@@ -534,6 +536,7 @@ public class Peer extends PeerSocketHandler {
                 } catch (InterruptedException e) {
                 }
             }
+
             if (invBlockHashes.size() > 0) {
                 sendGetBlocksDataNextPiece();
             } else {
@@ -956,9 +959,10 @@ public class Peer extends PeerSocketHandler {
             blochHashCount = blockHashes.size();
         }
 
-        if (filterBlockCount + blochHashCount > BitherjSettings.BLOCK_DIFFICULTY_INTERVAL) {
+        if (filterBlockCount + blochHashCount > BLOOMFILTER_UPDATE_BLOCK_INTERVAL) {
             log.info("{} rebuilding bloom filter after {} blocks",
                     getPeerAddress().getHostAddress(), filterBlockCount);
+            PeerManager.instance().requestBloomFilterRecalculate();
             sendFilterLoadMessage(PeerManager.instance().bloomFilterForPeer(this));
         }
 

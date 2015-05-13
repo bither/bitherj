@@ -822,6 +822,10 @@ public class PeerManager {
         });
     }
 
+    public void requestBloomFilterRecalculate() {
+        bloomFilter = null;
+    }
+
     private BloomFilter getBloomFilter() {
         if (bloomFilter == null) {
 
