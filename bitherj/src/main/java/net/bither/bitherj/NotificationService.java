@@ -15,7 +15,6 @@
 */
 package net.bither.bitherj;
 
-import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.Tx;
 
 public interface NotificationService {

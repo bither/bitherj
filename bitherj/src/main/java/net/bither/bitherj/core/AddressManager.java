@@ -53,7 +53,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             initAddress();
             initHDMKeychain();
             initHDAccount();
-            initAlias();
+            initAliasAndVanityLen();
             AbstractApp.addressIsReady = true;
             AbstractApp.notificationService.sendBroadcastAddressLoadCompleteState();
         }
@@ -63,21 +63,32 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return uniqueInstance;
     }
 
-    private void initAlias() {
+    private void initAliasAndVanityLen() {
         Map<String, String> addressAlias = AbstractDb.addressProvider.getAliases();
-        if (addressAlias.size() == 0) {
+        Map<String, Integer> vanityAddresses = AbstractDb.addressProvider.getVanitylens();
+        if (addressAlias.size() == 0 && vanityAddresses.size() == 0) {
             return;
         }
         for (Address address : privKeyAddresses) {
-            if (addressAlias.containsKey(address.getAddress())) {
-                String alias = addressAlias.get(address.getAddress());
+            String addressStr = address.getAddress();
+            if (addressAlias.containsKey(addressStr)) {
+                String alias = addressAlias.get(addressStr);
                 address.setAlias(alias);
+            }
+            if (vanityAddresses.containsKey(addressStr)) {
+                int vanityLen = vanityAddresses.get(addressStr);
+                address.setVanityLen(vanityLen);
             }
         }
         for (Address address : watchOnlyAddresses) {
-            if (addressAlias.containsKey(address.getAddress())) {
-                String alias = addressAlias.get(address.getAddress());
+            String addressStr = address.getAddress();
+            if (addressAlias.containsKey(addressStr)) {
+                String alias = addressAlias.get(addressStr);
                 address.setAlias(alias);
+            }
+            if (vanityAddresses.containsKey(addressStr)) {
+                int vanityLen = vanityAddresses.get(addressStr);
+                address.setVanityLen(vanityLen);
             }
         }
         if (hdmKeychain != null) {
@@ -121,16 +132,19 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             // double spend with confirmed tx
             return false;
         }
-
+       // long begin = System.currentTimeMillis();
+        List<String> inAddresses = tx.getInAddresses();
+       // log.info("getInAddresses time : {} ,ins:{}", (System.currentTimeMillis() - begin), tx.getIns().size());
         boolean isRegister = false;
-        Tx compressedTx = compressTx(tx);
+        Tx compressedTx = compressTx(tx, inAddresses);
         HashSet<String> needNotifyAddressHashSet = new HashSet<String>();
         HashSet<String> needNotifyHDAccountHS = new HashSet<String>();
         List<HDAccount.HDAccountAddress> relatedAddresses = new ArrayList<HDAccount.HDAccountAddress>();
         HashSet<String> relatedAddressesHS = new HashSet<String>();
 
+
         if (hdAccount != null) {
-            relatedAddresses = hdAccount.getRelatedAddressesForTx(compressedTx);
+            relatedAddresses = hdAccount.getRelatedAddressesForTx(compressedTx, inAddresses);
         }
 
         for (HDAccount.HDAccountAddress hdAccountAddress : relatedAddresses) {
@@ -165,7 +179,6 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
             }
             isRegister = true;
         } else {
-            List<String> inAddresses = AbstractDb.txProvider.getInAddresses(compressedTx);
             for (String address : inAddresses) {
                 if (addressHashSet.contains(address)) {
                     needNotifyAddressHashSet.add(address);
@@ -203,14 +216,14 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return isRegister;
     }
 
-    public boolean isTxRelated(Tx tx) {
+    public boolean isTxRelated(Tx tx, List<String> inAddresses) {
         for (Address address : this.getAllAddresses()) {
             if (isAddressContainsTx(address.getAddress(), tx)) {
                 return true;
             }
         }
         if (hasHDAccount()) {
-            return getHdAccount().isTxRelated(tx);
+            return getHdAccount().isTxRelated(tx, inAddresses);
         }
         return false;
     }
@@ -484,7 +497,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         for (Tx tx : txList) {
             if (!isSendFromHDAccount(tx, txHashList) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
-                HashSet<String> addressHashSet = AbstractDb.hdAccountProvider.getAllAddress();
+                HashSet<String> addressHashSet = AbstractDb.hdAccountProvider.
+                        getBelongAccountAddresses(tx.getOutAddressList());
                 for (Out out : tx.getOuts()) {
                     if (addressHashSet.contains(out.getOutAddress())) {
                         outList.add(out);
@@ -535,19 +549,19 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return hdAccountAddressList.size() > 0;
     }
 
-    public Tx compressTx(Tx tx) {
-        if (!isSendFromMe(tx) &&
-                (hdAccount == null || !hdAccount.isSendFromMe(tx))
+    public Tx compressTx(Tx tx, List<String> inAddresses) {
+        if (!isSendFromMe(tx, inAddresses) &&
+                (hdAccount == null || !hdAccount.isSendFromMe(inAddresses))
                 && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
             List<Out> outList = new ArrayList<Out>();
-            HashSet<String> hdAddresses = new HashSet<String>();
+            HashSet<String> hdAddressesSet = new HashSet<String>();
             if (hasHDAccount()) {
-                hdAddresses = hdAccount.getAllAddress();
+                hdAddressesSet = hdAccount.getBelongAccountAddresses(tx.getOutAddressList());
             }
             for (Out out : tx.getOuts()) {
                 String outAddress = out.getOutAddress();
                 if (addressHashSet.contains(outAddress)
-                        || hdAddresses.contains(outAddress)) {
+                        || hdAddressesSet.contains(outAddress)) {
                     outList.add(out);
                 }
             }
@@ -557,24 +571,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         return tx;
     }
 
-    private boolean isSendFromMe(Tx tx) {
-        boolean canParseFromScript = true;
-        List<String> fromAddress = new ArrayList<String>();
-        for (In in : tx.getIns()) {
-            String address = in.getFromAddress();
-            if (address != null) {
-                fromAddress.add(address);
-            } else {
-                canParseFromScript = false;
-                break;
-            }
-        }
-        List<String> addresses = null;
-        if (canParseFromScript) {
-            addresses = fromAddress;
-        } else {
-            addresses = AbstractDb.txProvider.getInAddresses(tx);
-        }
+    private boolean isSendFromMe(Tx tx, List<String> addresses) {
         return this.addressHashSet.containsAll(addresses);
     }
 

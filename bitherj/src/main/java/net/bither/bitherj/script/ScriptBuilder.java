@@ -113,7 +113,7 @@ public class ScriptBuilder {
                         .data(Utils.getAddressHash(to))
                         .op(OP_EQUAL)
                         .build();
-            } else {
+            } else if (Utils.getAddressHeader(to) == BitherjSettings.addressHeader)  {
                 // OP_DUP OP_HASH160 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
                 return new ScriptBuilder()
                         .op(OP_DUP)
@@ -122,6 +122,8 @@ public class ScriptBuilder {
                         .op(OP_EQUALVERIFY)
                         .op(OP_CHECKSIG)
                         .build();
+            } else {
+                return null;
             }
         } catch (AddressFormatException ex) {
             return null;

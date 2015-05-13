@@ -96,6 +96,9 @@ public abstract class AbstractDb {
     public static final String CREATE_ALIASES_SQL = "create table if not exists aliases " +
             "(address text not null primary key" +
             ", alias text not null);";
+    public static final String CREATE_VANITY_ADDRESS_SQL = "create table if not exists vanity_address " +
+            "(address text not null primary key" +
+            " , vanity_len integer );";
 
     public static final String CREATE_BLOCK_NO_INDEX = "create index idx_blocks_block_no on blocks (block_no);";
     public static final String CREATE_BLOCK_PREV_INDEX = "create index idx_blocks_block_prev on blocks (block_prev);";
@@ -127,6 +130,8 @@ public abstract class AbstractDb {
     // hd Account index
     public static final String CREATE_HD_ACCOUNT_ADDRESS_INDEX = "create index idx_hd_address_address on hd_account_addresses (address);";
 
+    //add hd_accont_id for outs
+    public static final String ADD_HD_ACCOUNT_ID_FOR_OUTS = "alter table outs add column hd_account_id integer;";
 
     public static IBlockProvider blockProvider;
     public static IPeerProvider peerProvider;
@@ -169,6 +174,7 @@ public abstract class AbstractDb {
         public static final String HDM_BID = "hdm_bid";
         public static final String PASSWORD_SEED = "password_seed";
         public static final String ALIASES = "aliases";
+        public static final String VANITY_ADDRESS = "vanity_address";
 
         //hd account
         public static final String HD_ACCOUNT = "hd_account";
@@ -250,8 +256,8 @@ public abstract class AbstractDb {
 
     public interface HDSeedsColumns {
         public static final String HD_SEED_ID = "hd_seed_id";
-        public static final String ENCRYPT_SEED = "encrypt_seed";
-        public static final String ENCRYPT_MNMONIC_SEED = "encrypt_hd_seed";
+        public static final String ENCRYPT_MNEMONIC_SEED = "encrypt_seed";
+        public static final String ENCRYPT_HD_SEED = "encrypt_hd_seed";
         public static final String IS_XRANDOM = "is_xrandom";
         public static final String HDM_ADDRESS = "hdm_address";
         public static final String SINGULAR_MODE_BACKUP = "singular_mode_backup";
@@ -299,6 +305,11 @@ public abstract class AbstractDb {
         public static final String IS_SYNCED = "is_synced";
 
 
+    }
+
+    public interface VanityAddressColumns {
+        public static final String ADDRESS = "address";
+        public static final String VANITY_LEN = "vanity_len";
     }
 
 

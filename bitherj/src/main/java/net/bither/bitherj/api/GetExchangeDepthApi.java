@@ -23,20 +23,17 @@ import net.bither.bitherj.utils.Utils;
 
 public class GetExchangeDepthApi extends HttpGetResponse<String> {
 
-    private BitherjSettings.MarketType marketType;
 
     public GetExchangeDepthApi(BitherjSettings.MarketType marketType) {
-        this.marketType = marketType;
+
         String url = Utils.format(BitherUrl.BITHER_DEPTH_URL,
-                this.marketType.getValue());
+                BitherjSettings.getMarketValue(marketType));
         setUrl(url);
     }
 
     @Override
     public void setResult(String response) throws Exception {
         this.result = response;
-        //JSONObject json = new JSONObject(response);
-        //this.result = Depth.formatJsonOfMarketDepth(this.marketType, json);
     }
 
 }

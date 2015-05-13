@@ -3,6 +3,7 @@ package net.bither.bitherj.crypto;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.Utils;
+
 import org.junit.Test;
 
 import java.util.ArrayList;

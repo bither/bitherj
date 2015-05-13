@@ -19,7 +19,9 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.exception.AddressFormatException;
+
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 public class AddressTest {
@@ -28,8 +30,8 @@ public class AddressTest {
         try {
             DumpedPrivateKey dumpedPrivateKey = new DumpedPrivateKey("L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1");
             ECKey ecKey = dumpedPrivateKey.getKey();
-            String addressStr=ecKey.toAddress();
-            assertEquals(ecKey.toAddress(),"1F3sAm6ZtwLAUnj7d38pGFxtP3RVEvtsbV");
+            String addressStr = ecKey.toAddress();
+            assertEquals(ecKey.toAddress(), "1F3sAm6ZtwLAUnj7d38pGFxtP3RVEvtsbV");
         } catch (AddressFormatException e) {
             e.printStackTrace();
         }

@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2014 http://Bither.net
  *
@@ -40,8 +39,8 @@ public interface IHDAccountProvider {
 
     public String externalAddress();
 
-    //TODO To optimize the query
-    public HashSet<String> getAllAddress();
+
+    public HashSet<String> getBelongAccountAddresses(List<String> addressList);
 
 
     public HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index);
@@ -69,6 +68,8 @@ public interface IHDAccountProvider {
     public long sentFromAccount(int hdAccountId, byte[] txHash);
 
     public List<Tx> getTxAndDetailByHDAccount(int page);
+
+    public List<Tx> getTxAndDetailByHDAccount();
 
     public List<Out> getUnspendOutByHDAccount(int hdAccountId);
 

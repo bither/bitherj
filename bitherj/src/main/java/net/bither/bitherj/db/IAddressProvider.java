@@ -25,6 +25,8 @@ public interface IAddressProvider {
             , String firstAddress, boolean isXrandom, String addressOfPS
             , byte[] externalPub, byte[] internalPub);
 
+    public String getHDFristAddress(int hdSeedId);
+
     public byte[] getExternalPub(int hdSeedId);
 
     public byte[] getInternalPub(int hdSeedId);
@@ -33,13 +35,15 @@ public interface IAddressProvider {
 
     public String getHDAccountEncryptMnmonicSeed(int hdSeedId);
 
+    public boolean hdAccountIsXRandom(int seedId);
+
     public List<Integer> getHDAccountSeeds();
 
     public List<Integer> getHDSeeds();
 
-    public String getEncryptSeed(int hdSeedId);
+    public String getEncryptMnemonicSeed(int hdSeedId);
 
-    public String getEncryptMnmonicSeed(int hdSeedId);
+    public String getEncryptHDSeed(int hdSeedId);
 
     public void updateEncrypttMnmonicSeed(int hdSeedId, String encryptMnmonicSeed);
 
@@ -51,7 +55,7 @@ public interface IAddressProvider {
 
     public void setSingularModeBackup(int hdSeedId, String singularModeBackup);
 
-    public int addHDKey(String encryptSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
+    public int addHDKey(String encryptedMnemonicSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
 
     public HDMBId getHDMBId();
 
@@ -103,5 +107,12 @@ public interface IAddressProvider {
 
     public void updateAlias(String address, @Nullable String alias);
 
-    public String getHDFristAddress(int hdSeedId);
+    //vanity_len
+    public int getVanityLen(String address);
+
+    public Map<String, Integer> getVanitylens();
+
+    public void updateVaitylen(String address, int vanitylen);
+
+
 }

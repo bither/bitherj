@@ -386,7 +386,7 @@ public class HDMKeychain extends AbstractHD {
         if (isInRecovery()) {
             throw new AssertionError("recover mode hdm keychain do not have encrypted hd seed");
         }
-        String encrypted = AbstractDb.addressProvider.getEncryptMnmonicSeed(hdSeedId);
+        String encrypted = AbstractDb.addressProvider.getEncryptHDSeed(hdSeedId);
         if (encrypted == null) {
             return null;
         }
@@ -399,7 +399,7 @@ public class HDMKeychain extends AbstractHD {
             throw new AssertionError("recover mode hdm keychain do not have encrypted mnemonic "
                     + "seed");
         }
-        return AbstractDb.addressProvider.getEncryptSeed(hdSeedId).toUpperCase();
+        return AbstractDb.addressProvider.getEncryptMnemonicSeed(hdSeedId).toUpperCase();
     }
 
     public String getFirstAddressFromDb() {
@@ -470,7 +470,7 @@ public class HDMKeychain extends AbstractHD {
         if (isInRecovery()) {
             throw new AssertionError("HDM in recovery can not create passwordSeed");
         }
-        String encrypted = AbstractDb.addressProvider.getEncryptSeed(hdSeedId);
+        String encrypted = AbstractDb.addressProvider.getEncryptMnemonicSeed(hdSeedId);
         byte[] priv = new EncryptedData(encrypted).decrypt(password);
         ECKey k = new ECKey(priv, null);
         String address = k.toAddress();
@@ -492,9 +492,9 @@ public class HDMKeychain extends AbstractHD {
     }
 
     public boolean isInRecovery() {
-        return Utils.compareString(AbstractDb.addressProvider.getEncryptSeed(hdSeedId),
+        return Utils.compareString(AbstractDb.addressProvider.getEncryptMnemonicSeed(hdSeedId),
                 HDMKeychainRecover.RecoverPlaceHolder) ||
-                Utils.compareString(AbstractDb.addressProvider.getEncryptMnmonicSeed(hdSeedId),
+                Utils.compareString(AbstractDb.addressProvider.getEncryptHDSeed(hdSeedId),
                         HDMKeychainRecover.RecoverPlaceHolder) ||
                 Utils.compareString(getFirstAddressFromDb(), HDMKeychainRecover.RecoverPlaceHolder);
     }

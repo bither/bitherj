@@ -18,6 +18,7 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.Utils;
+
 import org.junit.Test;
 
 import java.util.Arrays;

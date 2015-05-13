@@ -549,7 +549,7 @@ public final class Rijndael {
      */
     public void decrypt(byte[] ct, byte[] pt) {
         /*
-	     * map byte array block to cipher state
+         * map byte array block to cipher state
 	     * and add initial round key:
 	     */
         int k = 0, v;

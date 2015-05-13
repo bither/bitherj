@@ -134,7 +134,7 @@ public abstract class AbstractHD {
         return words;
     }
 
-    public boolean isFromXRandom(){
+    public boolean isFromXRandom() {
         return isFromXRandom;
     }
 

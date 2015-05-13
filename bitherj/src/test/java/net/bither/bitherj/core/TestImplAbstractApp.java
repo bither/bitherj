@@ -22,6 +22,7 @@ import net.bither.bitherj.ISetting;
 import net.bither.bitherj.NotificationService;
 import net.bither.bitherj.api.TrustCert;
 import net.bither.bitherj.qrcode.QRCodeUtil;
+
 import org.apache.http.client.CookieStore;
 import org.apache.http.impl.client.BasicCookieStore;
 

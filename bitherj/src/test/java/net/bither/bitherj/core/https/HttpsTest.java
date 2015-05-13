@@ -2,15 +2,12 @@ package net.bither.bitherj.core.https;
 
 import net.bither.bitherj.api.ConnectHttps;
 import net.bither.bitherj.api.TrustCert;
-import net.bither.bitherj.api.http.HttpException;
 
 import org.junit.Test;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 public class HttpsTest {
     private static final String TrustStorePath = "bithertruststore.jks";

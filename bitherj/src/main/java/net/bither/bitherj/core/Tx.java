@@ -42,7 +42,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -1381,7 +1386,7 @@ public class Tx extends Message implements Comparable<Tx> {
 
     public long deltaAmountFrom(HDAccount account) {
         long receive = 0;
-        HashSet<String> hashSet = AbstractDb.hdAccountProvider.getAllAddress();
+        HashSet<String> hashSet = account.getBelongAccountAddresses(getOutAddressList());
         for (Out out : this.outs) {
             if (hashSet.contains(out.getOutAddress())) {
                 receive += out.getOutValue();
@@ -1389,6 +1394,40 @@ public class Tx extends Message implements Comparable<Tx> {
         }
         long sent = AbstractDb.hdAccountProvider.sentFromAccount(account.getHdSeedId(), getTxHash());
         return receive - sent;
+    }
+
+    public List<String> getOutAddressList() {
+        List<String> outAddressList = new ArrayList<String>();
+        for (Out out : this.outs) {
+            String outAddress = out.getOutAddress();
+            if (!Utils.isEmpty(outAddress)) {
+                outAddressList.add(outAddress);
+            }
+
+        }
+        return outAddressList;
+    }
+
+    public List<String> getInAddresses() {
+        boolean canParseFromScript = true;
+        List<String> fromAddress = new ArrayList<String>();
+        for (In in : getIns()) {
+            String address = in.getFromAddress();
+            if (address != null) {
+                fromAddress.add(address);
+            } else {
+                canParseFromScript = false;
+                break;
+            }
+        }
+        List<String> addresses;
+        if (canParseFromScript) {
+            addresses = fromAddress;
+        } else {
+            addresses = AbstractDb.txProvider.getInAddresses(Tx.this);
+        }
+        return addresses;
+
     }
 
     public int getConfirmationCount() {

@@ -1,6 +1,7 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.qrcode.QRCodeUtil;
+
 import org.junit.Test;
 
 /**

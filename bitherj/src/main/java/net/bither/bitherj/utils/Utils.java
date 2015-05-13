@@ -1,12 +1,12 @@
 /**
  * Copyright 2011 Google Inc.
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,6 +24,7 @@ import com.google.common.primitives.UnsignedLongs;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
+import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.exception.AddressFormatException;
 
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
@@ -910,15 +911,12 @@ public class Utils {
     }
 
     public static boolean validBicoinAddress(String str) {
-        final Pattern PATTERN_BITCOIN_ADDRESS = Pattern.compile("["
-                + new String(Base58.ALPHABET) + "]{20,40}");
-        if (PATTERN_BITCOIN_ADDRESS.matcher(str).matches()) {
-            try {
-                Base58.decodeChecked(str);
-                return true;
-            } catch (final AddressFormatException x) {
-                x.printStackTrace();
-            }
+        try {
+            int addressHeader = getAddressHeader(str);
+            return (addressHeader == BitherjSettings.p2shHeader
+                    || addressHeader == BitherjSettings.addressHeader);
+        } catch (final AddressFormatException x) {
+            x.printStackTrace();
         }
         return false;
     }
@@ -1054,6 +1052,29 @@ public class Utils {
         return !result.isEmpty();
     }
 
+
+    // remeber to wipe #address
+    public static SecureCharSequence formatHashFromCharSequence(@Nonnull final SecureCharSequence address, final int groupSize, final int lineSize) {
+        int length = address.length();
+        if (length % groupSize == 0) {
+            length = length + length / groupSize - 1;
+        } else {
+            length = length + length / groupSize;
+        }
+        char[] chars = new char[length];
+        for (int i = 0; i < length; i++) {
+            if (i % (groupSize + 1) == groupSize) {
+                if ((i + 1) % (lineSize + lineSize / groupSize) == 0) {
+                    chars[i] = '\n';
+                } else {
+                    chars[i] = ' ';
+                }
+            } else {
+                chars[i] = address.charAt(i - i / (groupSize + 1));
+            }
+        }
+        return new SecureCharSequence(chars);
+    }
 
 
 }

@@ -17,6 +17,7 @@ package net.bither.bitherj.crypto;
 
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.utils.Utils;
+
 import org.junit.Test;
 
 import java.math.BigInteger;

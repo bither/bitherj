@@ -116,7 +116,7 @@ public class PeerManager {
                 publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
             }
         }
-        
+
     }
 
     public boolean isConnected() {
@@ -498,8 +498,8 @@ public class PeerManager {
         executor.submit(new Runnable() {
             @Override
             public void run() {
-                boolean isRel = AddressManager.getInstance().registerTx(tx,
-                        Tx.TxNotificationType.txReceive);
+                boolean isRel = AddressManager.getInstance().registerTx(tx, Tx.TxNotificationType
+                        .txReceive);
                 if (isRel) {
                     boolean isAlreadyInDb = AbstractDb.txProvider.isExist(tx.getTxHash());
 
@@ -904,6 +904,13 @@ public class PeerManager {
         return downloadingPeer;
     }
 
+    public int waitingTaskCount() {
+        if (executor == null || executor.getQueue() == null) {
+            return 0;
+        }
+        return executor.getQueue().size();
+    }
+
     static class PeerManagerExecutorService extends ThreadPoolExecutor {
         private static final int TaskCapacity = 5000;
         private static final int TaskCapacityWaitForRoom = 2000;
@@ -988,8 +995,6 @@ public class PeerManager {
             if (downloadingPeer != null) {
                 log.warn("{} chain sync time out", downloadingPeer.getPeerAddress()
                         .getHostAddress());
-                synchronizing = false;
-                syncStartHeight = 0;
                 downloadingPeer.disconnect();
             }
         }

@@ -234,6 +234,7 @@ public class TxBuilder {
 
 interface TxBuilderProtocol {
     public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx);
+
     public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx);
 }
 

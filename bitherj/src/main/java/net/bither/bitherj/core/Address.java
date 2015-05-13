@@ -22,7 +22,6 @@ import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.exception.TxBuilderException;
-import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
@@ -31,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -42,6 +40,9 @@ import javax.annotation.Nonnull;
 
 
 public class Address implements Comparable<Address> {
+
+    public static int VANITY_LEN_NO_EXSITS = -1;
+
     private static final Logger log = LoggerFactory.getLogger(Address.class);
 
     public static final String KEY_SPLIT_STRING = ":";
@@ -59,7 +60,9 @@ public class Address implements Comparable<Address> {
     private boolean isTrashed = false;
     private String alias;
 
-    public Address(){
+    private int vanityLen = VANITY_LEN_NO_EXSITS;
+
+    public Address() {
         super();
     }
 
@@ -388,7 +391,7 @@ public class Address implements Comparable<Address> {
         return true;
     }
 
-    public boolean isHDAccount(){
+    public boolean isHDAccount() {
         return this instanceof HDAccount;
     }
 
@@ -402,12 +405,36 @@ public class Address implements Comparable<Address> {
 
     public void updateAlias(String alias) {
         this.alias = alias;
-        AbstractDb.addressProvider.updateAlias(getAddress(), this.alias);
+        AbstractDb.addressProvider.updateAlias(this.address, this.alias);
     }
 
     public void removeAlias() {
         this.alias = null;
         AbstractDb.addressProvider.updateAlias(getAddress(), null);
     }
+
+    public int getVanityLen() {
+        return vanityLen;
+    }
+
+    public void setVanityLen(int vanityLen) {
+        this.vanityLen = vanityLen;
+    }
+
+    public void updateVanityLen(int vanityLen) {
+        this.vanityLen = vanityLen;
+        AbstractDb.addressProvider.updateVaitylen(this.address, this.vanityLen);
+    }
+
+    public void removeVanitylen() {
+        this.vanityLen = VANITY_LEN_NO_EXSITS;
+        AbstractDb.addressProvider.updateVaitylen(this.address, VANITY_LEN_NO_EXSITS);
+
+    }
+
+    public boolean exsitsVanityLen() {
+        return vanityLen != VANITY_LEN_NO_EXSITS;
+    }
+
 
 }

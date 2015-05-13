@@ -16,9 +16,6 @@
 
 package net.bither.bitherj.core;
 
-import net.bither.bitherj.core.Block;
-import net.bither.bitherj.core.BlockChain;
-import net.bither.bitherj.core.PeerManager;
 import org.junit.Test;
 
 public class PeerManagerTest {
