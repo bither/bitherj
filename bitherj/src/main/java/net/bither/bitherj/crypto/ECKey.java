@@ -157,6 +157,10 @@ public class ECKey implements Serializable {
         return CURVE.getCurve().decodePoint(uncompressed.getEncoded(true));
     }
 
+    public final static ECPoint checkPoint(byte[] pubs) {
+        return CURVE.getCurve().decodePoint(pubs);
+    }
+
 
     /**
      * Creates an ECKey given the private key only.  The public key is calculated from it (this is slow)

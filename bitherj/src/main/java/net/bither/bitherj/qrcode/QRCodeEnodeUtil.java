@@ -19,6 +19,7 @@ package net.bither.bitherj.qrcode;
 
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
+import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -54,6 +55,24 @@ public class QRCodeEnodeUtil {
         return content;
     }
 
+    public static boolean checkPubkeysQRCodeContent(String content) {
+        String[] strs = QRCodeUtil.splitString(content);
+        for (String str : strs) {
+            boolean checkCompressed = str.length() == 66 || ((str.length() == 67)
+                    && (str.indexOf(QRCodeUtil.XRANDOM_FLAG) == 0));
+            boolean checkUnCompressed = str.length() == 130 || ((str.length() == 131)
+                    && (str.indexOf(QRCodeUtil.XRANDOM_FLAG) == 0));
+            org.spongycastle.math.ec.ECPoint ecPoint = ECKey.checkPoint(Utils.hexStringToByteArray(str));
+            if (ecPoint == null || !ecPoint.isValid()) {
+                return false;
+            }
+            if (!checkCompressed && !checkUnCompressed) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static List<Address> formatPublicString(String content) {
         String[] strs = QRCodeUtil.splitString(content);
         ArrayList<Address> wallets = new ArrayList<Address>();
@@ -64,9 +83,13 @@ public class QRCodeEnodeUtil {
                 str = str.substring(1);
             }
             byte[] pub = Utils.hexStringToByteArray(str);
-            String addString = Utils.toAddress(Utils.sha256hash160(pub));
-            Address address = new Address(addString, pub, null, isXRandom);
-            wallets.add(address);
+
+            org.spongycastle.math.ec.ECPoint ecPoint = ECKey.checkPoint(pub);
+            if (ecPoint != null && ecPoint.isValid()) {
+                String addString = Utils.toAddress(Utils.sha256hash160(pub));
+                Address address = new Address(addString, pub, null, isXRandom);
+                wallets.add(address);
+            }
         }
         return wallets;
 
