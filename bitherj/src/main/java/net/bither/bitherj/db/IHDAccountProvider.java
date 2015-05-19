@@ -74,4 +74,8 @@ public interface IHDAccountProvider {
     public List<Out> getUnspendOutByHDAccount(int hdAccountId);
 
     public List<Tx> getRecentlyTxsByAccount(int greateThanBlockNo, int limit);
+
+    public int getUnspendOutCountByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
+
+    public List<Out> getUnspendOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
 }
