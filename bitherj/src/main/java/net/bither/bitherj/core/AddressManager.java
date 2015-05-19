@@ -136,7 +136,13 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         List<String> inAddresses = tx.getInAddresses();
        // log.info("getInAddresses time : {} ,ins:{}", (System.currentTimeMillis() - begin), tx.getIns().size());
         boolean isRegister = false;
-        Tx compressedTx = compressTx(tx, inAddresses);
+        Tx compressedTx;
+        if (txNotificationType != Tx.TxNotificationType.txSend) {
+            compressedTx = compressTx(tx, inAddresses);
+        } else {
+            compressedTx = tx;
+        }
+
         HashSet<String> needNotifyAddressHashSet = new HashSet<String>();
         HashSet<String> needNotifyHDAccountHS = new HashSet<String>();
         List<HDAccount.HDAccountAddress> relatedAddresses = new ArrayList<HDAccount.HDAccountAddress>();
