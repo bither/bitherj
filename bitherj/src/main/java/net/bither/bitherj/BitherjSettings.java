@@ -27,6 +27,10 @@ public class BitherjSettings {
     public static final boolean LOG_DEBUG = true;
     public static final boolean DEV_DEBUG = true;
 
+    public static final int BITHER_DESKTOP_NETWORK_SOCKET = 8329;
+    public static final int BITHER_ENTERPRISE_NETWORK_SOCKET = 8328;
+    public static final int BITHER_DAEMON_NETWORK_SOCKET = 8327;
+
     public static final int PROTOCOL_VERSION = 70001;
     public static final int MIN_PROTO_VERSION = 70001;
 

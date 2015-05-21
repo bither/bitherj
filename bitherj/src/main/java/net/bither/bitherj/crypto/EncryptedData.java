@@ -64,6 +64,13 @@ public class EncryptedData {
                 + QRCodeUtil.QR_CODE_SPLIT + Utils.bytesToHexString(saltForQRCode.getQrCodeSalt()).toUpperCase();
     }
 
+    public String toEncryptedStringForQRCode(boolean isCompress, boolean isFromXRandom) {
+        SaltForQRCode newSaltForQRCode = new SaltForQRCode(saltForQRCode.getSalt(), isCompress, isFromXRandom);
+        return Utils.bytesToHexString(encryptedData).toUpperCase()
+                + QRCodeUtil.QR_CODE_SPLIT + Utils.bytesToHexString(initialisationVector).toUpperCase()
+                + QRCodeUtil.QR_CODE_SPLIT + Utils.bytesToHexString(newSaltForQRCode.getQrCodeSalt()).toUpperCase();
+    }
+
     public boolean isXRandom() {
         return saltForQRCode.isFromXRandom();
     }
@@ -77,5 +84,8 @@ public class EncryptedData {
         return new EncryptedData(encrypted.decrypt(oldPassword), newPassword).toEncryptedString();
     }
 
-
+    public static String changePwdKeepFlag(String encryptStr, CharSequence oldPassword, CharSequence newPassword) {
+        EncryptedData encrypted = new EncryptedData(encryptStr);
+        return new EncryptedData(encrypted.decrypt(oldPassword), newPassword, encrypted.isCompressed(), encrypted.isXRandom()).toEncryptedString();
+    }
 }
