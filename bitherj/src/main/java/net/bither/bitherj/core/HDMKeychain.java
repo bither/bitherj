@@ -145,7 +145,7 @@ public class HDMKeychain extends AbstractHD {
             }
             for (HDMAddress.Pubs p : pubs) {
                 if (p.isCompleted()) {
-                    as.add(new HDMAddress(p, this));
+                    as.add(new HDMAddress(p, this, false));
                 } else {
                     uncompPubs.add(p);
                 }
@@ -247,7 +247,7 @@ public class HDMKeychain extends AbstractHD {
                 fetchDelegate.completeRemotePublicKeys(password, pubs);
                 for (HDMAddress.Pubs p : pubs) {
                     if (p.isCompleted()) {
-                        as.add(new HDMAddress(p, this));
+                        as.add(new HDMAddress(p, this, true));
                     } else {
                         AbstractDb.addressProvider.setHDMPubsRemote(getHdSeedId(), p.index,
                                 p.remote);
@@ -580,7 +580,7 @@ public class HDMKeychain extends AbstractHD {
                 }
                 for (HDMAddress.Pubs p : pubs) {
                     if (p.isCompleted()) {
-                        as.add(new HDMAddress(p, this));
+                        as.add(new HDMAddress(p, this, false));
                     } else {
                         uncompPubs.add(p);
                     }

@@ -21,8 +21,8 @@ public class HDMAddress extends Address {
     private HDMKeychain keychain;
     private Pubs pubs;
 
-    public HDMAddress(Pubs pubs, HDMKeychain keychain) {
-        this(pubs, pubs.getAddress(), false, keychain);
+    public HDMAddress(Pubs pubs, HDMKeychain keychain, boolean isSyncComplete) {
+        this(pubs, pubs.getAddress(), isSyncComplete, keychain);
     }
 
     public HDMAddress(Pubs pubs, String address, boolean isSyncComplete, HDMKeychain keychain) {

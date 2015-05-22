@@ -99,7 +99,7 @@ public abstract class ImportPrivateKey {
             encryptedPrivateString = PrivateKeyUtil.getEncryptedString(ecKey);
         }
         Address address = new Address(ecKey.toAddress(), ecKey.getPubKey(), encryptedPrivateString
-                , ecKey.isFromXRandom());
+                , false, ecKey.isFromXRandom());
         if (AddressManager.getInstance().getWatchOnlyAddresses().contains(address)) {
             password.wipe();
             importError(CAN_NOT_IMPORT_BITHER_COLD_PRIVATE_KEY);

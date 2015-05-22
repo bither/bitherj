@@ -265,7 +265,7 @@ public class PrivateKeyUtil {
                 return null;
             } else {
                 Address address = new Address(key.toAddress(), key.getPubKey(), encryptedString,
-                        key.isFromXRandom());
+                        false, key.isFromXRandom());
                 key.clearPrivateKey();
                 list.add(address);
             }

@@ -87,7 +87,7 @@ public class QRCodeEnodeUtil {
             org.spongycastle.math.ec.ECPoint ecPoint = ECKey.checkPoint(pub);
             if (ecPoint != null && ecPoint.isValid()) {
                 String addString = Utils.toAddress(Utils.sha256hash160(pub));
-                Address address = new Address(addString, pub, null, isXRandom);
+                Address address = new Address(addString, pub, null, false, isXRandom);
                 wallets.add(address);
             }
         }
