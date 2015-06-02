@@ -86,6 +86,8 @@ public class PeerManager {
     private Timer syncTimeOutTimer;
     private HashMap<Sha256Hash, Timer> publishTxTimeoutTimers;
 
+    private boolean onlyBoardcasting = false;
+
     public static final PeerManager instance() {
         if (instance == null) {
             synchronized (newInstanceLock) {
@@ -323,6 +325,9 @@ public class PeerManager {
                 @Override
                 public void run() {
                     peer.connectSucceed();
+                    if (isOnlyBoardcasting()) {
+                        return;
+                    }
                     if (!doneSyncFromSPV() && getLastBlockHeight() >= peer.getVersionLastBlockHeight()) {
                         AbstractApp.notificationService.sendBroadcastSyncSPVFinished(true);
                     }
@@ -1084,6 +1089,14 @@ public class PeerManager {
 
     public boolean isSynchronizing() {
         return synchronizing;
+    }
+
+    public boolean isOnlyBoardcasting() {
+        return this.onlyBoardcasting;
+    }
+
+    public void setOnlyBoardcasting(boolean onlyBoardcasting) {
+        this.onlyBoardcasting = onlyBoardcasting;
     }
 
     public void onDestroy() {
