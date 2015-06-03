@@ -60,15 +60,60 @@ public class EnterpriseHDMTxSignaturePool {
                     .decodeFromDER(sigs.get(i)), TransactionSignature.SigHash.ALL, false);
             if (i == 0) {
                 byte[] pub = recoverPub(txSig, unsignedHashes().get(i));
+                if (pub == null) {
+                    break;
+                }
+                pubIndex = pubs.indexOf(pub);
+                if (pubIndex < 0) {
+                    break;
+                }
             }
             txSigs.add(txSig);
         }
-
+        if (pubIndex < 0) {
+            return false;
+        }
+        signatures.put(Integer.valueOf(pubIndex), txSigs);
         return true;
+    }
+
+    public Tx sign() {
+        assert satisfied();
+        ArrayList<byte[]> txSigs = new ArrayList<byte[]>();
+
+        for (int inputIndex = 0;
+             inputIndex < tx.getIns().size();
+             inputIndex++) {
+
+            ArrayList<TransactionSignature> inputSigs = new ArrayList<TransactionSignature>();
+
+            for (Integer pubIndex = 0;
+                 pubIndex < pubs.size();
+                 pubIndex++) {
+                if (signatures.containsKey(pubIndex)) {
+                    inputSigs.add(signatures.get(pubIndex).get(inputIndex));
+                }
+            }
+
+            txSigs.add(ScriptBuilder.createP2SHMultiSigInputScript(inputSigs, multisigProgram)
+                    .getProgram());
+        }
+
+        tx.signWithSignatures(txSigs);
+
+        if (tx.verifySignatures()) {
+            return tx;
+        } else {
+            return null;
+        }
     }
 
     public List<byte[]> unsignedHashes() {
         return tx.getUnsignedInHashesForHDM(multisigProgram);
+    }
+
+    public boolean satisfied() {
+        return signatureCount() >= threshold();
     }
 
     public int signatureCount() {
