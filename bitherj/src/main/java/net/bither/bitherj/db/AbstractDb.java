@@ -108,6 +108,7 @@ public abstract class AbstractDb {
     public static final String CREATE_TX_BLOCK_NO_INDEX = "create index idx_tx_block_no on txs (block_no);";
     public static final String CREATE_IN_PREV_TX_HASH_INDEX = "create index idx_in_prev_tx_hash on ins (prev_tx_hash);";
 
+
     //hd account
     public static final String CREATE_HD_ACCOUNT = "create table if not exists  hd_account " +
             "( hd_account_id integer not null primary key autoincrement" +
@@ -132,6 +133,33 @@ public abstract class AbstractDb {
 
     //add hd_accont_id for outs
     public static final String ADD_HD_ACCOUNT_ID_FOR_OUTS = "alter table outs add column hd_account_id integer;";
+
+    //enterprise hdm
+    public static final String CREATE_ENTERPRISE_HD_ACCOUNT = "create table if not exists enterprise_hd_account " +
+            "( hd_account_id integer not null primary key autoincrement" +
+            ", encrypt_seed text not null" +
+            ", encrypt_mnemonic_seed text" +
+            ", hd_address text not null" +
+            ", is_xrandom integer not null);";
+    public static final String CREATE_MULTI_SIGN_SET = "create table if not exists enterprise_multi_sign_set " +
+            ", multi_sign_n integer not null" +
+            ", multi_sign_m integer not null);";
+
+    public static final String CREATE_ENTERPRISE_HDM_ADDRESSES_SQL = "create table if not exists enterprise_hdm_addresses " +
+            "(hdm_index integer not null" +
+            ", pub_key_1 text not null" +
+            ", pub_key_2 text not null" +
+            ", pub_key_3 text" +
+            ", pub_key_4 text" +
+            ", pub_key_5 text" +
+            ", pub_key_6 text" +
+            ", pub_key_7 text" +
+            ", pub_key_8 text" +
+            ", pub_key_9 text" +
+            ", pub_key_10 text" +
+            ", address text" +
+            ", is_synced integer " +
+            ", primary key (hdm_index));";
 
     public static IBlockProvider blockProvider;
     public static IPeerProvider peerProvider;
@@ -180,6 +208,12 @@ public abstract class AbstractDb {
         public static final String HD_ACCOUNT = "hd_account";
 
         public static final String HD_ACCOUNT_ADDRESS = "hd_account_addresses";
+
+        //enterprise hdm
+
+        public static final String ENTERPRISE_HD_ACCOUNT = "enterprise_hd_account";
+        public static final String ENTERPRISE_MULTI_SIGN_SET = "enterprise_multi_sign_set";
+        public static final String ENTERPRISE_HDM_ADDRESS = "enterprise_hdm_addresses";
 
 
     }
@@ -310,6 +344,38 @@ public abstract class AbstractDb {
     public interface VanityAddressColumns {
         public static final String ADDRESS = "address";
         public static final String VANITY_LEN = "vanity_len";
+    }
+
+    //enterprise hdm
+    public interface EnterpriseHDAccountColumns {
+        public static final String HD_ACCOUNT_ID = "hd_account_id";
+        public static final String ENCRYPT_SEED = "encrypt_seed";
+        public static final String ENCRYPT_MNEMONIC_SEED = "encrypt_mnemonic_seed";
+        public static final String HD_ADDRESS = "hd_address";
+        public static final String IS_XRANDOM = "is_xrandom";
+
+    }
+
+    public interface EnterpriseMultiSignSetColumns {
+        public static final String MultiSignN = "multi_sign_n";
+        public static final String MultiSignM = "multi_sign_m";
+    }
+
+
+    public interface EnterpriseHDMAddressColumns {
+        public static final String HDMIndex = "hdm_index";
+        public static final String PubKey1 = "pub_key_1";
+        public static final String PubKey2 = "pub_key_2";
+        public static final String PubKey3 = "pub_key_3";
+        public static final String PubKey4 = "pub_key_4";
+        public static final String PubKey5 = "pub_key_5";
+        public static final String PubKey6 = "pub_key_6";
+        public static final String PubKey7 = "pub_key_7";
+        public static final String PubKey8 = "pub_key_8";
+        public static final String PubKey9 = "pub_key_9";
+        public static final String PubKey10 = "pub_key_10";
+        public static final String Address = "address";
+        public static final String IsSynced = "is_synced";
     }
 
 
