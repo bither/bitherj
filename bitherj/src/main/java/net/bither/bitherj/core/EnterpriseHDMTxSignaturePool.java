@@ -87,9 +87,7 @@ public class EnterpriseHDMTxSignaturePool {
 
             ArrayList<TransactionSignature> inputSigs = new ArrayList<TransactionSignature>();
 
-            for (Integer pubIndex = 0;
-                 pubIndex < pubs.size();
-                 pubIndex++) {
+            for (Integer pubIndex : signaturePubIndexes()) {
                 if (signatures.containsKey(pubIndex)) {
                     inputSigs.add(signatures.get(pubIndex).get(inputIndex));
                 }
@@ -118,6 +116,13 @@ public class EnterpriseHDMTxSignaturePool {
 
     public int signatureCount() {
         return signatures.values().size();
+    }
+
+    public List<Integer> signaturePubIndexes() {
+        ArrayList<Integer> indexes = new ArrayList<Integer>();
+        indexes.addAll(signatures.keySet());
+        indexes.sort(null);
+        return indexes;
     }
 
     public int threshold() {

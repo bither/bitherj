@@ -67,6 +67,11 @@ public class EnterpriseHDMAddress extends Address {
     }
 
     @Override
+    public boolean isHDM() {
+        return true;
+    }
+
+    @Override
     public String getFullEncryptPrivKey() {
         throw new RuntimeException("hdm address can't get encrypted private key");
     }
