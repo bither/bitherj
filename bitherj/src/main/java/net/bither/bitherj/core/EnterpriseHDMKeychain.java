@@ -55,6 +55,7 @@ public class EnterpriseHDMKeychain {
                 e.printStackTrace();
             }
         }
+        //TODO EnterpriseHDMKeychain add to db
     }
 
     public EnterpriseHDMKeychain(int accountId) {
@@ -87,11 +88,10 @@ public class EnterpriseHDMKeychain {
         }
 
         ArrayList<EnterpriseHDMAddress> as = new ArrayList<EnterpriseHDMAddress>();
-        ArrayList<byte[]> pubs = new ArrayList<byte[]>();
         for (int index = addresses.size();
              index < addresses.size() + count;
              index++) {
-            pubs.clear();
+            ArrayList<byte[]> pubs = new ArrayList<byte[]>();
             for (int j = 0;
                  j < pubCount();
                  j++) {
