@@ -142,13 +142,14 @@ public abstract class AbstractDb {
             ", hd_address text not null" +
             ", is_xrandom integer not null);";
     public static final String CREATE_MULTI_SIGN_SET = "create table if not exists enterprise_multi_sign_set " +
-            ", multi_sign_n integer not null" +
+            " ( multi_sign_n integer not null" +
             ", multi_sign_m integer not null);";
 
     public static final String CREATE_ENTERPRISE_HDM_ADDRESSES_SQL = "create table if not exists enterprise_hdm_addresses " +
             "(hdm_index integer not null" +
-            ", pub_key_1 text not null" +
-            ", pub_key_2 text not null" +
+            ", address text not null" +
+            ", pub_key_1 text" +
+            ", pub_key_2 text" +
             ", pub_key_3 text" +
             ", pub_key_4 text" +
             ", pub_key_5 text" +
@@ -157,7 +158,6 @@ public abstract class AbstractDb {
             ", pub_key_8 text" +
             ", pub_key_9 text" +
             ", pub_key_10 text" +
-            ", address text" +
             ", is_synced integer " +
             ", primary key (hdm_index));";
 
@@ -166,6 +166,7 @@ public abstract class AbstractDb {
     public static ITxProvider txProvider;
     public static IAddressProvider addressProvider;
     public static IHDAccountProvider hdAccountProvider;
+    public static IEnterpriseHDMProvider enterpriseHDMProvider;
 
     public void construct() {
         blockProvider = initBlockProvider();
@@ -173,6 +174,7 @@ public abstract class AbstractDb {
         txProvider = initTxProvider();
         addressProvider = initAddressProvider();
         hdAccountProvider = initHDAccountProvider();
+        enterpriseHDMProvider = initEnterpriseHDMProvider();
 
     }
 
@@ -185,6 +187,8 @@ public abstract class AbstractDb {
     public abstract IAddressProvider initAddressProvider();
 
     public abstract IHDAccountProvider initHDAccountProvider();
+
+    public abstract IEnterpriseHDMProvider initEnterpriseHDMProvider();
 
     public interface Tables {
 
@@ -363,19 +367,19 @@ public abstract class AbstractDb {
 
 
     public interface EnterpriseHDMAddressColumns {
-        public static final String HDMIndex = "hdm_index";
-        public static final String PubKey1 = "pub_key_1";
-        public static final String PubKey2 = "pub_key_2";
-        public static final String PubKey3 = "pub_key_3";
-        public static final String PubKey4 = "pub_key_4";
-        public static final String PubKey5 = "pub_key_5";
-        public static final String PubKey6 = "pub_key_6";
-        public static final String PubKey7 = "pub_key_7";
-        public static final String PubKey8 = "pub_key_8";
-        public static final String PubKey9 = "pub_key_9";
-        public static final String PubKey10 = "pub_key_10";
-        public static final String Address = "address";
-        public static final String IsSynced = "is_synced";
+        public static final String HDM_INDEX = "hdm_index";
+        public static final String PUB_KEY_0 = "pub_key_0";
+        public static final String PUB_KEY_1 = "pub_key_1";
+        public static final String PUB_KEY_2 = "pub_key_2";
+        public static final String PUB_KEY_3 = "pub_key_3";
+        public static final String PUB_KEY_4 = "pub_key_4";
+        public static final String PUB_KEY_5 = "pub_key_5";
+        public static final String PUB_KEY_6 = "pub_key_6";
+        public static final String PUB_KEY_7 = "pub_key_7";
+        public static final String PUB_KEY_8 = "pub_key_8";
+        public static final String PUB_KEY_9 = "pub_key_9";
+        public static final String ADDRESS = "address";
+        public static final String IS_SYNCED = "is_synced";
     }
 
 

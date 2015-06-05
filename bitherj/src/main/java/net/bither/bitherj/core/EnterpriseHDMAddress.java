@@ -18,6 +18,7 @@
 
 package net.bither.bitherj.core;
 
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.Utils;
@@ -78,7 +79,7 @@ public class EnterpriseHDMAddress extends Address {
 
     @Override
     public void updateSyncComplete() {
-        //TODO EnterpriseHDMAddress updateSyncComplete
+        AbstractDb.enterpriseHDMProvider.updateSyncComplete(EnterpriseHDMAddress.this);
     }
 
     public static final class Pubs {

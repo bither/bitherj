@@ -20,6 +20,7 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
+import net.bither.bitherj.db.AbstractDb;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -64,7 +65,15 @@ public class EnterpriseHDMKeychain {
     }
 
     private void initFromDb() {
-        //TODO EnterpriseHDMKeychain init From Db
+        synchronized (addresses) {
+            List<EnterpriseHDMAddress> temp = AbstractDb.enterpriseHDMProvider.
+                    getEnterpriseHDMAddress(EnterpriseHDMKeychain.this);
+            if (temp != null) {
+                addresses.addAll(temp);
+            }
+
+        }
+
     }
 
     public int prepareAddresses(int count, List<byte[]> externalRoots) throws KeyNotMatchException {
@@ -107,7 +116,7 @@ public class EnterpriseHDMKeychain {
     }
 
     private void addAddressesToDb(List<EnterpriseHDMAddress> addresses) {
-        //TODO EnterpriseHDMKeychain addAddressesToDb
+        AbstractDb.enterpriseHDMProvider.addEnterpriseHDMAddress(addresses);
     }
 
     private byte[] pubFromExternalRoot(int index, byte[] externalRoot) {

@@ -22,6 +22,7 @@ import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.utils.Utils;
 
 import java.security.SecureRandom;
@@ -51,8 +52,8 @@ public class EnterpriseHDMSeed extends AbstractHD {
         wipeHDSeed();
         wipeMnemonicSeed();
         hdSeedId = 0;
-        // TODO AbstractDb.addressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
-        // encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
+        AbstractDb.addressProvider.addEnterpriseHDKey(encryptedMnemonicSeed.toEncryptedString(),
+                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
 
     }
 
@@ -80,8 +81,8 @@ public class EnterpriseHDMSeed extends AbstractHD {
         wipeHDSeed();
         wipeMnemonicSeed();
         hdSeedId = 0;
-        // TODO AbstractDb.addressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
-        // encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
+        AbstractDb.addressProvider.addEnterpriseHDKey(encryptedMnemonicSeed.toEncryptedString(),
+                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
     }
 
     // From DB
@@ -133,17 +134,17 @@ public class EnterpriseHDMSeed extends AbstractHD {
 
     @Override
     protected String getEncryptedHDSeed() {
-        //TODO EnterpriseHDMSeed  getEncryptedHDSeed
-        return null;
+
+        return AbstractDb.addressProvider.getEnterpriseEncryptHDSeed(this.hdSeedId);
     }
 
     @Override
     protected String getEncryptedMnemonicSeed() {
-        //TODO EnterpriseHDMSeed  getEncryptedMnemonicSeed
-        return null;
+
+        return AbstractDb.addressProvider.getEnterpriseEncryptMnemonicSeed(this.hdSeedId);
     }
 
     public String getFirstAddressFromDb() {
-        return null;//TODO EnterpriseHDMSeed getFirstAddressFromDb
+        return AbstractDb.addressProvider.getEnterpriseHDFristAddress(this.hdSeedId);
     }
 }
