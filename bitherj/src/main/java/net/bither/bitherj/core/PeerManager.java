@@ -837,8 +837,7 @@ public class PeerManager {
             filterUpdateHeight = getLastBlockHeight();
             filterFpRate = BloomFilter.DEFAULT_BLOOM_FILTER_FP_RATE;
 
-            if (downloadingPeer != null && filterUpdateHeight + BitherjSettings
-                    .BLOCK_DIFFICULTY_INTERVAL < downloadingPeer.getVersionLastBlockHeight()) {
+            if (downloadingPeer != null && filterUpdateHeight + 500 < downloadingPeer.getVersionLastBlockHeight()) {
                 filterFpRate = BloomFilter.BLOOM_REDUCED_FALSEPOSITIVE_RATE; // lower false
                 // positive rate during chain sync
             } else if (downloadingPeer != null && filterUpdateHeight < downloadingPeer
