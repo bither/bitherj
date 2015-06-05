@@ -56,7 +56,8 @@ public class EnterpriseHDMKeychain {
                 e.printStackTrace();
             }
         }
-        //TODO EnterpriseHDMKeychain add to db
+        AbstractDb.enterpriseHDMProvider.addMultiSignSet(this.threshold, this.pubCount);
+        AbstractDb.enterpriseHDMProvider.addEnterpriseHDMAddress(addresses);
     }
 
     public EnterpriseHDMKeychain(int accountId) {
