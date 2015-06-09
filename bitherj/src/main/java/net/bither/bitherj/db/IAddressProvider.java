@@ -45,13 +45,6 @@ public interface IAddressProvider {
 
     public String getEncryptHDSeed(int hdSeedId);
 
-    public String getEnterpriseEncryptMnemonicSeed(int hdSeedId);
-
-    public String getEnterpriseEncryptHDSeed(int hdSeedId);
-
-    public String getEnterpriseHDFristAddress(int hdSeedId);
-
-    public boolean isEnterpriseHDMSeedFromXRandom(int hdSeedId);
 
     public void updateEncrypttMnmonicSeed(int hdSeedId, String encryptMnmonicSeed);
 
@@ -66,7 +59,6 @@ public interface IAddressProvider {
     public int addHDKey(String encryptedMnemonicSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
 
     public int addEnterpriseHDKey(String encryptedMnemonicSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
-
     public HDMBId getHDMBId();
 
 

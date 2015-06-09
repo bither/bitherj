@@ -22,6 +22,17 @@ import net.bither.bitherj.core.EnterpriseHDMKeychain;
 import java.util.List;
 
 public interface IEnterpriseHDMProvider {
+
+
+
+    public String getEnterpriseEncryptMnemonicSeed(int hdSeedId);
+
+    public String getEnterpriseEncryptHDSeed(int hdSeedId);
+
+    public String getEnterpriseHDFristAddress(int hdSeedId);
+
+    public boolean isEnterpriseHDMSeedFromXRandom(int hdSeedId);
+
     public void addEnterpriseHDMAddress(List<EnterpriseHDMAddress> enterpriseHDMAddressList);
 
     public List<EnterpriseHDMAddress> getEnterpriseHDMAddress(EnterpriseHDMKeychain keychain);

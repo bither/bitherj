@@ -89,7 +89,7 @@ public class EnterpriseHDMSeed extends AbstractHD {
     // From DB
     public EnterpriseHDMSeed(int seedId) {
         this.hdSeedId = seedId;
-        isFromXRandom = AbstractDb.addressProvider.isEnterpriseHDMSeedFromXRandom(hdSeedId);
+        isFromXRandom = AbstractDb.enterpriseHDMProvider.isEnterpriseHDMSeedFromXRandom(hdSeedId);
     }
 
     public byte[] getExternalRootPubExtended(CharSequence password) throws MnemonicException
@@ -141,16 +141,16 @@ public class EnterpriseHDMSeed extends AbstractHD {
     @Override
     protected String getEncryptedHDSeed() {
 
-        return AbstractDb.addressProvider.getEnterpriseEncryptHDSeed(this.hdSeedId);
+        return AbstractDb.enterpriseHDMProvider.getEnterpriseEncryptHDSeed(this.hdSeedId);
     }
 
     @Override
     public String getEncryptedMnemonicSeed() {
-        return AbstractDb.addressProvider.getEnterpriseEncryptMnemonicSeed(this.hdSeedId);
+        return AbstractDb.enterpriseHDMProvider.getEnterpriseEncryptMnemonicSeed(this.hdSeedId);
     }
 
     public String getFirstAddressFromDb() {
-        return AbstractDb.addressProvider.getEnterpriseHDFristAddress(this.hdSeedId);
+        return AbstractDb.enterpriseHDMProvider.getEnterpriseHDFristAddress(this.hdSeedId);
     }
 
     public static boolean hasSeed() {
