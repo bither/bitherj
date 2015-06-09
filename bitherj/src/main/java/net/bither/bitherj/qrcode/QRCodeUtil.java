@@ -44,6 +44,7 @@ public class QRCodeUtil {
     public static final String XRANDOM_FLAG = "+";
     public static final String OLD_QR_CODE_SPLIT = ":";
     public static final String HDM_QR_CODE_FLAG = "-";
+    public static final String Enterprise_HDM_QR_CODE_FLAG = "?";
     public static final String HD_QR_CODE_FLAG = "%";
 
 

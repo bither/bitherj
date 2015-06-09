@@ -38,6 +38,7 @@ public class EnterpriseHDMSeed extends AbstractHD {
     public EnterpriseHDMSeed(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         this.mnemonicSeed = mnemonicSeed;
+        isFromXRandom = false;
         String firstAddress = null;
         EncryptedData encryptedMnemonicSeed = null;
         EncryptedData encryptedHDSeed = null;
@@ -88,6 +89,7 @@ public class EnterpriseHDMSeed extends AbstractHD {
     // From DB
     public EnterpriseHDMSeed(int seedId) {
         this.hdSeedId = seedId;
+        isFromXRandom = AbstractDb.addressProvider.isEnterpriseHDMSeedFromXRandom(hdSeedId);
     }
 
     public byte[] getExternalRootPubExtended(CharSequence password) throws MnemonicException
@@ -132,6 +134,10 @@ public class EnterpriseHDMSeed extends AbstractHD {
         }
     }
 
+    public boolean isFromXRandom() {
+        return isFromXRandom;
+    }
+
     @Override
     protected String getEncryptedHDSeed() {
 
@@ -139,8 +145,7 @@ public class EnterpriseHDMSeed extends AbstractHD {
     }
 
     @Override
-    protected String getEncryptedMnemonicSeed() {
-
+    public String getEncryptedMnemonicSeed() {
         return AbstractDb.addressProvider.getEnterpriseEncryptMnemonicSeed(this.hdSeedId);
     }
 

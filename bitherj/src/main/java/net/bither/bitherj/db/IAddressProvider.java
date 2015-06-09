@@ -51,6 +51,8 @@ public interface IAddressProvider {
 
     public String getEnterpriseHDFristAddress(int hdSeedId);
 
+    public boolean isEnterpriseHDMSeedFromXRandom(int hdSeedId);
+
     public void updateEncrypttMnmonicSeed(int hdSeedId, String encryptMnmonicSeed);
 
     public boolean isHDSeedFromXRandom(int hdSeedId);
