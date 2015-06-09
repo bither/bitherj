@@ -29,4 +29,8 @@ public interface IEnterpriseHDMProvider {
     public void addMultiSignSet(int n, int m);
 
     public void updateSyncComplete(EnterpriseHDMAddress enterpriseHDMAddress);
+
+    public List<Integer> getEnterpriseHDMKeychainIds();
+
+    public int getEnterpriseHDMSeedId();
 }

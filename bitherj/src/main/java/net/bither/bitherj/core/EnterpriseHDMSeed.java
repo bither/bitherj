@@ -147,4 +147,16 @@ public class EnterpriseHDMSeed extends AbstractHD {
     public String getFirstAddressFromDb() {
         return AbstractDb.addressProvider.getEnterpriseHDFristAddress(this.hdSeedId);
     }
+
+    public static boolean hasSeed() {
+        return AbstractDb.enterpriseHDMProvider.getEnterpriseHDMSeedId() >= 0;
+    }
+
+    public static EnterpriseHDMSeed seed() {
+        if (hasSeed()) {
+            return new EnterpriseHDMSeed(AbstractDb.enterpriseHDMProvider.getEnterpriseHDMSeedId());
+        }
+        return null;
+    }
+
 }
