@@ -52,8 +52,7 @@ public class EnterpriseHDMSeed extends AbstractHD {
         firstAddress = getFirstAddressFromSeed(password);
         wipeHDSeed();
         wipeMnemonicSeed();
-        hdSeedId = 0;
-        AbstractDb.addressProvider.addEnterpriseHDKey(encryptedMnemonicSeed.toEncryptedString(),
+        hdSeedId = AbstractDb.addressProvider.addEnterpriseHDKey(encryptedMnemonicSeed.toEncryptedString(),
                 encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
 
     }
@@ -81,8 +80,7 @@ public class EnterpriseHDMSeed extends AbstractHD {
         k.clearPrivateKey();
         wipeHDSeed();
         wipeMnemonicSeed();
-        hdSeedId = 0;
-        AbstractDb.addressProvider.addEnterpriseHDKey(encryptedMnemonicSeed.toEncryptedString(),
+        hdSeedId = AbstractDb.addressProvider.addEnterpriseHDKey(encryptedMnemonicSeed.toEncryptedString(),
                 encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
     }
 

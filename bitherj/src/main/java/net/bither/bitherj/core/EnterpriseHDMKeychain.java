@@ -62,7 +62,6 @@ public class EnterpriseHDMKeychain {
             }
         }
         AbstractDb.enterpriseHDMProvider.addMultiSignSet(this.threshold, this.pubCount);
-        AbstractDb.enterpriseHDMProvider.addEnterpriseHDMAddress(addresses);
     }
 
     public EnterpriseHDMKeychain(int accountId) {
@@ -71,15 +70,14 @@ public class EnterpriseHDMKeychain {
     }
 
     private void initFromDb() {
+        //TODO need threshold and pubCount
         synchronized (addresses) {
             List<EnterpriseHDMAddress> temp = AbstractDb.enterpriseHDMProvider.
                     getEnterpriseHDMAddress(EnterpriseHDMKeychain.this);
             if (temp != null) {
                 addresses.addAll(temp);
             }
-
         }
-
     }
 
     public int prepareAddresses(int count, List<byte[]> externalRoots) throws KeyNotMatchException {
