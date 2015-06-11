@@ -32,6 +32,9 @@ import java.util.List;
  * Created by songchenwen on 15/6/2.
  */
 public class EnterpriseHDMKeychain {
+    public interface EnterpriseHDMKeychainAddressChangeDelegate {
+        void enterpriseHDMKeychainAddedAddress(EnterpriseHDMAddress address);
+    }
 
     private int accountId;
 
@@ -39,6 +42,8 @@ public class EnterpriseHDMKeychain {
     private int pubCount;
 
     private ArrayList<EnterpriseHDMAddress> addresses;
+
+    private EnterpriseHDMKeychainAddressChangeDelegate addressChangeDelegate;
 
     public EnterpriseHDMKeychain(int threshold, List<byte[]> externalRoots) {
         this(threshold, 0, externalRoots);
@@ -57,7 +62,6 @@ public class EnterpriseHDMKeychain {
             }
         }
         AbstractDb.enterpriseHDMProvider.addMultiSignSet(this.threshold, this.pubCount);
-        AbstractDb.enterpriseHDMProvider.addEnterpriseHDMAddress(addresses);
     }
 
     public EnterpriseHDMKeychain(int accountId) {
@@ -66,15 +70,14 @@ public class EnterpriseHDMKeychain {
     }
 
     private void initFromDb() {
+        //TODO need threshold and pubCount
         synchronized (addresses) {
             List<EnterpriseHDMAddress> temp = AbstractDb.enterpriseHDMProvider.
                     getEnterpriseHDMAddress(EnterpriseHDMKeychain.this);
             if (temp != null) {
                 addresses.addAll(temp);
             }
-
         }
-
     }
 
     public int prepareAddresses(int count, List<byte[]> externalRoots) throws KeyNotMatchException {
@@ -107,8 +110,12 @@ public class EnterpriseHDMKeychain {
                  j++) {
                 pubs.add(pubFromExternalRoot(index, externalRoots.get(j)));
             }
-            as.add(new EnterpriseHDMAddress(new EnterpriseHDMAddress.Pubs(index, threshold(),
-                    pubs), this, false));
+            EnterpriseHDMAddress a = new EnterpriseHDMAddress(new EnterpriseHDMAddress.Pubs
+                    (index, threshold(), pubs), this, false);
+            as.add(a);
+            if (addressChangeDelegate != null) {
+                addressChangeDelegate.enterpriseHDMKeychainAddedAddress(a);
+            }
         }
         if (as.size() > 0) {
             addAddressesToDb(as);
@@ -146,6 +153,16 @@ public class EnterpriseHDMKeychain {
 
     public int pubCount() {
         return pubCount;
+    }
+
+
+    public ArrayList<EnterpriseHDMAddress> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddressChangeDelegate(EnterpriseHDMKeychainAddressChangeDelegate
+                                                 addressChangeDelegate) {
+        this.addressChangeDelegate = addressChangeDelegate;
     }
 
     public static final class KeyNotMatchException extends Exception {

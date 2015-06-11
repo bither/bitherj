@@ -38,6 +38,7 @@ public class EnterpriseHDMSeed extends AbstractHD {
     public EnterpriseHDMSeed(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         this.mnemonicSeed = mnemonicSeed;
+        isFromXRandom = false;
         String firstAddress = null;
         EncryptedData encryptedMnemonicSeed = null;
         EncryptedData encryptedHDSeed = null;
@@ -51,8 +52,7 @@ public class EnterpriseHDMSeed extends AbstractHD {
         firstAddress = getFirstAddressFromSeed(password);
         wipeHDSeed();
         wipeMnemonicSeed();
-        hdSeedId = 0;
-        AbstractDb.addressProvider.addEnterpriseHDKey(encryptedMnemonicSeed.toEncryptedString(),
+        hdSeedId = AbstractDb.addressProvider.addEnterpriseHDKey(encryptedMnemonicSeed.toEncryptedString(),
                 encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
 
     }
@@ -80,14 +80,14 @@ public class EnterpriseHDMSeed extends AbstractHD {
         k.clearPrivateKey();
         wipeHDSeed();
         wipeMnemonicSeed();
-        hdSeedId = 0;
-        AbstractDb.addressProvider.addEnterpriseHDKey(encryptedMnemonicSeed.toEncryptedString(),
+        hdSeedId = AbstractDb.addressProvider.addEnterpriseHDKey(encryptedMnemonicSeed.toEncryptedString(),
                 encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
     }
 
     // From DB
     public EnterpriseHDMSeed(int seedId) {
         this.hdSeedId = seedId;
+        isFromXRandom = AbstractDb.enterpriseHDMProvider.isEnterpriseHDMSeedFromXRandom(hdSeedId);
     }
 
     public byte[] getExternalRootPubExtended(CharSequence password) throws MnemonicException
@@ -132,19 +132,34 @@ public class EnterpriseHDMSeed extends AbstractHD {
         }
     }
 
+    public boolean isFromXRandom() {
+        return isFromXRandom;
+    }
+
     @Override
     protected String getEncryptedHDSeed() {
 
-        return AbstractDb.addressProvider.getEnterpriseEncryptHDSeed(this.hdSeedId);
+        return AbstractDb.enterpriseHDMProvider.getEnterpriseEncryptHDSeed(this.hdSeedId);
     }
 
     @Override
-    protected String getEncryptedMnemonicSeed() {
-
-        return AbstractDb.addressProvider.getEnterpriseEncryptMnemonicSeed(this.hdSeedId);
+    public String getEncryptedMnemonicSeed() {
+        return AbstractDb.enterpriseHDMProvider.getEnterpriseEncryptMnemonicSeed(this.hdSeedId);
     }
 
     public String getFirstAddressFromDb() {
-        return AbstractDb.addressProvider.getEnterpriseHDFristAddress(this.hdSeedId);
+        return AbstractDb.enterpriseHDMProvider.getEnterpriseHDFristAddress(this.hdSeedId);
     }
+
+    public static boolean hasSeed() {
+        return AbstractDb.enterpriseHDMProvider.getEnterpriseHDMSeedId() >= 0;
+    }
+
+    public static EnterpriseHDMSeed seed() {
+        if (hasSeed()) {
+            return new EnterpriseHDMSeed(AbstractDb.enterpriseHDMProvider.getEnterpriseHDMSeedId());
+        }
+        return null;
+    }
+
 }
