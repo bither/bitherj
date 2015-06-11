@@ -69,11 +69,11 @@ public class Peer extends PeerSocketHandler {
 
     private static final int BLOOMFILTER_UPDATE_BLOCK_INTERVAL = 100;
 
-    private static final int GET_BLOCK_DATA_PIECE_SIZE = 5;
+    private static final int GET_BLOCK_DATA_PIECE_SIZE = 1;
 
-    private static final int MAX_PEER_MANAGER_WAITING_TASK_COUNT = 5;
+    private static final int MAX_PEER_MANAGER_WAITING_TASK_COUNT = 1;
 
-    private static final int RELAY_BLOCK_COUNT_WHEN_SYNC = 5;
+    private static final int RELAY_BLOCK_COUNT_WHEN_SYNC = 1;
 
     private static final int PEER_MANAGER_MAX_TASK_CHECKING_INTERVAL = 100;
 
