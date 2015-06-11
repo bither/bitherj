@@ -41,7 +41,7 @@ public class EnterpriseHDMKeychain {
     private int threshold;
     private int pubCount;
 
-    private ArrayList<EnterpriseHDMAddress> addresses;
+    private ArrayList<EnterpriseHDMAddress> addresses = new ArrayList<EnterpriseHDMAddress>();
 
     private EnterpriseHDMKeychainAddressChangeDelegate addressChangeDelegate;
 
