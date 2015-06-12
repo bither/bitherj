@@ -143,9 +143,9 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             // double spend with confirmed tx
             return false;
         }
-       // long begin = System.currentTimeMillis();
+        // long begin = System.currentTimeMillis();
         List<String> inAddresses = tx.getInAddresses();
-       // log.info("getInAddresses time : {} ,ins:{}", (System.currentTimeMillis() - begin), tx.getIns().size());
+        // log.info("getInAddresses time : {} ,ins:{}", (System.currentTimeMillis() - begin), tx.getIns().size());
         boolean isRegister = false;
         Tx compressedTx;
         if (txNotificationType != Tx.TxNotificationType.txSend) {
@@ -397,6 +397,9 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             }
             result.addAll(this.privKeyAddresses);
             result.addAll(this.watchOnlyAddresses);
+            if (hasEnterpriseHDMKeychain()) {
+                result.addAll(getEnterpriseHDMKeychain().getAddresses());
+            }
             return result;
         }
     }
