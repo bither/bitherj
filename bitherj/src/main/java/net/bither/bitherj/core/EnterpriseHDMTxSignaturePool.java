@@ -23,6 +23,7 @@ import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.script.ScriptBuilder;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -121,7 +122,7 @@ public class EnterpriseHDMTxSignaturePool {
     public List<Integer> signaturePubIndexes() {
         ArrayList<Integer> indexes = new ArrayList<Integer>();
         indexes.addAll(signatures.keySet());
-        indexes.sort(null);
+        Collections.sort(indexes);
         return indexes;
     }
 

@@ -22,9 +22,13 @@ import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.db.AbstractDb;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -32,6 +36,9 @@ import java.util.List;
  * Created by songchenwen on 15/6/2.
  */
 public class EnterpriseHDMKeychain {
+    public static final int MaxPubCount = 10;
+    private static final Logger log = LoggerFactory.getLogger(EnterpriseHDMKeychain.class);
+
     public interface EnterpriseHDMKeychainAddressChangeDelegate {
         void enterpriseHDMKeychainAddedAddress(EnterpriseHDMAddress address);
     }
@@ -87,13 +94,19 @@ public class EnterpriseHDMKeychain {
         assert externalRoots.size() == pubCount();
         externalRoots = sortExternalRoots(externalRoots);
 
+        ArrayList<DeterministicKey> externalRootPubs = new ArrayList<DeterministicKey>();
+        for (byte[] bytes : externalRoots) {
+            externalRootPubs.add(HDKeyDerivation.createMasterPubKeyFromExtendedBytes(bytes));
+        }
+
         if (addresses.size() > 0) {
             List<byte[]> firstPubs = addresses.get(0).getPubkeys();
 
             for (int i = 0;
                  i < pubCount();
                  i++) {
-                if (!Arrays.equals(firstPubs.get(i), pubFromExternalRoot(0, externalRoots.get(i))
+                if (!Arrays.equals(firstPubs.get(i), externalRootPubs.get(i).deriveSoftened(0)
+                                .getPubKey()
                 )) {
                     throw new KeyNotMatchException(i);
                 }
@@ -108,7 +121,7 @@ public class EnterpriseHDMKeychain {
             for (int j = 0;
                  j < pubCount();
                  j++) {
-                pubs.add(pubFromExternalRoot(index, externalRoots.get(j)));
+                pubs.add(externalRootPubs.get(j).deriveSoftened(index).getPubKey());
             }
             EnterpriseHDMAddress a = new EnterpriseHDMAddress(new EnterpriseHDMAddress.Pubs
                     (index, threshold(), pubs), this, false);
@@ -127,16 +140,10 @@ public class EnterpriseHDMKeychain {
         AbstractDb.enterpriseHDMProvider.addEnterpriseHDMAddress(addresses);
     }
 
-    private byte[] pubFromExternalRoot(int index, byte[] externalRoot) {
-        DeterministicKey external = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
-                (externalRoot);
-        return external.deriveSoftened(index).getPubKey();
-    }
-
     private List<byte[]> sortExternalRoots(List<byte[]> externalRoots) {
         ArrayList<byte[]> sortedExternalRoots = new ArrayList<byte[]>();
         sortedExternalRoots.addAll(externalRoots);
-        sortedExternalRoots.sort(externalRootComparator);
+        Collections.sort(sortedExternalRoots, externalRootComparator);
         return sortedExternalRoots;
     }
 
