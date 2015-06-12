@@ -98,9 +98,10 @@ public class EnterpriseHDMSeed extends AbstractHD {
                 .EXTERNAL_ROOT_PATH);
         master.wipe();
         accountKey.wipe();
+        byte[] ext = externalChainRoot.getPubKeyExtended();
         externalChainRoot.clearPrivateKey();
         externalChainRoot.clearChainCode();
-        return externalChainRoot.getPubKeyExtended();
+        return ext;
     }
 
     public List<byte[]> signHashes(int index, List<byte[]> hashes, CharSequence password) {
