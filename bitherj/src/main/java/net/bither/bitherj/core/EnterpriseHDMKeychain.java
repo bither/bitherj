@@ -77,7 +77,8 @@ public class EnterpriseHDMKeychain {
     }
 
     private void initFromDb() {
-        //TODO need threshold and pubCount
+        pubCount = AbstractDb.enterpriseHDMProvider.getPubCount();
+        threshold = AbstractDb.enterpriseHDMProvider.getThreshold();
         synchronized (addresses) {
             List<EnterpriseHDMAddress> temp = AbstractDb.enterpriseHDMProvider.
                     getEnterpriseHDMAddress(EnterpriseHDMKeychain.this);
