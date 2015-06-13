@@ -59,7 +59,7 @@ public class EnterpriseHDMKeychain {
     public EnterpriseHDMKeychain(int threshold, int prepareCount, List<byte[]> externalRoots) {
         this.threshold = threshold;
         this.pubCount = externalRoots.size();
-        addresses = new ArrayList<EnterpriseHDMAddress>();
+        AbstractDb.enterpriseHDMProvider.addMultiSignSet(this.threshold, this.pubCount);
         if (prepareCount > 0) {
             try {
                 prepareAddresses(prepareCount, externalRoots);
@@ -68,7 +68,6 @@ public class EnterpriseHDMKeychain {
                 e.printStackTrace();
             }
         }
-        AbstractDb.enterpriseHDMProvider.addMultiSignSet(this.threshold, this.pubCount);
     }
 
     public EnterpriseHDMKeychain(int accountId) {
@@ -80,6 +79,7 @@ public class EnterpriseHDMKeychain {
         pubCount = AbstractDb.enterpriseHDMProvider.getPubCount();
         threshold = AbstractDb.enterpriseHDMProvider.getThreshold();
         synchronized (addresses) {
+            addresses.clear();
             List<EnterpriseHDMAddress> temp = AbstractDb.enterpriseHDMProvider.
                     getEnterpriseHDMAddress(EnterpriseHDMKeychain.this);
             if (temp != null) {
@@ -131,6 +131,7 @@ public class EnterpriseHDMKeychain {
                 addressChangeDelegate.enterpriseHDMKeychainAddedAddress(a);
             }
         }
+        addresses.addAll(as);
         if (as.size() > 0) {
             addAddressesToDb(as);
         }
