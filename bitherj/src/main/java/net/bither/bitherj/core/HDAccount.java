@@ -383,9 +383,7 @@ public class HDAccount extends Address {
 
     public boolean initTxs(List<Tx> txs) {
         AbstractDb.txProvider.addTxs(txs);
-        if (txs.size() > 0) {
-            notificatTx(null, Tx.TxNotificationType.txFromApi);
-        }
+        notificatTx(null, Tx.TxNotificationType.txFromApi);
         return true;
     }
 
