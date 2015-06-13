@@ -60,7 +60,7 @@ public class EnterpriseHDMTxSignaturePool {
             TransactionSignature txSig = new TransactionSignature(ECKey.ECDSASignature
                     .decodeFromDER(sigs.get(i)), TransactionSignature.SigHash.ALL, false);
             if (i == 0) {
-                byte[] pub = recoverPub(txSig, unsignedHashes().get(i));
+                byte[] pub = recoverPub(sigs.get(i), unsignedHashes().get(i));
                 if (pub == null) {
                     break;
                 }
@@ -130,8 +130,13 @@ public class EnterpriseHDMTxSignaturePool {
         return threshold;
     }
 
-    private byte[] recoverPub(TransactionSignature signature, byte[] hash) {
-        // TODO EnterpriseHDMTxSignaturePool recoverPub
+    private byte[] recoverPub(byte[] signature, byte[] hash) {
+        for (int i = 0; i < pubs.size(); i++) {
+            byte[] pubByte = pubs.get(i);
+            if (ECKey.verify(hash, signature, pubByte)) {
+                return pubByte;
+            }
+        }
         return null;
     }
 }
