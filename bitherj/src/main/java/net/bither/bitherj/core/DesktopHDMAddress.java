@@ -27,13 +27,13 @@ import net.bither.bitherj.script.ScriptBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EnDesktopHDMAddress extends Address {
+public class DesktopHDMAddress extends Address {
     public static interface HDMFetchOtherSignatureDelegate {
         List<TransactionSignature> getOtherSignature(int addressIndex, CharSequence password,
                                                      List<byte[]> unsignHash, Tx tx);
     }
 
-    private EnDesktopHDMKeychain keychain;
+    private DesktopHDMKeychain keychain;
     private HDMAddress.Pubs pubs;
 
 
@@ -42,11 +42,11 @@ public class EnDesktopHDMAddress extends Address {
 
     private boolean isIssued;
 
-    public EnDesktopHDMAddress(HDMAddress.Pubs pubs, EnDesktopHDMKeychain keychain, boolean isSyncComplete) {
+    public DesktopHDMAddress(HDMAddress.Pubs pubs, DesktopHDMKeychain keychain, boolean isSyncComplete) {
         this(pubs, pubs.getAddress(), isSyncComplete, keychain);
     }
 
-    public EnDesktopHDMAddress(HDMAddress.Pubs pubs, String address, boolean isSyncComplete, EnDesktopHDMKeychain keychain) {
+    public DesktopHDMAddress(HDMAddress.Pubs pubs, String address, boolean isSyncComplete, DesktopHDMKeychain keychain) {
         super(address, pubs.getMultiSigScript().getProgram(), pubs.index, isSyncComplete, true,
                 false, null);
         this.keychain = keychain;
@@ -73,11 +73,11 @@ public class EnDesktopHDMAddress extends Address {
         return pubs.index;
     }
 
-    public EnDesktopHDMKeychain getKeychain() {
+    public DesktopHDMKeychain getKeychain() {
         return keychain;
     }
 
-    public void setKeychain(EnDesktopHDMKeychain keychain) {
+    public void setKeychain(DesktopHDMKeychain keychain) {
         this.keychain = keychain;
     }
 

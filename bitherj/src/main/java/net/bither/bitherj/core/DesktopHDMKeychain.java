@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
 import java.security.SecureRandom;
 import java.util.*;
 
-public class EnDesktopHDMKeychain extends AbstractHD {
+public class DesktopHDMKeychain extends AbstractHD {
 
 
     private long balance = 0;
@@ -49,15 +49,15 @@ public class EnDesktopHDMKeychain extends AbstractHD {
 
     protected int hdSeedId = -1;
 
-    private static final Logger log = LoggerFactory.getLogger(EnDesktopHDMKeychain.class);
+    private static final Logger log = LoggerFactory.getLogger(DesktopHDMKeychain.class);
 
 
-    protected ArrayList<EnDesktopHDMAddress> allCompletedAddresses;
-    private Collection<EnDesktopHDMAddress> addressesInUse;
-    private Collection<EnDesktopHDMAddress> addressesTrashed;
+    protected ArrayList<DesktopHDMAddress> allCompletedAddresses;
+    private Collection<DesktopHDMAddress> addressesInUse;
+    private Collection<DesktopHDMAddress> addressesTrashed;
 
 
-    public EnDesktopHDMKeychain(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
+    public DesktopHDMKeychain(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         this.mnemonicSeed = mnemonicSeed;
         String firstAddress = null;
@@ -75,12 +75,12 @@ public class EnDesktopHDMKeychain extends AbstractHD {
         wipeMnemonicSeed();
         hdSeedId = AbstractDb.enDesktopAddressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
                 encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address, null, null);
-        allCompletedAddresses = new ArrayList<EnDesktopHDMAddress>();
+        allCompletedAddresses = new ArrayList<DesktopHDMAddress>();
 
     }
 
     // Create With Random
-    public EnDesktopHDMKeychain(SecureRandom random, CharSequence password) {
+    public DesktopHDMKeychain(SecureRandom random, CharSequence password) {
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
         mnemonicSeed = new byte[32];
         String firstAddress = null;
@@ -104,25 +104,25 @@ public class EnDesktopHDMKeychain extends AbstractHD {
         wipeMnemonicSeed();
         hdSeedId = AbstractDb.enDesktopAddressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
                 encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address, null, null);
-        allCompletedAddresses = new ArrayList<EnDesktopHDMAddress>();
+        allCompletedAddresses = new ArrayList<DesktopHDMAddress>();
     }
 
     // From DB
-    public EnDesktopHDMKeychain(int seedId) {
+    public DesktopHDMKeychain(int seedId) {
         this.hdSeedId = seedId;
-        allCompletedAddresses = new ArrayList<EnDesktopHDMAddress>();
+        allCompletedAddresses = new ArrayList<DesktopHDMAddress>();
         initFromDb();
     }
 
     // Import
-    public EnDesktopHDMKeychain(EncryptedData encryptedMnemonicSeed, CharSequence password) throws
+    public DesktopHDMKeychain(EncryptedData encryptedMnemonicSeed, CharSequence password) throws
             HDMBitherIdNotMatchException, MnemonicException.MnemonicLengthException {
         mnemonicSeed = encryptedMnemonicSeed.decrypt(password);
         hdSeed = seedFromMnemonic(mnemonicSeed);
         isFromXRandom = encryptedMnemonicSeed.isXRandom();
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
-        allCompletedAddresses = new ArrayList<EnDesktopHDMAddress>();
-        ArrayList<EnDesktopHDMAddress> as = new ArrayList<EnDesktopHDMAddress>();
+        allCompletedAddresses = new ArrayList<DesktopHDMAddress>();
+        ArrayList<DesktopHDMAddress> as = new ArrayList<DesktopHDMAddress>();
         ArrayList<HDMAddress.Pubs> uncompPubs = new ArrayList<HDMAddress.Pubs>();
 
         ECKey k = new ECKey(mnemonicSeed, null);
@@ -148,33 +148,33 @@ public class EnDesktopHDMKeychain extends AbstractHD {
     }
 
 
-    public List<EnDesktopHDMAddress> getAddresses() {
+    public List<DesktopHDMAddress> getAddresses() {
         synchronized (allCompletedAddresses) {
             if (addressesInUse == null) {
                 addressesInUse = Collections2.filter(allCompletedAddresses,
-                        new Predicate<EnDesktopHDMAddress>() {
+                        new Predicate<DesktopHDMAddress>() {
                             @Override
-                            public boolean apply(@Nullable EnDesktopHDMAddress input) {
+                            public boolean apply(@Nullable DesktopHDMAddress input) {
                                 return !input.isTrashed();
                             }
                         });
             }
-            return new ArrayList<EnDesktopHDMAddress>(addressesInUse);
+            return new ArrayList<DesktopHDMAddress>(addressesInUse);
         }
     }
 
-    public List<EnDesktopHDMAddress> getTrashedAddresses() {
+    public List<DesktopHDMAddress> getTrashedAddresses() {
         synchronized (allCompletedAddresses) {
             if (addressesTrashed == null) {
                 addressesTrashed = Collections2.filter(allCompletedAddresses,
-                        new Predicate<EnDesktopHDMAddress>() {
+                        new Predicate<DesktopHDMAddress>() {
                             @Override
-                            public boolean apply(@Nullable EnDesktopHDMAddress input) {
+                            public boolean apply(@Nullable DesktopHDMAddress input) {
                                 return input.isTrashed();
                             }
                         });
             }
-            return new ArrayList<EnDesktopHDMAddress>(addressesTrashed);
+            return new ArrayList<DesktopHDMAddress>(addressesTrashed);
         }
     }
 
@@ -204,7 +204,7 @@ public class EnDesktopHDMKeychain extends AbstractHD {
     public int getCurrentMaxAddressIndex() {
         synchronized (allCompletedAddresses) {
             int max = Integer.MIN_VALUE;
-            for (EnDesktopHDMAddress address : allCompletedAddresses) {
+            for (DesktopHDMAddress address : allCompletedAddresses) {
                 if (address.getIndex() > max) {
                     max = address.getIndex();
                 }
@@ -213,7 +213,7 @@ public class EnDesktopHDMKeychain extends AbstractHD {
         }
     }
 
-    public List<EnDesktopHDMAddress> getAllCompletedAddresses() {
+    public List<DesktopHDMAddress> getAllCompletedAddresses() {
         synchronized (allCompletedAddresses) {
             return allCompletedAddresses;
         }

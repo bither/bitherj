@@ -49,6 +49,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
     protected HDMKeychain hdmKeychain;
     protected EnterpriseHDMKeychain enterpriseHDMKeychain;
     protected HDAccount hdAccount;
+    protected List<DesktopHDMKeychain> desktopHDMKeychains;
 
     private AddressManager() {
         synchronized (lock) {
@@ -56,6 +57,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             initHDMKeychain();
             initEnterpriseHDMKeychain();
             initHDAccount();
+            initDesktopHDMKeychain();
             initAliasAndVanityLen();
             AbstractApp.addressIsReady = true;
             AbstractApp.notificationService.sendBroadcastAddressLoadCompleteState();
@@ -138,14 +140,28 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         }
     }
 
+    private void initDesktopHDMKeychain() {
+        List<Integer> seeds = AbstractDb.enDesktopAddressProvider.getDesktopKeyChainSeed();
+        if (seeds.size() > 0) {
+            desktopHDMKeychains = new ArrayList<DesktopHDMKeychain>();
+            for (int i = 0; i < seeds.size(); i++) {
+                desktopHDMKeychains.add(new DesktopHDMKeychain(seeds.get(i)));
+            }
+        }
+    }
+
+    public void setDesktopHDMKeychains(List<DesktopHDMKeychain> desktopHDMKeychains) {
+        this.desktopHDMKeychains = desktopHDMKeychains;
+    }
+
     public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {
         if (AbstractDb.txProvider.isTxDoubleSpendWithConfirmedTx(tx)) {
             // double spend with confirmed tx
             return false;
         }
-       // long begin = System.currentTimeMillis();
+        // long begin = System.currentTimeMillis();
         List<String> inAddresses = tx.getInAddresses();
-       // log.info("getInAddresses time : {} ,ins:{}", (System.currentTimeMillis() - begin), tx.getIns().size());
+        // log.info("getInAddresses time : {} ,ins:{}", (System.currentTimeMillis() - begin), tx.getIns().size());
         boolean isRegister = false;
         Tx compressedTx;
         if (txNotificationType != Tx.TxNotificationType.txSend) {

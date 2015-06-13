@@ -20,7 +20,7 @@ package net.bither.bitherj.db;
 
 import java.util.List;
 
-public interface IEnDesktopAddressProvider {
+public interface IDesktopAddressProvider {
 
     public int addHDKey(String encryptedMnemonicSeed, String encryptHdSeed,
                         String firstAddress, boolean isXrandom, String addressOfPS
@@ -39,4 +39,6 @@ public interface IEnDesktopAddressProvider {
     public String getEncryptHDSeed(int hdSeedId);
 
     public String getHDMFristAddress(int hdSeedId);
+
+    public List<Integer> getDesktopKeyChainSeed();
 }
