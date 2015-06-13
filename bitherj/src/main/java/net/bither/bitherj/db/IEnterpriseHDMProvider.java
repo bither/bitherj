@@ -23,8 +23,6 @@ import java.util.List;
 
 public interface IEnterpriseHDMProvider {
 
-
-
     public String getEnterpriseEncryptMnemonicSeed(int hdSeedId);
 
     public String getEnterpriseEncryptHDSeed(int hdSeedId);
