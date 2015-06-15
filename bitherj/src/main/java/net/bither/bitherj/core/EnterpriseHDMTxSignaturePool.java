@@ -21,6 +21,7 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.script.ScriptBuilder;
+import net.bither.bitherj.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,6 +79,10 @@ public class EnterpriseHDMTxSignaturePool {
         return true;
     }
 
+    public void clearSignatures() {
+        signatures.clear();
+    }
+
     public Tx sign() {
         assert satisfied();
         ArrayList<byte[]> txSigs = new ArrayList<byte[]>();
@@ -111,6 +116,10 @@ public class EnterpriseHDMTxSignaturePool {
         return tx.getUnsignedInHashesForHDM(multisigProgram);
     }
 
+    public Tx tx() {
+        return tx;
+    }
+
     public boolean satisfied() {
         return signatureCount() >= threshold();
     }
@@ -130,6 +139,10 @@ public class EnterpriseHDMTxSignaturePool {
         return threshold;
     }
 
+    public int pubCount() {
+        return pubs.size();
+    }
+
     private byte[] recoverPub(byte[] signature, byte[] hash) {
         for (int i = 0; i < pubs.size(); i++) {
             byte[] pubByte = pubs.get(i);
@@ -139,4 +152,12 @@ public class EnterpriseHDMTxSignaturePool {
         }
         return null;
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " :\n tx0: " + Utils.bytesToHexString(unsignedHashes
+                ().get(0)) + "\n threshold: " + threshold() + "\n program: " + Utils
+                .bytesToHexString(multisigProgram);
+    }
+
 }
