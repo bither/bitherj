@@ -70,41 +70,59 @@ public class DesktopHDMKeychain extends AbstractHD {
         hdSeed = seedFromMnemonic(mnemonicSeed);
         encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
-        firstAddress = getFirstAddressFromSeed(password);
-        wipeHDSeed();
-        wipeMnemonicSeed();
-        hdSeedId = AbstractDb.enDesktopAddressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
-                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address, null, null);
-        allCompletedAddresses = new ArrayList<DesktopHDMAddress>();
+        DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
+        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, true);
 
     }
+
 
     // Create With Random
     public DesktopHDMKeychain(SecureRandom random, CharSequence password) {
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
         mnemonicSeed = new byte[32];
-        String firstAddress = null;
+        
         EncryptedData encryptedMnemonicSeed = null;
         EncryptedData encryptedHDSeed = null;
-        while (firstAddress == null) {
-            try {
-                random.nextBytes(mnemonicSeed);
-                hdSeed = seedFromMnemonic(mnemonicSeed);
-                encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
-                encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
-                firstAddress = getFirstAddressFromSeed(password);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+
+        try {
+            random.nextBytes(mnemonicSeed);
+            hdSeed = seedFromMnemonic(mnemonicSeed);
+            encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
+            encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password, isFromXRandom);
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
+        DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
+        initHDAccount(master, encryptedMnemonicSeed, encryptedHDSeed, true);
+    }
+
+    private void initHDAccount(DeterministicKey master, EncryptedData encryptedMnemonicSeed,
+                               EncryptedData encryptedHDSeed, boolean isSyncedComplete) {
+        String firstAddress;
         ECKey k = new ECKey(mnemonicSeed, null);
         String address = k.toAddress();
         k.clearPrivateKey();
+        DeterministicKey accountKey = getAccount(master);
+        DeterministicKey internalKey = getChainRootKey(accountKey, AbstractHD.PathType.INTERNAL_ROOT_PATH);
+        DeterministicKey externalKey = getChainRootKey(accountKey, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+        DeterministicKey key = externalKey.deriveSoftened(0);
+        firstAddress = key.toAddress();
+        accountKey.wipe();
+        master.wipe();
+
         wipeHDSeed();
         wipeMnemonicSeed();
         hdSeedId = AbstractDb.enDesktopAddressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
-                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address, null, null);
+                encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
+                        .getPubKeyExtended());
         allCompletedAddresses = new ArrayList<DesktopHDMAddress>();
+
+        internalKey.wipe();
+        externalKey.wipe();
+
+
     }
 
     // From DB
