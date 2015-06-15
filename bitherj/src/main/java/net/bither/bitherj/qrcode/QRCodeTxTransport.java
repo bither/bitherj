@@ -446,7 +446,7 @@ public class QRCodeTxTransport implements Serializable {
     }
 
     private static boolean hasVersion(String str) {
-        String pattern = "[V0-9]";
+        String pattern = "[V][\\d{1,3}]";
         Pattern p = Pattern.compile(pattern);
         Matcher m = p.matcher(str);
         return m.matches();
