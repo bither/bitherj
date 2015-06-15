@@ -162,6 +162,20 @@ public abstract class AbstractHD {
         }
     }
 
+    protected byte[] getMasterPubKeyExtended(CharSequence password) {
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            return accountKey.getPubKeyExtended();
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
+    }
+
     protected void wipeHDSeed() {
         if (hdSeed == null) {
             return;

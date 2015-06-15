@@ -24,6 +24,7 @@ import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
+import org.omg.CORBA.PUBLIC_MEMBER;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,8 +151,16 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         }
     }
 
+    public boolean hasDesktopHDMKeychain() {
+        return desktopHDMKeychains != null && desktopHDMKeychains.size() > 0;
+    }
+
     public void setDesktopHDMKeychains(List<DesktopHDMKeychain> desktopHDMKeychains) {
         this.desktopHDMKeychains = desktopHDMKeychains;
+    }
+
+    public List<DesktopHDMKeychain> getDesktopHDMKeychains() {
+        return this.desktopHDMKeychains;
     }
 
     public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {

@@ -47,7 +47,6 @@ public class DesktopHDMKeychain extends AbstractHD {
     private long balance = 0;
     private static final int LOOK_AHEAD_SIZE = 100;
 
-    protected int hdSeedId = -1;
 
     private static final Logger log = LoggerFactory.getLogger(DesktopHDMKeychain.class);
 
@@ -80,7 +79,7 @@ public class DesktopHDMKeychain extends AbstractHD {
     public DesktopHDMKeychain(SecureRandom random, CharSequence password) {
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
         mnemonicSeed = new byte[32];
-        
+
         EncryptedData encryptedMnemonicSeed = null;
         EncryptedData encryptedHDSeed = null;
 
@@ -545,6 +544,11 @@ public class DesktopHDMKeychain extends AbstractHD {
     private int allGeneratedExternalAddressCount() {
         return AbstractDb.hdAccountProvider.allGeneratedAddressCount(PathType
                 .EXTERNAL_ROOT_PATH);
+    }
+
+    public String getMasterPubKeyExtendedStr(CharSequence password) {
+        byte[] bytes = getMasterPubKeyExtended(password);
+        return Utils.bytesToHexString(bytes).toUpperCase(Locale.US);
     }
 
 
