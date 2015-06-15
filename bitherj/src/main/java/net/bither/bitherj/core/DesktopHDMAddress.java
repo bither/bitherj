@@ -42,15 +42,16 @@ public class DesktopHDMAddress extends Address {
 
     private boolean isIssued;
 
-    public DesktopHDMAddress(HDMAddress.Pubs pubs, DesktopHDMKeychain keychain, boolean isSyncComplete) {
-        this(pubs, pubs.getAddress(), isSyncComplete, keychain);
+    public DesktopHDMAddress(HDMAddress.Pubs pubs, AbstractHD.PathType pathType, DesktopHDMKeychain keychain, boolean isSyncComplete) {
+        this(pubs, pathType, pubs.getAddress(), isSyncComplete, keychain);
     }
 
-    public DesktopHDMAddress(HDMAddress.Pubs pubs, String address, boolean isSyncComplete, DesktopHDMKeychain keychain) {
+    public DesktopHDMAddress(HDMAddress.Pubs pubs, AbstractHD.PathType pathType, String address, boolean isSyncComplete, DesktopHDMKeychain keychain) {
         super(address, pubs.getMultiSigScript().getProgram(), pubs.index, isSyncComplete, true,
                 false, null);
         this.keychain = keychain;
         this.pubs = pubs;
+        this.pathType = pathType;
     }
 
     public AbstractHD.PathType getPathType() {

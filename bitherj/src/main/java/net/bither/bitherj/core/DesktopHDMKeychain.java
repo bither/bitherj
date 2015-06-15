@@ -124,6 +124,81 @@ public class DesktopHDMKeychain extends AbstractHD {
 
     }
 
+    public void addAccountKey(byte[] firstByte, byte[] secondByte) {
+        //todo sort
+        DeterministicKey firstAccountKey = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                (firstByte);
+        DeterministicKey secondAccountKey = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                (secondByte);
+
+        DeterministicKey firestInternalKey = getChainRootKey(firstAccountKey, AbstractHD.PathType.INTERNAL_ROOT_PATH);
+        DeterministicKey firestExternalKey = getChainRootKey(firstAccountKey, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+
+        DeterministicKey secondInternalKey = getChainRootKey(secondAccountKey, AbstractHD.PathType.INTERNAL_ROOT_PATH);
+        DeterministicKey secondExternalKey = getChainRootKey(secondAccountKey, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+        List<byte[]> externalPubs = new ArrayList<byte[]>();
+        List<byte[]> internalPubs = new ArrayList<byte[]>();
+        externalPubs.add(firestExternalKey.getPubKeyExtended());
+        externalPubs.add(secondExternalKey.getPubKeyExtended());
+        internalPubs.add(firestInternalKey.getPubKeyExtended());
+        internalPubs.add(secondInternalKey.getPubKeyExtended());
+        AbstractDb.enDesktopAddressProvider.addHDMPub(externalPubs, internalPubs);
+        addDesktopAddress(PathType.EXTERNAL_ROOT_PATH, LOOK_AHEAD_SIZE);
+        addDesktopAddress(PathType.INTERNAL_ROOT_PATH, LOOK_AHEAD_SIZE);
+    }
+
+    private void addDesktopAddress(PathType pathType, int count) {
+        if (pathType == PathType.EXTERNAL_ROOT_PATH) {
+            List<DesktopHDMAddress> desktopHDMAddresses = new ArrayList<DesktopHDMAddress>();
+            List<byte[]> externalPubs = AbstractDb.enDesktopAddressProvider.getExternalPubs();
+            DeterministicKey externalKey1 = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                    (externalPubs.get(0));
+            DeterministicKey externalKey2 = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                    (externalPubs.get(1));
+            DeterministicKey externalKey3 = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                    (externalPubs.get(2));
+            for (int i = 0;
+                 i < count;
+                 i++) {
+                byte[] subExternalPub1 = externalKey1.deriveSoftened(i).getPubKey();
+                byte[] subExternalPub2 = externalKey2.deriveSoftened(i).getPubKey();
+                byte[] subExternalPub3 = externalKey3.deriveSoftened(i).getPubKey();
+                HDMAddress.Pubs pubs = new HDMAddress.Pubs();
+                pubs.hot = subExternalPub1;
+                pubs.cold = subExternalPub2;
+                pubs.remote = subExternalPub3;
+                DesktopHDMAddress desktopHDMAddress = new DesktopHDMAddress(pubs, pathType, DesktopHDMKeychain.this, false);
+                desktopHDMAddresses.add(desktopHDMAddress);
+                AbstractDb.desktopTxProvider.addAddress(desktopHDMAddresses);
+            }
+        } else {
+            List<DesktopHDMAddress> desktopHDMAddresses = new ArrayList<DesktopHDMAddress>();
+            List<byte[]> internalPubs = AbstractDb.enDesktopAddressProvider.getInternalPubs();
+            DeterministicKey internalKey1 = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                    (internalPubs.get(0));
+            DeterministicKey internalKey2 = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                    (internalPubs.get(1));
+            DeterministicKey internalKey3 = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                    (internalPubs.get(2));
+            for (int i = 0;
+                 i < count;
+                 i++) {
+                byte[] subInternalPub1 = internalKey1.deriveSoftened(i).getPubKey();
+                byte[] subInternalPub2 = internalKey2.deriveSoftened(i).getPubKey();
+                byte[] subInternalPub3 = internalKey3.deriveSoftened(i).getPubKey();
+                HDMAddress.Pubs pubs = new HDMAddress.Pubs();
+                pubs.hot = subInternalPub1;
+                pubs.cold = subInternalPub2;
+                pubs.remote = subInternalPub3;
+                DesktopHDMAddress desktopHDMAddress = new DesktopHDMAddress(pubs, pathType, DesktopHDMKeychain.this, false);
+                desktopHDMAddresses.add(desktopHDMAddress);
+                AbstractDb.desktopTxProvider.addAddress(desktopHDMAddresses);
+            }
+        }
+
+
+    }
+
     // From DB
     public DesktopHDMKeychain(int seedId) {
         this.hdSeedId = seedId;
