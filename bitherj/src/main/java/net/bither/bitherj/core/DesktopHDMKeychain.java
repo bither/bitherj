@@ -19,18 +19,19 @@
 package net.bither.bitherj.core;
 
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.api.CreateHDMAddressApi;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
+import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
+import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
@@ -38,7 +39,6 @@ import net.bither.bitherj.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.*;
@@ -111,7 +111,7 @@ public class DesktopHDMKeychain extends AbstractHD {
 
         wipeHDSeed();
         wipeMnemonicSeed();
-        hdSeedId = AbstractDb.enDesktopAddressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
+        hdSeedId = AbstractDb.desktopAddressProvider.addHDKey(encryptedMnemonicSeed.toEncryptedString(),
                 encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
                         .getPubKeyExtended());
         internalKey.wipe();
@@ -143,7 +143,7 @@ public class DesktopHDMKeychain extends AbstractHD {
         externalPubs.add(secondExternalKey.getPubKeyExtended());
         internalPubs.add(firestInternalKey.getPubKeyExtended());
         internalPubs.add(secondInternalKey.getPubKeyExtended());
-        AbstractDb.enDesktopAddressProvider.addHDMPub(externalPubs, internalPubs);
+        AbstractDb.desktopAddressProvider.addHDMPub(externalPubs, internalPubs);
         addDesktopAddress(PathType.EXTERNAL_ROOT_PATH, LOOK_AHEAD_SIZE);
         addDesktopAddress(PathType.INTERNAL_ROOT_PATH, LOOK_AHEAD_SIZE);
     }
@@ -151,7 +151,7 @@ public class DesktopHDMKeychain extends AbstractHD {
     private void addDesktopAddress(PathType pathType, int count) {
         if (pathType == PathType.EXTERNAL_ROOT_PATH) {
             List<DesktopHDMAddress> desktopHDMAddresses = new ArrayList<DesktopHDMAddress>();
-            List<byte[]> externalPubs = AbstractDb.enDesktopAddressProvider.getExternalPubs();
+            List<byte[]> externalPubs = AbstractDb.desktopAddressProvider.getExternalPubs();
             DeterministicKey externalKey1 = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                     (externalPubs.get(0));
             DeterministicKey externalKey2 = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
@@ -176,7 +176,7 @@ public class DesktopHDMKeychain extends AbstractHD {
             AbstractDb.desktopTxProvider.addAddress(desktopHDMAddresses);
         } else {
             List<DesktopHDMAddress> desktopHDMAddresses = new ArrayList<DesktopHDMAddress>();
-            List<byte[]> internalPubs = AbstractDb.enDesktopAddressProvider.getInternalPubs();
+            List<byte[]> internalPubs = AbstractDb.desktopAddressProvider.getInternalPubs();
             DeterministicKey internalKey1 = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                     (internalPubs.get(0));
             DeterministicKey internalKey2 = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
@@ -207,7 +207,8 @@ public class DesktopHDMKeychain extends AbstractHD {
     // From DB
     public DesktopHDMKeychain(int seedId) {
         this.hdSeedId = seedId;
-        initFromDb();
+        isFromXRandom = AbstractDb.desktopAddressProvider.isHDSeedFromXRandom(getHdSeedId());
+        updateBalance();
     }
 
     // Import
@@ -227,7 +228,7 @@ public class DesktopHDMKeychain extends AbstractHD {
         wipeMnemonicSeed();
         wipeHDSeed();
 
-        this.hdSeedId = AbstractDb.enDesktopAddressProvider.addHDKey(encryptedMnemonicSeed
+        this.hdSeedId = AbstractDb.desktopAddressProvider.addHDKey(encryptedMnemonicSeed
                         .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
                 isFromXRandom, address, null, null);
         if (as.size() > 0) {
@@ -269,16 +270,112 @@ public class DesktopHDMKeychain extends AbstractHD {
         return Utils.bytesToHexString(getExternalChainRootPubExtended(password)).toUpperCase();
     }
 
-
-    private void initFromDb() {
-        isFromXRandom = AbstractDb.enDesktopAddressProvider.isHDSeedFromXRandom(getHdSeedId());
-        initAddressesFromDb();
+    public boolean isTxRelated(Tx tx, List<String> inAddresses) {
+        return getRelatedAddressesForTx(tx, inAddresses).size() > 0;
     }
 
-    private void initAddressesFromDb() {
-
+    public Tx newTx(String toAddress, Long amount, CharSequence password) throws
+            TxBuilderException, MnemonicException.MnemonicLengthException {
+        return newTx(new String[]{toAddress}, new Long[]{amount}, password);
     }
 
+
+    public Tx newTx(String[] toAddresses, Long[] amounts, CharSequence password) throws
+            TxBuilderException, MnemonicException.MnemonicLengthException {
+        List<Out> outs = AbstractDb.hdAccountProvider.getUnspendOutByHDAccount(hdSeedId);
+
+        Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(), Arrays
+                .asList(amounts), Arrays.asList(toAddresses));
+        List<DesktopHDMAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
+        assert signingAddresses.size() == tx.getIns().size();
+
+        DeterministicKey master = masterKey(password);
+        if (master == null) {
+            return null;
+        }
+        DeterministicKey accountKey = getAccount(master);
+        DeterministicKey external = getChainRootKey(accountKey, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+        DeterministicKey internal = getChainRootKey(accountKey, AbstractHD.PathType.INTERNAL_ROOT_PATH);
+        accountKey.wipe();
+        master.wipe();
+        List<byte[]> unsignedHashes = tx.getUnsignedInHashes();
+        assert unsignedHashes.size() == signingAddresses.size();
+        ArrayList<byte[]> signatures = new ArrayList<byte[]>();
+        HashMap<String, DeterministicKey> addressToKeyMap = new HashMap<String, DeterministicKey>
+                (signingAddresses.size());
+
+        for (int i = 0;
+             i < signingAddresses.size();
+             i++) {
+            DesktopHDMAddress a = signingAddresses.get(i);
+            byte[] unsigned = unsignedHashes.get(i);
+
+            if (!addressToKeyMap.containsKey(a.getAddress())) {
+                if (a.getPathType() == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
+                    addressToKeyMap.put(a.getAddress(), external.deriveSoftened(a.getIndex()));
+                } else {
+                    addressToKeyMap.put(a.getAddress(), internal.deriveSoftened(a.getIndex()));
+                }
+            }
+
+            DeterministicKey key = addressToKeyMap.get(a.getAddress());
+            assert key != null;
+
+            TransactionSignature signature = new TransactionSignature(key.sign(unsigned, null),
+                    TransactionSignature.SigHash.ALL, false);
+            signatures.add(ScriptBuilder.createInputScript(signature, key).getProgram());
+        }
+
+        tx.signWithSignatures(signatures);
+        assert tx.verifySignatures();
+
+        external.wipe();
+        internal.wipe();
+        for (DeterministicKey key : addressToKeyMap.values()) {
+            key.wipe();
+        }
+
+        return tx;
+    }
+
+
+    public List<DesktopHDMAddress> getRelatedAddressesForTx(Tx tx, List<String> inAddresses) {
+        List<String> outAddressList = new ArrayList<String>();
+        List<DesktopHDMAddress> hdAccountAddressList = new ArrayList<DesktopHDMAddress>();
+        for (Out out : tx.getOuts()) {
+            String outAddress = out.getOutAddress();
+            outAddressList.add(outAddress);
+        }
+        List<DesktopHDMAddress> belongAccountOfOutList = AbstractDb.desktopTxProvider.belongAccount(DesktopHDMKeychain.this, outAddressList);
+        if (belongAccountOfOutList != null
+                && belongAccountOfOutList.size() > 0) {
+            hdAccountAddressList.addAll(belongAccountOfOutList);
+        }
+
+        List<DesktopHDMAddress> belongAccountOfInList = getAddressFromIn(inAddresses);
+        if (belongAccountOfInList != null && belongAccountOfInList.size() > 0) {
+            hdAccountAddressList.addAll(belongAccountOfInList);
+        }
+
+        return hdAccountAddressList;
+    }
+
+    private List<DesktopHDMAddress> getAddressFromIn(List<String> addresses) {
+
+        List<DesktopHDMAddress> hdAccountAddressList = AbstractDb.desktopTxProvider.belongAccount(DesktopHDMKeychain.this, addresses);
+        return hdAccountAddressList;
+    }
+
+
+    private String getNewChangeAddress() {
+        return addressForPath(AbstractHD.PathType.INTERNAL_ROOT_PATH, issuedInternalIndex() + 1).getAddress();
+    }
+
+    private DesktopHDMAddress addressForPath(AbstractHD.PathType type, int index) {
+        assert index < (type == AbstractHD.PathType.EXTERNAL_ROOT_PATH ? allGeneratedExternalAddressCount()
+                : allGeneratedInternalAddressCount());
+        return AbstractDb.desktopTxProvider.addressForPath(DesktopHDMKeychain.this, type, index);
+    }
 
     public boolean isFromXRandom() {
         return isFromXRandom;
@@ -290,6 +387,10 @@ public class DesktopHDMKeychain extends AbstractHD {
         return PrivateKeyUtil.getFullencryptHDMKeyChain(isFromXRandom, encryptPrivKey);
     }
 
+    private List<DesktopHDMAddress> getSigningAddressesForInputs(List<In> inputs) {
+        return AbstractDb.desktopTxProvider.getSigningAddressesForInputs(DesktopHDMKeychain.this, inputs);
+    }
+
     public String getQRCodeFullEncryptPrivKey() {
         return QRCodeUtil.HDM_QR_CODE_FLAG
                 + getFullEncryptPrivKey();
@@ -298,7 +399,7 @@ public class DesktopHDMKeychain extends AbstractHD {
     @Override
     protected String getEncryptedHDSeed() {
 
-        String encrypted = AbstractDb.enDesktopAddressProvider.getEncryptHDSeed(hdSeedId);
+        String encrypted = AbstractDb.desktopAddressProvider.getEncryptHDSeed(hdSeedId);
         if (encrypted == null) {
             return null;
         }
@@ -308,11 +409,11 @@ public class DesktopHDMKeychain extends AbstractHD {
     @Override
     public String getEncryptedMnemonicSeed() {
 
-        return AbstractDb.enDesktopAddressProvider.getEncryptMnemonicSeed(hdSeedId).toUpperCase();
+        return AbstractDb.desktopAddressProvider.getEncryptMnemonicSeed(hdSeedId).toUpperCase();
     }
 
     public String getFirstAddressFromDb() {
-        return AbstractDb.enDesktopAddressProvider.getHDMFristAddress(hdSeedId);
+        return AbstractDb.desktopAddressProvider.getHDMFristAddress(hdSeedId);
     }
 
     public boolean checkWithPassword(CharSequence password) {

@@ -53,4 +53,10 @@ public interface IDesktopTxProvider {
     public int getUnspendOutCountByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
 
     public List<Out> getUnspendOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
+
+    public DesktopHDMAddress addressForPath(DesktopHDMKeychain keychain, AbstractHD.PathType type, int index);
+
+    public List<DesktopHDMAddress> getSigningAddressesForInputs(DesktopHDMKeychain keychain, List<In> inList);
+
+    public List<DesktopHDMAddress> belongAccount(DesktopHDMKeychain keychain, List<String> addresses);
 }

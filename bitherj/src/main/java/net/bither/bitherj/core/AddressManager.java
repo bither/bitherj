@@ -24,7 +24,6 @@ import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
-import org.omg.CORBA.PUBLIC_MEMBER;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,7 +141,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
     }
 
     private void initDesktopHDMKeychain() {
-        List<Integer> seeds = AbstractDb.enDesktopAddressProvider.getDesktopKeyChainSeed();
+        List<Integer> seeds = AbstractDb.desktopAddressProvider.getDesktopKeyChainSeed();
         if (seeds.size() > 0) {
             desktopHDMKeychains = new ArrayList<DesktopHDMKeychain>();
             for (int i = 0; i < seeds.size(); i++) {
