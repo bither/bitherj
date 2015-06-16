@@ -18,8 +18,12 @@
 
 package net.bither.bitherj.db;
 
+import net.bither.bitherj.core.AbstractHD;
 import net.bither.bitherj.core.DesktopHDMAddress;
+import net.bither.bitherj.core.Tx;
+import org.omg.CORBA.PUBLIC_MEMBER;
 
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -29,4 +33,20 @@ public interface IDesktopTxProvider {
     public void addAddress(List<DesktopHDMAddress> address);
 
     public int maxHDMAddressPubIndex();
+
+    public String externalAddress();
+
+    public boolean hasAddress();
+
+    public long getHDAccountConfirmedBanlance(int hdSeedId);
+
+    public HashSet<String> getBelongAccountAddresses(List<String> addressList);
+
+    public void updateIssuedIndex(AbstractHD.PathType pathType, int index);
+
+    public int issuedIndex(AbstractHD.PathType pathType);
+
+    public int allGeneratedAddressCount(AbstractHD.PathType pathType);
+
+    public List<Tx> getHDAccountUnconfirmedTx();
 }
