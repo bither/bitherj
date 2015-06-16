@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.*;
 
@@ -125,7 +126,12 @@ public class DesktopHDMKeychain extends AbstractHD {
     }
 
     public void addAccountKey(byte[] firstByte, byte[] secondByte) {
-        //todo sort
+        if (new BigInteger(1, firstByte).compareTo(new BigInteger(1, secondByte)) > 0) {
+            byte[] temp = firstByte;
+            firstByte = secondByte;
+            secondByte = temp;
+        }
+
         DeterministicKey firstAccountKey = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                 (firstByte);
         DeterministicKey secondAccountKey = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
@@ -167,10 +173,12 @@ public class DesktopHDMKeychain extends AbstractHD {
                 pubs.hot = subExternalPub1;
                 pubs.cold = subExternalPub2;
                 pubs.remote = subExternalPub3;
+                pubs.index = i;
                 DesktopHDMAddress desktopHDMAddress = new DesktopHDMAddress(pubs, pathType, DesktopHDMKeychain.this, false);
                 desktopHDMAddresses.add(desktopHDMAddress);
-                AbstractDb.desktopTxProvider.addAddress(desktopHDMAddresses);
+
             }
+            AbstractDb.desktopTxProvider.addAddress(desktopHDMAddresses);
         } else {
             List<DesktopHDMAddress> desktopHDMAddresses = new ArrayList<DesktopHDMAddress>();
             List<byte[]> internalPubs = AbstractDb.enDesktopAddressProvider.getInternalPubs();
@@ -190,10 +198,12 @@ public class DesktopHDMKeychain extends AbstractHD {
                 pubs.hot = subInternalPub1;
                 pubs.cold = subInternalPub2;
                 pubs.remote = subInternalPub3;
+                pubs.index = i;
                 DesktopHDMAddress desktopHDMAddress = new DesktopHDMAddress(pubs, pathType, DesktopHDMKeychain.this, false);
                 desktopHDMAddresses.add(desktopHDMAddress);
-                AbstractDb.desktopTxProvider.addAddress(desktopHDMAddresses);
+
             }
+            AbstractDb.desktopTxProvider.addAddress(desktopHDMAddresses);
         }
 
 
