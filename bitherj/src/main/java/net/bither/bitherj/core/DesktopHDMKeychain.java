@@ -465,6 +465,27 @@ public class DesktopHDMKeychain extends AbstractHD {
                 deltaBalance);
     }
 
+
+    public int elementCountForBloomFilter() {
+        return allGeneratedExternalAddressCount() * 2 + AbstractDb.desktopTxProvider
+                .getUnspendOutCountByHDAccountWithPath(getHdSeedId(), AbstractHD.PathType
+                        .INTERNAL_ROOT_PATH);
+    }
+
+    public void addElementsForBloomFilter(BloomFilter filter) {
+        List<HDMAddress.Pubs> pubses = AbstractDb.desktopTxProvider.getPubs(AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+        for (HDMAddress.Pubs pub : pubses) {
+            byte[] pubByte = pub.getMultiSigScript().getProgram();
+            filter.insert(pubByte);
+            filter.insert(Utils.sha256hash160(pubByte));
+        }
+        List<Out> outs = AbstractDb.desktopTxProvider.getUnspendOutByHDAccountWithPath
+                (getHdSeedId(), AbstractHD.PathType.INTERNAL_ROOT_PATH);
+        for (Out out : outs) {
+            filter.insert(out.getOutpointData());
+        }
+    }
+
     private long calculateUnconfirmedBalance() {
         long balance = 0;
 

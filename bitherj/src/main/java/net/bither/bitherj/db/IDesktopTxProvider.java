@@ -18,9 +18,7 @@
 
 package net.bither.bitherj.db;
 
-import net.bither.bitherj.core.AbstractHD;
-import net.bither.bitherj.core.DesktopHDMAddress;
-import net.bither.bitherj.core.Tx;
+import net.bither.bitherj.core.*;
 import org.omg.CORBA.PUBLIC_MEMBER;
 
 import java.util.HashSet;
@@ -49,4 +47,10 @@ public interface IDesktopTxProvider {
     public int allGeneratedAddressCount(AbstractHD.PathType pathType);
 
     public List<Tx> getHDAccountUnconfirmedTx();
+
+    public List<HDMAddress.Pubs> getPubs(AbstractHD.PathType pathType);
+
+    public int getUnspendOutCountByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
+
+    public List<Out> getUnspendOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
 }
