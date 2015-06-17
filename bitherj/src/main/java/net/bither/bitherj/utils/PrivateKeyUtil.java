@@ -17,10 +17,7 @@
 package net.bither.bitherj.utils;
 
 import net.bither.bitherj.BitherjSettings;
-import net.bither.bitherj.core.Address;
-import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.core.HDAccount;
-import net.bither.bitherj.core.HDMKeychain;
+import net.bither.bitherj.core.*;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
@@ -393,6 +390,21 @@ public class PrivateKeyUtil {
                         + hdAccount.getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
             } catch (AddressFormatException e) {
                 e.printStackTrace();
+            }
+        }
+
+        if (AddressManager.getInstance().hasDesktopHDMKeychain()) {
+            for (DesktopHDMKeychain desktopHDMKeychain : AddressManager.getInstance().getDesktopHDMKeychains()) {
+                if (desktopHDMKeychain != null) {
+                    try {
+                        String address = desktopHDMKeychain.getFirstAddressFromDb();
+                        backupString += QRCodeUtil.HDM_QR_CODE_FLAG + Base58.bas58ToHexWithAddress(address)
+                                + QRCodeUtil.QR_CODE_SPLIT
+                                + desktopHDMKeychain.getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
+                    } catch (AddressFormatException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
         return backupString;
