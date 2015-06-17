@@ -535,23 +535,23 @@ public class DesktopHDMKeychain extends AbstractHD {
         log.info("HD supplied {} external addresses", as.size());
     }
 
-    public void onNewTx(Tx tx, List<HDAccount.HDAccountAddress> relatedAddresses, Tx.TxNotificationType txNotificationType) {
+    public void onNewTx(Tx tx, List<DesktopHDMAddress> relatedAddresses, Tx.TxNotificationType txNotificationType) {
         if (relatedAddresses == null || relatedAddresses.size() == 0) {
             return;
         }
 
         int maxInternal = -1, maxExternal = -1;
-//        for (HDAccount.HDAccountAddress a : relatedAddresses) {
-//            if (a.pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-//                if (a.index > maxExternal) {
-//                    maxExternal = a.index;
-//                }
-//            } else {
-//                if (a.index > maxInternal) {
-//                    maxInternal = a.index;
-//                }
-//            }
-//        }
+        for (DesktopHDMAddress a : relatedAddresses) {
+            if (a.getPathType() == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
+                if (a.getIndex() > maxExternal) {
+                    maxExternal = a.getIndex();
+                }
+            } else {
+                if (a.getIndex() > maxInternal) {
+                    maxInternal = a.getIndex();
+                }
+            }
+        }
 
         log.info("HD on new tx issued ex {}, issued in {}", maxExternal, maxInternal);
         if (maxExternal >= 0 && maxExternal > issuedExternalIndex()) {

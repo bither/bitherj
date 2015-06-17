@@ -54,6 +54,9 @@ public class Out extends Message {
     private long coinDepth;
 
     private int hdAccountId = -1;
+
+    private int desktopHDMAccountId = -1;
+
     private Tx tx;
 
 
@@ -222,6 +225,14 @@ public class Out extends Message {
 
     public void setHDAccountId(int hdAccountId) {
         this.hdAccountId = hdAccountId;
+    }
+
+    public int getDesktopHDMAccountId() {
+        return desktopHDMAccountId;
+    }
+
+    public void setDesktopHDMAccountId(int desktopHDMAccountId) {
+        this.desktopHDMAccountId = desktopHDMAccountId;
     }
 
     public byte[] getOutpointData() {

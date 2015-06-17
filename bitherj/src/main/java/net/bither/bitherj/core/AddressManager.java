@@ -180,16 +180,28 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
 
         HashSet<String> needNotifyAddressHashSet = new HashSet<String>();
         HashSet<String> needNotifyHDAccountHS = new HashSet<String>();
+        HashSet<String> needNotifyDesktopHDMHS = new HashSet<String>();
+
         List<HDAccount.HDAccountAddress> relatedAddresses = new ArrayList<HDAccount.HDAccountAddress>();
+        List<DesktopHDMAddress> relatedDesktopHDMAddresses = new ArrayList<DesktopHDMAddress>();
+
         HashSet<String> relatedAddressesHS = new HashSet<String>();
+        HashSet<String> relatedDesktopHDMAddressesHS = new HashSet<String>();
 
 
         if (hdAccount != null) {
             relatedAddresses = hdAccount.getRelatedAddressesForTx(compressedTx, inAddresses);
         }
+        if (hasDesktopHDMKeychain()) {
+            DesktopHDMKeychain desktopHDMKeychain = desktopHDMKeychains.get(0);
+            relatedDesktopHDMAddresses = desktopHDMKeychain.getRelatedAddressesForTx(compressedTx, inAddresses);
+        }
 
         for (HDAccount.HDAccountAddress hdAccountAddress : relatedAddresses) {
             relatedAddressesHS.add(hdAccountAddress.getAddress());
+        }
+        for (DesktopHDMAddress desktopHDMAddress : relatedDesktopHDMAddresses) {
+            relatedDesktopHDMAddressesHS.add(desktopHDMAddress.getAddress());
         }
 
 
@@ -201,6 +213,9 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
 
             if (relatedAddressesHS.contains(outAddress)) {
                 needNotifyHDAccountHS.add(outAddress);
+            }
+            if (relatedDesktopHDMAddressesHS.contains(outAddress)) {
+                needNotifyDesktopHDMHS.add(outAddress);
             }
 
         }
@@ -216,6 +231,9 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
                 if (needNotifyHDAccountHS.contains(outAddress)) {
                     needNotifyHDAccountHS.remove(outAddress);
                 }
+                if (needNotifyDesktopHDMHS.contains(outAddress)) {
+                    needNotifyDesktopHDMHS.remove(outAddress);
+                }
 
             }
             isRegister = true;
@@ -228,13 +246,17 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
                 if (relatedAddressesHS.contains(address)) {
                     needNotifyHDAccountHS.add(address);
                 }
+                if (relatedDesktopHDMAddressesHS.contains(address)) {
+                    needNotifyDesktopHDMHS.add(address);
+                }
             }
             isRegister = needNotifyAddressHashSet.size() > 0
-                    || needNotifyHDAccountHS.size() > 0;
+                    || needNotifyHDAccountHS.size() > 0 || needNotifyDesktopHDMHS.size() > 0;
         }
 
 
-        if (needNotifyAddressHashSet.size() > 0 || needNotifyHDAccountHS.size() > 0) {
+        if (needNotifyAddressHashSet.size() > 0
+                || needNotifyHDAccountHS.size() > 0 || needNotifyDesktopHDMHS.size() > 0) {
             AbstractDb.txProvider.add(compressedTx);
             log.info("add tx {} into db", Utils.hashToString(tx.getTxHash()));
         }
@@ -251,8 +273,18 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             }
         }
 
+        List<DesktopHDMAddress> needNotifityDesktopHDMAddressList = new ArrayList<DesktopHDMAddress>();
+        for (DesktopHDMAddress desktopHDMAddress : relatedDesktopHDMAddresses) {
+            if (needNotifityDesktopHDMAddressList.contains(desktopHDMAddress.getAddress())) {
+                needNotifityDesktopHDMAddressList.add(desktopHDMAddress);
+            }
+        }
         if (needNotifityAddressList.size() > 0) {
             getHdAccount().onNewTx(tx, needNotifityAddressList, txNotificationType);
+        }
+        if (needNotifityDesktopHDMAddressList.size() > 0) {
+            DesktopHDMKeychain desktopHDMKeychain = desktopHDMKeychains.get(0);
+            desktopHDMKeychain.onNewTx(tx, needNotifityDesktopHDMAddressList, txNotificationType);
         }
         return isRegister;
     }
