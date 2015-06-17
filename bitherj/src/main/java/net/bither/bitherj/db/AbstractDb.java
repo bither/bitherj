@@ -142,12 +142,14 @@ public abstract class AbstractDb {
             ", hd_address text not null" +
             ", is_xrandom integer not null);";
     public static final String CREATE_MULTI_SIGN_SET = "create table if not exists enterprise_multi_sign_set " +
-            " ( multi_sign_n integer not null" +
+            " (multi_sign_id integer not null primary key autoincrement" +
+            ", multi_sign_n integer not null" +
             ", multi_sign_m integer not null);";
 
     public static final String CREATE_ENTERPRISE_HDM_ADDRESSES_SQL = "create table if not exists enterprise_hdm_addresses " +
             "(hdm_index integer not null" +
             ", address text not null" +
+            ", pub_key_0 text" +
             ", pub_key_1 text" +
             ", pub_key_2 text" +
             ", pub_key_3 text" +
@@ -157,7 +159,6 @@ public abstract class AbstractDb {
             ", pub_key_7 text" +
             ", pub_key_8 text" +
             ", pub_key_9 text" +
-            ", pub_key_10 text" +
             ", is_synced integer " +
             ", primary key (hdm_index));";
 
@@ -370,8 +371,9 @@ public abstract class AbstractDb {
     }
 
     public interface EnterpriseMultiSignSetColumns {
-        public static final String MultiSignN = "multi_sign_n";
-        public static final String MultiSignM = "multi_sign_m";
+        public static final String MULTI_SIGN_N = "multi_sign_n";
+        public static final String MULTI_SIGN_M = "multi_sign_m";
+        public static final String MULTI_SIGN_ID = "multi_sign_id";
     }
 
 

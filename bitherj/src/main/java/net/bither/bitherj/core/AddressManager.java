@@ -453,6 +453,9 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             }
             result.addAll(this.privKeyAddresses);
             result.addAll(this.watchOnlyAddresses);
+            if (hasEnterpriseHDMKeychain()) {
+                result.addAll(getEnterpriseHDMKeychain().getAddresses());
+            }
             return result;
         }
     }

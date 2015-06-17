@@ -21,8 +21,10 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.script.ScriptBuilder;
+import net.bither.bitherj.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -59,7 +61,7 @@ public class EnterpriseHDMTxSignaturePool {
             TransactionSignature txSig = new TransactionSignature(ECKey.ECDSASignature
                     .decodeFromDER(sigs.get(i)), TransactionSignature.SigHash.ALL, false);
             if (i == 0) {
-                byte[] pub = recoverPub(txSig, unsignedHashes().get(i));
+                byte[] pub = recoverPub(sigs.get(i), unsignedHashes().get(i));
                 if (pub == null) {
                     break;
                 }
@@ -75,6 +77,10 @@ public class EnterpriseHDMTxSignaturePool {
         }
         signatures.put(Integer.valueOf(pubIndex), txSigs);
         return true;
+    }
+
+    public void clearSignatures() {
+        signatures.clear();
     }
 
     public Tx sign() {
@@ -110,6 +116,10 @@ public class EnterpriseHDMTxSignaturePool {
         return tx.getUnsignedInHashesForHDM(multisigProgram);
     }
 
+    public Tx tx() {
+        return tx;
+    }
+
     public boolean satisfied() {
         return signatureCount() >= threshold();
     }
@@ -121,7 +131,7 @@ public class EnterpriseHDMTxSignaturePool {
     public List<Integer> signaturePubIndexes() {
         ArrayList<Integer> indexes = new ArrayList<Integer>();
         indexes.addAll(signatures.keySet());
-        indexes.sort(null);
+        Collections.sort(indexes);
         return indexes;
     }
 
@@ -129,8 +139,25 @@ public class EnterpriseHDMTxSignaturePool {
         return threshold;
     }
 
-    private byte[] recoverPub(TransactionSignature signature, byte[] hash) {
-        // TODO EnterpriseHDMTxSignaturePool recoverPub
+    public int pubCount() {
+        return pubs.size();
+    }
+
+    private byte[] recoverPub(byte[] signature, byte[] hash) {
+        for (int i = 0; i < pubs.size(); i++) {
+            byte[] pubByte = pubs.get(i);
+            if (ECKey.verify(hash, signature, pubByte)) {
+                return pubByte;
+            }
+        }
         return null;
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " :\n tx0: " + Utils.bytesToHexString(unsignedHashes
+                ().get(0)) + "\n threshold: " + threshold() + "\n program: " + Utils
+                .bytesToHexString(multisigProgram);
+    }
+
 }
