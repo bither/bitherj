@@ -95,6 +95,46 @@ public class DesktopHDMKeychain extends AbstractHD {
     }
 
 
+    // From DB
+    public DesktopHDMKeychain(int seedId) {
+        this.hdSeedId = seedId;
+        isFromXRandom = AbstractDb.desktopAddressProvider.isHDSeedFromXRandom(getHdSeedId());
+        updateBalance();
+    }
+
+    // Import
+    public DesktopHDMKeychain(EncryptedData encryptedMnemonicSeed, CharSequence password) throws
+            HDMBitherIdNotMatchException, MnemonicException.MnemonicLengthException {
+        mnemonicSeed = encryptedMnemonicSeed.decrypt(password);
+        hdSeed = seedFromMnemonic(mnemonicSeed);
+        isFromXRandom = encryptedMnemonicSeed.isXRandom();
+        EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
+        ArrayList<DesktopHDMAddress> as = new ArrayList<DesktopHDMAddress>();
+        ArrayList<HDMAddress.Pubs> uncompPubs = new ArrayList<HDMAddress.Pubs>();
+
+        ECKey k = new ECKey(mnemonicSeed, null);
+        String address = k.toAddress();
+        k.clearPrivateKey();
+        String firstAddress = getFirstAddressFromSeed(password);
+        wipeMnemonicSeed();
+        wipeHDSeed();
+
+        this.hdSeedId = AbstractDb.desktopAddressProvider.addHDKey(encryptedMnemonicSeed
+                        .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
+                isFromXRandom, address, null, null);
+        if (as.size() > 0) {
+            //   EnDesktopAddressProvider.getInstance().completeHDMAddresses(getHdSeedId(), as);
+
+            if (uncompPubs.size() > 0) {
+                //  EnDesktopAddressProvider.getInstance().prepareHDMAddresses(getHdSeedId(), uncompPubs);
+                for (HDMAddress.Pubs p : uncompPubs) {
+                    AbstractDb.addressProvider.setHDMPubsRemote(getHdSeedId(), p.index, p.remote);
+                }
+            }
+        }
+    }
+
+
     private void initHDAccount(DeterministicKey master, EncryptedData encryptedMnemonicSeed,
                                EncryptedData encryptedHDSeed, boolean isSyncedComplete) {
         String firstAddress;
@@ -203,46 +243,6 @@ public class DesktopHDMKeychain extends AbstractHD {
 
 
     }
-
-    // From DB
-    public DesktopHDMKeychain(int seedId) {
-        this.hdSeedId = seedId;
-        isFromXRandom = AbstractDb.desktopAddressProvider.isHDSeedFromXRandom(getHdSeedId());
-        updateBalance();
-    }
-
-    // Import
-    public DesktopHDMKeychain(EncryptedData encryptedMnemonicSeed, CharSequence password) throws
-            HDMBitherIdNotMatchException, MnemonicException.MnemonicLengthException {
-        mnemonicSeed = encryptedMnemonicSeed.decrypt(password);
-        hdSeed = seedFromMnemonic(mnemonicSeed);
-        isFromXRandom = encryptedMnemonicSeed.isXRandom();
-        EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
-        ArrayList<DesktopHDMAddress> as = new ArrayList<DesktopHDMAddress>();
-        ArrayList<HDMAddress.Pubs> uncompPubs = new ArrayList<HDMAddress.Pubs>();
-
-        ECKey k = new ECKey(mnemonicSeed, null);
-        String address = k.toAddress();
-        k.clearPrivateKey();
-        String firstAddress = getFirstAddressFromSeed(password);
-        wipeMnemonicSeed();
-        wipeHDSeed();
-
-        this.hdSeedId = AbstractDb.desktopAddressProvider.addHDKey(encryptedMnemonicSeed
-                        .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
-                isFromXRandom, address, null, null);
-        if (as.size() > 0) {
-            //   EnDesktopAddressProvider.getInstance().completeHDMAddresses(getHdSeedId(), as);
-
-            if (uncompPubs.size() > 0) {
-                //  EnDesktopAddressProvider.getInstance().prepareHDMAddresses(getHdSeedId(), uncompPubs);
-                for (HDMAddress.Pubs p : uncompPubs) {
-                    AbstractDb.addressProvider.setHDMPubsRemote(getHdSeedId(), p.index, p.remote);
-                }
-            }
-        }
-    }
-
 
     public boolean hasDesktopHDMAddress() {
         return AbstractDb.desktopTxProvider.hasAddress();
@@ -646,6 +646,10 @@ public class DesktopHDMKeychain extends AbstractHD {
     public void updateBalance() {
         this.balance = AbstractDb.desktopTxProvider.getHDAccountConfirmedBanlance(hdSeedId)
                 + calculateUnconfirmedBalance();
+    }
+
+    public long getBalance() {
+        return this.balance;
     }
 
     public HashSet<String> getBelongAccountAddresses(List<String> addressList) {
