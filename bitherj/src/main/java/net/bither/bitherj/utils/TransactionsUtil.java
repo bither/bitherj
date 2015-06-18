@@ -20,16 +20,7 @@ package net.bither.bitherj.utils;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.api.BitherMytransactionsApi;
-import net.bither.bitherj.core.AbstractHD;
-import net.bither.bitherj.core.Address;
-import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.core.Block;
-import net.bither.bitherj.core.BlockChain;
-import net.bither.bitherj.core.HDAccount;
-import net.bither.bitherj.core.HDMAddress;
-import net.bither.bitherj.core.In;
-import net.bither.bitherj.core.Tx;
-import net.bither.bitherj.core.UnSignTransaction;
+import net.bither.bitherj.core.*;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
@@ -189,6 +180,11 @@ public class TransactionsUtil {
             getTxForHDAccount();
 
         }
+        if (AddressManager.getInstance().hasDesktopHDMKeychain()) {
+            DesktopHDMKeychain desktopHDMKeychain = AddressManager.getInstance().getDesktopHDMKeychains().get(0);
+            getTxForDesktopHDM(desktopHDMKeychain);
+
+        }
 
     }
 
@@ -253,6 +249,77 @@ public class TransactionsUtil {
                 } else {
                     hasTx = false;
                     AbstractDb.hdAccountProvider.updateSyncdForIndex(pathType, addressIndex);
+                }
+            }
+            addressIndex++;
+        }
+
+
+    }
+
+    private static void getTxForDesktopHDM(DesktopHDMKeychain desktopHDMKeychain) throws Exception {
+        for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
+            DesktopHDMAddress desktopHDMAddress;
+            boolean hasTx = true;
+            int addressIndex = 0;
+            while (hasTx) {
+                Block storedBlock = BlockChain.getInstance().getLastBlock();
+                int storeBlockHeight = storedBlock.getBlockNo();
+                desktopHDMAddress = AbstractDb.desktopTxProvider.addressForPath(desktopHDMKeychain,
+                        pathType, addressIndex);
+                if (desktopHDMAddress == null) {
+                    hasTx = false;
+                    log.warn("AccountAddress", "address is null path {} ,index {}", pathType, addressIndex);
+                    continue;
+                }
+                if (desktopHDMAddress.isSyncComplete()) {
+                    addressIndex++;
+                    continue;
+                }
+                List<Tx> transactions = new ArrayList<Tx>();
+                int apiBlockCount = 0;
+                int txSum = 0;
+                boolean needGetTxs = true;
+                int page = 1;
+                while (needGetTxs) {
+                    BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
+                            desktopHDMAddress.getAddress(), page);
+                    bitherMytransactionsApi.handleHttpGet();
+                    String txResult = bitherMytransactionsApi.getResult();
+                    JSONObject jsonObject = new JSONObject(txResult);
+                    if (!jsonObject.isNull(BLOCK_COUNT)) {
+                        apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
+                    }
+                    int txCnt = jsonObject.getInt(TX_CNT);
+                    List<Tx> temp = TransactionsUtil.getTransactionsFromBither(
+                            jsonObject, storeBlockHeight);
+                    transactions.addAll(temp);
+                    txSum = txSum + transactions.size();
+                    needGetTxs = txSum < txCnt;
+                    page++;
+                }
+                if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
+                    BlockChain.getInstance().rollbackBlock(apiBlockCount);
+                }
+
+                transactions = AddressManager.getInstance().compressTxsForDesktopHDM(transactions);
+
+                Collections.sort(transactions, new ComparatorTx());
+                desktopHDMKeychain.initTxs(transactions);
+                desktopHDMAddress.setSyncComplete(true);
+                desktopHDMKeychain.updateSyncComplete(desktopHDMAddress);
+
+                if (transactions.size() > 0) {
+                    if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
+                        desktopHDMKeychain.updateIssuedExternalIndex(addressIndex);
+                    } else {
+                        desktopHDMKeychain.updateIssuedInternalIndex(addressIndex);
+                    }
+                    desktopHDMKeychain.supplyEnoughKeys(false);
+                    hasTx = true;
+                } else {
+                    hasTx = false;
+                    AbstractDb.desktopTxProvider.updateSyncdForIndex(pathType, addressIndex);
                 }
             }
             addressIndex++;

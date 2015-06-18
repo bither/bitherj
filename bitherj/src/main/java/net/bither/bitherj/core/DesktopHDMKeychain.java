@@ -244,9 +244,27 @@ public class DesktopHDMKeychain extends AbstractHD {
 
     }
 
+
+    public boolean initTxs(List<Tx> txs) {
+        AbstractDb.txProvider.addTxs(txs);
+        notificatTx(null, Tx.TxNotificationType.txFromApi);
+        return true;
+    }
+
+    public void notificatTx(Tx tx, Tx.TxNotificationType txNotificationType) {
+        long deltaBalance = getDeltaBalance();
+        AbstractApp.notificationService.notificatTx(DesktopHDMKeychainPlaceHolder
+                , tx, txNotificationType, deltaBalance);
+    }
+
     public boolean hasDesktopHDMAddress() {
         return AbstractDb.desktopTxProvider.hasAddress();
     }
+
+    public void updateSyncComplete(DesktopHDMAddress accountAddress) {
+        AbstractDb.desktopTxProvider.updateSyncdComplete(accountAddress);
+    }
+
 
     private DeterministicKey externalChainRoot(CharSequence password) throws MnemonicException.MnemonicLengthException {
         DeterministicKey master = masterKey(password);

@@ -46,6 +46,10 @@ public interface IDesktopTxProvider {
 
     public int allGeneratedAddressCount(AbstractHD.PathType pathType);
 
+    public void updateSyncdForIndex(AbstractHD.PathType pathType, int index);
+
+    public void updateSyncdComplete(DesktopHDMAddress address);
+
     public List<Tx> getHDAccountUnconfirmedTx();
 
     public List<HDMAddress.Pubs> getPubs(AbstractHD.PathType pathType);
