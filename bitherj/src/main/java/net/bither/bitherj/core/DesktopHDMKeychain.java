@@ -50,6 +50,12 @@ public class DesktopHDMKeychain extends AbstractHD {
     private static final int LOOK_AHEAD_SIZE = 100;
 
 
+    public static interface DesktopHDMFetchOtherSignatureDelegate {
+        List<TransactionSignature> getOtherSignature(Tx tx,
+                                                     List<byte[]> unsignHash, List<PathTypeIndex> pathTypeIndexLsit);
+    }
+
+
     private static final Logger log = LoggerFactory.getLogger(DesktopHDMKeychain.class);
 
 
@@ -292,70 +298,131 @@ public class DesktopHDMKeychain extends AbstractHD {
         return getRelatedAddressesForTx(tx, inAddresses).size() > 0;
     }
 
-    public Tx newTx(String toAddress, Long amount, CharSequence password) throws
+    public Tx newTx(String toAddress, Long amount) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
-        return newTx(new String[]{toAddress}, new Long[]{amount}, password);
+        return newTx(new String[]{toAddress}, new Long[]{amount});
     }
 
 
-    public Tx newTx(String[] toAddresses, Long[] amounts, CharSequence password) throws
+    public Tx newTx(String[] toAddresses, Long[] amounts) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
-        List<Out> outs = AbstractDb.hdAccountProvider.getUnspendOutByHDAccount(hdSeedId);
+        List<Out> outs = AbstractDb.desktopTxProvider.getUnspendOutByHDAccount(hdSeedId);
 
         Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(), Arrays
                 .asList(amounts), Arrays.asList(toAddresses));
         List<DesktopHDMAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
         assert signingAddresses.size() == tx.getIns().size();
 
-        DeterministicKey master = masterKey(password);
-        if (master == null) {
-            return null;
-        }
-        DeterministicKey accountKey = getAccount(master);
-        DeterministicKey external = getChainRootKey(accountKey, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
-        DeterministicKey internal = getChainRootKey(accountKey, AbstractHD.PathType.INTERNAL_ROOT_PATH);
-        accountKey.wipe();
-        master.wipe();
         List<byte[]> unsignedHashes = tx.getUnsignedInHashes();
+
         assert unsignedHashes.size() == signingAddresses.size();
-        ArrayList<byte[]> signatures = new ArrayList<byte[]>();
-        HashMap<String, DeterministicKey> addressToKeyMap = new HashMap<String, DeterministicKey>
-                (signingAddresses.size());
 
-        for (int i = 0;
-             i < signingAddresses.size();
-             i++) {
-            DesktopHDMAddress a = signingAddresses.get(i);
-            byte[] unsigned = unsignedHashes.get(i);
-
-            if (!addressToKeyMap.containsKey(a.getAddress())) {
-                if (a.getPathType() == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-                    addressToKeyMap.put(a.getAddress(), external.deriveSoftened(a.getIndex()));
-                } else {
-                    addressToKeyMap.put(a.getAddress(), internal.deriveSoftened(a.getIndex()));
-                }
-            }
-
-            DeterministicKey key = addressToKeyMap.get(a.getAddress());
-            assert key != null;
-
-            TransactionSignature signature = new TransactionSignature(key.sign(unsigned, null),
-                    TransactionSignature.SigHash.ALL, false);
-            signatures.add(ScriptBuilder.createInputScript(signature, key).getProgram());
-        }
-
-        tx.signWithSignatures(signatures);
+//        DeterministicKey master = masterKey(password);
+//        if (master == null) {
+//            return null;
+//        }
+//        DeterministicKey accountKey = getAccount(master);
+//        DeterministicKey external = getChainRootKey(accountKey, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+//        DeterministicKey internal = getChainRootKey(accountKey, AbstractHD.PathType.INTERNAL_ROOT_PATH);
+//        accountKey.wipe();
+//        master.wipe();
+//        ArrayList<byte[]> signatures = new ArrayList<byte[]>();
+//        HashMap<String, DeterministicKey> addressToKeyMap = new HashMap<String, DeterministicKey>
+//                (signingAddresses.size());
+//
+//        for (int i = 0;
+//             i < signingAddresses.size();
+//             i++) {
+//            DesktopHDMAddress a = signingAddresses.get(i);
+//            byte[] unsigned = unsignedHashes.get(i);
+//
+//            if (!addressToKeyMap.containsKey(a.getAddress())) {
+//                if (a.getPathType() == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
+//                    addressToKeyMap.put(a.getAddress(), external.deriveSoftened(a.getIndex()));
+//                } else {
+//                    addressToKeyMap.put(a.getAddress(), internal.deriveSoftened(a.getIndex()));
+//                }
+//            }
+//
+//            DeterministicKey key = addressToKeyMap.get(a.getAddress());
+//            assert key != null;
+//
+//            TransactionSignature signature = new TransactionSignature(key.sign(unsigned, null),
+//                    TransactionSignature.SigHash.ALL, false);
+//            signatures.add(ScriptBuilder.createInputScript(signature, key).getProgram());
+//        }
+//
+//        tx.signWithSignatures(signatures);
         assert tx.verifySignatures();
 
-        external.wipe();
-        internal.wipe();
-        for (DeterministicKey key : addressToKeyMap.values()) {
-            key.wipe();
-        }
+//        external.wipe();
+//        internal.wipe();
+//        for (DeterministicKey key : addressToKeyMap.values()) {
+//            key.wipe();
+//        }
 
         return tx;
     }
 
+    public void signTx(Tx tx, List<byte[]> unSignHash, CharSequence passphrase, List<PathTypeIndex> pathTypeIndexList,
+                       List<DesktopHDMAddress> desktopHDMAddresslist,
+                       DesktopHDMFetchOtherSignatureDelegate delegate) {
+        tx.signWithSignatures(this.signWithOther(unSignHash,
+                passphrase, tx, pathTypeIndexList, desktopHDMAddresslist, delegate));
+    }
+
+    public List<byte[]> signWithOther(List<byte[]> unsignHash, CharSequence password, Tx tx, List<PathTypeIndex> pathTypeIndexList, List<DesktopHDMAddress> desktopHDMAddresslist,
+                                      DesktopHDMFetchOtherSignatureDelegate delegate
+    ) {
+        ArrayList<TransactionSignature> hotSigs = signMyPart(unsignHash, password, pathTypeIndexList);
+        List<TransactionSignature> otherSigs = delegate.getOtherSignature(
+                tx, unsignHash, pathTypeIndexList);
+        assert hotSigs.size() == otherSigs.size() && hotSigs.size() == unsignHash.size();
+        return formatInScript(hotSigs, otherSigs, desktopHDMAddresslist);
+    }
+
+    public ArrayList<TransactionSignature> signMyPart(List<byte[]> unsignedHashes,
+                                                      CharSequence password,
+                                                      List<PathTypeIndex> pathTypeIndexList) {
+
+
+        ArrayList<TransactionSignature> sigs = new ArrayList<TransactionSignature>();
+        for (int i = 0;
+             i < unsignedHashes.size();
+             i++) {
+            PathTypeIndex pathTypeIndex = pathTypeIndexList.get(0);
+            DeterministicKey key;
+            if (pathTypeIndex.pathType == PathType.EXTERNAL_ROOT_PATH) {
+                key = getExternalKey(pathTypeIndex.index, password);
+            } else {
+                key = getInternalKey(pathTypeIndex.index, password);
+            }
+            TransactionSignature transactionSignature = new TransactionSignature(key.sign
+                    (unsignedHashes.get(i)), TransactionSignature.SigHash.ALL, false);
+            sigs.add(transactionSignature);
+            key.wipe();
+        }
+
+        return sigs;
+    }
+
+
+    public static List<byte[]> formatInScript(List<TransactionSignature> signs1,
+                                              List<TransactionSignature> signs2,
+                                              List<DesktopHDMAddress> addressList) {
+        List<byte[]> result = new ArrayList<byte[]>();
+        for (int i = 0;
+             i < signs1.size();
+             i++) {
+            DesktopHDMAddress a = addressList.get(i);
+            List<TransactionSignature> signs = new ArrayList<TransactionSignature>(2);
+            signs.add(signs1.get(i));
+            signs.add(signs2.get(i));
+            result.add(ScriptBuilder.createP2SHMultiSigInputScript(signs,
+                    a.getPubKey()).getProgram());
+        }
+        return result;
+    }
 
     public List<DesktopHDMAddress> getRelatedAddressesForTx(Tx tx, List<String> inAddresses) {
         List<String> outAddressList = new ArrayList<String>();

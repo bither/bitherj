@@ -40,6 +40,8 @@ public class QRCodeUtil {
 
     }
 
+
+    public static final String QR_CODE_SECONDARY_SPLIT = "$";
     public static final String QR_CODE_SPLIT = "/";
     public static final String XRANDOM_FLAG = "+";
     public static final String OLD_QR_CODE_SPLIT = ":";

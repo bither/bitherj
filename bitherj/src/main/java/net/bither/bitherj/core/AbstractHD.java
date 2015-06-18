@@ -48,6 +48,12 @@ public abstract class AbstractHD {
 
     }
 
+    public static class PathTypeIndex {
+        public PathType pathType;
+        public int index;
+    }
+
+
     public static PathType getTernalRootType(int value) {
         switch (value) {
             case 0:
@@ -143,6 +149,23 @@ public abstract class AbstractHD {
         String address = Utils.toAddress(key.getPubKeyHash());
         key.wipe();
         return address;
+    }
+
+    public DeterministicKey getInternalKey(int index, CharSequence password) {
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey externalChainRoot = getChainRootKey(accountKey, PathType.INTERNAL_ROOT_PATH);
+            DeterministicKey key = externalChainRoot.deriveSoftened(index);
+            master.wipe();
+            accountKey.wipe();
+            externalChainRoot.wipe();
+            return key;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public DeterministicKey getExternalKey(int index, CharSequence password) {

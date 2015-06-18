@@ -16,18 +16,14 @@
 
 package net.bither.bitherj.qrcode;
 
-import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.core.EnterpriseHDMAddress;
-import net.bither.bitherj.core.HDMAddress;
-import net.bither.bitherj.core.Tx;
+import net.bither.bitherj.core.*;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Utils;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -397,6 +393,82 @@ public class QRCodeTxTransport implements Serializable {
         }
         qrCodeTransport.setHashList(hashList);
         return qrCodeTransport;
+    }
+
+
+    private static QRCodeTxTransport fromDeskpHDMSendRequestWithUnsignedTransaction(TxTransportType txTransportType, Tx tx, List<HashMap<Integer, AbstractHD.PathType>> pathIndexs,
+                                                                                    String addressCannotParsed) {
+        if (!AddressManager.getInstance().hasDesktopHDMKeychain()) {
+            return null;
+        }
+        QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
+        qrCodeTransport.setMyAddress(tx.getFromAddress());
+        String toAddress = tx.getFirstOutAddress();
+        if (Utils.isEmpty(toAddress)) {
+            toAddress = addressCannotParsed;
+        }
+
+        qrCodeTransport.setToAddress(toAddress);
+        qrCodeTransport.setTo(tx.amountSentToAddress(toAddress));
+        qrCodeTransport.setFee(tx.getFee());
+        List<String> hashList = new ArrayList<String>();
+        DesktopHDMKeychain desktopHDMKeychain = AddressManager.getInstance().getDesktopHDMKeychains().get(0);
+        if (txTransportType == TxTransportType.DesktopHDM) {
+            for (HashMap<Integer, AbstractHD.PathType> pathIndex : pathIndexs) {
+                for (Map.Entry<Integer, AbstractHD.PathType> kv : pathIndex.entrySet()) {
+                    DesktopHDMAddress a = AbstractDb.desktopTxProvider.addressForPath(desktopHDMKeychain, kv.getValue(), kv.getKey());
+                    for (byte[] h : tx.getUnsignedInHashesForHDM(a.getPubKey())) {
+                        String[] strings = new String[]{Integer.toString(kv.getValue().getValue()),
+                                Integer.toString(kv.getKey()), Utils.bytesToHexString(h)};
+                        hashList.add(Utils.joinString(strings, QRCodeUtil.QR_CODE_SECONDARY_SPLIT));
+                    }
+                }
+            }
+        }
+        qrCodeTransport.setHashList(hashList);
+        return qrCodeTransport;
+    }
+
+    public static String getDeskpHDMPresignTxString(TxTransportType txTransportType, Tx tx, String changeAddress,
+                                                    String addressCannotParsed, List<HashMap<Integer, AbstractHD.PathType>> pathIndex) {
+        QRCodeTxTransport qrCodeTransport = fromDeskpHDMSendRequestWithUnsignedTransaction(txTransportType, tx, pathIndex,
+                addressCannotParsed);
+        String preSignString = "";
+        try {
+            String versionStr = "";
+            if (txTransportType != null) {
+                versionStr = TX_TRANSPORT_VERSION + txTransportType.getType();
+            }
+            String changeStr = "";
+            if (!Utils.isEmpty(changeAddress)) {
+                long changeAmt = tx.amountSentToAddress(changeAddress);
+                if (changeAmt != 0) {
+                    String[] changeStrings = new String[]{Base58.bas58ToHexWithAddress
+                            (changeAddress), Long.toHexString(changeAmt)};
+                    changeStr = Utils.joinString(changeStrings, QRCodeUtil.QR_CODE_SPLIT);
+
+                }
+            }
+            String hdmIndexString = "";
+            if (qrCodeTransport.getHdmIndex() != QRCodeTxTransport.NO_HDM_INDEX) {
+                hdmIndexString = Integer.toHexString(qrCodeTransport.getHdmIndex());
+            }
+            String[] preSigns = new String[]{versionStr, hdmIndexString, Base58.bas58ToHexWithAddress
+                    (qrCodeTransport.getMyAddress()), changeStr, Long.toHexString(qrCodeTransport
+                    .getFee()), Base58.bas58ToHexWithAddress(qrCodeTransport.getToAddress()),
+                    Long.toHexString(qrCodeTransport.getTo())};
+            preSignString = Utils.joinString(preSigns, QRCodeUtil.QR_CODE_SPLIT);
+            String[] hashStrings = new String[qrCodeTransport.getHashList().size()];
+            hashStrings = qrCodeTransport.getHashList().toArray(hashStrings);
+            preSignString = preSignString + QRCodeUtil.QR_CODE_SPLIT + Utils.joinString
+                    (hashStrings, QRCodeUtil.QR_CODE_SPLIT);
+            preSignString.toUpperCase(Locale.US);
+        } catch (AddressFormatException e) {
+            e.printStackTrace();
+        }
+
+        return preSignString;
+
     }
 
     public static String getPresignTxString(Tx tx, String changeAddress,
