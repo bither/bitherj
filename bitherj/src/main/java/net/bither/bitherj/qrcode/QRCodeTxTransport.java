@@ -396,7 +396,7 @@ public class QRCodeTxTransport implements Serializable {
     }
 
 
-    private static QRCodeTxTransport fromDeskpHDMSendRequestWithUnsignedTransaction(TxTransportType txTransportType, Tx tx, List<HashMap<Integer, AbstractHD.PathType>> pathIndexs,
+    private static QRCodeTxTransport fromDeskpHDMSendRequestWithUnsignedTransaction(TxTransportType txTransportType, Tx tx, List<AbstractHD.PathTypeIndex> pathIndexs,
                                                                                     String addressCannotParsed) {
         if (!AddressManager.getInstance().hasDesktopHDMKeychain()) {
             return null;
@@ -414,15 +414,15 @@ public class QRCodeTxTransport implements Serializable {
         List<String> hashList = new ArrayList<String>();
         DesktopHDMKeychain desktopHDMKeychain = AddressManager.getInstance().getDesktopHDMKeychains().get(0);
         if (txTransportType == TxTransportType.DesktopHDM) {
-            for (HashMap<Integer, AbstractHD.PathType> pathIndex : pathIndexs) {
-                for (Map.Entry<Integer, AbstractHD.PathType> kv : pathIndex.entrySet()) {
-                    DesktopHDMAddress a = AbstractDb.desktopTxProvider.addressForPath(desktopHDMKeychain, kv.getValue(), kv.getKey());
-                    for (byte[] h : tx.getUnsignedInHashesForHDM(a.getPubKey())) {
-                        String[] strings = new String[]{Integer.toString(kv.getValue().getValue()),
-                                Integer.toString(kv.getKey()), Utils.bytesToHexString(h)};
-                        hashList.add(Utils.joinString(strings, QRCodeUtil.QR_CODE_SECONDARY_SPLIT));
-                    }
+            for (AbstractHD.PathTypeIndex pathIndex : pathIndexs) {
+
+                DesktopHDMAddress a = AbstractDb.desktopTxProvider.addressForPath(desktopHDMKeychain,pathIndex.pathType, pathIndex.index);
+                for (byte[] h : tx.getUnsignedInHashesForHDM(a.getPubKey())) {
+                    String[] strings = new String[]{Integer.toString(pathIndex.pathType.getValue()),
+                            Integer.toString(pathIndex.index), Utils.bytesToHexString(h)};
+                    hashList.add(Utils.joinString(strings, QRCodeUtil.QR_CODE_SECONDARY_SPLIT));
                 }
+
             }
         }
         qrCodeTransport.setHashList(hashList);
@@ -430,7 +430,7 @@ public class QRCodeTxTransport implements Serializable {
     }
 
     public static String getDeskpHDMPresignTxString(TxTransportType txTransportType, Tx tx, String changeAddress,
-                                                    String addressCannotParsed, List<HashMap<Integer, AbstractHD.PathType>> pathIndex) {
+                                                    String addressCannotParsed, List<AbstractHD.PathTypeIndex> pathIndex) {
         QRCodeTxTransport qrCodeTransport = fromDeskpHDMSendRequestWithUnsignedTransaction(txTransportType, tx, pathIndex,
                 addressCannotParsed);
         String preSignString = "";

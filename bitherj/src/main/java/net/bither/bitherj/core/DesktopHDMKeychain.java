@@ -48,7 +48,7 @@ public class DesktopHDMKeychain extends AbstractHD {
     public static final String DesktopHDMKeychainPlaceHolder = "DesktopHDMKeychain";
     private long balance = 0;
     private static final int LOOK_AHEAD_SIZE = 100;
-
+//todo 接收交易的时候 isIssued 更新的不对
 
     public static interface DesktopHDMFetchOtherSignatureDelegate {
         List<TransactionSignature> getOtherSignature(Tx tx,
@@ -364,6 +364,7 @@ public class DesktopHDMKeychain extends AbstractHD {
         return tx;
     }
 
+
     public void signTx(Tx tx, List<byte[]> unSignHash, CharSequence passphrase, List<PathTypeIndex> pathTypeIndexList,
                        List<DesktopHDMAddress> desktopHDMAddresslist,
                        DesktopHDMFetchOtherSignatureDelegate delegate) {
@@ -452,7 +453,7 @@ public class DesktopHDMKeychain extends AbstractHD {
     }
 
 
-    private String getNewChangeAddress() {
+    public String getNewChangeAddress() {
         return addressForPath(AbstractHD.PathType.INTERNAL_ROOT_PATH, issuedInternalIndex() + 1).getAddress();
     }
 
@@ -472,7 +473,7 @@ public class DesktopHDMKeychain extends AbstractHD {
         return PrivateKeyUtil.getFullencryptHDMKeyChain(isFromXRandom, encryptPrivKey);
     }
 
-    private List<DesktopHDMAddress> getSigningAddressesForInputs(List<In> inputs) {
+    public List<DesktopHDMAddress> getSigningAddressesForInputs(List<In> inputs) {
         return AbstractDb.desktopTxProvider.getSigningAddressesForInputs(DesktopHDMKeychain.this, inputs);
     }
 
