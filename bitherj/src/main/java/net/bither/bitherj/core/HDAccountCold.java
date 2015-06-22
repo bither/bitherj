@@ -24,6 +24,7 @@ import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,6 +84,16 @@ public class HDAccountCold extends AbstractHD {
         this.isFromXRandom = false;// TODO AbstractDb.addressProvider.hdAccountIsXRandom(seedId);
     }
 
+    public List<byte[]> signHashHexes(List<String> hashes, List<PathTypeIndex> paths,
+                                      CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        ArrayList<byte[]> hashBytes = new ArrayList<byte[]>();
+        for (String hash : hashes) {
+            hashBytes.add(Utils.hexStringToByteArray(hash));
+        }
+        return signHashes(hashBytes, paths, password);
+    }
+
     public List<byte[]> signHashes(List<byte[]> hashes, List<PathTypeIndex> paths, CharSequence
             password) throws MnemonicException.MnemonicLengthException {
         assert hashes.size() == paths.size();
@@ -131,5 +142,13 @@ public class HDAccountCold extends AbstractHD {
         byte[] bytes = new byte[length];
         random.nextBytes(bytes);
         return bytes;
+    }
+
+    public static boolean hasHDAccountCold() {
+        return false; //TODO check from db
+    }
+
+    public static HDAccountCold hdAccountCold() {
+        return new HDAccountCold(0); //TODO get hd account cold id from db
     }
 }
