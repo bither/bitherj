@@ -365,22 +365,56 @@ public class DesktopHDMKeychain extends AbstractHD {
     }
 
 
-    public void signTx(Tx tx, List<byte[]> unSignHash, CharSequence passphrase, List<PathTypeIndex> pathTypeIndexList,
-                       List<DesktopHDMAddress> desktopHDMAddresslist,
+    public void signTx(Tx tx, List<byte[]> unSignHash, CharSequence passphrase,
                        DesktopHDMFetchOtherSignatureDelegate delegate) {
+
+        List<DesktopHDMAddress> desktopHDMAddresslist = getSigningAddressesForInputs(tx.getIns());
         tx.signWithSignatures(this.signWithOther(unSignHash,
-                passphrase, tx, pathTypeIndexList, desktopHDMAddresslist, delegate));
+                passphrase, tx, desktopHDMAddresslist, delegate));
     }
 
-    public List<byte[]> signWithOther(List<byte[]> unsignHash, CharSequence password, Tx tx, List<PathTypeIndex> pathTypeIndexList, List<DesktopHDMAddress> desktopHDMAddresslist,
+    public List<byte[]> signWithOther(List<byte[]> unsignHash, CharSequence password, Tx tx, List<DesktopHDMAddress> desktopHDMAddresslist,
                                       DesktopHDMFetchOtherSignatureDelegate delegate
     ) {
+        List<PathTypeIndex> pathTypeIndexList = new ArrayList<PathTypeIndex>();
+        for (DesktopHDMAddress desktopHDMAddress : desktopHDMAddresslist) {
+            PathTypeIndex pathTypeIndex = new PathTypeIndex();
+            pathTypeIndex.index = desktopHDMAddress.getIndex();
+            pathTypeIndex.pathType = desktopHDMAddress.getPathType();
+            pathTypeIndexList.add(pathTypeIndex);
+        }
         ArrayList<TransactionSignature> hotSigs = signMyPart(unsignHash, password, pathTypeIndexList);
         List<TransactionSignature> otherSigs = delegate.getOtherSignature(
                 tx, unsignHash, pathTypeIndexList);
         assert hotSigs.size() == otherSigs.size() && hotSigs.size() == unsignHash.size();
         return formatInScript(hotSigs, otherSigs, desktopHDMAddresslist);
     }
+
+    public ArrayList<byte[]> signWithCold(List<byte[]> unsignedHashes,
+                                          CharSequence password,
+                                          List<PathTypeIndex> pathTypeIndexList) {
+
+
+        ArrayList<byte[]> sigs = new ArrayList<byte[]>();
+        for (int i = 0;
+             i < unsignedHashes.size();
+             i++) {
+            PathTypeIndex pathTypeIndex = pathTypeIndexList.get(i);
+            DeterministicKey key;
+            if (pathTypeIndex.pathType == PathType.EXTERNAL_ROOT_PATH) {
+                key = getExternalKey(pathTypeIndex.index, password);
+                System.out.println("pub:"+Base58.encode(key.getPubKey()));
+            } else {
+                key = getInternalKey(pathTypeIndex.index, password);
+            }
+            ECKey.ECDSASignature signed = key.sign(unsignedHashes.get(i));
+            sigs.add(signed.encodeToDER());
+            key.wipe();
+        }
+
+        return sigs;
+    }
+
 
     public ArrayList<TransactionSignature> signMyPart(List<byte[]> unsignedHashes,
                                                       CharSequence password,
