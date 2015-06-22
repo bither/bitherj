@@ -23,7 +23,9 @@ import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Utils;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -76,6 +78,9 @@ public class QRCodeTxTransport implements Serializable {
     private String changeAddress;
     private int hdmIndex = NO_HDM_INDEX;
     private TxTransportType txTransportType;
+
+
+    private List<AbstractHD.PathTypeIndex> pathTypeIndexes;
 
 
     public List<String> getHashList() {
@@ -142,12 +147,148 @@ public class QRCodeTxTransport implements Serializable {
         this.hdmIndex = hdmIndex;
     }
 
+
+    public List<AbstractHD.PathTypeIndex> getPathTypeIndexes() {
+        return pathTypeIndexes;
+    }
+
+    public void setPathTypeIndexes(List<AbstractHD.PathTypeIndex> pathTypeIndexes) {
+        this.pathTypeIndexes = pathTypeIndexes;
+    }
+
     public TxTransportType getTxTransportType() {
         return txTransportType;
     }
 
     public void setTxTransportType(TxTransportType txTransportType) {
         this.txTransportType = txTransportType;
+    }
+
+
+    private static QRCodeTxTransport changeFormatQRCodeTransportOfDesktopHDM(String str) {
+        try {
+            String[] strArray = QRCodeUtil.splitString(str);
+            QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
+
+            String address = Base58.hexToBase58WithAddress(strArray[0]);
+            if (!Utils.validBicoinAddress(address)) {
+                return null;
+            }
+            qrCodeTransport.setMyAddress(address);
+            String changeAddress = Base58.hexToBase58WithAddress(strArray[1]);
+            if (!Utils.validBicoinAddress(changeAddress)) {
+                return null;
+            }
+            qrCodeTransport.setChangeAddress(changeAddress);
+            qrCodeTransport.setChangeAmt(Long.parseLong(strArray[2], 16));
+            qrCodeTransport.setFee(Long.parseLong(strArray[3], 16));
+            String toAddress = Base58.hexToBase58WithAddress(strArray[4]);
+            if (!Utils.validBicoinAddress(toAddress)) {
+                return null;
+            }
+            qrCodeTransport.setToAddress(toAddress);
+            qrCodeTransport.setTo(Long.parseLong(strArray[5], 16));
+            List<AbstractHD.PathTypeIndex> pathTypeIndexList = new ArrayList<AbstractHD.PathTypeIndex>();
+            List<String> hashList = new ArrayList<String>();
+            for (int i = 6;
+                 i < strArray.length;
+                 i++) {
+                String text = strArray[i];
+
+                if (!Utils.isEmpty(text)) {
+                    String[] hashPathTypeIndex = text.split(QRCodeUtil.QR_CODE_SECONDARY_SPLIT_ESCAPE);
+                    AbstractHD.PathTypeIndex pathTypeIndex = new AbstractHD.PathTypeIndex();
+                    pathTypeIndex.pathType = AbstractHD.getTernalRootType(Integer.valueOf(hashPathTypeIndex[0]));
+                    pathTypeIndex.index = Integer.valueOf(hashPathTypeIndex[1]);
+                    pathTypeIndexList.add(pathTypeIndex);
+                    hashList.add(hashPathTypeIndex[2]);
+                }
+            }
+            qrCodeTransport.setPathTypeIndexes(pathTypeIndexList);
+            qrCodeTransport.setHashList(hashList);
+            return qrCodeTransport;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static QRCodeTxTransport noChangeFormatDesktopHDMQRCodeTransport(String str) {
+        try {
+            String[] strArray = QRCodeUtil.splitString(str);
+            if (Utils.validBicoinAddress(strArray[0])) {
+                return oldFormatQRCodeTransport(str);
+            }
+            QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
+            String address = Base58.hexToBase58WithAddress(strArray[0]);
+
+            if (!Utils.validBicoinAddress(address)) {
+                return null;
+            }
+            qrCodeTransport.setMyAddress(address);
+            qrCodeTransport.setFee(Long.parseLong(strArray[1], 16));
+            qrCodeTransport.setToAddress(Base58.hexToBase58WithAddress(strArray[2]));
+            qrCodeTransport.setTo(Long.parseLong(strArray[3], 16));
+            List<String> hashList = new ArrayList<String>();
+            List<AbstractHD.PathTypeIndex> pathTypeIndexList = new ArrayList<AbstractHD.PathTypeIndex>();
+            for (int i = 4;
+                 i < strArray.length;
+                 i++) {
+                String text = strArray[i];
+                if (!Utils.isEmpty(text)) {
+                    String[] hashPathTypeIndex = text.split(QRCodeUtil.QR_CODE_SECONDARY_SPLIT_ESCAPE);
+                    AbstractHD.PathTypeIndex pathTypeIndex = new AbstractHD.PathTypeIndex();
+                    pathTypeIndex.pathType = AbstractHD.getTernalRootType(Integer.valueOf(hashPathTypeIndex[0]));
+                    pathTypeIndex.index = Integer.valueOf(hashPathTypeIndex[1]);
+                    pathTypeIndexList.add(pathTypeIndex);
+                    hashList.add(hashPathTypeIndex[2]);
+                }
+            }
+            qrCodeTransport.setHashList(hashList);
+            qrCodeTransport.setPathTypeIndexes(pathTypeIndexList);
+            return qrCodeTransport;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static QRCodeTxTransport formatQRCodeTransportOfDesktopHDM(String str) {
+        try {
+            QRCodeTxTransport qrCodeTxTransport = null;
+            TxTransportType txTransportType = null;
+//            int hdmIndex = QRCodeTxTransport.NO_HDM_INDEX;
+            String[] strArray = QRCodeUtil.splitString(str);
+            String str1 = strArray[0];
+            if (hasVersion(str1)) {
+                String versionStr = str1.replace(TX_TRANSPORT_VERSION, "");
+                int version = Integer.valueOf(versionStr);
+                txTransportType = getTxTransportType(version);
+                str = str.substring(strArray[0].length() + 1);
+                strArray = QRCodeUtil.splitString(str);
+            }
+//            boolean isHDM = !isAddressHex(strArray[0]);
+//            if (isHDM) {
+//                hdmIndex = Integer.parseInt(strArray[0], 16);
+//                str = str.substring(strArray[0].length() + 1);
+//                strArray = QRCodeUtil.splitString(str);
+//            }
+            boolean hasChangeAddress = isAddressHex(strArray[1]);
+            if (hasChangeAddress) {
+                qrCodeTxTransport = changeFormatQRCodeTransportOfDesktopHDM(str);
+
+            } else {
+                qrCodeTxTransport = noChangeFormatDesktopHDMQRCodeTransport(str);
+            }
+            qrCodeTxTransport.setTxTransportType(txTransportType);
+
+
+            return qrCodeTxTransport;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 
     public static QRCodeTxTransport formatQRCodeTransport(String str) {
@@ -416,7 +557,7 @@ public class QRCodeTxTransport implements Serializable {
         if (txTransportType == TxTransportType.DesktopHDM) {
             for (AbstractHD.PathTypeIndex pathIndex : pathIndexs) {
 
-                DesktopHDMAddress a = AbstractDb.desktopTxProvider.addressForPath(desktopHDMKeychain,pathIndex.pathType, pathIndex.index);
+                DesktopHDMAddress a = AbstractDb.desktopTxProvider.addressForPath(desktopHDMKeychain, pathIndex.pathType, pathIndex.index);
                 for (byte[] h : tx.getUnsignedInHashesForHDM(a.getPubKey())) {
                     String[] strings = new String[]{Integer.toString(pathIndex.pathType.getValue()),
                             Integer.toString(pathIndex.index), Utils.bytesToHexString(h)};

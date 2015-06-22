@@ -391,7 +391,7 @@ public class DesktopHDMKeychain extends AbstractHD {
         for (int i = 0;
              i < unsignedHashes.size();
              i++) {
-            PathTypeIndex pathTypeIndex = pathTypeIndexList.get(0);
+            PathTypeIndex pathTypeIndex = pathTypeIndexList.get(i);
             DeterministicKey key;
             if (pathTypeIndex.pathType == PathType.EXTERNAL_ROOT_PATH) {
                 key = getExternalKey(pathTypeIndex.index, password);
