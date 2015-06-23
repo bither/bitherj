@@ -335,10 +335,19 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             }
         }
         if (hasHDAccount()) {
-            return getHdAccount().isTxRelated(tx, inAddresses);
+            if (getHdAccount().isTxRelated(tx, inAddresses)) {
+                return true;
+            }
         }
         if (hasHDAccountMonitored()) {
-            return getHdAccountMonitored().isTxRelated(tx, inAddresses);
+            if (getHdAccountMonitored().isTxRelated(tx, inAddresses)) {
+                return true;
+            }
+        }
+        if (hasDesktopHDMKeychain()) {
+            if (getDesktopHDMKeychains().get(0).isTxRelated(tx, inAddresses)) {
+                return true;
+            }
         }
         return false;
     }

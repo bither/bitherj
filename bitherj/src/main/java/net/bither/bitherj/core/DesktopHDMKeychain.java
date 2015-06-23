@@ -726,6 +726,7 @@ public class DesktopHDMKeychain extends AbstractHD {
             byte[] pubByte = pub.getMultiSigScript().getProgram();
             filter.insert(pubByte);
             filter.insert(Utils.sha256hash160(pubByte));
+           // System.out.println("address:" + Utils.toP2SHAddress(Utils.sha256hash160(pubByte)));
         }
         List<Out> outs = AbstractDb.desktopTxProvider.getUnspendOutByHDAccountWithPath
                 (getHdSeedId(), AbstractHD.PathType.INTERNAL_ROOT_PATH);
