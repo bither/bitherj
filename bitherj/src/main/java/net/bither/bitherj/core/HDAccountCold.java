@@ -18,6 +18,9 @@
 
 package net.bither.bitherj.core;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
@@ -31,7 +34,12 @@ import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 /**
  * Created by songchenwen on 15/6/19.
@@ -49,7 +57,6 @@ public class HDAccountCold extends AbstractHD {
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         EncryptedData encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password,
                 isFromXRandom);
-        String firstAddress;
         ECKey k = new ECKey(mnemonicSeed, null);
         String address = k.toAddress();
         k.clearPrivateKey();
@@ -57,7 +64,7 @@ public class HDAccountCold extends AbstractHD {
         DeterministicKey externalKey = getChainRootKey(accountKey, AbstractHD.PathType
                 .EXTERNAL_ROOT_PATH);
         DeterministicKey key = externalKey.deriveSoftened(0);
-        firstAddress = key.toAddress();
+        String firstAddress = key.toAddress();
         accountKey.wipe();
         master.wipe();
         wipeHDSeed();
@@ -84,18 +91,20 @@ public class HDAccountCold extends AbstractHD {
         this.isFromXRandom = false;// TODO AbstractDb.addressProvider.hdAccountIsXRandom(seedId);
     }
 
-    public List<byte[]> signHashHexes(List<String> hashes, List<PathTypeIndex> paths,
-                                      CharSequence password) throws MnemonicException
+    public List<byte[]> signHashHexes(final Collection<String> hashes, Collection<PathTypeIndex>
+            paths, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
-        ArrayList<byte[]> hashBytes = new ArrayList<byte[]>();
-        for (String hash : hashes) {
-            hashBytes.add(Utils.hexStringToByteArray(hash));
-        }
-        return signHashes(hashBytes, paths, password);
+        return signHashes(Collections2.transform(hashes, new Function<String, byte[]>() {
+            @Nullable
+            @Override
+            public byte[] apply(String input) {
+                return Utils.hexStringToByteArray(input);
+            }
+        }), paths, password);
     }
 
-    public List<byte[]> signHashes(List<byte[]> hashes, List<PathTypeIndex> paths, CharSequence
-            password) throws MnemonicException.MnemonicLengthException {
+    public List<byte[]> signHashes(Collection<byte[]> hashes, Collection<PathTypeIndex> paths,
+                                   CharSequence password) throws MnemonicException.MnemonicLengthException {
         assert hashes.size() == paths.size();
         ArrayList<byte[]> sigs = new ArrayList<byte[]>();
         DeterministicKey master = masterKey(password);
@@ -104,11 +113,11 @@ public class HDAccountCold extends AbstractHD {
         DeterministicKey internal = getChainRootKey(account, PathType.INTERNAL_ROOT_PATH);
         master.wipe();
         account.wipe();
-        for (int i = 0;
-             i < hashes.size();
-             i++) {
-            byte[] hash = hashes.get(i);
-            PathTypeIndex path = paths.get(i);
+        Iterator<byte[]> hashIterator = hashes.iterator();
+        Iterator<PathTypeIndex> pathIterator = paths.iterator();
+        while (hashIterator.hasNext() && pathIterator.hasNext()) {
+            byte[] hash = hashIterator.next();
+            PathTypeIndex path = pathIterator.next();
             DeterministicKey key;
             if (path.pathType == PathType.EXTERNAL_ROOT_PATH) {
                 key = external.deriveSoftened(path.index);
@@ -126,6 +135,24 @@ public class HDAccountCold extends AbstractHD {
 
     public String getFirstAddressFromDb() {
         return AbstractDb.addressProvider.getHDFristAddress(hdSeedId);
+    }
+
+    public boolean checkWithPassword(CharSequence password) {
+        try {
+            decryptHDSeed(password);
+            decryptMnemonicSeed(password);
+            byte[] hdCopy = Arrays.copyOf(hdSeed, hdSeed.length);
+            boolean hdSeedSafe = Utils.compareString(getFirstAddressFromDb(),
+                    getFirstAddressFromSeed(null));
+            boolean mnemonicSeedSafe = Arrays.equals(seedFromMnemonic(mnemonicSeed), hdCopy);
+            Utils.wipeBytes(hdCopy);
+            wipeHDSeed();
+            wipeMnemonicSeed();
+            return hdSeedSafe && mnemonicSeedSafe;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
