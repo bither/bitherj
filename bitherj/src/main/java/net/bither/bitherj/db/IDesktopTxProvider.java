@@ -63,5 +63,8 @@ public interface IDesktopTxProvider {
     public List<DesktopHDMAddress> getSigningAddressesForInputs(DesktopHDMKeychain keychain, List<In> inList);
 
     public List<DesktopHDMAddress> belongAccount(DesktopHDMKeychain keychain, List<String> addresses);
+
     public List<Out> getUnspendOutByHDAccount(int hdAccountId);
+
+    public int unSyncedAddressCount();
 }

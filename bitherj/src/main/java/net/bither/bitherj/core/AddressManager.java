@@ -520,6 +520,10 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         if (hdAccountMonitored != null && !hdAccountMonitored.isSyncComplete()) {
             return false;
         }
+        if (hasDesktopHDMKeychain() && !desktopHDMKeychains.get(0).isSyncComplete()) {
+            return false;
+        }
+
         return true;
     }
 
@@ -702,7 +706,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         return txList;
     }
 
-    public List<Tx> compressTxsForHDAccountMonitored(List<Tx> txList){
+    public List<Tx> compressTxsForHDAccountMonitored(List<Tx> txList) {
         Map<Sha256Hash, Tx> txHashList = new HashMap<Sha256Hash, Tx>();
         for (Tx tx : txList) {
             txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
@@ -813,7 +817,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             if (hasHDAccount()) {
                 hdAddressesSet = hdAccount.getBelongAccountAddresses(tx.getOutAddressList());
             }
-            if(hasHDAccountMonitored()){
+            if (hasHDAccountMonitored()) {
                 hdMonitoredAddressesSet = hdAccountMonitored.getBelongAccountAddresses(tx.getOutAddressList());
             }
             for (Out out : tx.getOuts()) {
