@@ -24,4 +24,6 @@ public interface IColdHDAccountAddressProvider {
     public boolean hdAccountIsXRandom(int seedId);
 
     public List<Integer> getHDAccountSeeds();
+
+    public boolean hasHDAccountCold();
 }

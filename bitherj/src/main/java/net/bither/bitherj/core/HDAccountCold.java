@@ -63,15 +63,18 @@ public class HDAccountCold extends AbstractHD {
         DeterministicKey accountKey = getAccount(master);
         DeterministicKey externalKey = getChainRootKey(accountKey, AbstractHD.PathType
                 .EXTERNAL_ROOT_PATH);
+        DeterministicKey internalKey = getChainRootKey(accountKey, PathType
+                .INTERNAL_ROOT_PATH);
         DeterministicKey key = externalKey.deriveSoftened(0);
         String firstAddress = key.toAddress();
         accountKey.wipe();
         master.wipe();
         wipeHDSeed();
         wipeMnemonicSeed();
-        hdSeedId = 0;//TODO AbstractDb.addressProvider.addHDAccount(encryptedMnemonicSeed
-        // .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
-        // isFromXRandom, address);
+        hdSeedId = AbstractDb.addressProvider.addHDAccount(encryptedMnemonicSeed
+                        .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
+                isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
+                        .getPubKeyExtended());
         externalKey.wipe();
     }
 
@@ -88,7 +91,7 @@ public class HDAccountCold extends AbstractHD {
 
     public HDAccountCold(int hdSeedId) {
         this.hdSeedId = hdSeedId;
-        this.isFromXRandom = false;// TODO AbstractDb.addressProvider.hdAccountIsXRandom(seedId);
+        this.isFromXRandom = AbstractDb.coldHDAccountAddressProvider.hdAccountIsXRandom(hdSeedId);
     }
 
     public List<byte[]> signHashHexes(final Collection<String> hashes, Collection<PathTypeIndex>
@@ -104,7 +107,8 @@ public class HDAccountCold extends AbstractHD {
     }
 
     public List<byte[]> signHashes(Collection<byte[]> hashes, Collection<PathTypeIndex> paths,
-                                   CharSequence password) throws MnemonicException.MnemonicLengthException {
+                                   CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
         assert hashes.size() == paths.size();
         ArrayList<byte[]> sigs = new ArrayList<byte[]>();
         DeterministicKey master = masterKey(password);
@@ -157,12 +161,12 @@ public class HDAccountCold extends AbstractHD {
 
     @Override
     protected String getEncryptedHDSeed() {
-        return null;//TODO EncryptedHDSeed for HD Account Cold
+        return AbstractDb.coldHDAccountAddressProvider.getHDAccountEncryptSeed(hdSeedId);
     }
 
     @Override
     protected String getEncryptedMnemonicSeed() {
-        return null;//TODO EncryptedMnemonicSeed for HD Account Cold
+        return AbstractDb.coldHDAccountAddressProvider.getHDAccountEncryptMnmonicSeed(hdSeedId);
     }
 
     private static byte[] randomByteFromSecureRandom(SecureRandom random, int length) {
@@ -172,10 +176,15 @@ public class HDAccountCold extends AbstractHD {
     }
 
     public static boolean hasHDAccountCold() {
-        return false; //TODO check from db
+        return AbstractDb.coldHDAccountAddressProvider.hasHDAccountCold();
     }
 
     public static HDAccountCold hdAccountCold() {
-        return new HDAccountCold(0); //TODO get hd account cold id from db
+        List<Integer> seeds = AbstractDb.addressProvider.getHDAccountSeeds();
+        if (seeds.size() > 0) {
+            return new HDAccountCold(seeds.get(0));
+        } else {
+            return null;
+        }
     }
 }
