@@ -180,11 +180,84 @@ public class TransactionsUtil {
             getTxForHDAccount();
 
         }
+        if(AddressManager.getInstance().hasHDAccountMonitored()){
+            getTxForHDAccountMoitored();
+
+        }
         if (AddressManager.getInstance().hasDesktopHDMKeychain()) {
             DesktopHDMKeychain desktopHDMKeychain = AddressManager.getInstance().getDesktopHDMKeychains().get(0);
             getTxForDesktopHDM(desktopHDMKeychain);
 
         }
+
+    }
+    private static void getTxForHDAccountMoitored() throws Exception {
+        for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
+            HDAccount.HDAccountAddress hdAccountAddress;
+            boolean hasTx = true;
+            int addressIndex = 0;
+            while (hasTx) {
+                Block storedBlock = BlockChain.getInstance().getLastBlock();
+                int storeBlockHeight = storedBlock.getBlockNo();
+                hdAccountAddress = AbstractDb.coldHDAccountProvider.addressForPath(
+                        pathType, addressIndex);
+                if (hdAccountAddress == null) {
+                    hasTx = false;
+                    log.warn("AccountAddress", "address is null path {} ,index {}", pathType, addressIndex);
+                    continue;
+                }
+                if (hdAccountAddress.isSyncedComplete()) {
+                    addressIndex++;
+                    continue;
+                }
+                List<Tx> transactions = new ArrayList<Tx>();
+                int apiBlockCount = 0;
+                int txSum = 0;
+                boolean needGetTxs = true;
+                int page = 1;
+                while (needGetTxs) {
+                    BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
+                            hdAccountAddress.getAddress(), page);
+                    bitherMytransactionsApi.handleHttpGet();
+                    String txResult = bitherMytransactionsApi.getResult();
+                    JSONObject jsonObject = new JSONObject(txResult);
+                    if (!jsonObject.isNull(BLOCK_COUNT)) {
+                        apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
+                    }
+                    int txCnt = jsonObject.getInt(TX_CNT);
+                    List<Tx> temp = TransactionsUtil.getTransactionsFromBither(
+                            jsonObject, storeBlockHeight);
+                    transactions.addAll(temp);
+                    txSum = txSum + transactions.size();
+                    needGetTxs = txSum < txCnt;
+                    page++;
+                }
+                if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
+                    BlockChain.getInstance().rollbackBlock(apiBlockCount);
+                }
+                transactions = AddressManager.getInstance().compressTxsForHDAccountMoitored(transactions);
+                Collections.sort(transactions, new ComparatorTx());
+
+                AddressManager.getInstance().getHdAccountMonitored().initTxs(transactions);
+                hdAccountAddress.setSyncedComplete(true);
+                AddressManager.getInstance().getHdAccountMonitored().updateSyncComplete(hdAccountAddress);
+
+                if (transactions.size() > 0) {
+                    if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
+                        AddressManager.getInstance().getHdAccountMonitored().updateIssuedExternalIndex(addressIndex);
+                    } else {
+                        AddressManager.getInstance().getHdAccountMonitored().updateIssuedInternalIndex(addressIndex);
+                    }
+                    AddressManager.getInstance().getHdAccountMonitored().supplyEnoughKeys(false);
+                    hasTx = true;
+                } else {
+                    hasTx = false;
+                    AbstractDb.coldHDAccountProvider.updateSyncdForIndex(pathType, addressIndex);
+                }
+            }
+            addressIndex++;
+        }
+
 
     }
 

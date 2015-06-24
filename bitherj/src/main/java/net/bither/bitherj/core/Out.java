@@ -57,6 +57,9 @@ public class Out extends Message {
 
     private int desktopHDMAccountId = -1;
 
+
+    private int coldHDAccountId=-1;
+
     private Tx tx;
 
 
@@ -80,10 +83,13 @@ public class Out extends Message {
 
 //    public Out(Tx parent, BigInteger value, byte[] scriptBytes) {
 //        super();
-//        // Negative values obviously make no sense, except for -1 which is used as a sentinel value when calculating
+//        // Negative values obviously make no sense, except for -1 which is used as a sentinel
+// value when calculating
 //        // SIGHASH_SINGLE signatures, so unfortunately we have to allow that here.
-//        checkArgument(value.compareTo(BigInteger.ZERO) >= 0 || value.equals(Utils.NEGATIVE_ONE), "Negative values not allowed");
-//        checkArgument(value.compareTo(BitherjSettings.MAX_MONEY) < 0, "Values larger than MAX_MONEY not allowed");
+//        checkArgument(value.compareTo(BigInteger.ZERO) >= 0 || value.equals(Utils.NEGATIVE_ONE)
+// , "Negative values not allowed");
+//        checkArgument(value.compareTo(BitherjSettings.MAX_MONEY) < 0, "Values larger than
+// MAX_MONEY not allowed");
 //        this.value = value;
 //        this.outScript = scriptBytes;
 //        this.tx = parent;
@@ -93,10 +99,12 @@ public class Out extends Message {
 
     public Out(Tx parent, long value, byte[] scriptBytes) {
         super();
-        // Negative values obviously make no sense, except for -1 which is used as a sentinel value when calculating
+        // Negative values obviously make no sense, except for -1 which is used as a sentinel
+        // value when calculating
         // SIGHASH_SINGLE signatures, so unfortunately we have to allow that here.
         checkArgument(value >= 0 || value == -1, "Negative values not allowed");
-        checkArgument(value < BitherjSettings.MAX_MONEY, "Values larger than MAX_MONEY not allowed");
+        checkArgument(value < BitherjSettings.MAX_MONEY, "Values larger than MAX_MONEY not " +
+                "allowed");
         this.outValue = value;
         this.outScript = scriptBytes;
         this.tx = parent;
@@ -227,6 +235,15 @@ public class Out extends Message {
         this.hdAccountId = hdAccountId;
     }
 
+    public int getColdHDAccountId() {
+        return coldHDAccountId;
+    }
+
+    public void setColdHDAccountId(int coldHDAccountId) {
+        this.coldHDAccountId = coldHDAccountId;
+    }
+
+
     public int getDesktopHDMAccountId() {
         return desktopHDMAccountId;
     }
@@ -249,9 +266,12 @@ public class Out extends Message {
     //    // The script bytes are parsed and turned into a Script on demand.
     private transient WeakReference<Script> scriptPubKey;
     //
-//    // These fields are Java serialized but not Bitcoin serialized. They are used for tracking purposes in our wallet
-//    // only. If set to true, this output is counted towards our balance. If false and spentBy is null the tx output
-//    // was owned by us and was sent to somebody else. If false and spentBy is set it means this output was owned by
+//    // These fields are Java serialized but not Bitcoin serialized. They are used for tracking
+// purposes in our wallet
+//    // only. If set to true, this output is counted towards our balance. If false and spentBy
+// is null the tx output
+//    // was owned by us and was sent to somebody else. If false and spentBy is set it means this
+// output was owned by
 //    // us and used in one of our own transactions (eg, because it is a change output).
 //    private boolean availableForSpending;
 ////    private In spentBy;
@@ -262,9 +282,12 @@ public class Out extends Message {
 
     //
     public Script getScriptPubKey() throws ScriptException {
-        // Quick hack to try and reduce memory consumption on Androids. SoftReference is the same as WeakReference
-        // on Dalvik (by design), so this arrangement just means that we can avoid the cost of re-parsing the script
-        // bytes if getScriptPubKey is called multiple times in quick succession in between garbage collections.
+        // Quick hack to try and reduce memory consumption on Androids. SoftReference is the same
+        // as WeakReference
+        // on Dalvik (by design), so this arrangement just means that we can avoid the cost of
+        // re-parsing the script
+        // bytes if getScriptPubKey is called multiple times in quick succession in between
+        // garbage collections.
         Script script = scriptPubKey == null ? null : scriptPubKey.get();
         if (script == null) {
             script = new Script(outScript);
@@ -292,32 +315,47 @@ public class Out extends Message {
     }
 
     /**
-     * <p>Gets the minimum value for a txout of this size to be considered non-dust by a reference client
-     * (and thus relayed). See: CTxOut::IsDust() in the reference client. The assumption is that any output that would
-     * consume more than a third of its value in fees is not something the Bitcoin system wants to deal with right now,
-     * so we call them "dust outputs" and they're made non standard. The choice of one third is somewhat arbitrary and
+     * <p>Gets the minimum value for a txout of this size to be considered non-dust by a
+     * reference client
+     * (and thus relayed). See: CTxOut::IsDust() in the reference client. The assumption is that
+     * any output that would
+     * consume more than a third of its value in fees is not something the Bitcoin system wants
+     * to deal with right now,
+     * so we call them "dust outputs" and they're made non standard. The choice of one third is
+     * somewhat arbitrary and
      * may change in future.</p>
      * <p/>
-     * <p>You probably should use {@link net.bither.bitherj.core.Out#getMinNonDustValue()} which uses
+     * <p>You probably should use {@link net.bither.bitherj.core.Out#getMinNonDustValue()} which
+     * uses
      * a safe fee-per-kb by default.</p>
      *
-     * @param feePerKbRequired The fee required per kilobyte. Note that this is the same as the reference client's -minrelaytxfee * 3
-     *                         If you want a safe default, use {@link net.bither.bitherj.core.Tx#REFERENCE_DEFAULT_MIN_TX_FEE}*3
+     * @param feePerKbRequired The fee required per kilobyte. Note that this is the same as the
+     *                         reference client's -minrelaytxfee * 3
+     *                         If you want a safe default, use {@link net.bither.bitherj.core
+     *                         .Tx#REFERENCE_DEFAULT_MIN_TX_FEE}*3
      */
     public BigInteger getMinNonDustValue(BigInteger feePerKbRequired) {
-        // A typical output is 33 bytes (pubkey hash + opcodes) and requires an input of 148 bytes to spend so we add
-        // that together to find out the total amount of data used to transfer this amount of value. Note that this
-        // formula is wrong for anything that's not a pay-to-address output, unfortunately, we must follow the reference
-        // clients wrongness in order to ensure we're considered standard. A better formula would either estimate the
+        // A typical output is 33 bytes (pubkey hash + opcodes) and requires an input of 148
+        // bytes to spend so we add
+        // that together to find out the total amount of data used to transfer this amount of
+        // value. Note that this
+        // formula is wrong for anything that's not a pay-to-address output, unfortunately, we
+        // must follow the reference
+        // clients wrongness in order to ensure we're considered standard. A better formula would
+        // either estimate the
         // size of data needed to satisfy all different script types, or just hard code 33 below.
         final BigInteger size = BigInteger.valueOf(this.bitcoinSerialize().length + 148);
-        BigInteger[] nonDustAndRemainder = feePerKbRequired.multiply(size).divideAndRemainder(BigInteger.valueOf(1000));
-        return nonDustAndRemainder[1].equals(BigInteger.ZERO) ? nonDustAndRemainder[0] : nonDustAndRemainder[0].add(BigInteger.ONE);
+        BigInteger[] nonDustAndRemainder = feePerKbRequired.multiply(size).divideAndRemainder
+                (BigInteger.valueOf(1000));
+        return nonDustAndRemainder[1].equals(BigInteger.ZERO) ? nonDustAndRemainder[0] :
+                nonDustAndRemainder[0].add(BigInteger.ONE);
     }
 
     /**
-     * Returns the minimum value for this output to be considered "not dust", i.e. the transaction will be relayable
-     * and mined by default miners. For normal pay to address outputs, this is 5460 satoshis, the same as
+     * Returns the minimum value for this output to be considered "not dust", i.e. the
+     * transaction will be relayable
+     * and mined by default miners. For normal pay to address outputs, this is 5460 satoshis, the
+     * same as
      * {@link net.bither.bitherj.core.Tx#MIN_NONDUST_OUTPUT}.
      */
     public BigInteger getMinNonDustValue() {

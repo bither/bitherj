@@ -150,7 +150,9 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         List<Integer> seeds = AbstractDb.desktopAddressProvider.getDesktopKeyChainSeed();
         if (seeds.size() > 0) {
             desktopHDMKeychains = new ArrayList<DesktopHDMKeychain>();
-            for (int i = 0; i < seeds.size(); i++) {
+            for (int i = 0;
+                 i < seeds.size();
+                 i++) {
                 desktopHDMKeychains.add(new DesktopHDMKeychain(seeds.get(i)));
             }
         }
@@ -175,7 +177,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         }
         // long begin = System.currentTimeMillis();
         List<String> inAddresses = tx.getInAddresses();
-        // log.info("getInAddresses time : {} ,ins:{}", (System.currentTimeMillis() - begin), tx.getIns().size());
+        // log.info("getInAddresses time : {} ,ins:{}", (System.currentTimeMillis() - begin), tx
+        // .getIns().size());
         boolean isRegister = false;
         Tx compressedTx;
         if (txNotificationType != Tx.TxNotificationType.txSend) {
@@ -189,7 +192,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         HashSet<String> needNotifyHDAccountMonitoredHS = new HashSet<String>();
         HashSet<String> needNotifyDesktopHDMHS = new HashSet<String>();
 
-        List<HDAccount.HDAccountAddress> relatedAddresses = new ArrayList<HDAccount.HDAccountAddress>();
+        List<HDAccount.HDAccountAddress> relatedAddresses = new ArrayList<HDAccount
+                .HDAccountAddress>();
         List<HDAccount.HDAccountAddress> relatedHDMonitoredAddresses = new ArrayList<HDAccount
                 .HDAccountAddress>();
         List<DesktopHDMAddress> relatedDesktopHDMAddresses = new ArrayList<DesktopHDMAddress>();
@@ -208,7 +212,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         }
         if (hasDesktopHDMKeychain()) {
             DesktopHDMKeychain desktopHDMKeychain = desktopHDMKeychains.get(0);
-            relatedDesktopHDMAddresses = desktopHDMKeychain.getRelatedAddressesForTx(compressedTx, inAddresses);
+            relatedDesktopHDMAddresses = desktopHDMKeychain.getRelatedAddressesForTx
+                    (compressedTx, inAddresses);
         }
 
         for (HDAccount.HDAccountAddress hdAccountAddress : relatedAddresses) {
@@ -293,7 +298,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             }
         }
 
-        List<HDAccount.HDAccountAddress> needNotifityAddressList = new ArrayList<HDAccount.HDAccountAddress>();
+        List<HDAccount.HDAccountAddress> needNotifityAddressList = new ArrayList<HDAccount
+                .HDAccountAddress>();
         for (HDAccount.HDAccountAddress hdAccountAddress : relatedAddresses) {
             if (needNotifyHDAccountHS.contains(hdAccountAddress.getAddress())) {
                 needNotifityAddressList.add(hdAccountAddress);
@@ -308,7 +314,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             }
         }
 
-        List<DesktopHDMAddress> needNotifityDesktopHDMAddressList = new ArrayList<DesktopHDMAddress>();
+        List<DesktopHDMAddress> needNotifityDesktopHDMAddressList = new
+                ArrayList<DesktopHDMAddress>();
         for (DesktopHDMAddress desktopHDMAddress : relatedDesktopHDMAddresses) {
             if (needNotifityDesktopHDMAddressList.contains(desktopHDMAddress.getAddress())) {
                 needNotifityDesktopHDMAddressList.add(desktopHDMAddress);
@@ -532,6 +539,9 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         if (hasDesktopHDMKeychain() && !desktopHDMKeychains.get(0).isSyncComplete()) {
             return false;
         }
+        if (hasHDAccountMonitored() && !getHdAccountMonitored().isSyncComplete()) {
+            return false;
+        }
 
         return true;
     }
@@ -567,7 +577,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
     public void setHDMKeychain(HDMKeychain keychain) {
         synchronized (lock) {
             if (hdmKeychain != null && hdmKeychain != keychain) {
-                throw new RuntimeException("can not add a different hdm keychain to address manager");
+                throw new RuntimeException("can not add a different hdm keychain to address " +
+                        "manager");
             }
             if (hdmKeychain == keychain) {
                 return;
@@ -679,7 +690,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
         }
         for (Tx tx : txList) {
-            if (!isSendFromMe(tx, txHashList, address) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
+            if (!isSendFromMe(tx, txHashList, address) && tx.getOuts().size() > BitherjSettings
+                    .COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
                 for (Out out : tx.getOuts()) {
                     if (Utils.compareString(address.getAddress(), out.getOutAddress())) {
@@ -699,9 +711,33 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
         }
         for (Tx tx : txList) {
-            if (!isSendFromHDAccount(tx, txHashList) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
+            if (!isSendFromHDAccount(tx, txHashList) && tx.getOuts().size() > BitherjSettings
+                    .COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
                 HashSet<String> addressHashSet = AbstractDb.hdAccountProvider.
+                        getBelongAccountAddresses(tx.getOutAddressList());
+                for (Out out : tx.getOuts()) {
+                    if (addressHashSet.contains(out.getOutAddress())) {
+                        outList.add(out);
+                    }
+                }
+                tx.setOuts(outList);
+            }
+        }
+
+        return txList;
+    }
+
+    public List<Tx> compressTxsForHDAccountMoitored(List<Tx> txList) {
+        Map<Sha256Hash, Tx> txHashList = new HashMap<Sha256Hash, Tx>();
+        for (Tx tx : txList) {
+            txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
+        }
+        for (Tx tx : txList) {
+            if (!isSendFromHDAccount(tx, txHashList) && tx.getOuts().size() > BitherjSettings
+                    .COMPRESS_OUT_NUM) {
+                List<Out> outList = new ArrayList<Out>();
+                HashSet<String> addressHashSet = AbstractDb.coldHDAccountProvider.
                         getBelongAccountAddresses(tx.getOutAddressList());
                 for (Out out : tx.getOuts()) {
                     if (addressHashSet.contains(out.getOutAddress())) {
@@ -721,9 +757,11 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
         }
         for (Tx tx : txList) {
-            if (!isSendFromHDAccountMonitored(tx, txHashList) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
+            if (!isSendFromHDAccountMonitored(tx, txHashList) && tx.getOuts().size() >
+                    BitherjSettings.COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
-                HashSet<String> addressHashSet = new HashSet<String>();//TODO AbstractDb.hdAccountProvider.getBelongAccountAddresses(tx.getOutAddressList());
+                HashSet<String> addressHashSet = new HashSet<String>();//TODO AbstractDb
+                // .hdAccountProvider.getBelongAccountAddresses(tx.getOutAddressList());
                 for (Out out : tx.getOuts()) {
                     if (addressHashSet.contains(out.getOutAddress())) {
                         outList.add(out);
@@ -743,7 +781,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
         }
         for (Tx tx : txList) {
-            if (!isSendFromHDAccount(tx, txHashList) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
+            if (!isSendFromHDAccount(tx, txHashList) && tx.getOuts().size() > BitherjSettings
+                    .COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
                 HashSet<String> addressHashSet = AbstractDb.desktopTxProvider.
                         getBelongAccountAddresses(tx.getOutAddressList());
@@ -827,12 +866,14 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
                 hdAddressesSet = hdAccount.getBelongAccountAddresses(tx.getOutAddressList());
             }
             if (hasHDAccountMonitored()) {
-                hdMonitoredAddressesSet = hdAccountMonitored.getBelongAccountAddresses(tx.getOutAddressList());
+                hdMonitoredAddressesSet = hdAccountMonitored.getBelongAccountAddresses(tx
+                        .getOutAddressList());
             }
             for (Out out : tx.getOuts()) {
                 String outAddress = out.getOutAddress();
                 if (addressHashSet.contains(outAddress)
-                        || hdAddressesSet.contains(outAddress) || hdMonitoredAddressesSet.contains(outAddress)) {
+                        || hdAddressesSet.contains(outAddress) || hdMonitoredAddressesSet
+                        .contains(outAddress)) {
                     outList.add(out);
                 }
             }
@@ -848,7 +889,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
 
 
     public static boolean isPrivateLimit() {
-        int maxPrivateKey = AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD ?
+        int maxPrivateKey = AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode
+                .COLD ?
                 AbstractApp.bitherjSetting.watchOnlyAddressCountLimit()
                 : AbstractApp.bitherjSetting.privateKeyOfHotCountLimit();
         return AddressManager.getInstance().getPrivKeyAddresses() != null
@@ -857,16 +899,19 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
 
     public static boolean isWatchOnlyLimit() {
         return AddressManager.getInstance().getWatchOnlyAddresses() != null
-                && AddressManager.getInstance().getWatchOnlyAddresses().size() >= AbstractApp.bitherjSetting.watchOnlyAddressCountLimit();
+                && AddressManager.getInstance().getWatchOnlyAddresses().size() >= AbstractApp
+                .bitherjSetting.watchOnlyAddressCountLimit();
     }
 
     public static int canAddPrivateKeyCount() {
         int max;
         if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
-            max = AbstractApp.bitherjSetting.watchOnlyAddressCountLimit() - AddressManager.getInstance()
+            max = AbstractApp.bitherjSetting.watchOnlyAddressCountLimit() - AddressManager
+                    .getInstance()
                     .getAllAddresses().size();
         } else {
-            max = AbstractApp.bitherjSetting.privateKeyOfHotCountLimit() - AddressManager.getInstance()
+            max = AbstractApp.bitherjSetting.privateKeyOfHotCountLimit() - AddressManager
+                    .getInstance()
                     .getPrivKeyAddresses().size();
         }
         return max;
@@ -879,7 +924,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             if (AddressManager.getInstance().getHdmKeychain() == null) {
                 return false;
             }
-            return AddressManager.getInstance().getHdmKeychain().getAllCompletedAddresses().size() > 0;
+            return AddressManager.getInstance().getHdmKeychain().getAllCompletedAddresses().size
+                    () > 0;
         }
     }
 
