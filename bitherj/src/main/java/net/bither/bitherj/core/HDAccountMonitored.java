@@ -51,7 +51,6 @@ public class HDAccountMonitored extends Address {
 
     private long balance = 0;
 
-    protected transient byte[] accountExtentedPub;
     protected int hdSeedId = -1;
     protected boolean isFromXRandom;
 
@@ -72,7 +71,6 @@ public class HDAccountMonitored extends Address {
             isSyncedComplete, HDAccount.HDAccountGenerationDelegate generationDelegate) throws
             MnemonicException.MnemonicLengthException {
         super();
-        this.accountExtentedPub = accountExtentedPub;
         this.isFromXRandom = isFromXRandom;
         DeterministicKey account = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                 (accountExtentedPub);
@@ -126,8 +124,7 @@ public class HDAccountMonitored extends Address {
         //TODO AbstractDb.hdAccountProvider.addAddress(externalAddresses);
         //TODO AbstractDb.hdAccountProvider.addAddress(internalAddresses);
 
-        hdSeedId = 0; //TODO AbstractDb.addressProvider.addHDAccount(accountPubExtended,
-        // isFromXRandom)
+        hdSeedId = 0; //TODO AbstractDb.addressProvider.addHDAccount(internalKey.getPubKeyExtended(),externalKey.getPubKeyExtended(), isFromXRandom)
         internalKey.wipe();
         externalKey.wipe();
     }
@@ -135,7 +132,6 @@ public class HDAccountMonitored extends Address {
     public HDAccountMonitored(int seedId) {
         this.hdSeedId = seedId;
         this.isFromXRandom = false;// TODO AbstractDb.addressProvider.hdAccountIsXRandom(seedId);
-        this.accountExtentedPub = null; //TODO 
         updateBalance();
     }
 
@@ -171,8 +167,7 @@ public class HDAccountMonitored extends Address {
     }
 
     private void supplyNewInternalKey(int count, boolean isSyncedComplete) {
-        DeterministicKey root = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
-                (getInternalPub());
+        DeterministicKey root = HDKeyDerivation.createMasterPubKeyFromExtendedBytes(getInternalPub());
         int firstIndex = allGeneratedInternalAddressCount();
         ArrayList<HDAccount.HDAccountAddress> as = new ArrayList<HDAccount.HDAccountAddress>();
         for (int i = firstIndex;
@@ -306,8 +301,7 @@ public class HDAccountMonitored extends Address {
     }
 
     public void updateBalance() {
-        this.balance = 0; //TODO AbstractDb.hdAccountProvider.getHDAccountConfirmedBanlance(hdSeedId) +
-                calculateUnconfirmedBalance();
+        this.balance = 0; //TODO AbstractDb.hdAccountProvider.getHDAccountConfirmedBanlance(hdSeedId) + calculateUnconfirmedBalance();
     }
 
     private long calculateUnconfirmedBalance() {
@@ -402,15 +396,9 @@ public class HDAccountMonitored extends Address {
         List<HDAccount.HDAccountAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
         assert signingAddresses.size() == tx.getIns().size();
 
-        DeterministicKey accountKey = getAccount();
-        if (accountKey == null) {
-            return null;
-        }
-        DeterministicKey external = getChainRootKey(accountKey, AbstractHD.PathType
-                .EXTERNAL_ROOT_PATH);
-        DeterministicKey internal = getChainRootKey(accountKey, AbstractHD.PathType
-                .INTERNAL_ROOT_PATH);
-        accountKey.wipe();
+        DeterministicKey external = HDKeyDerivation.createMasterPubKeyFromExtendedBytes(getExternalPub());
+        DeterministicKey internal = HDKeyDerivation.createMasterPubKeyFromExtendedBytes(getInternalPub());
+
         List<byte[]> unsignedHashes = tx.getUnsignedInHashes();
         assert unsignedHashes.size() == signingAddresses.size();
         ArrayList<byte[]> signatures = new ArrayList<byte[]>();
@@ -547,10 +535,6 @@ public class HDAccountMonitored extends Address {
     protected DeterministicKey getChainRootKey(DeterministicKey accountKey, AbstractHD.PathType
             pathType) {
         return accountKey.deriveSoftened(pathType.getValue());
-    }
-
-    protected DeterministicKey getAccount() {
-        return HDKeyDerivation.createMasterPubKeyFromExtendedBytes(accountExtentedPub);
     }
 
     public boolean checkWithPassword(CharSequence password) {
