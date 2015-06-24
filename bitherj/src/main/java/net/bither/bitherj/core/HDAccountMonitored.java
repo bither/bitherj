@@ -19,13 +19,11 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
-import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.TxBuilderException;
-import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -34,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -382,64 +379,21 @@ public class HDAccountMonitored extends Address {
         return null;//TODO AbstractDb.hdAccountProvider.getBelongAccountAddresses(addressList);
     }
 
-    public Tx newTx(String toAddress, Long amount, CharSequence password) throws
+    public Tx newTx(String toAddress, Long amount) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
-        return newTx(new String[]{toAddress}, new Long[]{amount}, password);
+        return newTx(new String[]{toAddress}, new Long[]{amount});
     }
 
 
-    public Tx newTx(String[] toAddresses, Long[] amounts, CharSequence password) throws
+    public Tx newTx(String[] toAddresses, Long[] amounts) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
         List<Out> outs = null;//TODO AbstractDb.hdAccountProvider.getUnspendOutByHDAccount(hdSeedId);
-
-        Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(), Arrays.asList(amounts), Arrays.asList(toAddresses));
-        List<HDAccount.HDAccountAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
-        assert signingAddresses.size() == tx.getIns().size();
-
-        DeterministicKey external = HDKeyDerivation.createMasterPubKeyFromExtendedBytes(getExternalPub());
-        DeterministicKey internal = HDKeyDerivation.createMasterPubKeyFromExtendedBytes(getInternalPub());
-
-        List<byte[]> unsignedHashes = tx.getUnsignedInHashes();
-        assert unsignedHashes.size() == signingAddresses.size();
-        ArrayList<byte[]> signatures = new ArrayList<byte[]>();
-        HashMap<String, DeterministicKey> addressToKeyMap = new HashMap<String, DeterministicKey>
-                (signingAddresses.size());
-
-        for (int i = 0;
-             i < signingAddresses.size();
-             i++) {
-            HDAccount.HDAccountAddress a = signingAddresses.get(i);
-            byte[] unsigned = unsignedHashes.get(i);
-
-            if (!addressToKeyMap.containsKey(a.getAddress())) {
-                if (a.getPathType() == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-                    addressToKeyMap.put(a.getAddress(), external.deriveSoftened(a.getIndex()));
-                } else {
-                    addressToKeyMap.put(a.getAddress(), internal.deriveSoftened(a.getIndex()));
-                }
-            }
-
-            DeterministicKey key = addressToKeyMap.get(a.getAddress());
-            assert key != null;
-
-            TransactionSignature signature = new TransactionSignature(key.sign(unsigned, null),
-                    TransactionSignature.SigHash.ALL, false);
-            signatures.add(ScriptBuilder.createInputScript(signature, key).getProgram());
-        }
-
-        tx.signWithSignatures(signatures);
-        assert tx.verifySignatures();
-
-        external.wipe();
-        internal.wipe();
-        for (DeterministicKey key : addressToKeyMap.values()) {
-            key.wipe();
-        }
-
+        Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(), Arrays
+                .asList(amounts), Arrays.asList(toAddresses));
         return tx;
     }
 
-    private List<HDAccount.HDAccountAddress> getSigningAddressesForInputs(List<In> inputs) {
+    public List<HDAccount.HDAccountAddress> getSigningAddressesForInputs(List<In> inputs) {
         return null;//TODO AbstractDb.hdAccountProvider.getSigningAddressesForInputs(inputs);
     }
 
