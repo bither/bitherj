@@ -102,7 +102,7 @@ public class HDAccountMonitored extends Address {
              i++) {
             byte[] subExternalPub = externalKey.deriveSoftened(i).getPubKey();
             HDAccount.HDAccountAddress externalAddress = new HDAccount.HDAccountAddress
-                    (subExternalPub, AbstractHD.PathType.EXTERNAL_ROOT_PATH, i, isSyncedComplete);
+                    (subExternalPub, AbstractHD.PathType.EXTERNAL_ROOT_PATH, i, isSyncedComplete,hdSeedId);
             externalAddresses.add(externalAddress);
             progress += itemProgress;
             if (generationDelegate != null) {
@@ -111,7 +111,7 @@ public class HDAccountMonitored extends Address {
 
             byte[] subInternalPub = internalKey.deriveSoftened(i).getPubKey();
             HDAccount.HDAccountAddress internalAddress = new HDAccount.HDAccountAddress
-                    (subInternalPub, AbstractHD.PathType.INTERNAL_ROOT_PATH, i, isSyncedComplete);
+                    (subInternalPub, AbstractHD.PathType.INTERNAL_ROOT_PATH, i, isSyncedComplete,hdSeedId);
             internalAddresses.add(internalAddress);
             progress += itemProgress;
             if (generationDelegate != null) {
@@ -171,7 +171,7 @@ public class HDAccountMonitored extends Address {
              i < firstIndex + count;
              i++) {
             as.add(new HDAccount.HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD
-                    .PathType.INTERNAL_ROOT_PATH, i, isSyncedComplete));
+                    .PathType.INTERNAL_ROOT_PATH, i, isSyncedComplete,hdSeedId));
         }
         //TODO AbstractDb.hdAccountProvider.addAddress(as);
         log.info("HD monitored supplied {} internal addresses", as.size());
@@ -186,7 +186,7 @@ public class HDAccountMonitored extends Address {
              i < firstIndex + count;
              i++) {
             as.add(new HDAccount.HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD
-                    .PathType.EXTERNAL_ROOT_PATH, i, isSyncedComplete));
+                    .PathType.EXTERNAL_ROOT_PATH, i, isSyncedComplete,hdSeedId));
         }
        //TODO AbstractDb.hdAccountProvider.addAddress(as);
         log.info("HD monitored supplied {} external addresses", as.size());

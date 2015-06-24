@@ -9,6 +9,8 @@ public interface IColdHDAccountAddressProvider {
             , String firstAddress, boolean isXrandom, String addressOfPS
             , byte[] externalPub, byte[] internalPub);
 
+    public int addMonitoredHDAccount(boolean isXrandom, byte[] externalPub, byte[] internalPub);
+
     public String getHDFristAddress(int hdSeedId);
 
     public byte[] getExternalPub(int hdSeedId);

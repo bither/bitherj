@@ -170,7 +170,6 @@ public abstract class AbstractDb {
             "idx_cold_hd_address_address on cold_hd_account_addresses (address);";
 
 
-
     //add hd_accont_id for outs
     public static final String ADD_HD_ACCOUNT_ID_FOR_OUTS = "alter table outs add column " +
             "hd_account_id integer;";
@@ -216,6 +215,8 @@ public abstract class AbstractDb {
     public static IEnterpriseHDMProvider enterpriseHDMProvider;
     public static IDesktopAddressProvider desktopAddressProvider;
     public static IDesktopTxProvider desktopTxProvider;
+    public static IColdHDAccountAddressProvider coldHDAccountAddressProvider;
+    public static IColdHDAccountProvider coldHDAccountProvider;
 
     public void construct() {
         blockProvider = initBlockProvider();
@@ -245,6 +246,10 @@ public abstract class AbstractDb {
     public abstract IDesktopAddressProvider initEnDesktopAddressProvider();
 
     public abstract IDesktopTxProvider initDesktopTxProvider();
+
+    public abstract IColdHDAccountProvider initColdHDAccountProvider();
+
+    public abstract IColdHDAccountAddressProvider initColdHDAccountAddressPrivider();
 
     public interface Tables {
 
@@ -430,6 +435,7 @@ public abstract class AbstractDb {
 
 
     }
+
     public interface VanityAddressColumns {
         public static final String ADDRESS = "address";
         public static final String VANITY_LEN = "vanity_len";
