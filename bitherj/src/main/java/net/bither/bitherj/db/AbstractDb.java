@@ -32,6 +32,7 @@ public abstract class AbstractDb {
             ", out_status integer not null" +
             ", out_address text" +
             ", hd_account_id integer " +
+            ", cold_hd_account_id integer " +
             ", primary key (tx_hash, out_sn));";
 
     public static final String CREATE_INS_SQL = "create table if not exists ins " +
@@ -64,7 +65,8 @@ public abstract class AbstractDb {
             ", block_prev text" +
             ", is_main integer not null);";
 
-    public static final String CREATE_PASSWORD_SEED_SQL = "create table if not exists password_seed " +
+    public static final String CREATE_PASSWORD_SEED_SQL = "create table if not exists " +
+            "password_seed " +
             "(password_seed text not null primary key);";
     public static final String CREATE_ADDRESSES_SQL = "create table if not exists addresses " +
             "(address text not null primary key" +
@@ -81,7 +83,8 @@ public abstract class AbstractDb {
             ", hdm_address text not null" +
             ", is_xrandom integer not null" +
             ", singular_mode_backup text);";
-    public static final String CREATE_HDM_ADDRESSES_SQL = "create table if not exists hdm_addresses " +
+    public static final String CREATE_HDM_ADDRESSES_SQL = "create table if not exists " +
+            "hdm_addresses " +
             "(hd_seed_id integer not null" +
             ", hd_seed_index integer not null" +
             ", pub_key_hot text not null" +
@@ -96,17 +99,23 @@ public abstract class AbstractDb {
     public static final String CREATE_ALIASES_SQL = "create table if not exists aliases " +
             "(address text not null primary key" +
             ", alias text not null);";
-    public static final String CREATE_VANITY_ADDRESS_SQL = "create table if not exists vanity_address " +
+    public static final String CREATE_VANITY_ADDRESS_SQL = "create table if not exists " +
+            "vanity_address " +
             "(address text not null primary key" +
             " , vanity_len integer );";
 
-    public static final String CREATE_BLOCK_NO_INDEX = "create index idx_blocks_block_no on blocks (block_no);";
-    public static final String CREATE_BLOCK_PREV_INDEX = "create index idx_blocks_block_prev on blocks (block_prev);";
+    public static final String CREATE_BLOCK_NO_INDEX = "create index idx_blocks_block_no on " +
+            "blocks (block_no);";
+    public static final String CREATE_BLOCK_PREV_INDEX = "create index idx_blocks_block_prev on " +
+            "blocks (block_prev);";
 
     // new index
-    public static final String CREATE_OUT_OUT_ADDRESS_INDEX = "create index idx_out_out_address on outs (out_address);";
-    public static final String CREATE_TX_BLOCK_NO_INDEX = "create index idx_tx_block_no on txs (block_no);";
-    public static final String CREATE_IN_PREV_TX_HASH_INDEX = "create index idx_in_prev_tx_hash on ins (prev_tx_hash);";
+    public static final String CREATE_OUT_OUT_ADDRESS_INDEX = "create index idx_out_out_address " +
+            "on outs (out_address);";
+    public static final String CREATE_TX_BLOCK_NO_INDEX = "create index idx_tx_block_no on txs " +
+            "(block_no);";
+    public static final String CREATE_IN_PREV_TX_HASH_INDEX = "create index idx_in_prev_tx_hash " +
+            "on ins (prev_tx_hash);";
 
 
     //hd account
@@ -119,7 +128,8 @@ public abstract class AbstractDb {
             ", internal_pub text not null" +
             ", is_xrandom integer not null);";
 
-    public static final String CREATE_HD_ACCOUNT_ADDRESSES = "create table if not exists hd_account_addresses " +
+    public static final String CREATE_HD_ACCOUNT_ADDRESSES = "create table if not exists " +
+            "hd_account_addresses " +
             "(path_type integer not null" +
             ", address_index integer not null" +
             ", is_issued integer not null" +
@@ -127,26 +137,62 @@ public abstract class AbstractDb {
             ", pub text not null" +
             ", is_synced integer not null" +
             ", primary key (address));";
+    //cold hd account
+    public static final String CREATE_COLD_HD_ACCOUNT = "create table if not exists  " +
+            "cold_hd_account " +
+            "( hd_account_id integer not null primary key autoincrement" +
+            ", encrypt_seed text not null" +
+            ", encrypt_mnemonic_seed text" +
+            ", hd_address text not null" +
+            ", external_pub text not null" +
+            ", internal_pub text not null" +
+            ", is_xrandom integer not null);";
+
+    public static final String CREATE_COLD_HD_ACCOUNT_ADDRESSES = "create table if not exists " +
+            "cold_hd_account_addresses " +
+            "(hd_account_id integer" +
+            ",path_type integer not null" +
+            ", address_index integer not null" +
+            ", is_issued integer not null" +
+            ", address text not null" +
+            ", pub text not null" +
+            ", is_synced integer not null" +
+            ", primary key (address));";
+
 
     // hd Account index
-    public static final String CREATE_HD_ACCOUNT_ADDRESS_INDEX = "create index idx_hd_address_address on hd_account_addresses (address);";
+    public static final String CREATE_HD_ACCOUNT_ADDRESS_INDEX = "create index " +
+            "idx_hd_address_address on hd_account_addresses (address);";
+
+
+    // hd Account index
+    public static final String CREATE_COLD_HD_ACCOUNT_ADDRESS_INDEX = "create index " +
+            "idx_cold_hd_address_address on cold_hd_account_addresses (address);";
+
+
 
     //add hd_accont_id for outs
-    public static final String ADD_HD_ACCOUNT_ID_FOR_OUTS = "alter table outs add column hd_account_id integer;";
+    public static final String ADD_HD_ACCOUNT_ID_FOR_OUTS = "alter table outs add column " +
+            "hd_account_id integer;";
+    public static final String ADD_COLD_HD_ACCOUNT_ID_FOR_OUTS = "alter table outs add column " +
+            "cold_hd_account_id integer;";
 
     //enterprise hdm
-    public static final String CREATE_ENTERPRISE_HD_ACCOUNT = "create table if not exists enterprise_hd_account " +
+    public static final String CREATE_ENTERPRISE_HD_ACCOUNT = "create table if not exists " +
+            "enterprise_hd_account " +
             "( hd_account_id integer not null primary key autoincrement" +
             ", encrypt_seed text not null" +
             ", encrypt_mnemonic_seed text" +
             ", hd_address text not null" +
             ", is_xrandom integer not null);";
-    public static final String CREATE_MULTI_SIGN_SET = "create table if not exists enterprise_multi_sign_set " +
+    public static final String CREATE_MULTI_SIGN_SET = "create table if not exists " +
+            "enterprise_multi_sign_set " +
             " (multi_sign_id integer not null primary key autoincrement" +
             ", multi_sign_n integer not null" +
             ", multi_sign_m integer not null);";
 
-    public static final String CREATE_ENTERPRISE_HDM_ADDRESSES_SQL = "create table if not exists enterprise_hdm_addresses " +
+    public static final String CREATE_ENTERPRISE_HDM_ADDRESSES_SQL = "create table if not exists " +
+            "enterprise_hdm_addresses " +
             "(hdm_index integer not null" +
             ", address text not null" +
             ", pub_key_0 text" +
@@ -222,6 +268,11 @@ public abstract class AbstractDb {
         public static final String HD_ACCOUNT = "hd_account";
 
         public static final String HD_ACCOUNT_ADDRESS = "hd_account_addresses";
+
+        //cold hd account
+        public static final String COLD_HD_ACCOUNT = "cold_hd_account";
+
+        public static final String COLD_HD_ACCOUNT_ADDRESS = "cold_hd_account_addresses";
 
         //enterprise hdm
 
@@ -355,6 +406,30 @@ public abstract class AbstractDb {
 
     }
 
+    //cold hd account
+
+    public interface ColdHDAccountColumns {
+        public static final String HD_ACCOUNT_ID = "hd_account_id";
+        public static final String ENCRYPT_SEED = "encrypt_seed";
+        public static final String ENCRYPT_MNMONIC_SEED = "encrypt_mnemonic_seed";
+        public static final String IS_XRANDOM = "is_xrandom";
+        public static final String HD_ADDRESS = "hd_address";
+        public static final String EXTERNAL_PUB = "external_pub";
+        public static final String INTERNAL_PUB = "internal_pub";
+
+    }
+
+    public interface ColdHDAccountAddressesColumns {
+        public static final String HD_ACCOUNT_ID = "hd_account_id";
+        public static final String PATH_TYPE = "path_type";
+        public static final String ADDRESS_INDEX = "address_index";
+        public static final String IS_ISSUED = "is_issued";
+        public static final String ADDRESS = "address";
+        public static final String PUB = "pub";
+        public static final String IS_SYNCED = "is_synced";
+
+
+    }
     public interface VanityAddressColumns {
         public static final String ADDRESS = "address";
         public static final String VANITY_LEN = "vanity_len";
