@@ -27,6 +27,8 @@ import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.qrcode.QRCodeUtil;
+import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
@@ -169,10 +171,40 @@ public class HDAccountCold extends AbstractHD {
         return AbstractDb.coldHDAccountAddressProvider.getHDAccountEncryptMnmonicSeed(hdSeedId);
     }
 
+    public String getFullEncryptPrivKey() {
+        String encryptPrivKey = getEncryptedMnemonicSeed();
+        return PrivateKeyUtil.getFullencryptHDMKeyChain(isFromXRandom, encryptPrivKey);
+    }
+
+    public String getQRCodeFullEncryptPrivKey() {
+        return QRCodeUtil.HD_QR_CODE_FLAG + getFullEncryptPrivKey();
+    }
+
     private static byte[] randomByteFromSecureRandom(SecureRandom random, int length) {
         byte[] bytes = new byte[length];
         random.nextBytes(bytes);
         return bytes;
+    }
+
+    public byte[] accountPubExtended(CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        DeterministicKey master = masterKey(password);
+        DeterministicKey account = getAccount(master);
+        byte[] extended = account.getPubKeyExtended();
+        master.wipe();
+        account.wipe();
+        return extended;
+    }
+
+    public String accountPubExtendedString(CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        byte[] extended = accountPubExtended(password);
+        String result = "";
+        if (isFromXRandom) {
+            result += QRCodeUtil.XRANDOM_FLAG;
+        }
+        result += Utils.bytesToHexString(extended).toUpperCase();
+        return result;
     }
 
     public static boolean hasHDAccountCold() {
