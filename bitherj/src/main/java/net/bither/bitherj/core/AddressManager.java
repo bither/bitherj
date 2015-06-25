@@ -317,7 +317,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         List<DesktopHDMAddress> needNotifityDesktopHDMAddressList = new
                 ArrayList<DesktopHDMAddress>();
         for (DesktopHDMAddress desktopHDMAddress : relatedDesktopHDMAddresses) {
-            if (needNotifityDesktopHDMAddressList.contains(desktopHDMAddress.getAddress())) {
+            if (needNotifyDesktopHDMHS.contains(desktopHDMAddress.getAddress())) {
                 needNotifityDesktopHDMAddressList.add(desktopHDMAddress);
             }
         }
