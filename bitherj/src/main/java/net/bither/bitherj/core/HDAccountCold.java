@@ -212,7 +212,7 @@ public class HDAccountCold extends AbstractHD {
     }
 
     public static HDAccountCold hdAccountCold() {
-        List<Integer> seeds = AbstractDb.addressProvider.getHDAccountSeeds();
+        List<Integer> seeds = AbstractDb.coldHDAccountAddressProvider.getHDAccountSeeds();
         if (seeds.size() > 0) {
             return new HDAccountCold(seeds.get(0));
         } else {

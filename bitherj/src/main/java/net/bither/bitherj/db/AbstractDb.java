@@ -227,6 +227,8 @@ public abstract class AbstractDb {
         enterpriseHDMProvider = initEnterpriseHDMProvider();
         desktopAddressProvider = initEnDesktopAddressProvider();
         desktopTxProvider = initDesktopTxProvider();
+        coldHDAccountAddressProvider = initColdHDAccountAddressPrivider();
+        coldHDAccountProvider = initColdHDAccountProvider();
 
 
     }
