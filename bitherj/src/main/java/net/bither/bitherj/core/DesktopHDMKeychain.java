@@ -422,10 +422,8 @@ public class DesktopHDMKeychain extends AbstractHD {
     }
 
 
-    public void signTx(Tx tx, List<byte[]> unSignHash, CharSequence passphrase,
+    public void signTx(Tx tx, List<byte[]> unSignHash, CharSequence passphrase, List<DesktopHDMAddress> desktopHDMAddresslist,
                        DesktopHDMFetchOtherSignatureDelegate delegate) {
-
-        List<DesktopHDMAddress> desktopHDMAddresslist = getSigningAddressesForInputs(tx.getIns());
         tx.signWithSignatures(this.signWithOther(unSignHash,
                 passphrase, tx, desktopHDMAddresslist, delegate));
     }
@@ -726,7 +724,7 @@ public class DesktopHDMKeychain extends AbstractHD {
             byte[] pubByte = pub.getMultiSigScript().getProgram();
             filter.insert(pubByte);
             filter.insert(Utils.sha256hash160(pubByte));
-           // System.out.println("address:" + Utils.toP2SHAddress(Utils.sha256hash160(pubByte)));
+            // System.out.println("address:" + Utils.toP2SHAddress(Utils.sha256hash160(pubByte)));
         }
         List<Out> outs = AbstractDb.desktopTxProvider.getUnspendOutByHDAccountWithPath
                 (getHdSeedId(), AbstractHD.PathType.INTERNAL_ROOT_PATH);
