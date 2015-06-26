@@ -554,8 +554,10 @@ public class QRCodeTxTransport implements Serializable {
         qrCodeTransport.setFee(tx.getFee());
         List<String> hashList = new ArrayList<String>();
         if (txTransportType == TxTransportType.DesktopHDM) {
-            for (DesktopHDMAddress desktopHDMAddress : desktopHDMAddresses) {
-                for (byte[] h : tx.getUnsignedInHashesForHDM(desktopHDMAddress.getPubKey())) {
+
+            for (int i = 0; i < desktopHDMAddresses.size(); i++) {
+                DesktopHDMAddress desktopHDMAddress = desktopHDMAddresses.get(i);
+                for (byte[] h : tx.getUnsignedInHashesForDesktpHDM(desktopHDMAddress.getPubKey(), i)) {
                     String[] strings = new String[]{Integer.toString(desktopHDMAddress.getPathType().getValue()),
                             Integer.toString(desktopHDMAddress.getIndex()), Utils.bytesToHexString(h)};
                     hashList.add(Utils.joinString(strings, QRCodeUtil.QR_CODE_SECONDARY_SPLIT));

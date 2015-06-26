@@ -1374,8 +1374,8 @@ public class Tx extends Message implements Comparable<Tx> {
         if (address instanceof HDAccount) {
             return deltaAmountFrom((HDAccount) address);
         }
-        if (address instanceof HDAccountMonitored){
-            return deltaAmountFrom((HDAccountMonitored)address);
+        if (address instanceof HDAccountMonitored) {
+            return deltaAmountFrom((HDAccountMonitored) address);
         }
         long receive = 0;
         for (Out out : this.outs) {
@@ -1466,6 +1466,15 @@ public class Tx extends Message implements Comparable<Tx> {
                     .SigHash.ALL, false);
             result.add(this.hashForSignature(in.getInSn(), pubs, sigHashType));
         }
+        return result;
+    }
+
+    public List<byte[]> getUnsignedInHashesForDesktpHDM(byte[] pubs, int index) {
+        List<byte[]> result = new ArrayList<byte[]>();
+        In in = this.getIns().get(index);
+        byte sigHashType = (byte) TransactionSignature.calcSigHashValue(TransactionSignature
+                .SigHash.ALL, false);
+        result.add(this.hashForSignature(in.getInSn(), pubs, sigHashType));
         return result;
     }
 
@@ -1570,8 +1579,10 @@ public class Tx extends Message implements Comparable<Tx> {
                     if (in.getPrevOutScript() == null || in.getPrevOutScript().length == 0) {
                         return false;
                     }
+                    System.out.println("in:" + in.getFromAddress() + "," + in.getInSn());
                     scriptSig.correctlySpends(this, in.getInSn(), new Script(in.getPrevOutScript
                             ()), true);
+
                 }
             } catch (ScriptException ex) {
                 ex.printStackTrace();
