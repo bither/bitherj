@@ -140,7 +140,7 @@ public class HDAccountCold extends AbstractHD {
     }
 
     public String getFirstAddressFromDb() {
-        return AbstractDb.addressProvider.getHDFristAddress(hdSeedId);
+        return AbstractDb.coldHDAccountAddressProvider.getHDFristAddress(hdSeedId);
     }
 
     public boolean checkWithPassword(CharSequence password) {
