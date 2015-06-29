@@ -16,8 +16,14 @@
 
 package net.bither.bitherj.qrcode;
 
-import net.bither.bitherj.core.*;
-import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.core.AbstractHD;
+import net.bither.bitherj.core.AddressManager;
+import net.bither.bitherj.core.DesktopHDMAddress;
+import net.bither.bitherj.core.EnterpriseHDMAddress;
+import net.bither.bitherj.core.HDAccount;
+import net.bither.bitherj.core.HDAccountMonitored;
+import net.bither.bitherj.core.HDMAddress;
+import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Utils;
@@ -164,6 +170,54 @@ public class QRCodeTxTransport implements Serializable {
         this.txTransportType = txTransportType;
     }
 
+    public static String getHDAccountMonitoredUnsignedTx(Tx tx, String toAddress,
+                                                         HDAccountMonitored account) {
+        TxTransportType txTransportType = TxTransportType.ColdHD;
+        List<HDAccount.HDAccountAddress> addresses = account.getSigningAddressesForInputs(tx
+                .getIns());
+        List<byte[]> hashes = tx.getUnsignedInHashes();
+
+        QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
+
+        qrCodeTransport.setMyAddress(tx.getFromAddress());
+        qrCodeTransport.setToAddress(toAddress);
+        qrCodeTransport.setTo(tx.amountSentToAddress(toAddress));
+        qrCodeTransport.setFee(tx.getFee());
+        List<String> hashList = new ArrayList<String>();
+
+        for (int i = 0;
+             i < addresses.size();
+             i++) {
+            HDAccount.HDAccountAddress address = addresses.get(i);
+            byte[] h = hashes.get(i);
+            String[] strings = new String[]{Integer.toString(address.getPathType().getValue()),
+                    Integer.toString(address.getIndex()), Utils.bytesToHexString(h).toUpperCase
+                    (Locale.US)};
+            hashList.add(Utils.joinString(strings, QRCodeUtil.QR_CODE_SECONDARY_SPLIT));
+        }
+        qrCodeTransport.setHashList(hashList);
+
+        String preSignString;
+        try {
+            String versionStr = "";
+            if (txTransportType != null) {
+                versionStr = TX_TRANSPORT_VERSION + txTransportType.getType();
+            }
+            String[] preSigns = new String[]{versionStr, Base58.bas58ToHexWithAddress
+                    (qrCodeTransport.getMyAddress()), Long.toHexString(qrCodeTransport.getFee()),
+                    Base58.bas58ToHexWithAddress(qrCodeTransport.getToAddress()), Long
+                    .toHexString(qrCodeTransport.getTo())};
+            preSignString = Utils.joinString(preSigns, QRCodeUtil.QR_CODE_SPLIT);
+            String[] hashStrings = (String[]) qrCodeTransport.getHashList().toArray();
+            preSignString = preSignString + QRCodeUtil.QR_CODE_SPLIT + Utils.joinString
+                    (hashStrings, QRCodeUtil.QR_CODE_SPLIT);
+            preSignString.toUpperCase(Locale.US);
+        } catch (AddressFormatException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return preSignString;
+    }
 
     private static QRCodeTxTransport changeFormatQRCodeTransportOfDesktopHDM(String str) {
         try {
@@ -319,6 +373,22 @@ public class QRCodeTxTransport implements Serializable {
             }
             qrCodeTxTransport.setHdmIndex(hdmIndex);
             qrCodeTxTransport.setTxTransportType(txTransportType);
+            if (txTransportType == TxTransportType.ColdHD) {
+                List<String> strs = qrCodeTxTransport.getHashList();
+                ArrayList<String> hashes = new ArrayList<String>();
+                ArrayList<AbstractHD.PathTypeIndex> paths = new ArrayList<AbstractHD
+                        .PathTypeIndex>();
+                for (String s : strs) {
+                    String[] hs = s.split(QRCodeUtil.QR_CODE_SECONDARY_SPLIT_ESCAPE);
+                    AbstractHD.PathTypeIndex path = new AbstractHD.PathTypeIndex();
+                    path.pathType = AbstractHD.getTernalRootType(Integer.valueOf(hs[0]));
+                    path.index = Integer.valueOf(hs[1]);
+                    paths.add(path);
+                    hashes.add(hs[2]);
+                }
+                qrCodeTxTransport.setHashList(hashes);
+                qrCodeTxTransport.setPathTypeIndexes(paths);
+            }
             return qrCodeTxTransport;
         } catch (Exception e) {
             e.printStackTrace();

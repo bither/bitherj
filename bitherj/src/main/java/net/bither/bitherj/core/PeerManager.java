@@ -871,7 +871,9 @@ public class PeerManager {
             }
             bloomFilterElementCount = addresses.size() * 2 + outs.size() + (AddressManager
                     .getInstance().hasHDAccount() ? AddressManager.getInstance().getHdAccount()
-                    .elementCountForBloomFilter() : 0) + desktopHDMElementCount + 100;
+                    .elementCountForBloomFilter() : 0) + (AddressManager.getInstance()
+                    .hasHDAccountMonitored() ? AddressManager.getInstance().getHdAccountMonitored
+                    ().elementCountForBloomFilter() : 0) + desktopHDMElementCount + 100;
 
             BloomFilter filter = new BloomFilter(bloomFilterElementCount, filterFpRate, tweak,
                     BloomFilter.BloomUpdate.UPDATE_ALL);
@@ -899,6 +901,10 @@ public class PeerManager {
 
             if (AddressManager.getInstance().hasHDAccount()) {
                 AddressManager.getInstance().getHdAccount().addElementsForBloomFilter(filter);
+            }
+
+            if (AddressManager.getInstance().hasHDAccountMonitored()) {
+                AddressManager.getInstance().getHdAccountMonitored().addElementsForBloomFilter(filter);
             }
 
             if (AddressManager.getInstance().hasDesktopHDMKeychain()) {

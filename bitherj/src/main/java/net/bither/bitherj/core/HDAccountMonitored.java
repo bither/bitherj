@@ -145,11 +145,11 @@ public class HDAccountMonitored extends Address {
     }
 
     public byte[] getInternalPub() {
-        return AbstractDb.addressProvider.getInternalPub(hdSeedId);
+        return AbstractDb.coldHDAccountAddressProvider.getInternalPub(hdSeedId);
     }
 
     public byte[] getExternalPub() {
-        return AbstractDb.addressProvider.getExternalPub(hdSeedId);
+        return AbstractDb.coldHDAccountAddressProvider.getExternalPub(hdSeedId);
     }
 
     public void supplyEnoughKeys(boolean isSyncedComplete) {
