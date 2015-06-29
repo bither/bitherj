@@ -242,7 +242,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
                 needNotifyHDAccountHS.add(outAddress);
             }
 
-            if (relatedHDMonitoredAddresses.contains(outAddress)) {
+            if (relatedHDMonitoredAddressesHS.contains(outAddress)) {
                 needNotifyHDAccountMonitoredHS.add(outAddress);
             }
             if (relatedDesktopHDMAddressesHS.contains(outAddress)) {
