@@ -326,6 +326,11 @@ public class PeerManager {
                 public void run() {
                     peer.connectSucceed();
                     if (isOnlyBoardcasting()) {
+                        for (Tx tx : publishedTx.values()) {
+                            if (tx.getSource() > 0 && tx.getSource() <= MaxPeerCount) {
+                                peer.sendInvMessageWithTxHash(new Sha256Hash(tx.getTxHash()));
+                            }
+                        }
                         return;
                     }
                     if (!doneSyncFromSPV() && getLastBlockHeight() >= peer.getVersionLastBlockHeight()) {
