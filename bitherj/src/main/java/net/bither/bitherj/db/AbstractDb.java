@@ -141,9 +141,9 @@ public abstract class AbstractDb {
     public static final String CREATE_COLD_HD_ACCOUNT = "create table if not exists  " +
             "cold_hd_account " +
             "( hd_account_id integer not null primary key autoincrement" +
-            ", encrypt_seed text not null" +
+            ", encrypt_seed text " +
             ", encrypt_mnemonic_seed text" +
-            ", hd_address text not null" +
+            ", hd_address text " +
             ", external_pub text not null" +
             ", internal_pub text not null" +
             ", is_xrandom integer not null);";
