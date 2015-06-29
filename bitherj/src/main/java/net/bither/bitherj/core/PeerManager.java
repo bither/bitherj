@@ -86,7 +86,7 @@ public class PeerManager {
     private Timer syncTimeOutTimer;
     private HashMap<Sha256Hash, Timer> publishTxTimeoutTimers;
 
-    private boolean onlyBoardcasting = false;
+    private boolean onlyBroadcasting = false;
 
     public static final PeerManager instance() {
         if (instance == null) {
@@ -325,7 +325,7 @@ public class PeerManager {
                 @Override
                 public void run() {
                     peer.connectSucceed();
-                    if (isOnlyBoardcasting()) {
+                    if (isOnlyBroadcasting()) {
                         for (Tx tx : publishedTx.values()) {
                             if (tx.getSource() > 0 && tx.getSource() <= MaxPeerCount) {
                                 peer.sendInvMessageWithTxHash(new Sha256Hash(tx.getTxHash()));
@@ -1106,12 +1106,12 @@ public class PeerManager {
         return synchronizing;
     }
 
-    public boolean isOnlyBoardcasting() {
-        return this.onlyBoardcasting;
+    public boolean isOnlyBroadcasting() {
+        return this.onlyBroadcasting;
     }
 
-    public void setOnlyBoardcasting(boolean onlyBoardcasting) {
-        this.onlyBoardcasting = onlyBoardcasting;
+    public void setOnlyBroadcasting(boolean onlyBroadcasting) {
+        this.onlyBroadcasting = onlyBroadcasting;
     }
 
     public void onDestroy() {

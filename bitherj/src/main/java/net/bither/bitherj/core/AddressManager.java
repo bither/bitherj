@@ -147,13 +147,15 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
     }
 
     private void initDesktopHDMKeychain() {
-        List<Integer> seeds = AbstractDb.desktopAddressProvider.getDesktopKeyChainSeed();
-        if (seeds.size() > 0) {
-            desktopHDMKeychains = new ArrayList<DesktopHDMKeychain>();
-            for (int i = 0;
-                 i < seeds.size();
-                 i++) {
-                desktopHDMKeychains.add(new DesktopHDMKeychain(seeds.get(i)));
+        if (AbstractDb.desktopAddressProvider != null) {
+            List<Integer> seeds = AbstractDb.desktopAddressProvider.getDesktopKeyChainSeed();
+            if (seeds.size() > 0) {
+                desktopHDMKeychains = new ArrayList<DesktopHDMKeychain>();
+                for (int i = 0;
+                     i < seeds.size();
+                     i++) {
+                    desktopHDMKeychains.add(new DesktopHDMKeychain(seeds.get(i)));
+                }
             }
         }
     }
@@ -559,13 +561,15 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
     }
 
     private void initEnterpriseHDMKeychain() {
-        List<Integer> ids = AbstractDb.enterpriseHDMProvider.getEnterpriseHDMKeychainIds();
-        if (ids != null && ids.size() > 0) {
-            enterpriseHDMKeychain = new EnterpriseHDMKeychain(ids.get(0));
-            enterpriseHDMKeychain.setAddressChangeDelegate(this);
-            List<EnterpriseHDMAddress> addresses = enterpriseHDMKeychain.getAddresses();
-            for (EnterpriseHDMAddress a : addresses) {
-                addressHashSet.add(a.getAddress());
+        if (AbstractDb.enterpriseHDMProvider != null) {
+            List<Integer> ids = AbstractDb.enterpriseHDMProvider.getEnterpriseHDMKeychainIds();
+            if (ids != null && ids.size() > 0) {
+                enterpriseHDMKeychain = new EnterpriseHDMKeychain(ids.get(0));
+                enterpriseHDMKeychain.setAddressChangeDelegate(this);
+                List<EnterpriseHDMAddress> addresses = enterpriseHDMKeychain.getAddresses();
+                for (EnterpriseHDMAddress a : addresses) {
+                    addressHashSet.add(a.getAddress());
+                }
             }
         }
     }
