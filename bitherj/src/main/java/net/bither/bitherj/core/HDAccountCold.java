@@ -23,11 +23,13 @@ import com.google.common.collect.Collections2;
 
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
+import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.qrcode.QRCodeUtil;
+import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
 
@@ -130,9 +132,10 @@ public class HDAccountCold extends AbstractHD {
             } else {
                 key = internal.deriveSoftened(path.index);
             }
-            ECKey.ECDSASignature sig = key.sign(hash);
+            TransactionSignature sig = new TransactionSignature(key.sign(hash),
+                    TransactionSignature.SigHash.ALL, false);
+            sigs.add(ScriptBuilder.createInputScript(sig, key).getProgram());
             key.wipe();
-            sigs.add(sig.encodeToDER());
         }
         external.wipe();
         internal.wipe();

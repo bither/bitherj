@@ -1407,7 +1407,7 @@ public class Tx extends Message implements Comparable<Tx> {
                 receive += out.getOutValue();
             }
         }
-        long sent = 0;//TODO AbstractDb.hdAccountProvider.sentFromAccount(account.getHdSeedId(), getTxHash());
+        long sent = AbstractDb.coldHDAccountProvider.sentFromAccount(account.getHdSeedId(), getTxHash());
         return receive - sent;
     }
 

@@ -208,7 +208,8 @@ public class QRCodeTxTransport implements Serializable {
                     Base58.bas58ToHexWithAddress(qrCodeTransport.getToAddress()), Long
                     .toHexString(qrCodeTransport.getTo())};
             preSignString = Utils.joinString(preSigns, QRCodeUtil.QR_CODE_SPLIT);
-            String[] hashStrings = (String[]) qrCodeTransport.getHashList().toArray();
+            String[] hashStrings = new String[qrCodeTransport.getHashList().size()];
+            hashStrings = qrCodeTransport.getHashList().toArray(hashStrings);
             preSignString = preSignString + QRCodeUtil.QR_CODE_SPLIT + Utils.joinString
                     (hashStrings, QRCodeUtil.QR_CODE_SPLIT);
             preSignString.toUpperCase(Locale.US);

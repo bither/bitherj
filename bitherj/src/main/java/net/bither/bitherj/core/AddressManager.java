@@ -280,15 +280,16 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
                 if (relatedAddressesHS.contains(address)) {
                     needNotifyHDAccountHS.add(address);
                 }
-                if (relatedHDMonitoredAddresses.contains(address)) {
+                if (relatedHDMonitoredAddressesHS.contains(address)) {
                     needNotifyHDAccountMonitoredHS.add(address);
                 }
                 if (relatedDesktopHDMAddressesHS.contains(address)) {
                     needNotifyDesktopHDMHS.add(address);
                 }
             }
-            isRegister = needNotifyAddressHashSet.size() > 0
-                    || needNotifyHDAccountHS.size() > 0 || needNotifyDesktopHDMHS.size() > 0;
+            isRegister = needNotifyAddressHashSet.size() > 0 || needNotifyHDAccountHS.size() > 0
+                    || needNotifyDesktopHDMHS.size() > 0 || needNotifyHDAccountMonitoredHS.size()
+                    > 0;
         }
 
 
