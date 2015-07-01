@@ -62,7 +62,11 @@ public class QRCodeEnodeUtil {
                     && (str.indexOf(QRCodeUtil.XRANDOM_FLAG) == 0));
             boolean checkUnCompressed = str.length() == 130 || ((str.length() == 131)
                     && (str.indexOf(QRCodeUtil.XRANDOM_FLAG) == 0));
+            if(str.indexOf(QRCodeUtil.XRANDOM_FLAG) == 0){
+                str = str.substring(QRCodeUtil.XRANDOM_FLAG.length());
+            }
             org.spongycastle.math.ec.ECPoint ecPoint = ECKey.checkPoint(Utils.hexStringToByteArray(str));
+
             if (ecPoint == null || !ecPoint.isValid()) {
                 return false;
             }
