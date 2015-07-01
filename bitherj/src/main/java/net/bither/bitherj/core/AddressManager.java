@@ -143,7 +143,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
     }
 
     private void initHDAccountMonitored() {
-        List<Integer> seeds = AbstractDb.coldHDAccountAddressProvider.getHDAccountSeeds();
+        List<Integer> seeds = AbstractDb.hdAccountProvider.getHDAccountSeeds();
         if (seeds.size() > 0) {
             hdAccountMonitored = new HDAccountMonitored(seeds.get(0));
         }
@@ -745,7 +745,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             if (!isSendFromHDAccount(tx, txHashList) && tx.getOuts().size() > BitherjSettings
                     .COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
-                HashSet<String> addressHashSet = AbstractDb.coldHDAccountProvider.
+                HashSet<String> addressHashSet = AbstractDb.hdAccountProvider.
                         getBelongAccountAddresses(tx.getOutAddressList());
                 for (Out out : tx.getOuts()) {
                     if (addressHashSet.contains(out.getOutAddress())) {
@@ -768,7 +768,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             if (!isSendFromHDAccountMonitored(tx, txHashList) && tx.getOuts().size() >
                     BitherjSettings.COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
-                HashSet<String> addressHashSet = AbstractDb.coldHDAccountProvider
+                HashSet<String> addressHashSet = AbstractDb.hdAccountProvider
                         .getBelongAccountAddresses(tx.getOutAddressList());
                 for (Out out : tx.getOuts()) {
                     if (addressHashSet.contains(out.getOutAddress())) {
@@ -858,7 +858,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
                 }
             }
         }
-        List<HDAccount.HDAccountAddress> hdAccountAddressList = AbstractDb.coldHDAccountProvider
+        List<HDAccount.HDAccountAddress> hdAccountAddressList = AbstractDb.hdAccountProvider
                 .belongAccount(inAddressList);
         return hdAccountAddressList != null && hdAccountAddressList.size() > 0;
     }

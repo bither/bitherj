@@ -120,10 +120,10 @@ public class HDAccountMonitored extends Address {
                 generationDelegate.onHDAccountGenerationProgress(progress);
             }
         }
-        AbstractDb.coldHDAccountProvider.addAddress(externalAddresses);
-        AbstractDb.coldHDAccountProvider.addAddress(internalAddresses);
+        AbstractDb.hdAccountProvider.addAddress(externalAddresses);
+        AbstractDb.hdAccountProvider.addAddress(internalAddresses);
 
-        hdSeedId = AbstractDb.coldHDAccountAddressProvider.addMonitoredHDAccount(isFromXRandom,
+        hdSeedId = AbstractDb.hdAccountProvider.addMonitoredHDAccount(isFromXRandom,
                 internalKey.getPubKeyExtended(), externalKey.getPubKeyExtended());
         internalKey.wipe();
         externalKey.wipe();
@@ -131,7 +131,7 @@ public class HDAccountMonitored extends Address {
 
     public HDAccountMonitored(int seedId) {
         this.hdSeedId = seedId;
-        this.isFromXRandom = AbstractDb.coldHDAccountAddressProvider.hdAccountIsXRandom(seedId);
+        this.isFromXRandom = AbstractDb.hdAccountProvider.hdAccountIsXRandom(seedId);
         updateBalance();
     }
 
@@ -145,11 +145,11 @@ public class HDAccountMonitored extends Address {
     }
 
     public byte[] getInternalPub() {
-        return AbstractDb.coldHDAccountAddressProvider.getInternalPub(hdSeedId);
+        return AbstractDb.hdAccountProvider.getInternalPub(hdSeedId);
     }
 
     public byte[] getExternalPub() {
-        return AbstractDb.coldHDAccountAddressProvider.getExternalPub(hdSeedId);
+        return AbstractDb.hdAccountProvider.getExternalPub(hdSeedId);
     }
 
     public void supplyEnoughKeys(boolean isSyncedComplete) {
@@ -177,7 +177,7 @@ public class HDAccountMonitored extends Address {
             as.add(new HDAccount.HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD
                     .PathType.INTERNAL_ROOT_PATH, i, isSyncedComplete, hdSeedId));
         }
-        AbstractDb.coldHDAccountProvider.addAddress(as);
+        AbstractDb.hdAccountProvider.addAddress(as);
         log.info("HD monitored supplied {} internal addresses", as.size());
     }
 
@@ -192,12 +192,12 @@ public class HDAccountMonitored extends Address {
             as.add(new HDAccount.HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD
                     .PathType.EXTERNAL_ROOT_PATH, i, isSyncedComplete, hdSeedId));
         }
-        AbstractDb.coldHDAccountProvider.addAddress(as);
+        AbstractDb.hdAccountProvider.addAddress(as);
         log.info("HD monitored supplied {} external addresses", as.size());
     }
 
     public String getAddress() {
-        return AbstractDb.coldHDAccountProvider.externalAddress();
+        return AbstractDb.hdAccountProvider.externalAddress();
     }
 
     public String getShortAddress() {
@@ -205,30 +205,30 @@ public class HDAccountMonitored extends Address {
     }
 
     public int issuedInternalIndex() {
-        return AbstractDb.coldHDAccountProvider.issuedIndex(AbstractHD.PathType
+        return AbstractDb.hdAccountProvider.issuedIndex(AbstractHD.PathType
                 .INTERNAL_ROOT_PATH);
     }
 
     public int issuedExternalIndex() {
-        return AbstractDb.coldHDAccountProvider.issuedIndex(AbstractHD.PathType
+        return AbstractDb.hdAccountProvider.issuedIndex(AbstractHD.PathType
                 .EXTERNAL_ROOT_PATH);
 
     }
 
     private int allGeneratedInternalAddressCount() {
-        return AbstractDb.coldHDAccountProvider.allGeneratedAddressCount(AbstractHD.PathType
+        return AbstractDb.hdAccountProvider.allGeneratedAddressCount(AbstractHD.PathType
                 .INTERNAL_ROOT_PATH);
     }
 
     private int allGeneratedExternalAddressCount() {
-        return AbstractDb.coldHDAccountProvider.allGeneratedAddressCount(AbstractHD.PathType
+        return AbstractDb.hdAccountProvider.allGeneratedAddressCount(AbstractHD.PathType
                 .EXTERNAL_ROOT_PATH);
     }
 
     private HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index) {
         assert index < (type == AbstractHD.PathType.EXTERNAL_ROOT_PATH ?
                 allGeneratedExternalAddressCount() : allGeneratedInternalAddressCount());
-        return AbstractDb.coldHDAccountProvider.addressForPath(type, index);
+        return AbstractDb.hdAccountProvider.addressForPath(type, index);
     }
 
     public void onNewTx(Tx tx, List<HDAccount.HDAccountAddress> relatedAddresses, Tx
@@ -289,27 +289,27 @@ public class HDAccountMonitored extends Address {
     }
 
     public List<Tx> getTxs(int page) {
-        return AbstractDb.coldHDAccountProvider.getTxAndDetailByHDAccount(page);
+        return AbstractDb.hdAccountProvider.getTxAndDetailByHDAccount(page);
     }
 
     @Override
     public List<Tx> getTxs() {
-        return AbstractDb.coldHDAccountProvider.getTxAndDetailByHDAccount();
+        return AbstractDb.hdAccountProvider.getTxAndDetailByHDAccount();
     }
 
     public int txCount() {
-        return AbstractDb.coldHDAccountProvider.hdAccountTxCount();
+        return AbstractDb.hdAccountProvider.hdAccountTxCount();
     }
 
     public void updateBalance() {
-        this.balance = AbstractDb.coldHDAccountProvider.getHDAccountConfirmedBanlance
+        this.balance = AbstractDb.hdAccountProvider.getHDAccountConfirmedBanlance
                 (hdSeedId) + calculateUnconfirmedBalance();
     }
 
     private long calculateUnconfirmedBalance() {
         long balance = 0;
 
-        List<Tx> txs = AbstractDb.coldHDAccountProvider.getHDAccountUnconfirmedTx();
+        List<Tx> txs = AbstractDb.hdAccountProvider.getHDAccountUnconfirmedTx();
         Collections.sort(txs);
 
         Set<byte[]> invalidTx = new HashSet<byte[]>();
@@ -368,7 +368,7 @@ public class HDAccountMonitored extends Address {
             outAddressList.add(outAddress);
         }
         List<HDAccount.HDAccountAddress> belongAccountOfOutList = AbstractDb
-                .coldHDAccountProvider.belongAccount(outAddressList);
+                .hdAccountProvider.belongAccount(outAddressList);
         if (belongAccountOfOutList != null && belongAccountOfOutList.size() > 0) {
             hdAccountAddressList.addAll(belongAccountOfOutList);
         }
@@ -382,7 +382,7 @@ public class HDAccountMonitored extends Address {
     }
 
     public HashSet<String> getBelongAccountAddresses(List<String> addressList) {
-        return AbstractDb.coldHDAccountProvider.getBelongAccountAddresses(addressList);
+        return AbstractDb.hdAccountProvider.getBelongAccountAddresses(addressList);
     }
 
     public Tx newTx(String toAddress, Long amount) throws
@@ -393,7 +393,7 @@ public class HDAccountMonitored extends Address {
 
     public Tx newTx(String[] toAddresses, Long[] amounts) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
-        List<Out> outs = AbstractDb.coldHDAccountProvider.getUnspendOutByHDAccount
+        List<Out> outs = AbstractDb.hdAccountProvider.getUnspendOutByHDAccount
                 (hdSeedId);
         Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(), Arrays
                 .asList(amounts), Arrays.asList(toAddresses));
@@ -401,7 +401,7 @@ public class HDAccountMonitored extends Address {
     }
 
     public List<HDAccount.HDAccountAddress> getSigningAddressesForInputs(List<In> inputs) {
-        return AbstractDb.coldHDAccountProvider.getSigningAddressesForInputs(inputs);
+        return AbstractDb.hdAccountProvider.getSigningAddressesForInputs(inputs);
     }
 
 
@@ -413,18 +413,18 @@ public class HDAccountMonitored extends Address {
     private List<HDAccount.HDAccountAddress> getAddressFromIn(List<String> addresses) {
 
         List<HDAccount.HDAccountAddress> hdAccountAddressList = AbstractDb
-                .coldHDAccountProvider.belongAccount(addresses);
+                .hdAccountProvider.belongAccount(addresses);
         return hdAccountAddressList;
     }
 
     public void updateIssuedInternalIndex(int index) {
-        AbstractDb.coldHDAccountProvider.updateIssuedIndex(AbstractHD.PathType
+        AbstractDb.hdAccountProvider.updateIssuedIndex(AbstractHD.PathType
                         .INTERNAL_ROOT_PATH,
                 index);
     }
 
     public void updateIssuedExternalIndex(int index) {
-        AbstractDb.coldHDAccountProvider.updateIssuedIndex(AbstractHD.PathType
+        AbstractDb.hdAccountProvider.updateIssuedIndex(AbstractHD.PathType
                         .EXTERNAL_ROOT_PATH,
                 index);
     }
@@ -437,23 +437,23 @@ public class HDAccountMonitored extends Address {
 
 
     public void updateSyncComplete(HDAccount.HDAccountAddress accountAddress) {
-        AbstractDb.coldHDAccountProvider.updateSyncdComplete(accountAddress);
+        AbstractDb.hdAccountProvider.updateSyncdComplete(accountAddress);
     }
 
     public int elementCountForBloomFilter() {
-        return allGeneratedExternalAddressCount() * 2 + AbstractDb.coldHDAccountProvider
+        return allGeneratedExternalAddressCount() * 2 + AbstractDb.hdAccountProvider
                 .getUnspendOutCountByHDAccountWithPath(getHdSeedId(), AbstractHD.PathType
                         .INTERNAL_ROOT_PATH);
     }
 
     public void addElementsForBloomFilter(BloomFilter filter) {
-        List<byte[]> pubs = AbstractDb.coldHDAccountProvider.getPubs(AbstractHD.PathType
+        List<byte[]> pubs = AbstractDb.hdAccountProvider.getPubs(AbstractHD.PathType
                 .EXTERNAL_ROOT_PATH);
         for (byte[] pub : pubs) {
             filter.insert(pub);
             filter.insert(Utils.sha256hash160(pub));
         }
-        List<Out> outs = AbstractDb.coldHDAccountProvider
+        List<Out> outs = AbstractDb.hdAccountProvider
                 .getUnspendOutByHDAccountWithPath(getHdSeedId(), AbstractHD.PathType
                         .INTERNAL_ROOT_PATH);
         for (Out out : outs) {
@@ -466,14 +466,14 @@ public class HDAccountMonitored extends Address {
     }
 
     public boolean isSyncComplete() {
-        int unsyncedAddressCount = AbstractDb.coldHDAccountProvider.unSyncedAddressCount();
+        int unsyncedAddressCount = AbstractDb.hdAccountProvider.unSyncedAddressCount();
         return unsyncedAddressCount == 0;
     }
 
     public List<Tx> getRecentlyTxsWithConfirmationCntLessThan(int confirmationCnt, int limit) {
         List<Tx> txList = new ArrayList<Tx>();
         int blockNo = BlockChain.getInstance().getLastBlock().getBlockNo() - confirmationCnt + 1;
-        for (Tx tx : AbstractDb.coldHDAccountProvider.getRecentlyTxsByAccount(blockNo, limit)) {
+        for (Tx tx : AbstractDb.hdAccountProvider.getRecentlyTxsByAccount(blockNo, limit)) {
             txList.add(tx);
         }
         return txList;

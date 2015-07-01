@@ -199,7 +199,7 @@ public class TransactionsUtil {
             while (hasTx) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
                 int storeBlockHeight = storedBlock.getBlockNo();
-                hdAccountAddress = AbstractDb.coldHDAccountProvider.addressForPath(
+                hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(
                         pathType, addressIndex);
                 if (hdAccountAddress == null) {
                     hasTx = false;
@@ -252,7 +252,7 @@ public class TransactionsUtil {
                     hasTx = true;
                 } else {
                     hasTx = false;
-                    AbstractDb.coldHDAccountProvider.updateSyncdForIndex(pathType, addressIndex);
+                    AbstractDb.hdAccountProvider.updateSyncdForIndex(pathType, addressIndex);
                 }
             }
             addressIndex++;
