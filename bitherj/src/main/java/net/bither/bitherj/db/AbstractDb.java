@@ -111,6 +111,8 @@ public abstract class AbstractDb {
     // new index
     public static final String CREATE_OUT_OUT_ADDRESS_INDEX = "create index idx_out_out_address " +
             "on outs (out_address);";
+    public static final String CREATE_OUT_HD_ACCOUNT_ID_INDEX = "create index idx_out_hd_account_id " +
+            "on outs (hd_account_id);";
     public static final String CREATE_TX_BLOCK_NO_INDEX = "create index idx_tx_block_no on txs " +
             "(block_no);";
     public static final String CREATE_IN_PREV_TX_HASH_INDEX = "create index idx_in_prev_tx_hash " +
@@ -120,7 +122,7 @@ public abstract class AbstractDb {
     //hd account
     public static final String CREATE_HD_ACCOUNT = "create table if not exists  hd_account " +
             "( hd_account_id integer not null primary key autoincrement" +
-            ", encrypt_seed text not null" +
+            ", encrypt_seed text" +
             ", encrypt_mnemonic_seed text" +
             ", hd_address text not null" +
             ", external_pub text not null" +
@@ -129,51 +131,26 @@ public abstract class AbstractDb {
 
     public static final String CREATE_HD_ACCOUNT_ADDRESSES = "create table if not exists " +
             "hd_account_addresses " +
-            "(path_type integer not null" +
+            "(hd_account_id integer not null" +
+            ", path_type integer not null" +
             ", address_index integer not null" +
             ", is_issued integer not null" +
             ", address text not null" +
             ", pub text not null" +
             ", is_synced integer not null" +
             ", primary key (address));";
-//    //cold hd account
-//    public static final String CREATE_COLD_HD_ACCOUNT = "create table if not exists  " +
-//            "cold_hd_account " +
-//            "( hd_account_id integer not null primary key autoincrement" +
-//            ", encrypt_seed text " +
-//            ", encrypt_mnemonic_seed text" +
-//            ", hd_address text " +
-//            ", external_pub text not null" +
-//            ", internal_pub text not null" +
-//            ", is_xrandom integer not null);";
-
-//    public static final String CREATE_COLD_HD_ACCOUNT_ADDRESSES = "create table if not exists " +
-//            "cold_hd_account_addresses " +
-//            "(hd_account_id integer" +
-//            ",path_type integer not null" +
-//            ", address_index integer not null" +
-//            ", is_issued integer not null" +
-//            ", address text not null" +
-//            ", pub text not null" +
-//            ", is_synced integer not null" +
-//            ", primary key (address));";
 
 
     // hd Account index
     public static final String CREATE_HD_ACCOUNT_ADDRESS_INDEX = "create index " +
             "idx_hd_address_address on hd_account_addresses (address);";
-
-
-//    // hd Account index
-//    public static final String CREATE_COLD_HD_ACCOUNT_ADDRESS_INDEX = "create index " +
-//            "idx_cold_hd_address_address on cold_hd_account_addresses (address);";
+    public static final String CREATE_HD_ACCOUNT_ACCOUNT_ID_AND_PATH_TYPE_INDEX = "create index " +
+            "idx_hd_address_account_id_path on hd_account_addresses (hd_account_id, path_type);";
 
 
     //add hd_accont_id for outs
     public static final String ADD_HD_ACCOUNT_ID_FOR_OUTS = "alter table outs add column " +
             "hd_account_id integer;";
-//    public static final String ADD_COLD_HD_ACCOUNT_ID_FOR_OUTS = "alter table outs add column " +
-//            "cold_hd_account_id integer;";
 
     //enterprise hdm
     public static final String CREATE_ENTERPRISE_HD_ACCOUNT = "create table if not exists " +
@@ -228,8 +205,6 @@ public abstract class AbstractDb {
         desktopTxProvider = initDesktopTxProvider();
         coldHDAccountAddressProvider = initColdHDAccountAddressPrivider();
         coldHDAccountProvider = initColdHDAccountProvider();
-
-
     }
 
     public abstract IBlockProvider initBlockProvider();
@@ -285,8 +260,6 @@ public abstract class AbstractDb {
         public static final String ENTERPRISE_HD_ACCOUNT = "enterprise_hd_account";
         public static final String ENTERPRISE_MULTI_SIGN_SET = "enterprise_multi_sign_set";
         public static final String ENTERPRISE_HDM_ADDRESS = "enterprise_hdm_addresses";
-
-
     }
 
 
@@ -334,7 +307,6 @@ public abstract class AbstractDb {
         public static final String OUT_ADDRESS = "out_address";
         public static final String HD_ACCOUNT_ID = "hd_account_id";
         public static final String COLD_HD_ACCOUNT_ID = "cold_hd_account_id";
-
     }
 
     public interface PeersColumns {
@@ -404,14 +376,13 @@ public abstract class AbstractDb {
     }
 
     public interface HDAccountAddressesColumns {
+        public static final String HD_ACCOUNT_ID = "hd_account_id";
         public static final String PATH_TYPE = "path_type";
         public static final String ADDRESS_INDEX = "address_index";
         public static final String IS_ISSUED = "is_issued";
         public static final String ADDRESS = "address";
         public static final String PUB = "pub";
         public static final String IS_SYNCED = "is_synced";
-
-
     }
 
     //cold hd account
@@ -424,7 +395,6 @@ public abstract class AbstractDb {
         public static final String HD_ADDRESS = "hd_address";
         public static final String EXTERNAL_PUB = "external_pub";
         public static final String INTERNAL_PUB = "internal_pub";
-
     }
 
     public interface ColdHDAccountAddressesColumns {
@@ -435,8 +405,6 @@ public abstract class AbstractDb {
         public static final String ADDRESS = "address";
         public static final String PUB = "pub";
         public static final String IS_SYNCED = "is_synced";
-
-
     }
 
     public interface VanityAddressColumns {
