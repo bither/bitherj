@@ -93,6 +93,11 @@ public class HDAccountCold extends AbstractHD {
                 ().indexOf("XRandom") >= 0);
     }
 
+    public HDAccountCold(EncryptedData encryptedMnemonicSeed, CharSequence password) throws
+            MnemonicException.MnemonicLengthException {
+        this(encryptedMnemonicSeed.decrypt(password), password, encryptedMnemonicSeed.isXRandom());
+    }
+
     public HDAccountCold(int hdSeedId) {
         this.hdSeedId = hdSeedId;
         this.isFromXRandom = AbstractDb.coldHDAccountAddressProvider.hdAccountIsXRandom(hdSeedId);
