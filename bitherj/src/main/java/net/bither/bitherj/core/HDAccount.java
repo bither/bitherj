@@ -352,30 +352,30 @@ public class HDAccount extends Address {
 
     public void onNewTx(Tx tx, List<HDAccount.HDAccountAddress> relatedAddresses, Tx
             .TxNotificationType txNotificationType) {
-        if (relatedAddresses == null || relatedAddresses.size() == 0) {
-            return;
-        }
+//        if (relatedAddresses == null || relatedAddresses.size() == 0) {
+//            return;
+//        }
 
-        int maxInternal = -1, maxExternal = -1;
-        for (HDAccountAddress a : relatedAddresses) {
-            if (a.pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-                if (a.index > maxExternal) {
-                    maxExternal = a.index;
-                }
-            } else {
-                if (a.index > maxInternal) {
-                    maxInternal = a.index;
-                }
-            }
-        }
+//        int maxInternal = -1, maxExternal = -1;
+//        for (HDAccountAddress a : relatedAddresses) {
+//            if (a.pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
+//                if (a.index > maxExternal) {
+//                    maxExternal = a.index;
+//                }
+//            } else {
+//                if (a.index > maxInternal) {
+//                    maxInternal = a.index;
+//                }
+//            }
+//        }
 
-        log.info("HD on new tx issued ex {}, issued in {}", maxExternal, maxInternal);
-        if (maxExternal >= 0 && maxExternal > issuedExternalIndex()) {
-            updateIssuedExternalIndex(maxExternal);
-        }
-        if (maxInternal >= 0 && maxInternal > issuedInternalIndex()) {
-            updateIssuedInternalIndex(maxInternal);
-        }
+//        log.info("HD on new tx issued ex {}, issued in {}", maxExternal, maxInternal);
+//        if (maxExternal >= 0 && maxExternal > issuedExternalIndex()) {
+//            updateIssuedExternalIndex(maxExternal);
+//        }
+//        if (maxInternal >= 0 && maxInternal > issuedInternalIndex()) {
+//            updateIssuedInternalIndex(maxInternal);
+//        }
 
         supplyEnoughKeys(true);
 

@@ -218,7 +218,7 @@ public abstract class AbstractDb {
     public abstract IDesktopAddressProvider initEnDesktopAddressProvider();
 
     public abstract IDesktopTxProvider initDesktopTxProvider();
-    
+
     public interface Tables {
 
         public static final String BLOCKS = "blocks";
@@ -298,7 +298,7 @@ public abstract class AbstractDb {
         public static final String OUT_STATUS = "out_status";
         public static final String OUT_ADDRESS = "out_address";
         public static final String HD_ACCOUNT_ID = "hd_account_id";
-        public static final String COLD_HD_ACCOUNT_ID = "cold_hd_account_id";
+//        public static final String COLD_HD_ACCOUNT_ID = "cold_hd_account_id";
     }
 
     public interface PeersColumns {

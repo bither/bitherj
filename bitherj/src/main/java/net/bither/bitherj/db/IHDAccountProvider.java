@@ -42,6 +42,9 @@ public interface IHDAccountProvider {
 
     HashSet<String> getBelongAccountAddresses(int hdAccountId, List<String> addressList);
     HashSet<String> getBelongAccountAddresses(List<String> addressList);
+    Tx updateOutHDAccountId(Tx tx);
+    int getRelatedAddressCnt(List<String> addresses);
+    List<Integer> getRelatedHDAccountIdList(List<String> addresses);
 
 
     HDAccount.HDAccountAddress addressForPath(int hdAccountId, AbstractHD.PathType type, int index);

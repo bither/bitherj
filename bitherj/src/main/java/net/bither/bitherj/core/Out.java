@@ -58,7 +58,7 @@ public class Out extends Message {
     private int desktopHDMAccountId = -1;
 
 
-    private int coldHDAccountId=-1;
+//    private int coldHDAccountId=-1;
 
     private Tx tx;
 
@@ -235,13 +235,13 @@ public class Out extends Message {
         this.hdAccountId = hdAccountId;
     }
 
-    public int getColdHDAccountId() {
-        return coldHDAccountId;
-    }
+//    public int getColdHDAccountId() {
+//        return coldHDAccountId;
+//    }
 
-    public void setColdHDAccountId(int coldHDAccountId) {
-        this.coldHDAccountId = coldHDAccountId;
-    }
+//    public void setColdHDAccountId(int coldHDAccountId) {
+//        this.coldHDAccountId = coldHDAccountId;
+//    }
 
 
     public int getDesktopHDMAccountId() {
