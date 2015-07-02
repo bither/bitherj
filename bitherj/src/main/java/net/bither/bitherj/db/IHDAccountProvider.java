@@ -29,75 +29,76 @@ import java.util.List;
 public interface IHDAccountProvider {
 
 
-    public void addAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);
+    void addAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);
 
-    public int issuedIndex(AbstractHD.PathType pathType);
+    int issuedIndex(int hdAccountId, AbstractHD.PathType pathType);
 
-    public int allGeneratedAddressCount(AbstractHD.PathType pathType);
+    int allGeneratedAddressCount(int hdAccountId, AbstractHD.PathType pathType);
 
-    public void updateIssuedIndex(AbstractHD.PathType pathType, int index);
+    void updateIssuedIndex(int hdAccountId, AbstractHD.PathType pathType, int index);
 
-    public String externalAddress();
-
-
-    public HashSet<String> getBelongAccountAddresses(List<String> addressList);
+    String externalAddress(int hdAccountId);
 
 
-    public HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index);
+    HashSet<String> getBelongAccountAddresses(int hdAccountId, List<String> addressList);
+    HashSet<String> getBelongAccountAddresses(List<String> addressList);
 
-    public List<byte[]> getPubs(AbstractHD.PathType pathType);
 
-    public List<HDAccount.HDAccountAddress> belongAccount(List<String> addresses);
+    HDAccount.HDAccountAddress addressForPath(int hdAccountId, AbstractHD.PathType type, int index);
 
-    public void updateSyncdComplete(HDAccount.HDAccountAddress address);
+    List<byte[]> getPubs(int hdAccountId, AbstractHD.PathType pathType);
 
-    public void setSyncdNotComplete();
+    List<HDAccount.HDAccountAddress> belongAccount(int hdAccountId, List<String> addresses);
 
-    public int unSyncedAddressCount();
+    void updateSyncdComplete(int hdAccountId, HDAccount.HDAccountAddress address);
 
-    public void updateSyncdForIndex(AbstractHD.PathType pathType, int index);
+    void setSyncdNotComplete();
 
-    public List<HDAccount.HDAccountAddress> getSigningAddressesForInputs(List<In> inList);
+    int unSyncedAddressCount(int hdAccountId);
 
-    public int hdAccountTxCount();
+    void updateSyncdForIndex(int hdAccountId, AbstractHD.PathType pathType, int index);
 
-    public long getHDAccountConfirmedBanlance(int hdAccountId);
+    List<HDAccount.HDAccountAddress> getSigningAddressesForInputs(int hdAccountId, List<In> inList);
 
-    public List<Tx> getHDAccountUnconfirmedTx();
+    int hdAccountTxCount(int hdAccountId);
 
-    public long sentFromAccount(int hdAccountId, byte[] txHash);
+    long getHDAccountConfirmedBanlance(int hdAccountId);
 
-    public List<Tx> getTxAndDetailByHDAccount(int page);
+    List<Tx> getHDAccountUnconfirmedTx(int hdAccountId);
 
-    public List<Tx> getTxAndDetailByHDAccount();
+    long sentFromAccount(int hdAccountId, byte[] txHash);
 
-    public List<Out> getUnspendOutByHDAccount(int hdAccountId);
+    List<Tx> getTxAndDetailByHDAccount(int hdAccountId, int page);
 
-    public List<Tx> getRecentlyTxsByAccount(int greateThanBlockNo, int limit);
+    List<Tx> getTxAndDetailByHDAccount(int hdAccountId);
 
-    public int getUnspendOutCountByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
+    List<Out> getUnspendOutByHDAccount(int hdAccountId);
 
-    public List<Out> getUnspendOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
+    List<Tx> getRecentlyTxsByAccount(int hdAccountId, int greateThanBlockNo, int limit);
 
-    public int addHDAccount(String encryptedMnemonicSeed, String encryptSeed
+    int getUnspendOutCountByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
+
+    List<Out> getUnspendOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
+
+    int addHDAccount(String encryptedMnemonicSeed, String encryptSeed
             , String firstAddress, boolean isXrandom, String addressOfPS
             , byte[] externalPub, byte[] internalPub);
 
-    public int addMonitoredHDAccount(boolean isXrandom, byte[] externalPub, byte[] internalPub);
+    int addMonitoredHDAccount(boolean isXrandom, byte[] externalPub, byte[] internalPub);
 
-    public String getHDFristAddress(int hdSeedId);
+    String getHDFristAddress(int hdSeedId);
 
-    public byte[] getExternalPub(int hdSeedId);
+    byte[] getExternalPub(int hdSeedId);
 
-    public byte[] getInternalPub(int hdSeedId);
+    byte[] getInternalPub(int hdSeedId);
 
-    public String getHDAccountEncryptSeed(int hdSeedId);
+    String getHDAccountEncryptSeed(int hdSeedId);
 
-    public String getHDAccountEncryptMnmonicSeed(int hdSeedId);
+    String getHDAccountEncryptMnmonicSeed(int hdSeedId);
 
-    public boolean hdAccountIsXRandom(int seedId);
+    boolean hdAccountIsXRandom(int seedId);
 
-    public List<Integer> getHDAccountSeeds();
+    List<Integer> getHDAccountSeeds();
 
-    public boolean hasHDAccountCold();
+    boolean hasHDAccountCold();
 }

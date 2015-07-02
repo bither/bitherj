@@ -841,7 +841,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             }
         }
         List<HDAccount.HDAccountAddress> hdAccountAddressList = AbstractDb.hdAccountProvider
-                .belongAccount(inAddressList);
+                .belongAccount(this.hdAccount.hdSeedId, inAddressList);
         return hdAccountAddressList.size() > 0;
     }
 
@@ -859,7 +859,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             }
         }
         List<HDAccount.HDAccountAddress> hdAccountAddressList = AbstractDb.hdAccountProvider
-                .belongAccount(inAddressList);
+                .belongAccount(this.hdAccount.hdSeedId, inAddressList);
         return hdAccountAddressList != null && hdAccountAddressList.size() > 0;
     }
 

@@ -177,11 +177,10 @@ public class TransactionsUtil {
         }
         getTxForAddress();
         if (AddressManager.getInstance().getHdAccount() != null) {
-            getTxForHDAccount();
-
+            getTxForHDAccount(AddressManager.getInstance().getHdAccount().getHdSeedId());
         }
         if(AddressManager.getInstance().hasHDAccountMonitored()){
-            getTxForHDAccountMoitored();
+            getTxForHDAccountMoitored(AddressManager.getInstance().getHdAccountMonitored().getHdSeedId());
 
         }
         if (AddressManager.getInstance().hasDesktopHDMKeychain()) {
@@ -191,7 +190,7 @@ public class TransactionsUtil {
         }
 
     }
-    private static void getTxForHDAccountMoitored() throws Exception {
+    private static void getTxForHDAccountMoitored(int hdSeedId) throws Exception {
         for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
             HDAccount.HDAccountAddress hdAccountAddress;
             boolean hasTx = true;
@@ -199,7 +198,7 @@ public class TransactionsUtil {
             while (hasTx) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
                 int storeBlockHeight = storedBlock.getBlockNo();
-                hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(
+                hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(hdSeedId,
                         pathType, addressIndex);
                 if (hdAccountAddress == null) {
                     hasTx = false;
@@ -252,7 +251,7 @@ public class TransactionsUtil {
                     hasTx = true;
                 } else {
                     hasTx = false;
-                    AbstractDb.hdAccountProvider.updateSyncdForIndex(pathType, addressIndex);
+                    AbstractDb.hdAccountProvider.updateSyncdForIndex(hdSeedId, pathType, addressIndex);
                 }
             }
             addressIndex++;
@@ -261,7 +260,7 @@ public class TransactionsUtil {
 
     }
 
-    private static void getTxForHDAccount() throws Exception {
+    private static void getTxForHDAccount(int hdSeedId) throws Exception {
         for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
             HDAccount.HDAccountAddress hdAccountAddress;
             boolean hasTx = true;
@@ -269,7 +268,7 @@ public class TransactionsUtil {
             while (hasTx) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
                 int storeBlockHeight = storedBlock.getBlockNo();
-                hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(
+                hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(hdSeedId,
                         pathType, addressIndex);
                 if (hdAccountAddress == null) {
                     hasTx = false;
@@ -321,7 +320,7 @@ public class TransactionsUtil {
                     hasTx = true;
                 } else {
                     hasTx = false;
-                    AbstractDb.hdAccountProvider.updateSyncdForIndex(pathType, addressIndex);
+                    AbstractDb.hdAccountProvider.updateSyncdForIndex(hdSeedId, pathType, addressIndex);
                 }
             }
             addressIndex++;
