@@ -226,12 +226,19 @@ public class HDAccount extends Address {
         }
         wipeHDSeed();
         wipeMnemonicSeed();
-        AbstractDb.hdAccountProvider.addAddress(externalAddresses);
-        AbstractDb.hdAccountProvider.addAddress(internalAddresses);
+
         hdSeedId = AbstractDb.addressProvider.addHDAccount(encryptedMnemonicSeed
                         .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
                 isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
                         .getPubKeyExtended());
+        for (HDAccountAddress addr : externalAddresses) {
+            addr.setHdAccountId(hdSeedId);
+        }
+        for (HDAccountAddress addr : internalAddresses) {
+            addr.setHdAccountId(hdSeedId);
+        }
+        AbstractDb.hdAccountProvider.addAddress(externalAddresses);
+        AbstractDb.hdAccountProvider.addAddress(internalAddresses);
         internalKey.wipe();
         externalKey.wipe();
     }
