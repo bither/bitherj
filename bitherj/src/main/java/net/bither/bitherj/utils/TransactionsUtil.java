@@ -176,11 +176,11 @@ public class TransactionsUtil {
             return;
         }
         getTxForAddress();
-        if (AddressManager.getInstance().getHdAccount() != null) {
-            getTxForHDAccount(AddressManager.getInstance().getHdAccount().getHdSeedId());
+        if (AddressManager.getInstance().getHDAccountHot() != null) {
+            getTxForHDAccount(AddressManager.getInstance().getHDAccountHot().getHdSeedId());
         }
         if(AddressManager.getInstance().hasHDAccountMonitored()){
-            getTxForHDAccountMoitored(AddressManager.getInstance().getHdAccountMonitored().getHdSeedId());
+            getTxForHDAccountMoitored(AddressManager.getInstance().getHDAccountMonitored().getHdSeedId());
 
         }
         if (AddressManager.getInstance().hasDesktopHDMKeychain()) {
@@ -237,17 +237,17 @@ public class TransactionsUtil {
                 transactions = AddressManager.getInstance().compressTxsForHDAccountMoitored(transactions);
                 Collections.sort(transactions, new ComparatorTx());
 
-                AddressManager.getInstance().getHdAccountMonitored().initTxs(transactions);
+                AddressManager.getInstance().getHDAccountMonitored().initTxs(transactions);
                 hdAccountAddress.setSyncedComplete(true);
-                AddressManager.getInstance().getHdAccountMonitored().updateSyncComplete(hdAccountAddress);
+                AddressManager.getInstance().getHDAccountMonitored().updateSyncComplete(hdAccountAddress);
 
                 if (transactions.size() > 0) {
                     if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-                        AddressManager.getInstance().getHdAccountMonitored().updateIssuedExternalIndex(addressIndex);
+                        AddressManager.getInstance().getHDAccountMonitored().updateIssuedExternalIndex(addressIndex);
                     } else {
-                        AddressManager.getInstance().getHdAccountMonitored().updateIssuedInternalIndex(addressIndex);
+                        AddressManager.getInstance().getHDAccountMonitored().updateIssuedInternalIndex(addressIndex);
                     }
-                    AddressManager.getInstance().getHdAccountMonitored().supplyEnoughKeys(false);
+                    AddressManager.getInstance().getHDAccountMonitored().supplyEnoughKeys(false);
                     hasTx = true;
                 } else {
                     hasTx = false;
@@ -306,17 +306,17 @@ public class TransactionsUtil {
                 }
                 transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
                 Collections.sort(transactions, new ComparatorTx());
-                AddressManager.getInstance().getHdAccount().initTxs(transactions);
+                AddressManager.getInstance().getHDAccountHot().initTxs(transactions);
                 hdAccountAddress.setSyncedComplete(true);
-                AddressManager.getInstance().getHdAccount().updateSyncComplete(hdAccountAddress);
+                AddressManager.getInstance().getHDAccountHot().updateSyncComplete(hdAccountAddress);
 
                 if (transactions.size() > 0) {
                     if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-                        AddressManager.getInstance().getHdAccount().updateIssuedExternalIndex(addressIndex);
+                        AddressManager.getInstance().getHDAccountHot().updateIssuedExternalIndex(addressIndex);
                     } else {
-                        AddressManager.getInstance().getHdAccount().updateIssuedInternalIndex(addressIndex);
+                        AddressManager.getInstance().getHDAccountHot().updateIssuedInternalIndex(addressIndex);
                     }
-                    AddressManager.getInstance().getHdAccount().supplyEnoughKeys(false);
+                    AddressManager.getInstance().getHDAccountHot().supplyEnoughKeys(false);
                     hasTx = true;
                 } else {
                     hasTx = false;

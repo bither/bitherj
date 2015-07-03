@@ -653,7 +653,7 @@ public class HDAccount extends Address {
     }
 
     public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses) {
-        throw new RuntimeException("use newTx() for hdAccount");
+        throw new RuntimeException("use newTx() for hdAccountHot");
     }
 
     public boolean hasPrivKey() {

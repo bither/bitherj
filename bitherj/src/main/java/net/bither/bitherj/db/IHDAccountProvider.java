@@ -83,25 +83,25 @@ public interface IHDAccountProvider {
 
     List<Out> getUnspendOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
 
-    int addHDAccount(String encryptedMnemonicSeed, String encryptSeed
-            , String firstAddress, boolean isXrandom, String addressOfPS
-            , byte[] externalPub, byte[] internalPub);
-
-    int addMonitoredHDAccount(boolean isXrandom, byte[] externalPub, byte[] internalPub);
-
-    String getHDFristAddress(int hdSeedId);
-
-    byte[] getExternalPub(int hdSeedId);
-
-    byte[] getInternalPub(int hdSeedId);
-
-    String getHDAccountEncryptSeed(int hdSeedId);
-
-    String getHDAccountEncryptMnmonicSeed(int hdSeedId);
-
-    boolean hdAccountIsXRandom(int seedId);
-
-    List<Integer> getHDAccountSeeds();
-
-    boolean hasHDAccountCold();
+//    int addHDAccount(String encryptedMnemonicSeed, String encryptSeed
+//            , String firstAddress, boolean isXrandom, String addressOfPS
+//            , byte[] externalPub, byte[] internalPub);
+//
+//    int addMonitoredHDAccount(boolean isXrandom, byte[] externalPub, byte[] internalPub);
+//
+//    String getHDFristAddress(int hdSeedId);
+//
+//    byte[] getExternalPub(int hdSeedId);
+//
+//    byte[] getInternalPub(int hdSeedId);
+//
+//    String getHDAccountEncryptSeed(int hdSeedId);
+//
+//    String getHDAccountEncryptMnmonicSeed(int hdSeedId);
+//
+//    boolean hdAccountIsXRandom(int seedId);
+//
+//    List<Integer> getHDAccountSeeds();
+//
+//    boolean hasHDAccountCold();
 }

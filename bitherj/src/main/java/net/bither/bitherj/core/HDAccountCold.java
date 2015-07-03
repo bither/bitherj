@@ -75,7 +75,7 @@ public class HDAccountCold extends AbstractHD {
         master.wipe();
         wipeHDSeed();
         wipeMnemonicSeed();
-        hdSeedId = AbstractDb.hdAccountProvider.addHDAccount(encryptedMnemonicSeed
+        hdSeedId = AbstractDb.addressProvider.addHDAccount(encryptedMnemonicSeed
                         .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
                 isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
                         .getPubKeyExtended());
@@ -100,7 +100,7 @@ public class HDAccountCold extends AbstractHD {
 
     public HDAccountCold(int hdSeedId) {
         this.hdSeedId = hdSeedId;
-        this.isFromXRandom = AbstractDb.hdAccountProvider.hdAccountIsXRandom(hdSeedId);
+        this.isFromXRandom = AbstractDb.addressProvider.hdAccountIsXRandom(hdSeedId);
     }
 
     public List<byte[]> signHashHexes(final Collection<String> hashes, Collection<PathTypeIndex>
@@ -148,7 +148,7 @@ public class HDAccountCold extends AbstractHD {
     }
 
     public String getFirstAddressFromDb() {
-        return AbstractDb.hdAccountProvider.getHDFristAddress(hdSeedId);
+        return AbstractDb.addressProvider.getHDFristAddress(hdSeedId);
     }
 
     public boolean checkWithPassword(CharSequence password) {
@@ -171,12 +171,12 @@ public class HDAccountCold extends AbstractHD {
 
     @Override
     protected String getEncryptedHDSeed() {
-        return AbstractDb.hdAccountProvider.getHDAccountEncryptSeed(hdSeedId);
+        return AbstractDb.addressProvider.getHDAccountEncryptSeed(hdSeedId);
     }
 
     @Override
     protected String getEncryptedMnemonicSeed() {
-        return AbstractDb.hdAccountProvider.getHDAccountEncryptMnmonicSeed(hdSeedId);
+        return AbstractDb.addressProvider.getHDAccountEncryptMnmonicSeed(hdSeedId);
     }
 
     public String getFullEncryptPrivKey() {
@@ -215,16 +215,16 @@ public class HDAccountCold extends AbstractHD {
         return result;
     }
 
-    public static boolean hasHDAccountCold() {
-        return AbstractDb.hdAccountProvider.hasHDAccountCold();
-    }
+//    public static boolean hasHDAccountCold() {
+//        return AbstractDb.hdAccountProvider.hasHDAccountCold();
+//    }
 
-    public static HDAccountCold hdAccountCold() {
-        List<Integer> seeds = AbstractDb.hdAccountProvider.getHDAccountSeeds();
-        if (seeds.size() > 0) {
-            return new HDAccountCold(seeds.get(0));
-        } else {
-            return null;
-        }
-    }
+//    public static HDAccountCold hdAccountCold() {
+//        List<Integer> seeds = AbstractDb.hdAccountProvider.getHDAccountSeeds();
+//        if (seeds.size() > 0) {
+//            return new HDAccountCold(seeds.get(0));
+//        } else {
+//            return null;
+//        }
+//    }
 }

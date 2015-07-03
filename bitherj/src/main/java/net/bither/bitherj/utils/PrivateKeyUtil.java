@@ -203,7 +203,7 @@ public class PrivateKeyUtil {
                 content += QRCodeUtil.QR_CODE_SPLIT + keychain.getQRCodeFullEncryptPrivKey();
             }
         }
-        HDAccount hdAccount = AddressManager.getInstance().getHdAccount();
+        HDAccount hdAccount = AddressManager.getInstance().getHDAccountHot();
         if (hdAccount != null) {
             if (Utils.isEmpty(content)) {
                 content += hdAccount.getQRCodeFullEncryptPrivKey();
@@ -381,7 +381,7 @@ public class PrivateKeyUtil {
                 e.printStackTrace();
             }
         }
-        HDAccount hdAccount = AddressManager.getInstance().getHdAccount();
+        HDAccount hdAccount = AddressManager.getInstance().getHDAccountHot();
         if (hdAccount != null) {
             try {
                 String address = hdAccount.getFirstAddressFromDb();

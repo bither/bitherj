@@ -123,7 +123,7 @@ public class HDAccountMonitored extends Address {
         AbstractDb.hdAccountProvider.addAddress(externalAddresses);
         AbstractDb.hdAccountProvider.addAddress(internalAddresses);
 
-        hdSeedId = AbstractDb.hdAccountProvider.addMonitoredHDAccount(isFromXRandom,
+        hdSeedId = AbstractDb.addressProvider.addMonitoredHDAccount(isFromXRandom,
                 internalKey.getPubKeyExtended(), externalKey.getPubKeyExtended());
         internalKey.wipe();
         externalKey.wipe();
@@ -131,7 +131,7 @@ public class HDAccountMonitored extends Address {
 
     public HDAccountMonitored(int seedId) {
         this.hdSeedId = seedId;
-        this.isFromXRandom = AbstractDb.hdAccountProvider.hdAccountIsXRandom(seedId);
+        this.isFromXRandom = AbstractDb.addressProvider.hdAccountIsXRandom(seedId);
         updateBalance();
     }
 
@@ -145,11 +145,11 @@ public class HDAccountMonitored extends Address {
     }
 
     public byte[] getInternalPub() {
-        return AbstractDb.hdAccountProvider.getInternalPub(hdSeedId);
+        return AbstractDb.addressProvider.getInternalPub(hdSeedId);
     }
 
     public byte[] getExternalPub() {
-        return AbstractDb.hdAccountProvider.getExternalPub(hdSeedId);
+        return AbstractDb.addressProvider.getExternalPub(hdSeedId);
     }
 
     public void supplyEnoughKeys(boolean isSyncedComplete) {
@@ -480,7 +480,7 @@ public class HDAccountMonitored extends Address {
     }
 
     public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses) {
-        throw new RuntimeException("use newTx() for hdAccount");
+        throw new RuntimeException("use newTx() for hdAccountHot");
     }
 
     public boolean hasPrivKey() {
