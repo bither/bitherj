@@ -225,7 +225,7 @@ public class HDAccountMonitored extends Address {
                 .EXTERNAL_ROOT_PATH);
     }
 
-    private HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index) {
+    public HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index) {
         assert index < (type == AbstractHD.PathType.EXTERNAL_ROOT_PATH ?
                 allGeneratedExternalAddressCount() : allGeneratedInternalAddressCount());
         return AbstractDb.hdAccountProvider.addressForPath(this.hdSeedId, type, index);

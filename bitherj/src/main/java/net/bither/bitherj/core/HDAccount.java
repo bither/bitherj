@@ -350,7 +350,7 @@ public class HDAccount extends Address {
                 .EXTERNAL_ROOT_PATH);
     }
 
-    private HDAccountAddress addressForPath(AbstractHD.PathType type, int index) {
+    public HDAccountAddress addressForPath(AbstractHD.PathType type, int index) {
         assert index < (type == AbstractHD.PathType.EXTERNAL_ROOT_PATH ?
                 allGeneratedExternalAddressCount()
                 : allGeneratedInternalAddressCount());
