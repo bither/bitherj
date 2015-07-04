@@ -243,13 +243,7 @@ public abstract class AbstractDb {
 
         //hd account
         public static final String HD_ACCOUNT = "hd_account";
-
         public static final String HD_ACCOUNT_ADDRESS = "hd_account_addresses";
-
-        //cold hd account
-//        public static final String COLD_HD_ACCOUNT = "cold_hd_account";
-
-        public static final String COLD_HD_ACCOUNT_ADDRESS = "cold_hd_account_addresses";
 
         //enterprise hdm
 
@@ -302,7 +296,6 @@ public abstract class AbstractDb {
         public static final String OUT_STATUS = "out_status";
         public static final String OUT_ADDRESS = "out_address";
         public static final String HD_ACCOUNT_ID = "hd_account_id";
-//        public static final String COLD_HD_ACCOUNT_ID = "cold_hd_account_id";
     }
 
     public interface PeersColumns {
@@ -359,7 +352,6 @@ public abstract class AbstractDb {
     }
 
     //hd account
-
     public interface HDAccountColumns {
         public static final String HD_ACCOUNT_ID = "hd_account_id";
         public static final String ENCRYPT_SEED = "encrypt_seed";
@@ -368,7 +360,6 @@ public abstract class AbstractDb {
         public static final String HD_ADDRESS = "hd_address";
         public static final String EXTERNAL_PUB = "external_pub";
         public static final String INTERNAL_PUB = "internal_pub";
-
     }
 
     public interface HDAccountAddressesColumns {
@@ -380,28 +371,6 @@ public abstract class AbstractDb {
         public static final String PUB = "pub";
         public static final String IS_SYNCED = "is_synced";
     }
-
-    //cold hd account
-
-//    public interface ColdHDAccountColumns {
-//        public static final String HD_ACCOUNT_ID = "hd_account_id";
-//        public static final String ENCRYPT_SEED = "encrypt_seed";
-//        public static final String ENCRYPT_MNMONIC_SEED = "encrypt_mnemonic_seed";
-//        public static final String IS_XRANDOM = "is_xrandom";
-//        public static final String HD_ADDRESS = "hd_address";
-//        public static final String EXTERNAL_PUB = "external_pub";
-//        public static final String INTERNAL_PUB = "internal_pub";
-//    }
-//
-//    public interface ColdHDAccountAddressesColumns {
-//        public static final String HD_ACCOUNT_ID = "hd_account_id";
-//        public static final String PATH_TYPE = "path_type";
-//        public static final String ADDRESS_INDEX = "address_index";
-//        public static final String IS_ISSUED = "is_issued";
-//        public static final String ADDRESS = "address";
-//        public static final String PUB = "pub";
-//        public static final String IS_SYNCED = "is_synced";
-//    }
 
     public interface VanityAddressColumns {
         public static final String ADDRESS = "address";

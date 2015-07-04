@@ -267,7 +267,7 @@ public class HDAccount extends Address {
     }
 
     public String getFirstAddressFromDb() {
-        return AbstractDb.hdAccountProvider.getHDFristAddress(hdSeedId);
+        return AbstractDb.hdAccountProvider.getHDFirstAddress(hdSeedId);
     }
 
     public void supplyEnoughKeys(boolean isSyncedComplete) {
@@ -315,7 +315,7 @@ public class HDAccount extends Address {
     }
 
     protected String getEncryptedMnemonicSeed() {
-        return AbstractDb.hdAccountProvider.getHDAccountEncryptMnmonicSeed(hdSeedId);
+        return AbstractDb.hdAccountProvider.getHDAccountEncryptMnemonicSeed(hdSeedId);
     }
 
     protected String getEncryptedHDSeed() {
@@ -357,33 +357,7 @@ public class HDAccount extends Address {
         return AbstractDb.hdAccountAddressProvider.addressForPath(this.hdSeedId, type, index);
     }
 
-    public void onNewTx(Tx tx, List<HDAccount.HDAccountAddress> relatedAddresses, Tx
-            .TxNotificationType txNotificationType) {
-//        if (relatedAddresses == null || relatedAddresses.size() == 0) {
-//            return;
-//        }
-
-//        int maxInternal = -1, maxExternal = -1;
-//        for (HDAccountAddress a : relatedAddresses) {
-//            if (a.pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-//                if (a.index > maxExternal) {
-//                    maxExternal = a.index;
-//                }
-//            } else {
-//                if (a.index > maxInternal) {
-//                    maxInternal = a.index;
-//                }
-//            }
-//        }
-
-//        log.info("HD on new tx issued ex {}, issued in {}", maxExternal, maxInternal);
-//        if (maxExternal >= 0 && maxExternal > issuedExternalIndex()) {
-//            updateIssuedExternalIndex(maxExternal);
-//        }
-//        if (maxInternal >= 0 && maxInternal > issuedInternalIndex()) {
-//            updateIssuedInternalIndex(maxInternal);
-//        }
-
+    public void onNewTx(Tx tx, Tx.TxNotificationType txNotificationType) {
         supplyEnoughKeys(true);
 
         long deltaBalance = getDeltaBalance();
@@ -428,7 +402,7 @@ public class HDAccount extends Address {
     }
 
     public void updateBalance() {
-        this.balance = AbstractDb.hdAccountAddressProvider.getHDAccountConfirmedBanlance(hdSeedId)
+        this.balance = AbstractDb.hdAccountAddressProvider.getHDAccountConfirmedBalance(hdSeedId)
                 + calculateUnconfirmedBalance();
     }
 
@@ -703,21 +677,9 @@ public class HDAccount extends Address {
             return;
         }
         String encryptedHDSeed = getEncryptedHDSeed();
-        if (Utils.isEmpty(encryptedHDSeed)) {
-            initHDSeedFromMnemonicSeed(password);
-        } else {
+        if (!Utils.isEmpty(encryptedHDSeed)) {
             hdSeed = new EncryptedData(encryptedHDSeed).decrypt(password);
         }
-    }
-
-    private void initHDSeedFromMnemonicSeed(CharSequence password) throws MnemonicException
-            .MnemonicLengthException {
-        decryptMnemonicSeed(password);
-        hdSeed = seedFromMnemonic(mnemonicSeed);
-        wipeMnemonicSeed();
-        AbstractDb.addressProvider.updateEncrypttMnmonicSeed(getHdSeedId(), new EncryptedData
-                (hdSeed,
-                password, isFromXRandom).toEncryptedString());
     }
 
     public void decryptMnemonicSeed(CharSequence password) throws KeyCrypterException {

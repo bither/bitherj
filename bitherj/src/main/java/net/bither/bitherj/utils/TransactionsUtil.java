@@ -251,7 +251,7 @@ public class TransactionsUtil {
                     hasTx = true;
                 } else {
                     hasTx = false;
-                    AbstractDb.hdAccountAddressProvider.updateSyncdForIndex(hdSeedId, pathType, addressIndex);
+                    AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, addressIndex);
                 }
             }
             addressIndex++;
@@ -320,7 +320,7 @@ public class TransactionsUtil {
                     hasTx = true;
                 } else {
                     hasTx = false;
-                    AbstractDb.hdAccountAddressProvider.updateSyncdForIndex(hdSeedId, pathType, addressIndex);
+                    AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, addressIndex);
                 }
             }
             addressIndex++;

@@ -148,7 +148,7 @@ public class HDAccountCold extends AbstractHD {
     }
 
     public String getFirstAddressFromDb() {
-        return AbstractDb.hdAccountProvider.getHDFristAddress(hdSeedId);
+        return AbstractDb.hdAccountProvider.getHDFirstAddress(hdSeedId);
     }
 
     public boolean checkWithPassword(CharSequence password) {
@@ -176,7 +176,7 @@ public class HDAccountCold extends AbstractHD {
 
     @Override
     protected String getEncryptedMnemonicSeed() {
-        return AbstractDb.hdAccountProvider.getHDAccountEncryptMnmonicSeed(hdSeedId);
+        return AbstractDb.hdAccountProvider.getHDAccountEncryptMnemonicSeed(hdSeedId);
     }
 
     public String getFullEncryptPrivKey() {
@@ -214,17 +214,4 @@ public class HDAccountCold extends AbstractHD {
         result += Utils.bytesToHexString(extended).toUpperCase();
         return result;
     }
-
-//    public static boolean hasHDAccountCold() {
-//        return AbstractDb.hdAccountAddressProvider.hasHDAccountCold();
-//    }
-
-//    public static HDAccountCold hdAccountCold() {
-//        List<Integer> seeds = AbstractDb.hdAccountAddressProvider.getHDAccountSeeds();
-//        if (seeds.size() > 0) {
-//            return new HDAccountCold(seeds.get(0));
-//        } else {
-//            return null;
-//        }
-//    }
 }

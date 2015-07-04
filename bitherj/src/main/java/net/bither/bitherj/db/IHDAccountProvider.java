@@ -19,29 +19,26 @@ package net.bither.bitherj.db;
 import java.util.List;
 
 public interface IHDAccountProvider {
+
+    int addHDAccount(String encryptedMnemonicSeed, String encryptSeed
+            , String firstAddress, boolean isXrandom, String addressOfPS
+            , byte[] externalPub, byte[] internalPub);
+
     int addMonitoredHDAccount(String firstAddress, boolean isXrandom, byte[] externalPub, byte[] internalPub);
 
     boolean hasMnemonicSeed(int hdAccountId);
 
-    public int addHDAccount(String encryptedMnemonicSeed, String encryptSeed
-            , String firstAddress, boolean isXrandom, String addressOfPS
-            , byte[] externalPub, byte[] internalPub);
+    String getHDFirstAddress(int hdSeedId);
 
-    public String getHDFristAddress(int hdSeedId);
+    byte[] getExternalPub(int hdSeedId);
 
-    public byte[] getExternalPub(int hdSeedId);
+    byte[] getInternalPub(int hdSeedId);
 
-    public byte[] getInternalPub(int hdSeedId);
+    String getHDAccountEncryptSeed(int hdSeedId);
 
-    public String getHDAccountEncryptSeed(int hdSeedId);
+    String getHDAccountEncryptMnemonicSeed(int hdSeedId);
 
-    public String getHDAccountEncryptMnmonicSeed(int hdSeedId);
+    boolean hdAccountIsXRandom(int seedId);
 
-    public boolean hdAccountIsXRandom(int seedId);
-
-    public List<Integer> getHDAccountSeeds();
-
-
-
-
+    List<Integer> getHDAccountSeeds();
 }

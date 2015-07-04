@@ -19,7 +19,7 @@ public interface IAddressProvider {
 
     public boolean hasPasswordSeed();
 
-    //hd
+    // hdm
     public List<Integer> getHDSeeds();
 
     public String getEncryptMnemonicSeed(int hdSeedId);

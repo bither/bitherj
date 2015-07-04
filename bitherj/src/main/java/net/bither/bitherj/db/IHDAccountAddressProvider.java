@@ -55,17 +55,17 @@ public interface IHDAccountAddressProvider {
 
     void updateSyncdComplete(int hdAccountId, HDAccount.HDAccountAddress address);
 
-    void setSyncdNotComplete();
+    void setSyncedNotComplete();
 
     int unSyncedAddressCount(int hdAccountId);
 
-    void updateSyncdForIndex(int hdAccountId, AbstractHD.PathType pathType, int index);
+    void updateSyncedForIndex(int hdAccountId, AbstractHD.PathType pathType, int index);
 
     List<HDAccount.HDAccountAddress> getSigningAddressesForInputs(int hdAccountId, List<In> inList);
 
     int hdAccountTxCount(int hdAccountId);
 
-    long getHDAccountConfirmedBanlance(int hdAccountId);
+    long getHDAccountConfirmedBalance(int hdAccountId);
 
     List<Tx> getHDAccountUnconfirmedTx(int hdAccountId);
 
@@ -89,7 +89,7 @@ public interface IHDAccountAddressProvider {
 //
 //    int addMonitoredHDAccount(boolean isXrandom, byte[] externalPub, byte[] internalPub);
 //
-//    String getHDFristAddress(int hdSeedId);
+//    String getHDFirstAddress(int hdSeedId);
 //
 //    byte[] getExternalPub(int hdSeedId);
 //
@@ -97,7 +97,7 @@ public interface IHDAccountAddressProvider {
 //
 //    String getHDAccountEncryptSeed(int hdSeedId);
 //
-//    String getHDAccountEncryptMnmonicSeed(int hdSeedId);
+//    String getHDAccountEncryptMnemonicSeed(int hdSeedId);
 //
 //    boolean hdAccountIsXRandom(int seedId);
 //

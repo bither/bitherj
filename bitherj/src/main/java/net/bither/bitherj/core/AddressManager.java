@@ -350,10 +350,10 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
     private void onNewTx(Tx tx, HashSet<Integer> relatedHDAccountIdList, Tx.TxNotificationType txNotificationType) {
         for (Integer i : relatedHDAccountIdList) {
             if (hasHDAccountHot() && getHDAccountHot().getHdSeedId() == i) {
-                getHDAccountHot().onNewTx(tx, null, txNotificationType);
+                getHDAccountHot().onNewTx(tx, txNotificationType);
             }
             if (hasHDAccountMonitored() && getHDAccountMonitored().getHdSeedId() == i) {
-                getHDAccountMonitored().onNewTx(tx, null, txNotificationType);
+                getHDAccountMonitored().onNewTx(tx, txNotificationType);
             }
         }
     }

@@ -239,8 +239,7 @@ public class HDAccountMonitored extends Address {
         return AbstractDb.hdAccountAddressProvider.addressForPath(this.hdSeedId, type, index);
     }
 
-    public void onNewTx(Tx tx, List<HDAccount.HDAccountAddress> relatedAddresses, Tx
-            .TxNotificationType txNotificationType) {
+    public void onNewTx(Tx tx, Tx.TxNotificationType txNotificationType) {
         supplyEnoughKeys(true);
 
         long deltaBalance = getDeltaBalance();
@@ -285,7 +284,7 @@ public class HDAccountMonitored extends Address {
     }
 
     public void updateBalance() {
-        this.balance = AbstractDb.hdAccountAddressProvider.getHDAccountConfirmedBanlance
+        this.balance = AbstractDb.hdAccountAddressProvider.getHDAccountConfirmedBalance
                 (hdSeedId) + calculateUnconfirmedBalance();
     }
 
