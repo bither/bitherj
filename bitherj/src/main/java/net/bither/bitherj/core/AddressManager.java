@@ -50,7 +50,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
     protected EnterpriseHDMKeychain enterpriseHDMKeychain;
     protected HDAccount hdAccountHot;
     protected HDAccountMonitored hdAccountMonitored;
-    protected HDAccountCold hdAccountCold;
+//    protected HDAccountCold hdAccountCold;
     protected List<DesktopHDMKeychain> desktopHDMKeychains;
 
     private AddressManager() {
@@ -136,14 +136,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
     }
 
     private void initHDAccounts() {
-        List<Integer> seeds = AbstractDb.addressProvider.getHDAccountSeeds();
-        if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
-            for (int seedId : seeds) {
-                if (hdAccountCold == null && AbstractDb.addressProvider.hasMnemonicSeed(seedId)) {
-                    hdAccountCold = new HDAccountCold(seedId);
-                }
-            }
-        } else {
+        if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.HOT) {
+            List<Integer> seeds = AbstractDb.addressProvider.getHDAccountSeeds();
             for (int seedId : seeds) {
                 if (hdAccountHot == null && AbstractDb.addressProvider.hasMnemonicSeed(seedId)) {
                     hdAccountHot = new HDAccount(seedId);
@@ -717,13 +711,29 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
 
     public boolean hasHDAccountCold() {
         synchronized (lock) {
-            return hdAccountCold != null;
+            if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
+                List<Integer> seeds = AbstractDb.addressProvider.getHDAccountSeeds();
+                for (int seedId : seeds) {
+                    if (AbstractDb.addressProvider.hasMnemonicSeed(seedId)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 
     public HDAccountCold getHDAccountCold() {
         synchronized (lock) {
-            return hdAccountCold;
+            if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
+                List<Integer> seeds = AbstractDb.addressProvider.getHDAccountSeeds();
+                for (int seedId : seeds) {
+                    if (AbstractDb.addressProvider.hasMnemonicSeed(seedId)) {
+                        return new HDAccountCold(seedId);
+                    }
+                }
+            }
+            return null;
         }
     }
 

@@ -22,7 +22,7 @@ public interface IAddressProvider {
     //hd
 
 
-    int addMonitoredHDAccount(boolean isXrandom, byte[] externalPub, byte[] internalPub);
+    int addMonitoredHDAccount(String firstAddress, boolean isXrandom, byte[] externalPub, byte[] internalPub);
 //    boolean hasHDAccountCold();
     boolean hasMnemonicSeed(int hdAccountId);
 

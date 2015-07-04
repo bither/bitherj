@@ -84,6 +84,8 @@ public class HDAccountMonitored extends Address {
                 .INTERNAL_ROOT_PATH);
         DeterministicKey externalKey = getChainRootKey(accountKey, AbstractHD.PathType
                 .EXTERNAL_ROOT_PATH);
+        DeterministicKey key = externalKey.deriveSoftened(0);
+        String firstAddress = key.toAddress();
         accountKey.wipe();
 
         progress += GenerationPreStartProgress;
@@ -120,11 +122,17 @@ public class HDAccountMonitored extends Address {
                 generationDelegate.onHDAccountGenerationProgress(progress);
             }
         }
+
+        hdSeedId = AbstractDb.addressProvider.addMonitoredHDAccount(firstAddress, isFromXRandom
+                , internalKey.getPubKeyExtended(), externalKey.getPubKeyExtended());
+        for (HDAccount.HDAccountAddress addr : externalAddresses) {
+            addr.setHdAccountId(hdSeedId);
+        }
+        for (HDAccount.HDAccountAddress addr : internalAddresses) {
+            addr.setHdAccountId(hdSeedId);
+        }
         AbstractDb.hdAccountProvider.addAddress(externalAddresses);
         AbstractDb.hdAccountProvider.addAddress(internalAddresses);
-
-        hdSeedId = AbstractDb.addressProvider.addMonitoredHDAccount(isFromXRandom,
-                internalKey.getPubKeyExtended(), externalKey.getPubKeyExtended());
         internalKey.wipe();
         externalKey.wipe();
     }
@@ -233,31 +241,6 @@ public class HDAccountMonitored extends Address {
 
     public void onNewTx(Tx tx, List<HDAccount.HDAccountAddress> relatedAddresses, Tx
             .TxNotificationType txNotificationType) {
-        if (relatedAddresses == null || relatedAddresses.size() == 0) {
-            return;
-        }
-
-        int maxInternal = -1, maxExternal = -1;
-        for (HDAccount.HDAccountAddress a : relatedAddresses) {
-            if (a.getPathType() == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-                if (a.getIndex() > maxExternal) {
-                    maxExternal = a.getIndex();
-                }
-            } else {
-                if (a.getIndex() > maxInternal) {
-                    maxInternal = a.getIndex();
-                }
-            }
-        }
-
-        log.info("HD on new tx issued ex {}, issued in {}", maxExternal, maxInternal);
-        if (maxExternal >= 0 && maxExternal > issuedExternalIndex()) {
-            updateIssuedExternalIndex(maxExternal);
-        }
-        if (maxInternal >= 0 && maxInternal > issuedInternalIndex()) {
-            updateIssuedInternalIndex(maxInternal);
-        }
-
         supplyEnoughKeys(true);
 
         long deltaBalance = getDeltaBalance();
@@ -289,7 +272,7 @@ public class HDAccountMonitored extends Address {
     }
 
     public List<Tx> getTxs(int page) {
-        return AbstractDb.hdAccountProvider.getTxAndDetailByHDAccount(page);
+        return AbstractDb.hdAccountProvider.getTxAndDetailByHDAccount(this.hdSeedId, page);
     }
 
     @Override
