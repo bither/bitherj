@@ -198,7 +198,7 @@ public class TransactionsUtil {
             while (hasTx) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
                 int storeBlockHeight = storedBlock.getBlockNo();
-                hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(hdSeedId,
+                hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId,
                         pathType, addressIndex);
                 if (hdAccountAddress == null) {
                     hasTx = false;
@@ -251,7 +251,7 @@ public class TransactionsUtil {
                     hasTx = true;
                 } else {
                     hasTx = false;
-                    AbstractDb.hdAccountProvider.updateSyncdForIndex(hdSeedId, pathType, addressIndex);
+                    AbstractDb.hdAccountAddressProvider.updateSyncdForIndex(hdSeedId, pathType, addressIndex);
                 }
             }
             addressIndex++;
@@ -268,7 +268,7 @@ public class TransactionsUtil {
             while (hasTx) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
                 int storeBlockHeight = storedBlock.getBlockNo();
-                hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(hdSeedId,
+                hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId,
                         pathType, addressIndex);
                 if (hdAccountAddress == null) {
                     hasTx = false;
@@ -320,7 +320,7 @@ public class TransactionsUtil {
                     hasTx = true;
                 } else {
                     hasTx = false;
-                    AbstractDb.hdAccountProvider.updateSyncdForIndex(hdSeedId, pathType, addressIndex);
+                    AbstractDb.hdAccountAddressProvider.updateSyncdForIndex(hdSeedId, pathType, addressIndex);
                 }
             }
             addressIndex++;
