@@ -26,7 +26,7 @@ import net.bither.bitherj.core.Tx;
 import java.util.HashSet;
 import java.util.List;
 
-public interface IHDAccountProvider {
+public interface IHDAccountAddressProvider {
 
 
     void addAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);

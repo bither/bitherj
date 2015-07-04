@@ -187,7 +187,7 @@ public abstract class AbstractDb {
     public static IPeerProvider peerProvider;
     public static ITxProvider txProvider;
     public static IAddressProvider addressProvider;
-    public static IHDAccountProvider hdAccountProvider;
+    public static IHDAccountAddressProvider hdAccountProvider;
     public static IEnterpriseHDMProvider enterpriseHDMProvider;
     public static IDesktopAddressProvider desktopAddressProvider;
     public static IDesktopTxProvider desktopTxProvider;
@@ -211,7 +211,7 @@ public abstract class AbstractDb {
 
     public abstract IAddressProvider initAddressProvider();
 
-    public abstract IHDAccountProvider initHDAccountProvider();
+    public abstract IHDAccountAddressProvider initHDAccountProvider();
 
     public abstract IEnterpriseHDMProvider initEnterpriseHDMProvider();
 
