@@ -325,7 +325,9 @@ public class BlockChain {
         Block b2 = block2;
 
         while (b1 != null && b2 != null && !Arrays.equals(b1.getBlockHash(), b2.getBlockHash())) {
-            b1 = AbstractDb.blockProvider.getBlock(b1.getBlockPrev());
+            if (b1.getBlockNo() == 0 || b1.getBlockNo() >= b2.getBlockNo()) {
+                b1 = AbstractDb.blockProvider.getBlock(b1.getBlockPrev());
+            }
             if (b1.getBlockNo() < b2.getBlockNo()) {
                 b2 = AbstractDb.blockProvider.getBlock(b2.getBlockPrev());
             }
