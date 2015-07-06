@@ -774,6 +774,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         Map<Sha256Hash, Tx> txHashList = new HashMap<Sha256Hash, Tx>();
         for (Tx tx : txList) {
             txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
+            AbstractDb.hdAccountAddressProvider.updateOutHDAccountId(tx);
         }
         for (Tx tx : txList) {
             if (!isSendFromHDAccount(tx, txHashList) && tx.getOuts().size() > BitherjSettings
@@ -793,28 +794,28 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         return txList;
     }
 
-    public List<Tx> compressTxsForHDAccountMoitored(List<Tx> txList) {
-        Map<Sha256Hash, Tx> txHashList = new HashMap<Sha256Hash, Tx>();
-        for (Tx tx : txList) {
-            txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
-        }
-        for (Tx tx : txList) {
-            if (!isSendFromHDAccount(tx, txHashList) && tx.getOuts().size() > BitherjSettings
-                    .COMPRESS_OUT_NUM) {
-                List<Out> outList = new ArrayList<Out>();
-                HashSet<String> addressHashSet = AbstractDb.hdAccountAddressProvider.
-                        getBelongAccountAddresses(tx.getOutAddressList());
-                for (Out out : tx.getOuts()) {
-                    if (addressHashSet.contains(out.getOutAddress())) {
-                        outList.add(out);
-                    }
-                }
-                tx.setOuts(outList);
-            }
-        }
-
-        return txList;
-    }
+//    public List<Tx> compressTxsForHDAccountMoitored(List<Tx> txList) {
+//        Map<Sha256Hash, Tx> txHashList = new HashMap<Sha256Hash, Tx>();
+//        for (Tx tx : txList) {
+//            txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
+//        }
+//        for (Tx tx : txList) {
+//            if (!isSendFromHDAccount(tx, txHashList) && tx.getOuts().size() > BitherjSettings
+//                    .COMPRESS_OUT_NUM) {
+//                List<Out> outList = new ArrayList<Out>();
+//                HashSet<String> addressHashSet = AbstractDb.hdAccountAddressProvider.
+//                        getBelongAccountAddresses(tx.getOutAddressList());
+//                for (Out out : tx.getOuts()) {
+//                    if (addressHashSet.contains(out.getOutAddress())) {
+//                        outList.add(out);
+//                    }
+//                }
+//                tx.setOuts(outList);
+//            }
+//        }
+//
+//        return txList;
+//    }
 
 //    public List<Tx> compressTxsForHDAccountMonitored(List<Tx> txList) {
 //        Map<Sha256Hash, Tx> txHashList = new HashMap<Sha256Hash, Tx>();
