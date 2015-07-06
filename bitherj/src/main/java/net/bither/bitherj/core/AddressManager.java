@@ -816,28 +816,28 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         return txList;
     }
 
-    public List<Tx> compressTxsForHDAccountMonitored(List<Tx> txList) {
-        Map<Sha256Hash, Tx> txHashList = new HashMap<Sha256Hash, Tx>();
-        for (Tx tx : txList) {
-            txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
-        }
-        for (Tx tx : txList) {
-            if (!isSendFromHDAccountMonitored(tx, txHashList) && tx.getOuts().size() >
-                    BitherjSettings.COMPRESS_OUT_NUM) {
-                List<Out> outList = new ArrayList<Out>();
-                HashSet<String> addressHashSet = AbstractDb.hdAccountAddressProvider
-                        .getBelongAccountAddresses(tx.getOutAddressList());
-                for (Out out : tx.getOuts()) {
-                    if (addressHashSet.contains(out.getOutAddress())) {
-                        outList.add(out);
-                    }
-                }
-                tx.setOuts(outList);
-            }
-        }
-
-        return txList;
-    }
+//    public List<Tx> compressTxsForHDAccountMonitored(List<Tx> txList) {
+//        Map<Sha256Hash, Tx> txHashList = new HashMap<Sha256Hash, Tx>();
+//        for (Tx tx : txList) {
+//            txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
+//        }
+//        for (Tx tx : txList) {
+//            if (!isSendFromHDAccountMonitored(tx, txHashList) && tx.getOuts().size() >
+//                    BitherjSettings.COMPRESS_OUT_NUM) {
+//                List<Out> outList = new ArrayList<Out>();
+//                HashSet<String> addressHashSet = AbstractDb.hdAccountAddressProvider
+//                        .getBelongAccountAddresses(tx.getOutAddressList());
+//                for (Out out : tx.getOuts()) {
+//                    if (addressHashSet.contains(out.getOutAddress())) {
+//                        outList.add(out);
+//                    }
+//                }
+//                tx.setOuts(outList);
+//            }
+//        }
+//
+//        return txList;
+//    }
 
 
     public List<Tx> compressTxsForDesktopHDM(List<Tx> txList) {
@@ -897,28 +897,26 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
                 }
             }
         }
-        List<HDAccount.HDAccountAddress> hdAccountAddressList = AbstractDb.hdAccountAddressProvider
-                .belongAccount(this.hdAccountHot.hdSeedId, inAddressList);
-        return hdAccountAddressList.size() > 0;
+        return AbstractDb.hdAccountAddressProvider.getRelatedAddressCnt(inAddressList) > 0;
     }
 
-    private boolean isSendFromHDAccountMonitored(Tx tx, Map<Sha256Hash, Tx> txHashList) {
-        List<String> inAddressList = new ArrayList<String>();
-        for (In in : tx.getIns()) {
-            Sha256Hash prevTxHash = new Sha256Hash(in.getPrevTxHash());
-            if (txHashList.containsKey(prevTxHash)) {
-                Tx preTx = txHashList.get(prevTxHash);
-                for (Out out : preTx.getOuts()) {
-                    if (out.getOutSn() == in.getPrevOutSn()) {
-                        inAddressList.add(out.getOutAddress());
-                    }
-                }
-            }
-        }
-        List<HDAccount.HDAccountAddress> hdAccountAddressList = AbstractDb.hdAccountAddressProvider
-                .belongAccount(this.hdAccountHot.hdSeedId, inAddressList);
-        return hdAccountAddressList != null && hdAccountAddressList.size() > 0;
-    }
+//    private boolean isSendFromHDAccountMonitored(Tx tx, Map<Sha256Hash, Tx> txHashList) {
+//        List<String> inAddressList = new ArrayList<String>();
+//        for (In in : tx.getIns()) {
+//            Sha256Hash prevTxHash = new Sha256Hash(in.getPrevTxHash());
+//            if (txHashList.containsKey(prevTxHash)) {
+//                Tx preTx = txHashList.get(prevTxHash);
+//                for (Out out : preTx.getOuts()) {
+//                    if (out.getOutSn() == in.getPrevOutSn()) {
+//                        inAddressList.add(out.getOutAddress());
+//                    }
+//                }
+//            }
+//        }
+//        List<HDAccount.HDAccountAddress> hdAccountAddressList = AbstractDb.hdAccountAddressProvider
+//                .belongAccount(this.hdAccountHot.hdSeedId, inAddressList);
+//        return hdAccountAddressList != null && hdAccountAddressList.size() > 0;
+//    }
 
     public Tx compressTx(Tx tx, List<String> inAddresses) {
         if (tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM
