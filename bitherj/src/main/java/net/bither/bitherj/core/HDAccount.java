@@ -389,7 +389,7 @@ public class HDAccount extends Address {
     }
 
     public List<Tx> getTxs(int page) {
-        return AbstractDb.hdAccountAddressProvider.getTxAndDetailByHDAccount(page);
+        return AbstractDb.hdAccountAddressProvider.getTxAndDetailByHDAccount(this.hdSeedId, page);
     }
 
     @Override
