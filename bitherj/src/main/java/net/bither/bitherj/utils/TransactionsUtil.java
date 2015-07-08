@@ -209,7 +209,6 @@ public class TransactionsUtil {
                     addressIndex++;
                     continue;
                 }
-                List<Tx> transactions = new ArrayList<Tx>();
                 int apiBlockCount = 0;
                 int txSum = 0;
                 boolean needGetTxs = true;
@@ -224,24 +223,23 @@ public class TransactionsUtil {
                         apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                     }
                     int txCnt = jsonObject.getInt(TX_CNT);
-                    List<Tx> temp = TransactionsUtil.getTransactionsFromBither(
+                    List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(
                             jsonObject, storeBlockHeight);
-                    transactions.addAll(temp);
+                    transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
+                    Collections.sort(transactions, new ComparatorTx());
+                    AddressManager.getInstance().getHDAccountMonitored().initTxs(transactions);
                     txSum = txSum + transactions.size();
-                    needGetTxs = txSum < txCnt;
+                    needGetTxs = transactions.size() > 0;
                     page++;
                 }
                 if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
                     BlockChain.getInstance().rollbackBlock(apiBlockCount);
                 }
-                transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
-                Collections.sort(transactions, new ComparatorTx());
 
-                AddressManager.getInstance().getHDAccountMonitored().initTxs(transactions);
                 hdAccountAddress.setSyncedComplete(true);
                 AddressManager.getInstance().getHDAccountMonitored().updateSyncComplete(hdAccountAddress);
 
-                if (transactions.size() > 0) {
+                if (txSum > 0) {
                     if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
                         AddressManager.getInstance().getHDAccountMonitored().updateIssuedExternalIndex(addressIndex);
                     } else {
@@ -279,7 +277,6 @@ public class TransactionsUtil {
                     addressIndex++;
                     continue;
                 }
-                List<Tx> transactions = new ArrayList<Tx>();
                 int apiBlockCount = 0;
                 int txSum = 0;
                 boolean needGetTxs = true;
@@ -294,23 +291,23 @@ public class TransactionsUtil {
                         apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                     }
                     int txCnt = jsonObject.getInt(TX_CNT);
-                    List<Tx> temp = TransactionsUtil.getTransactionsFromBither(
+                    List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(
                             jsonObject, storeBlockHeight);
-                    transactions.addAll(temp);
+                    transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
+                    Collections.sort(transactions, new ComparatorTx());
+                    AddressManager.getInstance().getHDAccountHot().initTxs(transactions);
                     txSum = txSum + transactions.size();
-                    needGetTxs = txSum < txCnt;
+                    needGetTxs = transactions.size() > 0;
                     page++;
                 }
                 if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
                     BlockChain.getInstance().rollbackBlock(apiBlockCount);
                 }
-                transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
-                Collections.sort(transactions, new ComparatorTx());
-                AddressManager.getInstance().getHDAccountHot().initTxs(transactions);
+
                 hdAccountAddress.setSyncedComplete(true);
                 AddressManager.getInstance().getHDAccountHot().updateSyncComplete(hdAccountAddress);
 
-                if (transactions.size() > 0) {
+                if (txSum > 0) {
                     if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
                         AddressManager.getInstance().getHDAccountHot().updateIssuedExternalIndex(addressIndex);
                     } else {
@@ -348,7 +345,6 @@ public class TransactionsUtil {
                     addressIndex++;
                     continue;
                 }
-                List<Tx> transactions = new ArrayList<Tx>();
                 int apiBlockCount = 0;
                 int txSum = 0;
                 boolean needGetTxs = true;
@@ -363,25 +359,23 @@ public class TransactionsUtil {
                         apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                     }
                     int txCnt = jsonObject.getInt(TX_CNT);
-                    List<Tx> temp = TransactionsUtil.getTransactionsFromBither(
+                    List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(
                             jsonObject, storeBlockHeight);
-                    transactions.addAll(temp);
+                    transactions = AddressManager.getInstance().compressTxsForDesktopHDM(transactions);
+                    Collections.sort(transactions, new ComparatorTx());
+                    desktopHDMKeychain.initTxs(transactions);
                     txSum = txSum + transactions.size();
-                    needGetTxs = txSum < txCnt;
+                    needGetTxs = transactions.size() > 0;
                     page++;
                 }
                 if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
                     BlockChain.getInstance().rollbackBlock(apiBlockCount);
                 }
 
-                transactions = AddressManager.getInstance().compressTxsForDesktopHDM(transactions);
-
-                Collections.sort(transactions, new ComparatorTx());
-                desktopHDMKeychain.initTxs(transactions);
                 desktopHDMAddress.setSyncComplete(true);
                 desktopHDMKeychain.updateSyncComplete(desktopHDMAddress);
 
-                if (transactions.size() > 0) {
+                if (txSum > 0) {
                     if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
                         desktopHDMKeychain.updateIssuedExternalIndex(addressIndex);
                     } else {
@@ -405,7 +399,6 @@ public class TransactionsUtil {
             Block storedBlock = BlockChain.getInstance().getLastBlock();
             int storeBlockHeight = storedBlock.getBlockNo();
             if (!address.isSyncComplete()) {
-                List<Tx> transactions = new ArrayList<Tx>();
                 int apiBlockCount = 0;
                 int txSum = 0;
                 boolean needGetTxs = true;
@@ -420,19 +413,18 @@ public class TransactionsUtil {
                         apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                     }
                     int txCnt = jsonObject.getInt(TX_CNT);
-                    List<Tx> temp = TransactionsUtil.getTransactionsFromBither(
+                    List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(
                             jsonObject, storeBlockHeight);
-                    transactions.addAll(temp);
+                    transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
+                    Collections.sort(transactions, new ComparatorTx());
+                    address.initTxs(transactions);
                     txSum = txSum + transactions.size();
-                    needGetTxs = txSum < txCnt;
+                    needGetTxs = transactions.size() > 0;
                     page++;
                 }
                 if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
                     BlockChain.getInstance().rollbackBlock(apiBlockCount);
                 }
-                transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
-                Collections.sort(transactions, new ComparatorTx());
-                address.initTxs(transactions);
                 address.setSyncComplete(true);
                 if (address instanceof HDMAddress) {
                     HDMAddress hdmAddress = (HDMAddress) address;
