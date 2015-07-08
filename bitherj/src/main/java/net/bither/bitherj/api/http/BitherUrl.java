@@ -27,7 +27,7 @@ public class BitherUrl {
         public static final String BITHER_BITCOIN_DOMAIN = "b.getcai.com";
         public static final String BITHER_USER_DOMAIN = "bu.getcai.com";
         public static final String BITHER_STATS_DOMAIN = "bs.getcai.com";
-        public static final String BITHER_BC_DOMAIN = "45.33.19.22";
+        public static final String BITHER_BC_DOMAIN = "bc.bither.net";
         public static final String BITHER_HDM_DOMAIN = "hdm.bither.net";
 
         public static final String BITHER_BITCOIN = Utils.format(FORMAT_HTTP, BITHER_BITCOIN_DOMAIN);
