@@ -21,7 +21,6 @@ import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.core.DesktopHDMAddress;
 import net.bither.bitherj.core.EnterpriseHDMAddress;
 import net.bither.bitherj.core.HDAccount;
-import net.bither.bitherj.core.HDAccountMonitored;
 import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.exception.AddressFormatException;
@@ -171,7 +170,7 @@ public class QRCodeTxTransport implements Serializable {
     }
 
     public static String getHDAccountMonitoredUnsignedTx(Tx tx, String toAddress,
-                                                         HDAccountMonitored account) {
+                                                         HDAccount account) {
         TxTransportType txTransportType = TxTransportType.ColdHD;
         List<HDAccount.HDAccountAddress> addresses = account.getSigningAddressesForInputs(tx
                 .getIns());

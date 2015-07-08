@@ -49,8 +49,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
     protected HDMKeychain hdmKeychain;
     protected EnterpriseHDMKeychain enterpriseHDMKeychain;
     protected HDAccount hdAccountHot;
-    protected HDAccountMonitored hdAccountMonitored;
-//    protected HDAccountCold hdAccountCold;
+    protected HDAccount hdAccountMonitored;
     protected List<DesktopHDMKeychain> desktopHDMKeychains;
 
     private AddressManager() {
@@ -142,7 +141,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
                 if (hdAccountHot == null && AbstractDb.hdAccountProvider.hasMnemonicSeed(seedId)) {
                     hdAccountHot = new HDAccount(seedId);
                 } else if (hdAccountMonitored == null && !AbstractDb.hdAccountProvider.hasMnemonicSeed(seedId)) {
-                    hdAccountMonitored = new HDAccountMonitored(seedId);
+                    hdAccountMonitored = new HDAccount(seedId);
                 }
             }
         }
@@ -691,7 +690,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         }
     }
 
-    public void setHDAccountMonitored(HDAccountMonitored account) {
+    public void setHDAccountMonitored(HDAccount account) {
         synchronized (lock) {
             hdAccountMonitored = account;
         }
@@ -703,7 +702,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         }
     }
 
-    public HDAccountMonitored getHDAccountMonitored() {
+    public HDAccount getHDAccountMonitored() {
         synchronized (lock) {
             return hdAccountMonitored;
         }
