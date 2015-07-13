@@ -277,10 +277,8 @@ public class HDAccount extends Address {
         for (int i = firstIndex;
              i < firstIndex + count;
              i++) {
-            HDAccountAddress address = new HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD.PathType
-                    .INTERNAL_ROOT_PATH, i, isSyncedComplete,hdSeedId);
-            address.setHdAccountId(this.hdSeedId);
-            as.add(address);
+            as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD.PathType
+                    .INTERNAL_ROOT_PATH, i, isSyncedComplete, hdSeedId));
         }
         AbstractDb.hdAccountAddressProvider.addAddress(as);
         log.info("HD supplied {} internal addresses", as.size());
@@ -294,10 +292,8 @@ public class HDAccount extends Address {
         for (int i = firstIndex;
              i < firstIndex + count;
              i++) {
-            HDAccountAddress address = new HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD.PathType
-                    .EXTERNAL_ROOT_PATH, i, isSyncedComplete,hdSeedId);
-            address.setHdAccountId(this.hdSeedId);
-            as.add(address);
+            as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD.PathType
+                    .EXTERNAL_ROOT_PATH, i, isSyncedComplete, hdSeedId));
         }
         AbstractDb.hdAccountAddressProvider.addAddress(as);
         log.info("HD supplied {} external addresses", as.size());
