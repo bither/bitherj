@@ -850,8 +850,7 @@ public class HDAccount extends Address {
     }
 
     public static final boolean checkDuplicated(byte[] ex, byte[] in) {
-        //TODO check duplicated
-        return false;
+        return AbstractDb.hdAccountProvider.isPubExist(ex, in);
     }
 
     public static class DuplicatedHDAccountException extends RuntimeException {
