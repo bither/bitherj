@@ -159,6 +159,9 @@ public class HDAccount extends Address {
                 .INTERNAL_ROOT_PATH);
         DeterministicKey externalKey = getChainRootKey(accountKey, AbstractHD.PathType
                 .EXTERNAL_ROOT_PATH);
+        if (checkDuplicated(externalKey.getPubKeyExtended(), internalKey.getPubKeyExtended())) {
+            throw new DuplicatedHDAccountException();
+        }
         DeterministicKey key = externalKey.deriveSoftened(0);
         String firstAddress = key.toAddress();
         accountKey.wipe();
@@ -844,5 +847,14 @@ public class HDAccount extends Address {
         public void setHdAccountId(int hdAccountId) {
             this.hdAccountId = hdAccountId;
         }
+    }
+
+    public static final boolean checkDuplicated(byte[] ex, byte[] in) {
+        //TODO check duplicated
+        return false;
+    }
+
+    public static class DuplicatedHDAccountException extends RuntimeException {
+
     }
 }
