@@ -95,7 +95,9 @@ public class PrivateKeyUtil {
         EncryptedPrivateKey epk = new EncryptedPrivateKey(Utils.hexStringToByteArray
                 (strs[1]), Utils.hexStringToByteArray(strs[0]));
         byte[] decrypted = crypter.decrypt(epk, crypter.deriveKey(password));
-
+        if (decrypted.length != 32) {
+            return null;
+        }
         ECKey ecKey = null;
         SecureCharSequence privateKeyText = null;
         if (needPrivteKeyText) {
