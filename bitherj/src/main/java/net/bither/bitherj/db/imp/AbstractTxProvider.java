@@ -519,16 +519,29 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
 //        }
         sql = "select count(0) from outs where tx_hash=? and out_sn=? and out_address=?";
         for (In inItem : txItem.getIns()) {
-            c = db.rawQuery(sql, new String[]{Base58.encode(inItem.getPrevTxHash())
-                    , Integer.toString(inItem.getPrevOutSn()), address});
-            count = 0;
-            if (c.moveToNext()) {
-                count = c.getInt(0);
-            }
-            c.close();
-            if (count > 0) {
+            final int[] cnt = {0};
+            this.execQueryOneRecord(db, sql, new String[]{Base58.encode(inItem.getPrevTxHash())
+                    , Integer.toString(inItem.getPrevOutSn()), address}, new Function<ICursor, Void>() {
+                @Nullable
+                @Override
+                public Void apply(@Nullable ICursor c) {
+                    cnt[0] = c.getInt(0);
+                    return null;
+                }
+            });
+            if (cnt[0] > 0) {
                 return true;
             }
+//            c = db.rawQuery(sql, new String[]{Base58.encode(inItem.getPrevTxHash())
+//                    , Integer.toString(inItem.getPrevOutSn()), address});
+//            count = 0;
+//            if (c.moveToNext()) {
+//                count = c.getInt(0);
+//            }
+//            c.close();
+//            if (count > 0) {
+//                return true;
+//            }
         }
         return result;
     }
@@ -536,36 +549,61 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
     public boolean isTxDoubleSpendWithConfirmedTx(Tx tx) {
         String sql = "select count(0) from ins a, txs b where a.tx_hash=b.tx_hash and" +
                 " b.block_no is not null and a.prev_tx_hash=? and a.prev_out_sn=?";
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        Cursor c;
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+//        Cursor c;
+        IDb db = this.getReadDb();
         for (In inItem : tx.getIns()) {
-            c = db.rawQuery(sql, new String[]{Base58.encode(inItem.getPrevTxHash()), Integer.toString(inItem.getPrevOutSn())});
-            if (c.moveToNext()) {
-                if (c.getInt(0) > 0) {
-                    c.close();
-                    return true;
+            final int[] cnt = {0};
+            this.execQueryOneRecord(db, sql, new String[]{Base58.encode(inItem.getPrevTxHash()), Integer.toString(inItem.getPrevOutSn())}, new Function<ICursor, Void>() {
+                @Nullable
+                @Override
+                public Void apply(@Nullable ICursor c) {
+                    cnt[0] = c.getInt(0);
+                    return null;
                 }
+            });
+            if (cnt[0] > 0) {
+                return true;
             }
-            c.close();
+//            c = db.rawQuery(sql, new String[]{Base58.encode(inItem.getPrevTxHash()), Integer.toString(inItem.getPrevOutSn())});
+//            if (c.moveToNext()) {
+//                if (c.getInt(0) > 0) {
+//                    c.close();
+//                    return true;
+//                }
+//            }
+//            c.close();
 
         }
         return false;
     }
 
     public List<String> getInAddresses(Tx tx) {
-        List<String> result = new ArrayList<String>();
+        final List<String> result = new ArrayList<String>();
         String sql = "select out_address from outs where tx_hash=? and out_sn=?";
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        Cursor c;
+        IDb db = this.getReadDb();
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+//        Cursor c;
         for (In inItem : tx.getIns()) {
-            c = db.rawQuery(sql, new String[]{Base58.encode(inItem.getPrevTxHash())
-                    , Integer.toString(inItem.getPrevOutSn())});
-            if (c.moveToNext()) {
-                if (!c.isNull(0)) {
-                    result.add(c.getString(0));
+            this.execQueryOneRecord(db, sql, new String[]{Base58.encode(inItem.getPrevTxHash())
+                    , Integer.toString(inItem.getPrevOutSn())}, new Function<ICursor, Void>() {
+                @Nullable
+                @Override
+                public Void apply(@Nullable ICursor c) {
+                    if (!c.isNull(0)) {
+                        result.add(c.getString(0));
+                    }
+                    return null;
                 }
-            }
-            c.close();
+            });
+//            c = db.rawQuery(sql, new String[]{Base58.encode(inItem.getPrevTxHash())
+//                    , Integer.toString(inItem.getPrevOutSn())});
+//            if (c.moveToNext()) {
+//                if (!c.isNull(0)) {
+//                    result.add(c.getString(0));
+//                }
+//            }
+//            c.close();
         }
         return result;
     }
@@ -574,37 +612,63 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         if (blockNo == Tx.TX_UNCONFIRMED || txHashes == null) {
             return;
         }
-        String sql = "update txs set block_no=%d where tx_hash='%s'";
+        String updateBlockNoSql = "update txs set block_no=? where tx_hash=?";
         String existSql = "select count(0) from txs where block_no=? and tx_hash=?";
         String doubleSpendSql = "select a.tx_hash from ins a, ins b where a.prev_tx_hash=b.prev_tx_hash " +
                 "and a.prev_out_sn=b.prev_out_sn and a.tx_hash<>b.tx_hash and b.tx_hash=?";
         String blockTimeSql = "select block_time from blocks where block_no=?";
-        String updateTxTimeThatMoreThanBlockTime = "update txs set tx_time=%d where block_no=%d and tx_time>%d";
-        SQLiteDatabase db = this.mDb.getWritableDatabase();
+        String updateTxTimeThatMoreThanBlockTime = "update txs set tx_time=? where block_no=? and tx_time>?";
+//        SQLiteDatabase db = this.mDb.getWritableDatabase();
+        IDb db = this.getWriteDb();
         db.beginTransaction();
-        Cursor c;
+//        Cursor c;
         for (byte[] txHash : txHashes) {
-            c = db.rawQuery(existSql, new String[]{Integer.toString(blockNo), Base58.encode(txHash)});
-            if (c.moveToNext()) {
-                int cnt = c.getInt(0);
-                c.close();
-                if (cnt > 0) {
-                    continue;
+            final int[] cnt = {0};
+            this.execQueryOneRecord(db, existSql, new String[]{Integer.toString(blockNo), Base58.encode(txHash)}, new Function<ICursor, Void>() {
+                @Nullable
+                @Override
+                public Void apply(@Nullable ICursor c) {
+                    cnt[0] = c.getInt(0);
+                    return null;
                 }
-            } else {
-                c.close();
+            });
+            if (cnt[0] > 0) {
+                continue;
             }
-            String updateSql = Utils.format(sql, blockNo, Base58.encode(txHash));
-            db.execSQL(updateSql);
-            c = db.rawQuery(doubleSpendSql, new String[]{Base58.encode(txHash)});
-            List<String> txHashes1 = new ArrayList<String>();
-            while (c.moveToNext()) {
-                int idColumn = c.getColumnIndex("tx_hash");
-                if (idColumn != -1) {
-                    txHashes1.add(c.getString(idColumn));
+//            c = db.rawQuery(existSql, new String[]{Integer.toString(blockNo), Base58.encode(txHash)});
+//            if (c.moveToNext()) {
+//                int cnt = c.getInt(0);
+//                c.close();
+//                if (cnt > 0) {
+//                    continue;
+//                }
+//            } else {
+//                c.close();
+//            }
+            this.execUpdate(db, updateBlockNoSql, new String[] {Integer.toString(blockNo), Base58.encode(txHash)});
+//            String updateSql = Utils.format(sql, blockNo, Base58.encode(txHash));
+//            db.execSQL(updateSql);
+            final List<String> txHashes1 = new ArrayList<String>();
+            this.execQueryLoop(db, doubleSpendSql, new String[]{Base58.encode(txHash)}, new Function<ICursor, Void>() {
+                @Nullable
+                @Override
+                public Void apply(@Nullable ICursor c) {
+                    int idColumn = c.getColumnIndex("tx_hash");
+                    if (idColumn != -1) {
+                        txHashes1.add(c.getString(idColumn));
+                    }
+                    return null;
                 }
-            }
-            c.close();
+            });
+//            c = db.rawQuery(doubleSpendSql, new String[]{Base58.encode(txHash)});
+//
+//            while (c.moveToNext()) {
+//                int idColumn = c.getColumnIndex("tx_hash");
+//                if (idColumn != -1) {
+//                    txHashes1.add(c.getString(idColumn));
+//                }
+//            }
+//            c.close();
             List<String> needRemoveTxHashes = new ArrayList<String>();
             while (txHashes1.size() > 0) {
                 String thisHash = txHashes1.get(0);
@@ -618,348 +682,44 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
             }
 
         }
-        c = db.rawQuery(blockTimeSql, new String[]{Integer.toString(blockNo)});
-        if (c.moveToNext()) {
-            int idColumn = c.getColumnIndex("block_time");
-            if (idColumn != -1) {
-                int blockTime = c.getInt(idColumn);
-                c.close();
-                String sqlTemp = Utils.format(updateTxTimeThatMoreThanBlockTime, blockTime, blockNo, blockTime);
-                db.execSQL(sqlTemp);
-            }
-        } else {
-            c.close();
-        }
-        db.setTransactionSuccessful();
-        db.endTransaction();
-    }
-
-    public void unConfirmTxByBlockNo(int blockNo) {
-        SQLiteDatabase db = this.mDb.getWritableDatabase();
-        String sql = "update txs set block_no=null where block_no>=" + blockNo;
-        db.execSQL(sql);
-    }
-
-    public List<Tx> getUnspendTxWithAddress(String address) {
-        String unspendOutSql = "select a.*,b.tx_ver,b.tx_locktime,b.tx_time,b.block_no,b.source,ifnull(b.block_no,0)*a.out_value coin_depth " +
-                "from outs a,txs b where a.tx_hash=b.tx_hash" +
-                " and a.out_address=? and a.out_status=?";
-        List<Tx> txItemList = new ArrayList<Tx>();
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        Cursor c = db.rawQuery(unspendOutSql, new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())});
-        try {
-            while (c.moveToNext()) {
-                int idColumn = c.getColumnIndex("coin_depth");
-
-                Tx txItem = TxHelper.applyCursor(c);
-                Out outItem = TxHelper.applyCursorOut(c);
+        final int[] blockTime = {-1};
+        this.execQueryOneRecord(db, blockTimeSql, new String[]{Integer.toString(blockNo)}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                int idColumn = c.getColumnIndex("block_time");
                 if (idColumn != -1) {
-                    outItem.setCoinDepth(c.getLong(idColumn));
+                    blockTime[0] = c.getInt(idColumn);
                 }
-                outItem.setTx(txItem);
-                txItem.setOuts(new ArrayList<Out>());
-                txItem.getOuts().add(outItem);
-                txItemList.add(txItem);
-
+                return null;
             }
-            c.close();
-        } catch (AddressFormatException e) {
-            e.printStackTrace();
+        });
+        if (blockTime[0] > 0) {
+            this.execUpdate(db, updateTxTimeThatMoreThanBlockTime, new String[]{Integer.toString(blockTime[0])
+                    , Integer.toString(blockNo), Integer.toString(blockTime[0])});
         }
-        return txItemList;
-    }
-
-    public List<Out> getUnspendOutWithAddress(String address) {
-        List<Out> outItems = new ArrayList<Out>();
-        String unspendOutSql = "select a.* from outs a,txs b where a.tx_hash=b.tx_hash " +
-                " and a.out_address=? and a.out_status=?";
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        Cursor c = db.rawQuery(unspendOutSql,
-                new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())});
-        try {
-            while (c.moveToNext()) {
-                outItems.add(TxHelper.applyCursorOut(c));
-            }
-            c.close();
-        } catch (AddressFormatException e) {
-            e.printStackTrace();
-        }
-        return outItems;
-    }
-
-    public long getConfirmedBalanceWithAddress(String address) {
-        long sum = 0;
-        String unspendOutSql = "select ifnull(sum(a.out_value),0) sum from outs a,txs b where a.tx_hash=b.tx_hash " +
-                " and a.out_address=? and a.out_status=? and b.block_no is not null";
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        Cursor c = db.rawQuery(unspendOutSql,
-                new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())});
-
-        if (c.moveToNext()) {
-            int idColumn = c.getColumnIndex("sum");
-            if (idColumn != -1) {
-                sum = c.getLong(idColumn);
-            }
-        }
-        c.close();
-        return sum;
-    }
-
-    public List<Tx> getUnconfirmedTxWithAddress(String address) {
-        List<Tx> txList = new ArrayList<Tx>();
-
-        HashMap<Sha256Hash, Tx> txDict = new HashMap<Sha256Hash, Tx>();
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        try {
-            String sql = "select b.* from addresses_txs a, txs b " +
-                    "where a.tx_hash=b.tx_hash and a.address=? and b.block_no is null " +
-                    "order by b.block_no desc";
-            Cursor c = db.rawQuery(sql, new String[]{address});
-            while (c.moveToNext()) {
-                Tx txItem = TxHelper.applyCursor(c);
-                txItem.setIns(new ArrayList<In>());
-                txItem.setOuts(new ArrayList<Out>());
-                txList.add(txItem);
-                txDict.put(new Sha256Hash(txItem.getTxHash()), txItem);
-            }
-            c.close();
-            sql = "select b.tx_hash,b.in_sn,b.prev_tx_hash,b.prev_out_sn " +
-                    "from addresses_txs a, ins b, txs c " +
-                    "where a.tx_hash=b.tx_hash and b.tx_hash=c.tx_hash and c.block_no is null and a.address=? "
-                    + "order by b.tx_hash ,b.in_sn";
-            c = db.rawQuery(sql, new String[]{address});
-            while (c.moveToNext()) {
-                In inItem = TxHelper.applyCursorIn(c);
-                Tx tx = txDict.get(new Sha256Hash(inItem.getTxHash()));
-                if (tx != null) {
-                    tx.getIns().add(inItem);
-                }
-            }
-            c.close();
-
-            sql = "select b.tx_hash,b.out_sn,b.out_value,b.out_address " +
-                    "from addresses_txs a, outs b, txs c " +
-                    "where a.tx_hash=b.tx_hash and b.tx_hash=c.tx_hash and c.block_no is null and a.address=? "
-                    + "order by b.tx_hash,b.out_sn";
-            c = db.rawQuery(sql, new String[]{address});
-            while (c.moveToNext()) {
-                Out out = TxHelper.applyCursorOut(c);
-                Tx tx = txDict.get(new Sha256Hash(out.getTxHash()));
-                if (tx != null) {
-                    tx.getOuts().add(out);
-                }
-            }
-            c.close();
-
-        } catch (AddressFormatException e) {
-            e.printStackTrace();
-        }
-        return txList;
-    }
-
-    public int txCount(String address) {
-        int result = 0;
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        String sql = "select count(0) cnt from addresses_txs  where address=?";
-        Cursor c = db.rawQuery(sql, new String[]{address});
-        if (c.moveToNext()) {
-            int idColumn = c.getColumnIndex("cnt");
-            if (idColumn != -1) {
-                result = c.getInt(idColumn);
-            }
-        }
-        c.close();
-
-        return result;
-    }
-
-    public long totalReceive(String address) {
-        long result = 0;
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        String sql = "select sum(aa.receive-ifnull(bb.send,0)) sum" +
-                "  from (select a.tx_hash,sum(a.out_value) receive " +
-                "    from outs a where a.out_address=?" +
-                "    group by a.tx_hash) aa LEFT OUTER JOIN " +
-                "  (select b.tx_hash,sum(a.out_value) send" +
-                "    from outs a, ins b" +
-                "    where a.tx_hash=b.prev_tx_hash and a.out_sn=b.prev_out_sn and a.out_address=?" +
-                "    group by b.tx_hash) bb on aa.tx_hash=bb.tx_hash " +
-                "  where aa.receive>ifnull(bb.send, 0)";
-        Cursor c = db.rawQuery(sql, new String[]{address, address});
-        if (c.moveToNext()) {
-            result = c.getLong(0);
-        }
-        c.close();
-        return result;
-    }
-
-    public void txSentBySelfHasSaw(byte[] txHash) {
-        SQLiteDatabase db = this.mDb.getWritableDatabase();
-        String sql = "update txs set source=source+1 where tx_hash=? and source>=1";
-        db.execSQL(sql, new String[]{Base58.encode(txHash)});
-    }
-
-    public List<Out> getOuts() {
-        List<Out> outItemList = new ArrayList<Out>();
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        String sql = "select * from outs ";
-        Cursor c = db.rawQuery(sql, null);
-        try {
-            while (c.moveToNext()) {
-                outItemList.add(TxHelper.applyCursorOut(c));
-            }
-        } catch (AddressFormatException e) {
-            e.printStackTrace();
-        } finally {
-            c.close();
-        }
-
-        return outItemList;
-    }
-
-    public List<In> getRelatedIn(String address) {
-        List<In> list = new ArrayList<In>();
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        String sql = "select ins.* from ins,addresses_txs " +
-                "where ins.tx_hash=addresses_txs.tx_hash and addresses_txs.address=? ";
-        Cursor c = db.rawQuery(sql, new String[]{address});
-        try {
-            while (c.moveToNext()) {
-                list.add(TxHelper.applyCursorIn(c));
-            }
-        } catch (AddressFormatException e) {
-            e.printStackTrace();
-        } finally {
-            c.close();
-        }
-        return list;
-    }
-
-    public List<Tx> getRecentlyTxsByAddress(String address, int greateThanBlockNo, int limit) {
-        List<Tx> txItemList = new ArrayList<Tx>();
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        String sql = "select b.* from addresses_txs a, txs b where a.tx_hash=b.tx_hash and a.address='%s' " +
-                "and ((b.block_no is null) or (b.block_no is not null and b.block_no>%d)) " +
-                "order by ifnull(b.block_no,4294967295) desc, b.tx_time desc " +
-                "limit %d ";
-        sql = Utils.format(sql, address, greateThanBlockNo, limit);
-        Cursor c = db.rawQuery(sql, null);
-        try {
-            while (c.moveToNext()) {
-                Tx txItem = TxHelper.applyCursor(c);
-                txItemList.add(txItem);
-            }
-
-            for (Tx item : txItemList) {
-                TxHelper.addInsAndOuts(db, item);
-            }
-        } catch (AddressFormatException e) {
-            e.printStackTrace();
-        } finally {
-            c.close();
-        }
-        return txItemList;
-    }
-
-//    public List<Long> txInValues(byte[] txHash) {
-//        List<Long> inValues = new ArrayList<Long>();
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        String sql = "select b.out_value " +
-//                "from ins a left outer join outs b on a.prev_tx_hash=b.tx_hash and a.prev_out_sn=b.out_sn " +
-//                "where a.tx_hash=?";
-//        Cursor c = db.rawQuery(sql, new String[]{Base58.encode(txHash)});
-//        while (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("out_value");
+//        c = db.rawQuery(blockTimeSql, new String[]{Integer.toString(blockNo)});
+//        if (c.moveToNext()) {
+//            int idColumn = c.getColumnIndex("block_time");
 //            if (idColumn != -1) {
-//                inValues.add(c.getLong(idColumn));
-//            } else {
-//                inValues.add(null);
+//                int blockTime = c.getInt(idColumn);
+//                c.close();
+//                String sqlTemp = Utils.format(updateTxTimeThatMoreThanBlockTime, blockTime, blockNo, blockTime);
+//                db.execSQL(sqlTemp);
 //            }
+//        } else {
+//            c.close();
 //        }
-//        c.close();
-//        return inValues;
-//    }
-
-    public HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem) {
-        HashMap<Sha256Hash, Tx> result = new HashMap<Sha256Hash, Tx>();
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        try {
-
-
-            for (In inItem : txItem.getIns()) {
-                Tx tx;
-                String txHashStr = Base58.encode(inItem.getTxHash());
-                String sql = "select * from txs where tx_hash=?";
-                Cursor c = db.rawQuery(sql, new String[]{txHashStr});
-                if (c.moveToNext()) {
-                    tx = TxHelper.applyCursor(c);
-                    c.close();
-                } else {
-                    c.close();
-                    continue;
-                }
-                TxHelper.addInsAndOuts(db, tx);
-                result.put(new Sha256Hash(tx.getTxHash()), tx);
-
-            }
-        } catch (AddressFormatException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-
-    public void clearAllTx() {
-        SQLiteDatabase db = mDb.getWritableDatabase();
-        db.beginTransaction();
-        db.execSQL("drop table " + AbstractDb.Tables.TXS + ";");
-        db.execSQL("drop table " + AbstractDb.Tables.OUTS + ";");
-        db.execSQL("drop table " + AbstractDb.Tables.INS + ";");
-        db.execSQL("drop table " + AbstractDb.Tables.ADDRESSES_TXS + ";");
-        db.execSQL("drop table " + AbstractDb.Tables.PEERS + ";");
-        db.execSQL(AbstractDb.CREATE_TXS_SQL);
-        db.execSQL(AbstractDb.CREATE_TX_BLOCK_NO_INDEX);
-        db.execSQL(AbstractDb.CREATE_OUTS_SQL);
-        db.execSQL(AbstractDb.CREATE_OUT_OUT_ADDRESS_INDEX);
-        db.execSQL(AbstractDb.CREATE_INS_SQL);
-        db.execSQL(AbstractDb.CREATE_IN_PREV_TX_HASH_INDEX);
-        db.execSQL(AbstractDb.CREATE_ADDRESSTXS_SQL);
-        db.execSQL(AbstractDb.CREATE_PEER_SQL);
-        db.setTransactionSuccessful();
+//        db.setTransactionSuccessful();
         db.endTransaction();
     }
 
-    public void completeInSignature(List<In> ins) {
-        SQLiteDatabase db = this.mDb.getWritableDatabase();
-        db.beginTransaction();
-        String sql = "update ins set in_signature=? where tx_hash=? and in_sn=? and ifnull(in_signature,'')=''";
-        for (In in : ins) {
-            db.execSQL(sql, new String[]{Base58.encode(in.getInSignature())
-                    , Base58.encode(in.getTxHash()), Integer.toString(in.getInSn())});
-        }
-        db.setTransactionSuccessful();
-        db.endTransaction();
-    }
-
-    public int needCompleteInSignature(String address) {
-        int result = 0;
-        SQLiteDatabase db = this.mDb.getReadableDatabase();
-        String sql = "select max(txs.block_no) from outs,ins,txs where outs.out_address=? " +
-                "and ins.prev_tx_hash=outs.tx_hash and ins.prev_out_sn=outs.out_sn " +
-                "and ifnull(ins.in_signature,'')='' and txs.tx_hash=ins.tx_hash";
-        Cursor c = db.rawQuery(sql, new String[]{address});
-        if (c.moveToNext()) {
-            result = c.getInt(0);
-        }
-        c.close();
-        return result;
-    }
-
-
-
-    @Override
     public void unConfirmTxByBlockNo(int blockNo) {
+//        SQLiteDatabase db = this.mDb.getWritableDatabase();
+//        String sql = "update txs set block_no=null where block_no>=" + blockNo;
+//        db.execSQL(sql);
         String sql = "update txs set block_no=null where block_no>=?";
-        this.execUpdate(sql, new String[]{Integer.toString(blockNo)});
+        this.execUpdate(sql, new String[] {Integer.toString(blockNo)});
     }
 
     @Override
@@ -989,6 +749,472 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         });
         return txItemList;
     }
+
+//    public List<Tx> getUnspendTxWithAddress(String address) {
+//        String unspendOutSql = "select a.*,b.tx_ver,b.tx_locktime,b.tx_time,b.block_no,b.source,ifnull(b.block_no,0)*a.out_value coin_depth " +
+//                "from outs a,txs b where a.tx_hash=b.tx_hash" +
+//                " and a.out_address=? and a.out_status=?";
+//        List<Tx> txItemList = new ArrayList<Tx>();
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+//        Cursor c = db.rawQuery(unspendOutSql, new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())});
+//        try {
+//            while (c.moveToNext()) {
+//                int idColumn = c.getColumnIndex("coin_depth");
+//
+//                Tx txItem = TxHelper.applyCursor(c);
+//                Out outItem = TxHelper.applyCursorOut(c);
+//                if (idColumn != -1) {
+//                    outItem.setCoinDepth(c.getLong(idColumn));
+//                }
+//                outItem.setTx(txItem);
+//                txItem.setOuts(new ArrayList<Out>());
+//                txItem.getOuts().add(outItem);
+//                txItemList.add(txItem);
+//
+//            }
+//            c.close();
+//        } catch (AddressFormatException e) {
+//            e.printStackTrace();
+//        }
+//        return txItemList;
+//    }
+
+    public List<Out> getUnspendOutWithAddress(String address) {
+        final List<Out> outItems = new ArrayList<Out>();
+        String unspendOutSql = "select a.* from outs a,txs b where a.tx_hash=b.tx_hash " +
+                " and a.out_address=? and a.out_status=?";
+        this.execQueryLoop(unspendOutSql, new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                outItems.add(applyCursorOut(c));
+                return null;
+            }
+        });
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+//        Cursor c = db.rawQuery(unspendOutSql,
+//                new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())});
+//        try {
+//            while (c.moveToNext()) {
+//                outItems.add(TxHelper.applyCursorOut(c));
+//            }
+//            c.close();
+//        } catch (AddressFormatException e) {
+//            e.printStackTrace();
+//        }
+        return outItems;
+    }
+
+    public long getConfirmedBalanceWithAddress(String address) {
+        final long[] sum = {0};
+        String unspendOutSql = "select ifnull(sum(a.out_value),0) sum from outs a,txs b where a.tx_hash=b.tx_hash " +
+                " and a.out_address=? and a.out_status=? and b.block_no is not null";
+        this.execQueryOneRecord(unspendOutSql, new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                int idColumn = c.getColumnIndex("sum");
+                if (idColumn != -1) {
+                    sum[0] = c.getLong(idColumn);
+                }
+                return null;
+            }
+        });
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+//        Cursor c = db.rawQuery(unspendOutSql,
+//                new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())});
+//
+//        if (c.moveToNext()) {
+//            int idColumn = c.getColumnIndex("sum");
+//            if (idColumn != -1) {
+//                sum[0] = c.getLong(idColumn);
+//            }
+//        }
+//        c.close();
+        return sum[0];
+    }
+
+    public List<Tx> getUnconfirmedTxWithAddress(String address) {
+        final List<Tx> txList = new ArrayList<Tx>();
+
+        final HashMap<Sha256Hash, Tx> txDict = new HashMap<Sha256Hash, Tx>();
+        IDb db = this.getReadDb();
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+//        try {
+            String sql = "select b.* from addresses_txs a, txs b " +
+                    "where a.tx_hash=b.tx_hash and a.address=? and b.block_no is null " +
+                    "order by b.block_no desc";
+            this.execQueryLoop(db, sql, new String[]{address}, new Function<ICursor, Void>() {
+                @Nullable
+                @Override
+                public Void apply(@Nullable ICursor c) {
+                    Tx txItem = applyCursor(c);
+                    txItem.setIns(new ArrayList<In>());
+                    txItem.setOuts(new ArrayList<Out>());
+                    txList.add(txItem);
+                    txDict.put(new Sha256Hash(txItem.getTxHash()), txItem);
+                    return null;
+                }
+            });
+//            Cursor c = db.rawQuery(sql, new String[]{address});
+//            while (c.moveToNext()) {
+//                Tx txItem = TxHelper.applyCursor(c);
+//                txItem.setIns(new ArrayList<In>());
+//                txItem.setOuts(new ArrayList<Out>());
+//                txList.add(txItem);
+//                txDict.put(new Sha256Hash(txItem.getTxHash()), txItem);
+//            }
+//            c.close();
+            sql = "select b.tx_hash,b.in_sn,b.prev_tx_hash,b.prev_out_sn " +
+                    "from addresses_txs a, ins b, txs c " +
+                    "where a.tx_hash=b.tx_hash and b.tx_hash=c.tx_hash and c.block_no is null and a.address=? "
+                    + "order by b.tx_hash ,b.in_sn";
+            this.execQueryLoop(db, sql, new String[]{address}, new Function<ICursor, Void>() {
+                @Nullable
+                @Override
+                public Void apply(@Nullable ICursor c) {
+                    In inItem = applyCursorIn(c);
+                    Tx tx = txDict.get(new Sha256Hash(inItem.getTxHash()));
+                    if (tx != null) {
+                        tx.getIns().add(inItem);
+                    }
+                    return null;
+                }
+            });
+//            c = db.rawQuery(sql, new String[]{address});
+//            while (c.moveToNext()) {
+//                In inItem = TxHelper.applyCursorIn(c);
+//                Tx tx = txDict.get(new Sha256Hash(inItem.getTxHash()));
+//                if (tx != null) {
+//                    tx.getIns().add(inItem);
+//                }
+//            }
+//            c.close();
+
+            sql = "select b.tx_hash,b.out_sn,b.out_value,b.out_address " +
+                    "from addresses_txs a, outs b, txs c " +
+                    "where a.tx_hash=b.tx_hash and b.tx_hash=c.tx_hash and c.block_no is null and a.address=? "
+                    + "order by b.tx_hash,b.out_sn";
+            this.execQueryLoop(db, sql, new String[]{address}, new Function<ICursor, Void>() {
+                @Nullable
+                @Override
+                public Void apply(@Nullable ICursor c) {
+                    Out out = applyCursorOut(c);
+                    Tx tx = txDict.get(new Sha256Hash(out.getTxHash()));
+                    if (tx != null) {
+                        tx.getOuts().add(out);
+                    }
+                    return null;
+                }
+            });
+//            c = db.rawQuery(sql, new String[]{address});
+//            while (c.moveToNext()) {
+//                Out out = TxHelper.applyCursorOut(c);
+//                Tx tx = txDict.get(new Sha256Hash(out.getTxHash()));
+//                if (tx != null) {
+//                    tx.getOuts().add(out);
+//                }
+//            }
+//            c.close();
+//        } catch (AddressFormatException e) {
+//            e.printStackTrace();
+//        }
+        return txList;
+    }
+
+    public int txCount(String address) {
+        final int[] result = {0};
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+        String sql = "select count(0) cnt from addresses_txs where address=?";
+        this.execQueryOneRecord(sql, new String[]{address}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                int idColumn = c.getColumnIndex("cnt");
+                if (idColumn != -1) {
+                    result[0] = c.getInt(idColumn);
+                }
+                return null;
+            }
+        });
+//        Cursor c = db.rawQuery(sql, new String[]{address});
+//        if (c.moveToNext()) {
+//            int idColumn = c.getColumnIndex("cnt");
+//            if (idColumn != -1) {
+//                result[0] = c.getInt(idColumn);
+//            }
+//        }
+//        c.close();
+
+        return result[0];
+    }
+
+    public long totalReceive(String address) {
+        final long[] result = {0};
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+        String sql = "select sum(aa.receive-ifnull(bb.send,0)) sum" +
+                "  from (select a.tx_hash,sum(a.out_value) receive " +
+                "    from outs a where a.out_address=?" +
+                "    group by a.tx_hash) aa LEFT OUTER JOIN " +
+                "  (select b.tx_hash,sum(a.out_value) send" +
+                "    from outs a, ins b" +
+                "    where a.tx_hash=b.prev_tx_hash and a.out_sn=b.prev_out_sn and a.out_address=?" +
+                "    group by b.tx_hash) bb on aa.tx_hash=bb.tx_hash " +
+                "  where aa.receive>ifnull(bb.send, 0)";
+//        Cursor c = db.rawQuery(sql, new String[]{address, address});
+        this.execQueryOneRecord(sql, new String[]{address, address}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                result[0] = c.getLong(0);
+                return null;
+            }
+        });
+//        if (c.moveToNext()) {
+//            result[0] = c.getLong(0);
+//        }
+//        c.close();
+        return result[0];
+    }
+
+    public void txSentBySelfHasSaw(byte[] txHash) {
+//        SQLiteDatabase db = this.mDb.getWritableDatabase();
+        String sql = "update txs set source=source+1 where tx_hash=? and source>=1";
+//        db.execSQL(sql, new String[]{Base58.encode(txHash)});
+        this.execUpdate(sql, new String[]{Base58.encode(txHash)});
+    }
+
+    public List<Out> getOuts() {
+        final List<Out> outItemList = new ArrayList<Out>();
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+        String sql = "select * from outs ";
+        this.execQueryLoop(sql, null, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                outItemList.add(applyCursorOut(c));
+                return null;
+            }
+        });
+//        Cursor c = db.rawQuery(sql, null);
+//        try {
+//            while (c.moveToNext()) {
+//                outItemList.add(TxHelper.applyCursorOut(c));
+//            }
+//        } catch (AddressFormatException e) {
+//            e.printStackTrace();
+//        } finally {
+//            c.close();
+//        }
+
+        return outItemList;
+    }
+
+    public List<In> getRelatedIn(String address) {
+        final List<In> list = new ArrayList<In>();
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+        String sql = "select ins.* from ins,addresses_txs " +
+                "where ins.tx_hash=addresses_txs.tx_hash and addresses_txs.address=? ";
+        this.execQueryLoop(sql, new String[]{address}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                list.add(applyCursorIn(c));
+                return null;
+            }
+        });
+//        Cursor c = db.rawQuery(sql, new String[]{address});
+//        try {
+//            while (c.moveToNext()) {
+//                list.add(TxHelper.applyCursorIn(c));
+//            }
+//        } catch (AddressFormatException e) {
+//            e.printStackTrace();
+//        } finally {
+//            c.close();
+//        }
+        return list;
+    }
+
+    public List<Tx> getRecentlyTxsByAddress(String address, int greateThanBlockNo, int limit) {
+        final List<Tx> txItemList = new ArrayList<Tx>();
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+        String sql = "select b.* from addresses_txs a, txs b where a.tx_hash=b.tx_hash and a.address='%s' " +
+                "and ((b.block_no is null) or (b.block_no is not null and b.block_no>%d)) " +
+                "order by ifnull(b.block_no,4294967295) desc, b.tx_time desc " +
+                "limit %d ";
+        sql = Utils.format(sql, address, greateThanBlockNo, limit);
+        IDb db = this.getReadDb();
+        this.execQueryLoop(db, sql, null, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                Tx txItem = applyCursor(c);
+                txItemList.add(txItem);
+                return null;
+            }
+        });
+        for (Tx item : txItemList) {
+            addInsAndOuts(db, item);
+        }
+//        Cursor c = db.rawQuery(sql, null);
+//        try {
+//            while (c.moveToNext()) {
+//                Tx txItem = TxHelper.applyCursor(c);
+//                txItemList.add(txItem);
+//            }
+//
+//            for (Tx item : txItemList) {
+//                TxHelper.addInsAndOuts(db, item);
+//            }
+//        } catch (AddressFormatException e) {
+//            e.printStackTrace();
+//        } finally {
+//            c.close();
+//        }
+        return txItemList;
+    }
+
+//    public List<Long> txInValues(byte[] txHash) {
+//        List<Long> inValues = new ArrayList<Long>();
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+//        String sql = "select b.out_value " +
+//                "from ins a left outer join outs b on a.prev_tx_hash=b.tx_hash and a.prev_out_sn=b.out_sn " +
+//                "where a.tx_hash=?";
+//        Cursor c = db.rawQuery(sql, new String[]{Base58.encode(txHash)});
+//        while (c.moveToNext()) {
+//            int idColumn = c.getColumnIndex("out_value");
+//            if (idColumn != -1) {
+//                inValues.add(c.getLong(idColumn));
+//            } else {
+//                inValues.add(null);
+//            }
+//        }
+//        c.close();
+//        return inValues;
+//    }
+
+    public HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem) {
+        HashMap<Sha256Hash, Tx> result = new HashMap<Sha256Hash, Tx>();
+        IDb db = this.getReadDb();
+
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+//        try {
+            for (In inItem : txItem.getIns()) {
+                final Tx tx = new Tx();
+                final boolean[] isExists = {false};
+//                String txHashStr = Base58.encode(inItem.getTxHash());
+                String sql = "select * from txs where tx_hash=?";
+                this.execQueryOneRecord(db, sql, new String[]{Base58.encode(inItem.getTxHash())}, new Function<ICursor, Void>() {
+                    @Nullable
+                    @Override
+                    public Void apply(@Nullable ICursor c) {
+                        applyCursor(c, tx);
+                        isExists[0] = true;
+                        return null;
+                    }
+                });
+                if (!isExists[0]) {
+                    continue;
+                }
+//                Cursor c = db.rawQuery(sql, new String[]{txHashStr});
+//                if (c.moveToNext()) {
+//                    tx = TxHelper.applyCursor(c);
+//                    c.close();
+//                } else {
+//                    c.close();
+//                    continue;
+//                }
+                addInsAndOuts(db, tx);
+                result.put(new Sha256Hash(tx.getTxHash()), tx);
+            }
+//        } catch (AddressFormatException e) {
+//            e.printStackTrace();
+//        }
+        return result;
+    }
+
+    public void clearAllTx() {
+//        SQLiteDatabase db = mDb.getWritableDatabase();
+        IDb db = this.getWriteDb();
+        db.beginTransaction();
+        this.execUpdate(db, "drop table " + AbstractDb.Tables.TXS + ";", null);
+        this.execUpdate(db, "drop table " + AbstractDb.Tables.OUTS + ";", null);
+        this.execUpdate(db, "drop table " + AbstractDb.Tables.INS + ";", null);
+        this.execUpdate(db, "drop table " + AbstractDb.Tables.ADDRESSES_TXS + ";", null);
+        this.execUpdate(db, "drop table " + AbstractDb.Tables.PEERS + ";", null);
+        this.execUpdate(db, AbstractDb.CREATE_TXS_SQL, null);
+        this.execUpdate(db, AbstractDb.CREATE_TX_BLOCK_NO_INDEX, null);
+        this.execUpdate(db, AbstractDb.CREATE_OUTS_SQL, null);
+        this.execUpdate(db, AbstractDb.CREATE_OUT_OUT_ADDRESS_INDEX, null);
+        this.execUpdate(db, AbstractDb.CREATE_INS_SQL, null);
+        this.execUpdate(db, AbstractDb.CREATE_IN_PREV_TX_HASH_INDEX, null);
+        this.execUpdate(db, AbstractDb.CREATE_ADDRESSTXS_SQL, null);
+        this.execUpdate(db, AbstractDb.CREATE_PEER_SQL, null);
+
+//        db.execSQL("drop table " + AbstractDb.Tables.TXS + ";");
+//        db.execSQL("drop table " + AbstractDb.Tables.OUTS + ";");
+//        db.execSQL("drop table " + AbstractDb.Tables.INS + ";");
+//        db.execSQL("drop table " + AbstractDb.Tables.ADDRESSES_TXS + ";");
+//        db.execSQL("drop table " + AbstractDb.Tables.PEERS + ";");
+//        db.execSQL(AbstractDb.CREATE_TXS_SQL);
+//        db.execSQL(AbstractDb.CREATE_TX_BLOCK_NO_INDEX);
+//        db.execSQL(AbstractDb.CREATE_OUTS_SQL);
+//        db.execSQL(AbstractDb.CREATE_OUT_OUT_ADDRESS_INDEX);
+//        db.execSQL(AbstractDb.CREATE_INS_SQL);
+//        db.execSQL(AbstractDb.CREATE_IN_PREV_TX_HASH_INDEX);
+//        db.execSQL(AbstractDb.CREATE_ADDRESSTXS_SQL);
+//        db.execSQL(AbstractDb.CREATE_PEER_SQL);
+//        db.setTransactionSuccessful();
+        db.endTransaction();
+    }
+
+    public void completeInSignature(List<In> ins) {
+//        SQLiteDatabase db = this.mDb.getWritableDatabase();
+        IDb db = this.getWriteDb();
+        db.beginTransaction();
+        String sql = "update ins set in_signature=? where tx_hash=? and in_sn=? and ifnull(in_signature,'')=''";
+        for (In in : ins) {
+            this.execUpdate(db, sql, new String[]{Base58.encode(in.getInSignature())
+                    , Base58.encode(in.getTxHash()), Integer.toString(in.getInSn())});
+//            db.execSQL(sql, new String[]{Base58.encode(in.getInSignature())
+//                    , Base58.encode(in.getTxHash()), Integer.toString(in.getInSn())});
+        }
+//        db.setTransactionSuccessful();
+        db.endTransaction();
+    }
+
+    public int needCompleteInSignature(String address) {
+        final int[] result = {0};
+//        SQLiteDatabase db = this.mDb.getReadableDatabase();
+        String sql = "select max(txs.block_no) from outs,ins,txs where outs.out_address=? " +
+                "and ins.prev_tx_hash=outs.tx_hash and ins.prev_out_sn=outs.out_sn " +
+                "and ifnull(ins.in_signature,'')='' and txs.tx_hash=ins.tx_hash";
+        this.execQueryOneRecord(sql, new String[]{address}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                result[0] = c.getInt(0);
+                return null;
+            }
+        });
+//        Cursor c = db.rawQuery(sql, new String[]{address});
+//        if (c.moveToNext()) {
+//            result[0] = c.getInt(0);
+//        }
+//        c.close();
+        return result[0];
+    }
+
+
+
+//    @Override
+//    public void unConfirmTxByBlockNo(int blockNo) {
+//        String sql = "update txs set block_no=null where block_no>=?";
+//        this.execUpdate(sql, new String[]{Integer.toString(blockNo)});
+//    }
+
+
 
     public static Tx applyCursor(ICursor c) {
         return applyCursor(c, null);
