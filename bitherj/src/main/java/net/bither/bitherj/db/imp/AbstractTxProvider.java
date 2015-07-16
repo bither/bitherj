@@ -1413,7 +1413,7 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
 
     }
 
-    abstract void insertTxToDb(IDb db, Tx tx);
+    protected abstract void insertTxToDb(IDb db, Tx tx);
 
 
     public List<AddressTx> insertIn(IDb db, final Tx txItem) {
@@ -1490,7 +1490,7 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         return addressTxes;
     }
 
-    abstract void insertInToDb(IDb db, In in);
+    protected abstract void insertInToDb(IDb db, In in);
 
     public List<AddressTx> insertOut(IDb db, Tx txItem) {
 //        Cursor c;
@@ -1627,7 +1627,7 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         return addressTxes;
     }
 
-    abstract void insertOutToDb(IDb db, Out out);
+    protected abstract void insertOutToDb(IDb db, Out out);
 
     public static class AddressTx {
         private String address;
