@@ -17,10 +17,7 @@
 package net.bither.bitherj.utils;
 
 import net.bither.bitherj.BitherjSettings;
-import net.bither.bitherj.core.Address;
-import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.core.HDAccount;
-import net.bither.bitherj.core.HDMKeychain;
+import net.bither.bitherj.core.*;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
@@ -98,7 +95,7 @@ public class PrivateKeyUtil {
         EncryptedPrivateKey epk = new EncryptedPrivateKey(Utils.hexStringToByteArray
                 (strs[1]), Utils.hexStringToByteArray(strs[0]));
         byte[] decrypted = crypter.decrypt(epk, crypter.deriveKey(password));
-
+        
         ECKey ecKey = null;
         SecureCharSequence privateKeyText = null;
         if (needPrivteKeyText) {
@@ -206,7 +203,7 @@ public class PrivateKeyUtil {
                 content += QRCodeUtil.QR_CODE_SPLIT + keychain.getQRCodeFullEncryptPrivKey();
             }
         }
-        HDAccount hdAccount = AddressManager.getInstance().getHdAccount();
+        HDAccount hdAccount = AddressManager.getInstance().getHDAccountHot();
         if (hdAccount != null) {
             if (Utils.isEmpty(content)) {
                 content += hdAccount.getQRCodeFullEncryptPrivKey();
@@ -265,7 +262,7 @@ public class PrivateKeyUtil {
                 return null;
             } else {
                 Address address = new Address(key.toAddress(), key.getPubKey(), encryptedString,
-                        key.isFromXRandom());
+                        false, key.isFromXRandom());
                 key.clearPrivateKey();
                 list.add(address);
             }
@@ -384,7 +381,7 @@ public class PrivateKeyUtil {
                 e.printStackTrace();
             }
         }
-        HDAccount hdAccount = AddressManager.getInstance().getHdAccount();
+        HDAccount hdAccount = AddressManager.getInstance().getHDAccountHot();
         if (hdAccount != null) {
             try {
                 String address = hdAccount.getFirstAddressFromDb();

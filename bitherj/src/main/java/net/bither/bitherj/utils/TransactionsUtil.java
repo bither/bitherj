@@ -20,16 +20,7 @@ package net.bither.bitherj.utils;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.api.BitherMytransactionsApi;
-import net.bither.bitherj.core.AbstractHD;
-import net.bither.bitherj.core.Address;
-import net.bither.bitherj.core.AddressManager;
-import net.bither.bitherj.core.Block;
-import net.bither.bitherj.core.BlockChain;
-import net.bither.bitherj.core.HDAccount;
-import net.bither.bitherj.core.HDMAddress;
-import net.bither.bitherj.core.In;
-import net.bither.bitherj.core.Tx;
-import net.bither.bitherj.core.UnSignTransaction;
+import net.bither.bitherj.core.*;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
@@ -185,14 +176,21 @@ public class TransactionsUtil {
             return;
         }
         getTxForAddress();
-        if (AddressManager.getInstance().getHdAccount() != null) {
-            getTxForHDAccount();
+        if (AddressManager.getInstance().getHDAccountHot() != null) {
+            getTxForHDAccount(AddressManager.getInstance().getHDAccountHot().getHdSeedId());
+        }
+        if(AddressManager.getInstance().hasHDAccountMonitored()){
+            getTxForHDAccountMoitored(AddressManager.getInstance().getHDAccountMonitored().getHdSeedId());
+
+        }
+        if (AddressManager.getInstance().hasDesktopHDMKeychain()) {
+            DesktopHDMKeychain desktopHDMKeychain = AddressManager.getInstance().getDesktopHDMKeychains().get(0);
+            getTxForDesktopHDM(desktopHDMKeychain);
 
         }
 
     }
-
-    private static void getTxForHDAccount() throws Exception {
+    private static void getTxForHDAccountMoitored(int hdSeedId) throws Exception {
         for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
             HDAccount.HDAccountAddress hdAccountAddress;
             boolean hasTx = true;
@@ -200,7 +198,7 @@ public class TransactionsUtil {
             while (hasTx) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
                 int storeBlockHeight = storedBlock.getBlockNo();
-                hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(
+                hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId,
                         pathType, addressIndex);
                 if (hdAccountAddress == null) {
                     hasTx = false;
@@ -211,7 +209,6 @@ public class TransactionsUtil {
                     addressIndex++;
                     continue;
                 }
-                List<Tx> transactions = new ArrayList<Tx>();
                 int apiBlockCount = 0;
                 int txSum = 0;
                 boolean needGetTxs = true;
@@ -226,33 +223,169 @@ public class TransactionsUtil {
                         apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                     }
                     int txCnt = jsonObject.getInt(TX_CNT);
-                    List<Tx> temp = TransactionsUtil.getTransactionsFromBither(
+                    List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(
                             jsonObject, storeBlockHeight);
-                    transactions.addAll(temp);
+                    transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
+                    Collections.sort(transactions, new ComparatorTx());
+                    AddressManager.getInstance().getHDAccountMonitored().initTxs(transactions);
                     txSum = txSum + transactions.size();
-                    needGetTxs = txSum < txCnt;
+                    needGetTxs = transactions.size() > 0;
                     page++;
                 }
                 if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
                     BlockChain.getInstance().rollbackBlock(apiBlockCount);
                 }
-                transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
-                Collections.sort(transactions, new ComparatorTx());
-                AddressManager.getInstance().getHdAccount().initTxs(transactions);
-                hdAccountAddress.setSyncedComplete(true);
-                AddressManager.getInstance().getHdAccount().updateSyncComplete(hdAccountAddress);
 
-                if (transactions.size() > 0) {
+                hdAccountAddress.setSyncedComplete(true);
+                AddressManager.getInstance().getHDAccountMonitored().updateSyncComplete(hdAccountAddress);
+
+                if (txSum > 0) {
                     if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-                        AddressManager.getInstance().getHdAccount().updateIssuedExternalIndex(addressIndex);
+                        AddressManager.getInstance().getHDAccountMonitored().updateIssuedExternalIndex(addressIndex);
                     } else {
-                        AddressManager.getInstance().getHdAccount().updateIssuedInternalIndex(addressIndex);
+                        AddressManager.getInstance().getHDAccountMonitored().updateIssuedInternalIndex(addressIndex);
                     }
-                    AddressManager.getInstance().getHdAccount().supplyEnoughKeys(false);
+                    AddressManager.getInstance().getHDAccountMonitored().supplyEnoughKeys(false);
                     hasTx = true;
                 } else {
                     hasTx = false;
-                    AbstractDb.hdAccountProvider.updateSyncdForIndex(pathType, addressIndex);
+                    AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, addressIndex);
+                }
+            }
+            addressIndex++;
+        }
+
+
+    }
+
+    private static void getTxForHDAccount(int hdSeedId) throws Exception {
+        for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
+            HDAccount.HDAccountAddress hdAccountAddress;
+            boolean hasTx = true;
+            int addressIndex = 0;
+            while (hasTx) {
+                Block storedBlock = BlockChain.getInstance().getLastBlock();
+                int storeBlockHeight = storedBlock.getBlockNo();
+                hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId,
+                        pathType, addressIndex);
+                if (hdAccountAddress == null) {
+                    hasTx = false;
+                    log.warn("AccountAddress", "address is null path {} ,index {}", pathType, addressIndex);
+                    continue;
+                }
+                if (hdAccountAddress.isSyncedComplete()) {
+                    addressIndex++;
+                    continue;
+                }
+                int apiBlockCount = 0;
+                int txSum = 0;
+                boolean needGetTxs = true;
+                int page = 1;
+                while (needGetTxs) {
+                    BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
+                            hdAccountAddress.getAddress(), page);
+                    bitherMytransactionsApi.handleHttpGet();
+                    String txResult = bitherMytransactionsApi.getResult();
+                    JSONObject jsonObject = new JSONObject(txResult);
+                    if (!jsonObject.isNull(BLOCK_COUNT)) {
+                        apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
+                    }
+                    int txCnt = jsonObject.getInt(TX_CNT);
+                    List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(
+                            jsonObject, storeBlockHeight);
+                    transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
+                    Collections.sort(transactions, new ComparatorTx());
+                    AddressManager.getInstance().getHDAccountHot().initTxs(transactions);
+                    txSum = txSum + transactions.size();
+                    needGetTxs = transactions.size() > 0;
+                    page++;
+                }
+                if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
+                    BlockChain.getInstance().rollbackBlock(apiBlockCount);
+                }
+
+                hdAccountAddress.setSyncedComplete(true);
+                AddressManager.getInstance().getHDAccountHot().updateSyncComplete(hdAccountAddress);
+
+                if (txSum > 0) {
+                    if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
+                        AddressManager.getInstance().getHDAccountHot().updateIssuedExternalIndex(addressIndex);
+                    } else {
+                        AddressManager.getInstance().getHDAccountHot().updateIssuedInternalIndex(addressIndex);
+                    }
+                    AddressManager.getInstance().getHDAccountHot().supplyEnoughKeys(false);
+                    hasTx = true;
+                } else {
+                    hasTx = false;
+                    AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, addressIndex);
+                }
+            }
+            addressIndex++;
+        }
+
+
+    }
+
+    private static void getTxForDesktopHDM(DesktopHDMKeychain desktopHDMKeychain) throws Exception {
+        for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
+            DesktopHDMAddress desktopHDMAddress;
+            boolean hasTx = true;
+            int addressIndex = 0;
+            while (hasTx) {
+                Block storedBlock = BlockChain.getInstance().getLastBlock();
+                int storeBlockHeight = storedBlock.getBlockNo();
+                desktopHDMAddress = AbstractDb.desktopTxProvider.addressForPath(desktopHDMKeychain,
+                        pathType, addressIndex);
+                if (desktopHDMAddress == null) {
+                    hasTx = false;
+                    log.warn("AccountAddress", "address is null path {} ,index {}", pathType, addressIndex);
+                    continue;
+                }
+                if (desktopHDMAddress.isSyncComplete()) {
+                    addressIndex++;
+                    continue;
+                }
+                int apiBlockCount = 0;
+                int txSum = 0;
+                boolean needGetTxs = true;
+                int page = 1;
+                while (needGetTxs) {
+                    BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
+                            desktopHDMAddress.getAddress(), page);
+                    bitherMytransactionsApi.handleHttpGet();
+                    String txResult = bitherMytransactionsApi.getResult();
+                    JSONObject jsonObject = new JSONObject(txResult);
+                    if (!jsonObject.isNull(BLOCK_COUNT)) {
+                        apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
+                    }
+                    int txCnt = jsonObject.getInt(TX_CNT);
+                    List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(
+                            jsonObject, storeBlockHeight);
+                    transactions = AddressManager.getInstance().compressTxsForDesktopHDM(transactions);
+                    Collections.sort(transactions, new ComparatorTx());
+                    desktopHDMKeychain.initTxs(transactions);
+                    txSum = txSum + transactions.size();
+                    needGetTxs = transactions.size() > 0;
+                    page++;
+                }
+                if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
+                    BlockChain.getInstance().rollbackBlock(apiBlockCount);
+                }
+
+                desktopHDMAddress.setSyncComplete(true);
+                desktopHDMKeychain.updateSyncComplete(desktopHDMAddress);
+
+                if (txSum > 0) {
+                    if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
+                        desktopHDMKeychain.updateIssuedExternalIndex(addressIndex);
+                    } else {
+                        desktopHDMKeychain.updateIssuedInternalIndex(addressIndex);
+                    }
+                    desktopHDMKeychain.supplyEnoughKeys(false);
+                    hasTx = true;
+                } else {
+                    hasTx = false;
+                    AbstractDb.desktopTxProvider.updateSyncdForIndex(pathType, addressIndex);
                 }
             }
             addressIndex++;
@@ -266,7 +399,6 @@ public class TransactionsUtil {
             Block storedBlock = BlockChain.getInstance().getLastBlock();
             int storeBlockHeight = storedBlock.getBlockNo();
             if (!address.isSyncComplete()) {
-                List<Tx> transactions = new ArrayList<Tx>();
                 int apiBlockCount = 0;
                 int txSum = 0;
                 boolean needGetTxs = true;
@@ -281,19 +413,18 @@ public class TransactionsUtil {
                         apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                     }
                     int txCnt = jsonObject.getInt(TX_CNT);
-                    List<Tx> temp = TransactionsUtil.getTransactionsFromBither(
+                    List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(
                             jsonObject, storeBlockHeight);
-                    transactions.addAll(temp);
+                    transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
+                    Collections.sort(transactions, new ComparatorTx());
+                    address.initTxs(transactions);
                     txSum = txSum + transactions.size();
-                    needGetTxs = txSum < txCnt;
+                    needGetTxs = transactions.size() > 0;
                     page++;
                 }
                 if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
                     BlockChain.getInstance().rollbackBlock(apiBlockCount);
                 }
-                transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
-                Collections.sort(transactions, new ComparatorTx());
-                address.initTxs(transactions);
                 address.setSyncComplete(true);
                 if (address instanceof HDMAddress) {
                     HDMAddress hdmAddress = (HDMAddress) address;

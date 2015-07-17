@@ -86,6 +86,8 @@ public class PeerManager {
     private Timer syncTimeOutTimer;
     private HashMap<Sha256Hash, Timer> publishTxTimeoutTimers;
 
+    private boolean onlyBroadcasting = false;
+
     public static final PeerManager instance() {
         if (instance == null) {
             synchronized (newInstanceLock) {
@@ -323,6 +325,14 @@ public class PeerManager {
                 @Override
                 public void run() {
                     peer.connectSucceed();
+                    if (isOnlyBroadcasting()) {
+                        for (Tx tx : publishedTx.values()) {
+                            if (tx.getSource() > 0 && tx.getSource() <= MaxPeerCount) {
+                                peer.sendInvMessageWithTxHash(new Sha256Hash(tx.getTxHash()));
+                            }
+                        }
+                        return;
+                    }
                     if (!doneSyncFromSPV() && getLastBlockHeight() >= peer.getVersionLastBlockHeight()) {
                         AbstractApp.notificationService.sendBroadcastSyncSPVFinished(true);
                     }
@@ -832,8 +842,7 @@ public class PeerManager {
             filterUpdateHeight = getLastBlockHeight();
             filterFpRate = BloomFilter.DEFAULT_BLOOM_FILTER_FP_RATE;
 
-            if (downloadingPeer != null && filterUpdateHeight + BitherjSettings
-                    .BLOCK_DIFFICULTY_INTERVAL < downloadingPeer.getVersionLastBlockHeight()) {
+            if (downloadingPeer != null && filterUpdateHeight + 500 < downloadingPeer.getVersionLastBlockHeight()) {
                 filterFpRate = BloomFilter.BLOOM_REDUCED_FALSEPOSITIVE_RATE; // lower false
                 // positive rate during chain sync
             } else if (downloadingPeer != null && filterUpdateHeight < downloadingPeer
@@ -853,9 +862,18 @@ public class PeerManager {
                 }
             }
             List<Address> addresses = AddressManager.getInstance().getAllAddresses();
+            int desktopHDMElementCount = 0;
+            if (AddressManager.getInstance().hasDesktopHDMKeychain()) {
+                DesktopHDMKeychain desktopHDMKeychain =
+                        AddressManager.getInstance().getDesktopHDMKeychains().get(0);
+                desktopHDMElementCount = desktopHDMKeychain.elementCountForBloomFilter();
+
+            }
             bloomFilterElementCount = addresses.size() * 2 + outs.size() + (AddressManager
-                    .getInstance().hasHDAccount() ? AddressManager.getInstance().getHdAccount()
-                    .elementCountForBloomFilter() : 0) + 100;
+                    .getInstance().hasHDAccountHot() ? AddressManager.getInstance().getHDAccountHot()
+                    .elementCountForBloomFilter() : 0) + (AddressManager.getInstance()
+                    .hasHDAccountMonitored() ? AddressManager.getInstance().getHDAccountMonitored
+                    ().elementCountForBloomFilter() : 0) + desktopHDMElementCount + 100;
 
             BloomFilter filter = new BloomFilter(bloomFilterElementCount, filterFpRate, tweak,
                     BloomFilter.BloomUpdate.UPDATE_ALL);
@@ -881,10 +899,18 @@ public class PeerManager {
                 }
             }
 
-            if (AddressManager.getInstance().hasHDAccount()) {
-                AddressManager.getInstance().getHdAccount().addElementsForBloomFilter(filter);
+            if (AddressManager.getInstance().hasHDAccountHot()) {
+                AddressManager.getInstance().getHDAccountHot().addElementsForBloomFilter(filter);
             }
 
+            if (AddressManager.getInstance().hasHDAccountMonitored()) {
+                AddressManager.getInstance().getHDAccountMonitored().addElementsForBloomFilter(filter);
+            }
+
+            if (AddressManager.getInstance().hasDesktopHDMKeychain()) {
+                DesktopHDMKeychain desktopHDMKeychain = AddressManager.getInstance().getDesktopHDMKeychains().get(0);
+                desktopHDMKeychain.addElementsForBloomFilter(filter);
+            }
             bloomFilter = filter;
         }
         return bloomFilter;
@@ -1084,6 +1110,14 @@ public class PeerManager {
 
     public boolean isSynchronizing() {
         return synchronizing;
+    }
+
+    public boolean isOnlyBroadcasting() {
+        return this.onlyBroadcasting;
+    }
+
+    public void setOnlyBroadcasting(boolean onlyBroadcasting) {
+        this.onlyBroadcasting = onlyBroadcasting;
     }
 
     public void onDestroy() {

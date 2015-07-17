@@ -1,46 +1,85 @@
+/*
+ *
+ *  Copyright 2014 http://Bither.net
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ * /
+ */
+
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.PasswordException;
-import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
-import net.bither.bitherj.utils.Utils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class HDMAddress extends Address {
+public class DesktopHDMAddress extends Address {
     public static interface HDMFetchOtherSignatureDelegate {
         List<TransactionSignature> getOtherSignature(int addressIndex, CharSequence password,
                                                      List<byte[]> unsignHash, Tx tx);
     }
 
-    private HDMKeychain keychain;
-    private Pubs pubs;
+    private DesktopHDMKeychain keychain;
+    private HDMAddress.Pubs pubs;
 
-    public HDMAddress(Pubs pubs, HDMKeychain keychain, boolean isSyncComplete) {
-        this(pubs, pubs.getAddress(), isSyncComplete, keychain);
+
+    private AbstractHD.PathType pathType;
+
+
+    private boolean isIssued;
+
+    public DesktopHDMAddress(HDMAddress.Pubs pubs, AbstractHD.PathType pathType, DesktopHDMKeychain keychain, boolean isSyncComplete) {
+        this(pubs, pubs.getAddress(), pathType, false, isSyncComplete, keychain);
     }
 
-    public HDMAddress(Pubs pubs, String address, boolean isSyncComplete, HDMKeychain keychain) {
+    public DesktopHDMAddress(HDMAddress.Pubs pubs, String address, AbstractHD.PathType pathType, boolean isIssued, boolean isSyncComplete, DesktopHDMKeychain keychain) {
         super(address, pubs.getMultiSigScript().getProgram(), pubs.index, isSyncComplete, true,
                 false, null);
+        this.isIssued = isIssued;
         this.keychain = keychain;
         this.pubs = pubs;
+        this.pathType = pathType;
+    }
+
+    public AbstractHD.PathType getPathType() {
+        return pathType;
+    }
+
+    public void setPathType(AbstractHD.PathType pathType) {
+        this.pathType = pathType;
+    }
+
+    public boolean isIssued() {
+        return isIssued;
+    }
+
+    public void setIssued(boolean isIssued) {
+        this.isIssued = isIssued;
     }
 
     public int getIndex() {
         return pubs.index;
     }
 
-    public HDMKeychain getKeychain() {
+    public DesktopHDMKeychain getKeychain() {
         return keychain;
     }
 
-    public void setKeychain(HDMKeychain keychain) {
+    public void setKeychain(DesktopHDMKeychain keychain) {
         this.keychain = keychain;
     }
 
@@ -78,9 +117,6 @@ public class HDMAddress extends Address {
 
     public ArrayList<TransactionSignature> signMyPart(List<byte[]> unsignedHashes,
                                                       CharSequence password) {
-        if (isInRecovery()) {
-            throw new AssertionError("recovery hdm address can not sign");
-        }
         DeterministicKey key = keychain.getExternalKey(pubs.index, password);
         ArrayList<TransactionSignature> sigs = new ArrayList<TransactionSignature>();
         for (int i = 0;
@@ -157,52 +193,5 @@ public class HDMAddress extends Address {
         return true;
     }
 
-    public boolean isInRecovery() {
-        return getKeychain().isInRecovery();
-    }
-
-    public static final class Pubs {
-        public static final byte[] EmptyBytes = new byte[]{0};
-
-        public byte[] hot;
-        public byte[] cold;
-        public byte[] remote;
-        public int index;
-
-        public Pubs(byte[] hot, byte[] cold, byte[] remote, int index) {
-            this.hot = hot;
-            this.cold = cold;
-            this.remote = remote;
-            this.index = index;
-        }
-
-        public Pubs() {
-        }
-
-        public Script getMultiSigScript() {
-            assert isCompleted();
-            return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(hot, cold, remote));
-        }
-
-        public boolean isCompleted() {
-            return hasHot() && hasCold() && hasRemote();
-        }
-
-        public boolean hasHot() {
-            return hot != null && !Arrays.equals(hot, EmptyBytes);
-        }
-
-        public boolean hasCold() {
-            return cold != null && !Arrays.equals(cold, EmptyBytes);
-        }
-
-        public boolean hasRemote() {
-            return remote != null && !Arrays.equals(remote, EmptyBytes);
-        }
-
-        public String getAddress() {
-            return Utils.toP2SHAddress(Utils.sha256hash160(getMultiSigScript().getProgram()));
-        }
-    }
 
 }

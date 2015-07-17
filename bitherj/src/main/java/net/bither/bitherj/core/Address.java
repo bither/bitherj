@@ -66,9 +66,10 @@ public class Address implements Comparable<Address> {
         super();
     }
 
-    public Address(String address, byte[] pubKey, String encryptString, boolean isFromXRandom) {
+    public Address(String address, byte[] pubKey, String encryptString, boolean isSyncComplete
+            , boolean isFromXRandom) {
         this(address, pubKey, AddressManager.getInstance().getSortTime(!Utils.isEmpty
-                (encryptString)), false, isFromXRandom, false, encryptString);
+                (encryptString)), isSyncComplete, isFromXRandom, false, encryptString);
 
     }
 
@@ -210,9 +211,7 @@ public class Address implements Comparable<Address> {
 
     public boolean initTxs(List<Tx> txs) {
         AbstractDb.txProvider.addTxs(txs);
-        if (txs.size() > 0) {
-            notificatTx(null, Tx.TxNotificationType.txFromApi);
-        }
+        notificatTx(null, Tx.TxNotificationType.txFromApi);
         return true;
     }
 

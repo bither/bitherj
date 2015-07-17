@@ -19,31 +19,13 @@ public interface IAddressProvider {
 
     public boolean hasPasswordSeed();
 
-    //hd
-
-    public int addHDAccount(String encryptedMnemonicSeed, String encryptSeed
-            , String firstAddress, boolean isXrandom, String addressOfPS
-            , byte[] externalPub, byte[] internalPub);
-
-    public String getHDFristAddress(int hdSeedId);
-
-    public byte[] getExternalPub(int hdSeedId);
-
-    public byte[] getInternalPub(int hdSeedId);
-
-    public String getHDAccountEncryptSeed(int hdSeedId);
-
-    public String getHDAccountEncryptMnmonicSeed(int hdSeedId);
-
-    public boolean hdAccountIsXRandom(int seedId);
-
-    public List<Integer> getHDAccountSeeds();
-
+    // hdm
     public List<Integer> getHDSeeds();
 
     public String getEncryptMnemonicSeed(int hdSeedId);
 
     public String getEncryptHDSeed(int hdSeedId);
+
 
     public void updateEncrypttMnmonicSeed(int hdSeedId, String encryptMnmonicSeed);
 
@@ -57,6 +39,7 @@ public interface IAddressProvider {
 
     public int addHDKey(String encryptedMnemonicSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
 
+    public int addEnterpriseHDKey(String encryptedMnemonicSeed, String encryptHdSeed, String firstAddress, boolean isXrandom, String addressOfPS);
     public HDMBId getHDMBId();
 
 
