@@ -303,20 +303,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
     }
 
     private void addTxToDb(IDb db, Tx txItem) {
-//        HashSet<String> addressSet = AbstractDb.hdAccountAddressProvider.
-//                getBelongAccountAddresses(txItem.getOutAddressList());
-////        HashSet<String> coldHDAccountAddressSet = AbstractDb.hdAccountAddressProvider.
-////                getBelongAccountAddresses(txItem.getOutAddressList());
-//        for (Out out : txItem.getOuts()) {
-//            if (addressSet.contains(out.getOutAddress())) {
-//                out.setHDAccountId(AddressManager.getInstance().getHDAccountHot().getHdSeedId());
-//            }
-////            if (coldHDAccountAddressSet.contains(out.getOutAddress())) {
-////                out.setColdHDAccountId(AddressManager.getInstance().getHDAccountMonitored()
-////                        .getHdSeedId());
-////            }
-//        }
-
         this.insertTx(db, txItem);
         List<AddressTx> addressesTxsRels = new ArrayList<AddressTx>();
         List<AddressTx> temp = insertIn(db, txItem);
@@ -330,9 +316,7 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         String sql = "insert or ignore into addresses_txs(address, tx_hash) values(?,?)";
         for (AddressTx addressTx : addressesTxsRels) {
             this.execUpdate(db, sql, new String[]{addressTx.getAddress(), addressTx.getTxHash()});
-//            db.execSQL(sql, new String[]{addressTx.getAddress(), addressTx.getTxHash()});
         }
-
     }
 
     public void remove(byte[] txHash) {
@@ -1417,9 +1401,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
 
 
     public List<AddressTx> insertIn(IDb db, final Tx txItem) {
-//        Cursor c;
-//        String sql;
-//        ContentValues cv;
         final List<AddressTx> addressTxes = new ArrayList<AddressTx>();
         String existSql = "select count(0) cnt from ins where tx_hash=? and in_sn=?";
         String outAddressSql = "select out_address from outs where tx_hash=? and out_sn=?";
@@ -1499,7 +1480,7 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         String existSql = "select count(0) cnt from outs where tx_hash=? and out_sn=?";
         String updateHDAccountIdSql = "update outs set hd_account_id=? where tx_hash=? and out_sn=?";
         String queryHDAddressSql = "select hd_account_id,path_type,address_index from hd_account_addresses where address=?";
-        String updateHDAddressIssuedSql = "update hd_account_addresses set is_issued=? where path_type=? and address_index<=? and hd_account_id=?";
+        String updateHDAddressIssuedSql = "update hd_account_addresses set is_issued=? where path_type=? and address_index=? and hd_account_id=?";
         String queryPrevTxHashSql = "select tx_hash from ins where prev_tx_hash=? and prev_out_sn=?";
         String updateOutStatusSql = "update outs set out_status=? where tx_hash=? and out_sn=?";
         final List<AddressTx> addressTxes = new ArrayList<AddressTx>();
@@ -1533,7 +1514,7 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
 //                applyContentValues(outItem, cv);
 //                db.insert(AbstractDb.Tables.OUTS, null, cv);
             } else {
-                if (outItem.getHDAccountId() > -1) {
+//                if (outItem.getHDAccountId() > -1) {
 //                    cv = new ContentValues();
 //                    cv.put(AbstractDb.OutsColumns.HD_ACCOUNT_ID,
 //                            outItem.getHDAccountId());
@@ -1542,10 +1523,10 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
 //                                    Base58.encode(txItem.getTxHash()), Integer.toString(outItem
 //                                    .getOutSn())
 //                            });
-
-                }
+//                }
                 if (outItem.getHDAccountId() > -1) {
-                    this.execUpdate(db, updateHDAccountIdSql, new String[]{Base58.encode(txItem.getTxHash())
+                    this.execUpdate(db, updateHDAccountIdSql, new String[]{
+                            Integer.toString(outItem.getHDAccountId()), Base58.encode(txItem.getTxHash())
                             , Integer.toString(outItem.getOutSn())});
                     final int[] tmpHDAccountId = {-1};
                     final int[] tmpPathType = {0};
