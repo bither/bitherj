@@ -41,4 +41,6 @@ public interface IHDAccountProvider {
     boolean hdAccountIsXRandom(int seedId);
 
     List<Integer> getHDAccountSeeds();
+
+    boolean isPubExist(byte[] externalPub, byte[] internalPub);
 }
