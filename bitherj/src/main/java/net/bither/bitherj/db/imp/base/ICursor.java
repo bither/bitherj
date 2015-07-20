@@ -3,7 +3,7 @@ package net.bither.bitherj.db.imp.base;
 public interface ICursor {
     int getCount();
 
-    int getPosition();
+//    int getPosition();
 
     boolean move(int var1);
 
@@ -29,11 +29,11 @@ public interface ICursor {
 
     int getColumnIndexOrThrow(String var1) throws IllegalArgumentException;
 
-    String getColumnName(int var1);
-
-    String[] getColumnNames();
-
-    int getColumnCount();
+//    String getColumnName(int var1);
+//
+//    String[] getColumnNames();
+//
+//    int getColumnCount();
 
     byte[] getBlob(int var1);
 

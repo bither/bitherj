@@ -208,21 +208,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         if (txExists[0]) {
             addInsAndOuts(db, txItem);
         }
-
-//        Cursor c = db.rawQuery(sql, new String[]{txHashStr});
-//        try {
-//            if (c.moveToNext()) {
-//                txItem = TxHelper.applyCursor(c);
-//            }
-//            c.close();
-//            if (txItem != null) {
-//                TxHelper.addInsAndOuts(db, txItem);
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//
-//        }
         return txItem;
     }
 
@@ -242,27 +227,12 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 return null;
             }
         });
-//
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor cursor;
-//
-//        cursor = db.rawQuery(sql, new String[]{Base58.encode(txHash),
-//                address});
-//        if (cursor.moveToNext()) {
-//            int idColumn = cursor.getColumnIndex(AbstractDb.OutsColumns.OUT_VALUE);
-//            if (idColumn != -1) {
-//                sum[0] = cursor.getLong(idColumn);
-//            }
-//        }
-//        cursor.close();
-
         return sum[0];
     }
 
 
     public boolean isExist(byte[] txHash) {
         final boolean[] result = {false};
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
         String sql = "select count(0) from txs where tx_hash=?";
         this.execQueryOneRecord(sql, new String[]{Base58.encode(txHash)}, new Function<ICursor, Void>() {
             @Nullable
@@ -272,32 +242,23 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 return null;
             }
         });
-//        Cursor c = db.rawQuery(sql, new String[]{Base58.encode(txHash)});
-//        if (c.moveToNext()) {
-//            result[0] = c.getInt(0) > 0;
-//        }
-//        c.close();
         return result[0];
     }
 
     public void add(Tx txItem) {
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
         IDb db = this.getWriteDb();
         db.beginTransaction();
         addTxToDb(db, txItem);
-//        db.setTransactionSuccessful();
         db.endTransaction();
     }
 
     public void addTxs(List<Tx> txItems) {
         if (txItems.size() > 0) {
-//            SQLiteDatabase db = this.mDb.getWritableDatabase();
             IDb db = this.getWriteDb();
             db.beginTransaction();
             for (Tx txItem : txItems) {
                 addTxToDb(db, txItem);
             }
-//            db.setTransactionSuccessful();
             db.endTransaction();
         }
     }
@@ -332,12 +293,10 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
             txHashes.addAll(temp);
         }
         IDb db = this.getWriteDb();
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
         db.beginTransaction();
         for (String str : needRemoveTxHashes) {
             removeSingleTx(db, str);
         }
-//        db.setTransactionSuccessful();
         db.endTransaction();
     }
 
@@ -368,31 +327,10 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 return null;
             }
         });
-//        Cursor c = db.rawQuery(inSql, new String[]{tx});
-//
-//        while (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex(AbstractDb.InsColumns.PREV_TX_HASH);
-//            String prevTxHash = null;
-//            int prevOutSn = 0;
-//            if (idColumn != -1) {
-//                prevTxHash = c.getString(idColumn);
-//            }
-//            idColumn = c.getColumnIndex(AbstractDb.InsColumns.PREV_OUT_SN);
-//            if (idColumn != -1) {
-//                prevOutSn = c.getInt(idColumn);
-//            }
-//            needUpdateOuts.add(new Object[]{prevTxHash, prevOutSn});
-//
-//        }
-//        c.close();
         this.execUpdate(db, deleteAddressesTx, new String[] {tx});
         this.execUpdate(db, deleteOut, new String[] {tx});
         this.execUpdate(db, deleteIn, new String[] {tx});
         this.execUpdate(db, deleteTx, new String[] {tx});
-//        db.execSQL(deleteAddressesTx);
-//        db.execSQL(deleteOut);
-//        db.execSQL(deleteIn);
-//        db.execSQL(deleteTx);
         for (Object[] array : needUpdateOuts) {
             final boolean[] isExist = {false};
             this.execQueryLoop(db, existOtherIn, new String[]{array[0].toString(), array[1].toString()}, new Function<ICursor, Void>() {
@@ -407,22 +345,7 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
             });
             if (isExist[0]) {
                 this.execUpdate(db, updatePrevOut, new String[] {"0", array[0].toString(), array[1].toString()});
-//                String updateSql = Utils.format(updatePrevOut,
-//                        Out.OutStatus.unspent.getValue(), array[0].toString(), Integer.valueOf(array[1].toString()));
-//                db.execSQL(updateSql);
             }
-
-//            c = db.rawQuery(existOtherIn, new String[]{array[0].toString(), array[1].toString()});
-//            while (c.moveToNext()) {
-//                if (c.getInt(0) == 0) {
-//                    String updateSql = Utils.format(updatePrevOut,
-//                            Out.OutStatus.unspent.getValue(), array[0].toString(), Integer.valueOf(array[1].toString()));
-//                    db.execSQL(updateSql);
-//                }
-//
-//            }
-//            c.close();
-
         }
     }
 
@@ -437,13 +360,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 return null;
             }
         });
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//
-//        Cursor c = db.rawQuery(relayTx, new String[]{txHash});
-//        while (c.moveToNext()) {
-//            relayTxHashes.add(c.getString(0));
-//        }
-//        c.close();
         return relayTxHashes;
     }
 
@@ -452,8 +368,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         String sql = "select count(0) from ins a, txs b where a.tx_hash=b.tx_hash and" +
                 " b.block_no is not null and a.prev_tx_hash=? and a.prev_out_sn=?";
         IDb db = this.getReadDb();
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c;
         for (In inItem : txItem.getIns()) {
             final boolean[] isDoubleSpent = {false};
             this.execQueryOneRecord(db, sql, new String[]{Base58.encode(inItem.getPrevTxHash()), Integer.toString(inItem.getPrevOutSn())}, new Function<ICursor, Void>() {
@@ -467,14 +381,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
             if (isDoubleSpent[0]) {
                 return false;
             }
-//            c = db.rawQuery(sql, new String[]{Base58.encode(inItem.getPrevTxHash()), Integer.toString(inItem.getPrevOutSn())});
-//            if (c.moveToNext()) {
-//                if (c.getInt(0) > 0) {
-//                    c.close();
-//                    return false;
-//                }
-//            }
-//            c.close();
         }
         sql = "select count(0) from addresses_txs where tx_hash=? and address=?";
         final boolean[] isRecordInRel = {false};
@@ -490,17 +396,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         if (isRecordInRel[0]) {
             return true;
         }
-//        c = db.rawQuery(sql, new String[]{
-//                Base58.encode(txItem.getTxHash()), address
-//        });
-//        int count = 0;
-//        if (c.moveToNext()) {
-//            count = c.getInt(0);
-//        }
-//        c.close();
-//        if (count > 0) {
-//            return true;
-//        }
         sql = "select count(0) from outs where tx_hash=? and out_sn=? and out_address=?";
         for (In inItem : txItem.getIns()) {
             final int[] cnt = {0};
@@ -516,16 +411,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
             if (cnt[0] > 0) {
                 return true;
             }
-//            c = db.rawQuery(sql, new String[]{Base58.encode(inItem.getPrevTxHash())
-//                    , Integer.toString(inItem.getPrevOutSn()), address});
-//            count = 0;
-//            if (c.moveToNext()) {
-//                count = c.getInt(0);
-//            }
-//            c.close();
-//            if (count > 0) {
-//                return true;
-//            }
         }
         return result;
     }
@@ -533,8 +418,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
     public boolean isTxDoubleSpendWithConfirmedTx(Tx tx) {
         String sql = "select count(0) from ins a, txs b where a.tx_hash=b.tx_hash and" +
                 " b.block_no is not null and a.prev_tx_hash=? and a.prev_out_sn=?";
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c;
         IDb db = this.getReadDb();
         for (In inItem : tx.getIns()) {
             final int[] cnt = {0};
@@ -549,15 +432,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
             if (cnt[0] > 0) {
                 return true;
             }
-//            c = db.rawQuery(sql, new String[]{Base58.encode(inItem.getPrevTxHash()), Integer.toString(inItem.getPrevOutSn())});
-//            if (c.moveToNext()) {
-//                if (c.getInt(0) > 0) {
-//                    c.close();
-//                    return true;
-//                }
-//            }
-//            c.close();
-
         }
         return false;
     }
@@ -566,8 +440,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         final List<String> result = new ArrayList<String>();
         String sql = "select out_address from outs where tx_hash=? and out_sn=?";
         IDb db = this.getReadDb();
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c;
         for (In inItem : tx.getIns()) {
             this.execQueryOneRecord(db, sql, new String[]{Base58.encode(inItem.getPrevTxHash())
                     , Integer.toString(inItem.getPrevOutSn())}, new Function<ICursor, Void>() {
@@ -580,14 +452,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                     return null;
                 }
             });
-//            c = db.rawQuery(sql, new String[]{Base58.encode(inItem.getPrevTxHash())
-//                    , Integer.toString(inItem.getPrevOutSn())});
-//            if (c.moveToNext()) {
-//                if (!c.isNull(0)) {
-//                    result.add(c.getString(0));
-//                }
-//            }
-//            c.close();
         }
         return result;
     }
@@ -602,10 +466,8 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 "and a.prev_out_sn=b.prev_out_sn and a.tx_hash<>b.tx_hash and b.tx_hash=?";
         String blockTimeSql = "select block_time from blocks where block_no=?";
         String updateTxTimeThatMoreThanBlockTime = "update txs set tx_time=? where block_no=? and tx_time>?";
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
         IDb db = this.getWriteDb();
         db.beginTransaction();
-//        Cursor c;
         for (byte[] txHash : txHashes) {
             final int[] cnt = {0};
             this.execQueryOneRecord(db, existSql, new String[]{Integer.toString(blockNo), Base58.encode(txHash)}, new Function<ICursor, Void>() {
@@ -619,19 +481,7 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
             if (cnt[0] > 0) {
                 continue;
             }
-//            c = db.rawQuery(existSql, new String[]{Integer.toString(blockNo), Base58.encode(txHash)});
-//            if (c.moveToNext()) {
-//                int cnt = c.getInt(0);
-//                c.close();
-//                if (cnt > 0) {
-//                    continue;
-//                }
-//            } else {
-//                c.close();
-//            }
             this.execUpdate(db, updateBlockNoSql, new String[] {Integer.toString(blockNo), Base58.encode(txHash)});
-//            String updateSql = Utils.format(sql, blockNo, Base58.encode(txHash));
-//            db.execSQL(updateSql);
             final List<String> txHashes1 = new ArrayList<String>();
             this.execQueryLoop(db, doubleSpendSql, new String[]{Base58.encode(txHash)}, new Function<ICursor, Void>() {
                 @Nullable
@@ -644,15 +494,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                     return null;
                 }
             });
-//            c = db.rawQuery(doubleSpendSql, new String[]{Base58.encode(txHash)});
-//
-//            while (c.moveToNext()) {
-//                int idColumn = c.getColumnIndex("tx_hash");
-//                if (idColumn != -1) {
-//                    txHashes1.add(c.getString(idColumn));
-//                }
-//            }
-//            c.close();
             List<String> needRemoveTxHashes = new ArrayList<String>();
             while (txHashes1.size() > 0) {
                 String thisHash = txHashes1.get(0);
@@ -664,7 +505,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
             for (String each : needRemoveTxHashes) {
                 removeSingleTx(db, each);
             }
-
         }
         final int[] blockTime = {-1};
         this.execQueryOneRecord(db, blockTimeSql, new String[]{Integer.toString(blockNo)}, new Function<ICursor, Void>() {
@@ -682,26 +522,10 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
             this.execUpdate(db, updateTxTimeThatMoreThanBlockTime, new String[]{Integer.toString(blockTime[0])
                     , Integer.toString(blockNo), Integer.toString(blockTime[0])});
         }
-//        c = db.rawQuery(blockTimeSql, new String[]{Integer.toString(blockNo)});
-//        if (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("block_time");
-//            if (idColumn != -1) {
-//                int blockTime = c.getInt(idColumn);
-//                c.close();
-//                String sqlTemp = Utils.format(updateTxTimeThatMoreThanBlockTime, blockTime, blockNo, blockTime);
-//                db.execSQL(sqlTemp);
-//            }
-//        } else {
-//            c.close();
-//        }
-//        db.setTransactionSuccessful();
         db.endTransaction();
     }
 
     public void unConfirmTxByBlockNo(int blockNo) {
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        String sql = "update txs set block_no=null where block_no>=" + blockNo;
-//        db.execSQL(sql);
         String sql = "update txs set block_no=null where block_no>=?";
         this.execUpdate(sql, new String[] {Integer.toString(blockNo)});
     }
@@ -734,35 +558,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         return txItemList;
     }
 
-//    public List<Tx> getUnspendTxWithAddress(String address) {
-//        String unspendOutSql = "select a.*,b.tx_ver,b.tx_locktime,b.tx_time,b.block_no,b.source,ifnull(b.block_no,0)*a.out_value coin_depth " +
-//                "from outs a,txs b where a.tx_hash=b.tx_hash" +
-//                " and a.out_address=? and a.out_status=?";
-//        List<Tx> txItemList = new ArrayList<Tx>();
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(unspendOutSql, new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())});
-//        try {
-//            while (c.moveToNext()) {
-//                int idColumn = c.getColumnIndex("coin_depth");
-//
-//                Tx txItem = TxHelper.applyCursor(c);
-//                Out outItem = TxHelper.applyCursorOut(c);
-//                if (idColumn != -1) {
-//                    outItem.setCoinDepth(c.getLong(idColumn));
-//                }
-//                outItem.setTx(txItem);
-//                txItem.setOuts(new ArrayList<Out>());
-//                txItem.getOuts().add(outItem);
-//                txItemList.add(txItem);
-//
-//            }
-//            c.close();
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        }
-//        return txItemList;
-//    }
-
     public List<Out> getUnspendOutWithAddress(String address) {
         final List<Out> outItems = new ArrayList<Out>();
         String unspendOutSql = "select a.* from outs a,txs b where a.tx_hash=b.tx_hash " +
@@ -775,17 +570,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 return null;
             }
         });
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(unspendOutSql,
-//                new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())});
-//        try {
-//            while (c.moveToNext()) {
-//                outItems.add(TxHelper.applyCursorOut(c));
-//            }
-//            c.close();
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        }
         return outItems;
     }
 
@@ -804,17 +588,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 return null;
             }
         });
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(unspendOutSql,
-//                new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())});
-//
-//        if (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("sum");
-//            if (idColumn != -1) {
-//                sum[0] = c.getLong(idColumn);
-//            }
-//        }
-//        c.close();
         return sum[0];
     }
 
@@ -823,8 +596,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
 
         final HashMap<Sha256Hash, Tx> txDict = new HashMap<Sha256Hash, Tx>();
         IDb db = this.getReadDb();
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        try {
             String sql = "select b.* from addresses_txs a, txs b " +
                     "where a.tx_hash=b.tx_hash and a.address=? and b.block_no is null " +
                     "order by b.block_no desc";
@@ -840,15 +611,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                     return null;
                 }
             });
-//            Cursor c = db.rawQuery(sql, new String[]{address});
-//            while (c.moveToNext()) {
-//                Tx txItem = TxHelper.applyCursor(c);
-//                txItem.setIns(new ArrayList<In>());
-//                txItem.setOuts(new ArrayList<Out>());
-//                txList.add(txItem);
-//                txDict.put(new Sha256Hash(txItem.getTxHash()), txItem);
-//            }
-//            c.close();
             sql = "select b.tx_hash,b.in_sn,b.prev_tx_hash,b.prev_out_sn " +
                     "from addresses_txs a, ins b, txs c " +
                     "where a.tx_hash=b.tx_hash and b.tx_hash=c.tx_hash and c.block_no is null and a.address=? "
@@ -865,15 +627,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                     return null;
                 }
             });
-//            c = db.rawQuery(sql, new String[]{address});
-//            while (c.moveToNext()) {
-//                In inItem = TxHelper.applyCursorIn(c);
-//                Tx tx = txDict.get(new Sha256Hash(inItem.getTxHash()));
-//                if (tx != null) {
-//                    tx.getIns().add(inItem);
-//                }
-//            }
-//            c.close();
 
             sql = "select b.tx_hash,b.out_sn,b.out_value,b.out_address " +
                     "from addresses_txs a, outs b, txs c " +
@@ -891,24 +644,11 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                     return null;
                 }
             });
-//            c = db.rawQuery(sql, new String[]{address});
-//            while (c.moveToNext()) {
-//                Out out = TxHelper.applyCursorOut(c);
-//                Tx tx = txDict.get(new Sha256Hash(out.getTxHash()));
-//                if (tx != null) {
-//                    tx.getOuts().add(out);
-//                }
-//            }
-//            c.close();
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        }
         return txList;
     }
 
     public int txCount(String address) {
         final int[] result = {0};
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
         String sql = "select count(0) cnt from addresses_txs where address=?";
         this.execQueryOneRecord(sql, new String[]{address}, new Function<ICursor, Void>() {
             @Nullable
@@ -921,21 +661,11 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 return null;
             }
         });
-//        Cursor c = db.rawQuery(sql, new String[]{address});
-//        if (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("cnt");
-//            if (idColumn != -1) {
-//                result[0] = c.getInt(idColumn);
-//            }
-//        }
-//        c.close();
-
         return result[0];
     }
 
     public long totalReceive(String address) {
         final long[] result = {0};
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
         String sql = "select sum(aa.receive-ifnull(bb.send,0)) sum" +
                 "  from (select a.tx_hash,sum(a.out_value) receive " +
                 "    from outs a where a.out_address=?" +
@@ -945,7 +675,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 "    where a.tx_hash=b.prev_tx_hash and a.out_sn=b.prev_out_sn and a.out_address=?" +
                 "    group by b.tx_hash) bb on aa.tx_hash=bb.tx_hash " +
                 "  where aa.receive>ifnull(bb.send, 0)";
-//        Cursor c = db.rawQuery(sql, new String[]{address, address});
         this.execQueryOneRecord(sql, new String[]{address, address}, new Function<ICursor, Void>() {
             @Nullable
             @Override
@@ -954,23 +683,16 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 return null;
             }
         });
-//        if (c.moveToNext()) {
-//            result[0] = c.getLong(0);
-//        }
-//        c.close();
         return result[0];
     }
 
     public void txSentBySelfHasSaw(byte[] txHash) {
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
         String sql = "update txs set source=source+1 where tx_hash=? and source>=1";
-//        db.execSQL(sql, new String[]{Base58.encode(txHash)});
         this.execUpdate(sql, new String[]{Base58.encode(txHash)});
     }
 
     public List<Out> getOuts() {
         final List<Out> outItemList = new ArrayList<Out>();
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
         String sql = "select * from outs ";
         this.execQueryLoop(sql, null, new Function<ICursor, Void>() {
             @Nullable
@@ -980,23 +702,11 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 return null;
             }
         });
-//        Cursor c = db.rawQuery(sql, null);
-//        try {
-//            while (c.moveToNext()) {
-//                outItemList.add(TxHelper.applyCursorOut(c));
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//            c.close();
-//        }
-
         return outItemList;
     }
 
     public List<In> getRelatedIn(String address) {
         final List<In> list = new ArrayList<In>();
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
         String sql = "select ins.* from ins,addresses_txs " +
                 "where ins.tx_hash=addresses_txs.tx_hash and addresses_txs.address=? ";
         this.execQueryLoop(sql, new String[]{address}, new Function<ICursor, Void>() {
@@ -1007,22 +717,11 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 return null;
             }
         });
-//        Cursor c = db.rawQuery(sql, new String[]{address});
-//        try {
-//            while (c.moveToNext()) {
-//                list.add(TxHelper.applyCursorIn(c));
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//            c.close();
-//        }
         return list;
     }
 
     public List<Tx> getRecentlyTxsByAddress(String address, int greateThanBlockNo, int limit) {
         final List<Tx> txItemList = new ArrayList<Tx>();
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
         String sql = "select b.* from addresses_txs a, txs b where a.tx_hash=b.tx_hash and a.address='%s' " +
                 "and ((b.block_no is null) or (b.block_no is not null and b.block_no>%d)) " +
                 "order by ifnull(b.block_no,4294967295) desc, b.tx_time desc " +
@@ -1041,80 +740,32 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         for (Tx item : txItemList) {
             addInsAndOuts(db, item);
         }
-//        Cursor c = db.rawQuery(sql, null);
-//        try {
-//            while (c.moveToNext()) {
-//                Tx txItem = TxHelper.applyCursor(c);
-//                txItemList.add(txItem);
-//            }
-//
-//            for (Tx item : txItemList) {
-//                TxHelper.addInsAndOuts(db, item);
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//            c.close();
-//        }
         return txItemList;
     }
-
-//    public List<Long> txInValues(byte[] txHash) {
-//        List<Long> inValues = new ArrayList<Long>();
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        String sql = "select b.out_value " +
-//                "from ins a left outer join outs b on a.prev_tx_hash=b.tx_hash and a.prev_out_sn=b.out_sn " +
-//                "where a.tx_hash=?";
-//        Cursor c = db.rawQuery(sql, new String[]{Base58.encode(txHash)});
-//        while (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("out_value");
-//            if (idColumn != -1) {
-//                inValues.add(c.getLong(idColumn));
-//            } else {
-//                inValues.add(null);
-//            }
-//        }
-//        c.close();
-//        return inValues;
-//    }
 
     public HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem) {
         HashMap<Sha256Hash, Tx> result = new HashMap<Sha256Hash, Tx>();
         IDb db = this.getReadDb();
 
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        try {
-            for (In inItem : txItem.getIns()) {
-                final Tx tx = new Tx();
-                final boolean[] isExists = {false};
-//                String txHashStr = Base58.encode(inItem.getTxHash());
-                String sql = "select * from txs where tx_hash=?";
-                this.execQueryOneRecord(db, sql, new String[]{Base58.encode(inItem.getTxHash())}, new Function<ICursor, Void>() {
-                    @Nullable
-                    @Override
-                    public Void apply(@Nullable ICursor c) {
-                        applyCursor(c, tx);
-                        isExists[0] = true;
-                        return null;
-                    }
-                });
-                if (!isExists[0]) {
-                    continue;
+        for (In inItem : txItem.getIns()) {
+            final Tx tx = new Tx();
+            final boolean[] isExists = {false};
+            String sql = "select * from txs where tx_hash=?";
+            this.execQueryOneRecord(db, sql, new String[]{Base58.encode(inItem.getTxHash())}, new Function<ICursor, Void>() {
+                @Nullable
+                @Override
+                public Void apply(@Nullable ICursor c) {
+                    applyCursor(c, tx);
+                    isExists[0] = true;
+                    return null;
                 }
-//                Cursor c = db.rawQuery(sql, new String[]{txHashStr});
-//                if (c.moveToNext()) {
-//                    tx = TxHelper.applyCursor(c);
-//                    c.close();
-//                } else {
-//                    c.close();
-//                    continue;
-//                }
-                addInsAndOuts(db, tx);
-                result.put(new Sha256Hash(tx.getTxHash()), tx);
+            });
+            if (!isExists[0]) {
+                continue;
             }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        }
+            addInsAndOuts(db, tx);
+            result.put(new Sha256Hash(tx.getTxHash()), tx);
+        }
         return result;
     }
 
@@ -1135,42 +786,22 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         this.execUpdate(db, AbstractDb.CREATE_IN_PREV_TX_HASH_INDEX, null);
         this.execUpdate(db, AbstractDb.CREATE_ADDRESSTXS_SQL, null);
         this.execUpdate(db, AbstractDb.CREATE_PEER_SQL, null);
-
-//        db.execSQL("drop table " + AbstractDb.Tables.TXS + ";");
-//        db.execSQL("drop table " + AbstractDb.Tables.OUTS + ";");
-//        db.execSQL("drop table " + AbstractDb.Tables.INS + ";");
-//        db.execSQL("drop table " + AbstractDb.Tables.ADDRESSES_TXS + ";");
-//        db.execSQL("drop table " + AbstractDb.Tables.PEERS + ";");
-//        db.execSQL(AbstractDb.CREATE_TXS_SQL);
-//        db.execSQL(AbstractDb.CREATE_TX_BLOCK_NO_INDEX);
-//        db.execSQL(AbstractDb.CREATE_OUTS_SQL);
-//        db.execSQL(AbstractDb.CREATE_OUT_OUT_ADDRESS_INDEX);
-//        db.execSQL(AbstractDb.CREATE_INS_SQL);
-//        db.execSQL(AbstractDb.CREATE_IN_PREV_TX_HASH_INDEX);
-//        db.execSQL(AbstractDb.CREATE_ADDRESSTXS_SQL);
-//        db.execSQL(AbstractDb.CREATE_PEER_SQL);
-//        db.setTransactionSuccessful();
         db.endTransaction();
     }
 
     public void completeInSignature(List<In> ins) {
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
         IDb db = this.getWriteDb();
         db.beginTransaction();
         String sql = "update ins set in_signature=? where tx_hash=? and in_sn=? and ifnull(in_signature,'')=''";
         for (In in : ins) {
             this.execUpdate(db, sql, new String[]{Base58.encode(in.getInSignature())
                     , Base58.encode(in.getTxHash()), Integer.toString(in.getInSn())});
-//            db.execSQL(sql, new String[]{Base58.encode(in.getInSignature())
-//                    , Base58.encode(in.getTxHash()), Integer.toString(in.getInSn())});
         }
-//        db.setTransactionSuccessful();
         db.endTransaction();
     }
 
     public int needCompleteInSignature(String address) {
         final int[] result = {0};
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
         String sql = "select max(txs.block_no) from outs,ins,txs where outs.out_address=? " +
                 "and ins.prev_tx_hash=outs.tx_hash and ins.prev_out_sn=outs.out_sn " +
                 "and ifnull(ins.in_signature,'')='' and txs.tx_hash=ins.tx_hash";
@@ -1182,23 +813,8 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 return null;
             }
         });
-//        Cursor c = db.rawQuery(sql, new String[]{address});
-//        if (c.moveToNext()) {
-//            result[0] = c.getInt(0);
-//        }
-//        c.close();
         return result[0];
     }
-
-
-
-//    @Override
-//    public void unConfirmTxByBlockNo(int blockNo) {
-//        String sql = "update txs set block_no=null where block_no>=?";
-//        this.execUpdate(sql, new String[]{Integer.toString(blockNo)});
-//    }
-
-
 
     public static Tx applyCursor(ICursor c) {
         return applyCursor(c, null);
@@ -1379,20 +995,9 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                 return null;
             }
         });
-//        Cursor c = db.rawQuery(existSql, new String[]{Base58.encode(txItem.getTxHash())});
 
-//        if (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("cnt");
-//            if (idColumn != -1) {
-//                cnt[0] = c.getInt(idColumn);
-//            }
-//        }
-//        c.close();
         if (cnt[0] == 0) {
             this.insertTxToDb(db, txItem);
-//            ContentValues cv = new ContentValues();
-//            applyContentValues(txItem, cv);
-//            db.insert(AbstractDb.Tables.TXS, null, cv);
         }
 
     }
@@ -1420,21 +1025,8 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                     return null;
                 }
             });
-//            c = db.rawQuery(existSql, new String[]{Base58.encode(inItem.getTxHash()), Integer
-//                    .toString(inItem.getInSn())});
-
-//            if (c.moveToNext()) {
-//                int idColumn = c.getColumnIndex("cnt");
-//                if (idColumn != -1) {
-//                    cnt[0] = c.getInt(idColumn);
-//                }
-//            }
-//            c.close();
             if (cnt[0] == 0) {
                 this.insertInToDb(db, inItem);
-//                cv = new ContentValues();
-//                applyContentValues(inItem, cv);
-//                db.insert(AbstractDb.Tables.INS, null, cv);
             }
 
             this.execQueryLoop(db, outAddressSql, new String[]{Base58.encode(inItem.getPrevTxHash())
@@ -1451,22 +1043,9 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                     return null;
                 }
             });
-//            c = db.rawQuery(sql, new String[]{
-//                    Base58.encode(inItem.getPrevTxHash()), Integer.toString(inItem.getPrevOutSn())
-//            });
-//            while (c.moveToNext()) {
-//                int idColumn = c.getColumnIndex("out_address");
-//                if (idColumn != -1) {
-//                    addressTxes.add(new AddressTx(c.getString(idColumn), Base58.encode(txItem
-//                            .getTxHash())));
-//                }
-//            }
-//            c.close();
+
             this.execUpdate(db, updateOutStatusSql, new String[]{Integer.toString(Out.OutStatus.spent.getValue()), Base58
                     .encode(inItem.getPrevTxHash()), Integer.toString(inItem.getPrevOutSn())});
-//            sql = "update outs set out_status=? where tx_hash=? and out_sn=?";
-//            db.execSQL(sql, new String[]{Integer.toString(Out.OutStatus.spent.getValue()), Base58
-//                    .encode(inItem.getPrevTxHash()), Integer.toString(inItem.getPrevOutSn())});
         }
         return addressTxes;
     }
@@ -1474,9 +1053,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
     protected abstract void insertInToDb(IDb db, In in);
 
     public List<AddressTx> insertOut(IDb db, Tx txItem) {
-//        Cursor c;
-//        String sql;
-//        ContentValues cv;
         String existSql = "select count(0) cnt from outs where tx_hash=? and out_sn=?";
         String updateHDAccountIdSql = "update outs set hd_account_id=? where tx_hash=? and out_sn=?";
         String queryHDAddressSql = "select hd_account_id,path_type,address_index from hd_account_addresses where address=?";
@@ -1498,32 +1074,9 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                     return null;
                 }
             });
-//            c = db.rawQuery(existSql, new String[]{Base58.encode(outItem.getTxHash()), Integer
-//                    .toString(outItem.getOutSn())});
-//            int cnt = 0;
-//            if (c.moveToNext()) {
-//                int idColumn = c.getColumnIndex("cnt");
-//                if (idColumn != -1) {
-//                    cnt = c.getInt(idColumn);
-//                }
-//            }
-//            c.close();
             if (cnt[0] == 0) {
                 this.insertOutToDb(db, outItem);
-//                cv = new ContentValues();
-//                applyContentValues(outItem, cv);
-//                db.insert(AbstractDb.Tables.OUTS, null, cv);
             } else {
-//                if (outItem.getHDAccountId() > -1) {
-//                    cv = new ContentValues();
-//                    cv.put(AbstractDb.OutsColumns.HD_ACCOUNT_ID,
-//                            outItem.getHDAccountId());
-//                    db.update(AbstractDb.Tables.OUTS, cv,
-//                            " tx_hash=? and out_sn=? ", new String[]{
-//                                    Base58.encode(txItem.getTxHash()), Integer.toString(outItem
-//                                    .getOutSn())
-//                            });
-//                }
                 if (outItem.getHDAccountId() > -1) {
                     this.execUpdate(db, updateHDAccountIdSql, new String[]{
                             Integer.toString(outItem.getHDAccountId()), Base58.encode(txItem.getTxHash())
@@ -1549,21 +1102,7 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                     }
 
                 }
-//                if (outItem.getColdHDAccountId() > -1) {
-//                    cv = new ContentValues();
-//                    cv.put(AbstractDb.OutsColumns.COLD_HD_ACCOUNT_ID,
-//                            outItem.getColdHDAccountId());
-//                    db.update(AbstractDb.Tables.OUTS, cv,
-//                            " tx_hash=? and out_sn=? ", new String[]{
-//                                    Base58.encode(txItem.getTxHash()), Integer.toString(outItem
-//                                    .getOutSn())
-//                            });
-//
-//                }
             }
-//            if (outItem.getHDAccountId() > -1) {
-//                TxHelper.updateHDAddressIsIssued(db, outItem.getOutAddress());
-//            }
             if (!Utils.isEmpty(outItem.getOutAddress())) {
                 addressTxes.add(new AddressTx(outItem.getOutAddress(), Base58.encode(txItem
                         .getTxHash())));
@@ -1582,28 +1121,10 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
                     return null;
                 }
             });
-//            sql = "select tx_hash from ins where prev_tx_hash=? and prev_out_sn=?";
-//            c = db.rawQuery(sql, new String[]{Base58.encode(txItem.getTxHash()), Integer.toString
-//                    (outItem.getOutSn())});
-//
-//            if (c.moveToNext()) {
-//                int idColumn = c.getColumnIndex("tx_hash");
-//                if (idColumn != -1) {
-//                    addressTxes.add(new AddressTx(outItem.getOutAddress(), c.getString(idColumn)));
-//                }
-//                isSpentByExistTx[0] = true;
-//            }
-//                c.close();
             if (isSpentByExistTx[0]) {
                 this.execUpdate(db, updateOutStatusSql, new String[]{Integer.toString(Out.OutStatus.spent.getValue())
                         , Base58.encode(txItem.getTxHash()), Integer.toString(outItem.getOutSn())});
-//                sql = "update outs set out_status=? where tx_hash=? and out_sn=?";
-//                db.execSQL(sql, new String[]{
-//                        Integer.toString(Out.OutStatus.spent.getValue()), Base58.encode(txItem
-//                        .getTxHash()), Integer.toString(outItem.getOutSn())
-//                });
             }
-
         }
         return addressTxes;
     }
@@ -1617,7 +1138,6 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         public AddressTx(String address, String txHash) {
             this.address = address;
             this.txHash = txHash;
-
         }
 
         public String getTxHash() {
@@ -1635,7 +1155,5 @@ public abstract class AbstractTxProvider implements IProvider, ITxProvider {
         public void setAddress(String address) {
             this.address = address;
         }
-
-
     }
 }
