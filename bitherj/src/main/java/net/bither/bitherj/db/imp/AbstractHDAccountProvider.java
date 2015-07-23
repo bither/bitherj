@@ -23,7 +23,6 @@ import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.db.IHDAccountProvider;
 import net.bither.bitherj.db.imp.base.ICursor;
 import net.bither.bitherj.db.imp.base.IDb;
-import net.bither.bitherj.db.imp.base.IProvider;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Utils;
@@ -33,7 +32,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-public abstract class AbstractHDAccountProvider implements IProvider, IHDAccountProvider {
+public abstract class AbstractHDAccountProvider extends AbstractProvider implements IHDAccountProvider {
 
     @Override
     public String getHDFirstAddress(int hdSeedId) {

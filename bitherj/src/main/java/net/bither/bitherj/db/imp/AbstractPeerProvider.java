@@ -23,7 +23,6 @@ import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.db.IPeerProvider;
 import net.bither.bitherj.db.imp.base.ICursor;
 import net.bither.bitherj.db.imp.base.IDb;
-import net.bither.bitherj.db.imp.base.IProvider;
 import net.bither.bitherj.utils.Utils;
 
 import java.net.InetAddress;
@@ -34,7 +33,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-public abstract class AbstractPeerProvider implements IProvider, IPeerProvider {
+public abstract class AbstractPeerProvider extends AbstractProvider implements IPeerProvider {
 
     public List<Peer> getAllPeers() {
         final List<Peer> peers = new ArrayList<Peer>();

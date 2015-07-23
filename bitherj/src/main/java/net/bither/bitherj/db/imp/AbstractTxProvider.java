@@ -26,7 +26,6 @@ import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.db.ITxProvider;
 import net.bither.bitherj.db.imp.base.ICursor;
 import net.bither.bitherj.db.imp.base.IDb;
-import net.bither.bitherj.db.imp.base.IProvider;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Sha256Hash;
@@ -38,7 +37,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-public abstract class AbstractTxProvider implements IProvider, ITxProvider {
+public abstract class AbstractTxProvider extends AbstractProvider implements ITxProvider {
 
     @Override
     public List<Tx> getTxAndDetailByAddress(String address) {

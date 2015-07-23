@@ -28,7 +28,6 @@ import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.db.IAddressProvider;
 import net.bither.bitherj.db.imp.base.ICursor;
 import net.bither.bitherj.db.imp.base.IDb;
-import net.bither.bitherj.db.imp.base.IProvider;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Utils;
@@ -40,7 +39,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public abstract class AbstractAddressProvider implements IProvider, IAddressProvider {
+public abstract class AbstractAddressProvider extends AbstractProvider implements IAddressProvider {
 
     @Override
     public boolean changePassword(CharSequence oldPassword, CharSequence newPassword) {

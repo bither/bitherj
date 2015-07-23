@@ -24,7 +24,6 @@ import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.db.IBlockProvider;
 import net.bither.bitherj.db.imp.base.ICursor;
 import net.bither.bitherj.db.imp.base.IDb;
-import net.bither.bitherj.db.imp.base.IProvider;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
 
@@ -34,7 +33,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-public abstract class AbstractBlockProvider implements IProvider, IBlockProvider {
+public abstract class AbstractBlockProvider extends AbstractProvider implements IBlockProvider {
 
     public List<Block> getAllBlocks() {
         final List<Block> blockItems = new ArrayList<Block>();
