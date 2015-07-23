@@ -49,20 +49,6 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
             }
         });
         return blockItems;
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(sql, null);
-//        try {
-//            while (c.moveToNext()) {
-//                blockItems.add(applyCursor(c));
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//            c.close();
-//        }
-//
-//        return blockItems;
     }
 
     @Override
@@ -78,19 +64,6 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
             }
         });
         return blockItems;
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(sql, null);
-//        try {
-//            while (c.moveToNext()) {
-//                blockItems.add(applyCursor(c));
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//            c.close();
-//        }
-//
-//        return blockItems;
     }
 
     public List<Block> getBlocksFrom(int blockNo) {
@@ -105,19 +78,6 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
             }
         });
         return blockItems;
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(sql, null);
-//        try {
-//            while (c.moveToNext()) {
-//                blockItems.add(applyCursor(c));
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//            c.close();
-//        }
-//
-//        return blockItems;
     }
 
     public int getBlockCount() {
@@ -135,18 +95,6 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
             }
         });
         return count[0];
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(sql, null);
-//        int count = 0;
-//        if (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("cnt");
-//            if (idColumn != -1) {
-//                count = c.getInt(idColumn);
-//            }
-//        }
-//        c.close();
-//        return count;
     }
 
     public Block getLastBlock() {
@@ -162,21 +110,6 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
             }
         });
         return item[0];
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        String sql = "select * from blocks where is_main=1 order by block_no desc limit 1";
-//        Cursor c = db.rawQuery(sql, null);
-//        try {
-//            if (c.moveToNext()) {
-//                item = applyCursor(c);
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//            c.close();
-//        }
-//
-//        return item;
     }
 
     public Block getLastOrphanBlock() {
@@ -191,21 +124,6 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
             }
         });
         return item[0];
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        String sql = "select * from blocks where is_main=0 order by block_no desc limit 1";
-//        Cursor c = db.rawQuery(sql, null);
-//        try {
-//            if (c.moveToNext()) {
-//                item = applyCursor(c);
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//            c.close();
-//        }
-//
-//        return item;
     }
 
     public Block getBlock(byte[] blockHash) {
@@ -220,21 +138,6 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
             }
         });
         return item[0];
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        String sql = "select * from blocks where block_hash='" + Base58.encode(blockHash) + "'";
-//        Cursor c = db.rawQuery(sql, null);
-//        try {
-//            if (c.moveToNext()) {
-//                item = applyCursor(c);
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//            c.close();
-//        }
-//
-//        return item;
     }
 
     public Block getOrphanBlockByPrevHash(byte[] prevHash) {
@@ -249,21 +152,6 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
             }
         });
         return item[0];
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        String sql = "select * from blocks where block_prev=" + Base58.encode(prevHash) + " and is_main=0";
-//        Cursor c = db.rawQuery(sql, null);
-//        try {
-//            if (c.moveToNext()) {
-//                item = applyCursor(c);
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//            c.close();
-//        }
-//
-//        return item;
     }
 
     public Block getMainChainBlock(byte[] blockHash) {
@@ -278,21 +166,6 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
             }
         });
         return item[0];
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        String sql = "select * from blocks where block_hash= '" + Base58.encode(blockHash) + "' and is_main=1";
-//        Cursor c = db.rawQuery(sql, null);
-//        try {
-//            if (c.moveToNext()) {
-//                item = applyCursor(c);
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//            c.close();
-//        }
-//
-//        return item;
     }
 
     public List<byte[]> exists(List<byte[]> blockHashes) {
@@ -333,17 +206,6 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
             });
         }
         writeDb.endTransaction();
-
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        db.beginTransaction();
-//        for (Block item : addBlockList) {
-//
-//            ContentValues cv = new ContentValues();
-//            applyContentValues(item, cv);
-//            db.insert(AbstractDb.Tables.BLOCKS, null, cv);
-//        }
-//        db.setTransactionSuccessful();
-//        db.endTransaction();
     }
 
     public void addBlock(Block item) {
@@ -361,12 +223,7 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
                     , Base58.encode(item.getBlockPrev())
                     , item.isMain() ? "1" : "0"
             });
-//            SQLiteDatabase db = this.mDb.getWritableDatabase();
-//            ContentValues cv = new ContentValues();
-//            applyContentValues(item, cv);
-//            db.insert(AbstractDb.Tables.BLOCKS, null, cv);
         }
-
     }
 
     public boolean blockExists(byte[] blockHash) {
@@ -382,32 +239,16 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
             }
         });
         return cnt[0] > 0;
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(sql, null);
-//        int cnt = 0;
-//        if (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("cnt");
-//            cnt = c.getInt(idColumn);
-//        }
-//        c.close();
-//        return cnt > 0;
     }
 
     public void updateBlock(byte[] blockHash, boolean isMain) {
         String sql = "update blocks set is_main=? where block_hash=?";
         this.execUpdate(sql, new String[] {isMain ? "1" : "0", Base58.encode(blockHash)});
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        ContentValues cv = new ContentValues();
-//        cv.put(AbstractDb.BlocksColumns.IS_MAIN, isMain ? 1 : 0);
-//        db.update(AbstractDb.Tables.BLOCKS, cv, "block_hash=?", new String[]{Base58.encode(blockHash)});
     }
 
     public void removeBlock(byte[] blockHash) {
         String sql = "delete from blocks where block_hash=?";
         this.execUpdate(sql, new String[]{Base58.encode(blockHash)});
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        db.delete(AbstractDb.Tables.BLOCKS, "block_hash=?", new String[]{Base58.encode(blockHash)});
     }
 
     public void cleanOldBlock() {
@@ -437,48 +278,7 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
             sql = "delete from blocks where block_no<?";
             this.execUpdate(sql, new String[]{Integer.toString(blockNo)});
         }
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        String sql = "select count(0) cnt from blocks";
-//        Cursor c = db.rawQuery(sql, null);
-//        int cnt = 0;
-//        if (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("cnt");
-//            if (idColumn != -1) {
-//                cnt = c.getInt(idColumn);
-//            }
-//        }
-//        c.close();
-//        if (cnt > 5000) {
-//            sql = "select max(block_no) max_block_no from blocks where is_main=1";
-//            c = db.rawQuery(sql, null);
-//            int maxBlockNo = 0;
-//            if (c.moveToNext()) {
-//                int idColumn = c.getColumnIndex("max_block_no");
-//                if (idColumn != -1) {
-//                    maxBlockNo = c.getInt(idColumn);
-//
-//                }
-//            }
-//            c.close();
-//            int blockNo = (maxBlockNo - BitherjSettings.BLOCK_DIFFICULTY_INTERVAL) - maxBlockNo % BitherjSettings.BLOCK_DIFFICULTY_INTERVAL;
-//            db = this.mDb.getWritableDatabase();
-//            db.delete(AbstractDb.Tables.BLOCKS, "block_no<?", new String[]{Integer.toString(blockNo)});
-//        }
     }
-
-//    private void applyContentValues(Block item, ContentValues cv) {
-//        cv.put(AbstractDb.BlocksColumns.BLOCK_BITS, item.getBlockBits());
-//        cv.put(AbstractDb.BlocksColumns.BLOCK_HASH, Base58.encode(item.getBlockHash()));
-//        cv.put(AbstractDb.BlocksColumns.BLOCK_NO, item.getBlockNo());
-//        cv.put(AbstractDb.BlocksColumns.BLOCK_NONCE, item.getBlockNonce());
-//        cv.put(AbstractDb.BlocksColumns.BLOCK_PREV, Base58.encode(item.getBlockPrev()));
-//        cv.put(AbstractDb.BlocksColumns.BLOCK_ROOT, Base58.encode(item.getBlockRoot()));
-//        cv.put(AbstractDb.BlocksColumns.BLOCK_TIME, item.getBlockTime());
-//        cv.put(AbstractDb.BlocksColumns.BLOCK_VER, item.getBlockVer());
-//        cv.put(AbstractDb.BlocksColumns.IS_MAIN, item.isMain() ? 1 : 0);
-//
-//    }
 
     private Block applyCursor(ICursor c) {
         byte[] blockHash = null;
@@ -540,5 +340,4 @@ public abstract class AbstractBlockProvider implements IProvider, IBlockProvider
         }
         return new Block(blockHash, version, prevBlock, merkleRoot, timestamp, target, nonce, blockNo, isMain);
     }
-
 }

@@ -61,15 +61,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             });
         }
         writeDb.endTransaction();
-//
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        db.beginTransaction();
-//        for (HDAccount.HDAccountAddress hdAccountAddress : hdAccountAddresses) {
-//            ContentValues cv = getHDMAddressCV(hdAccountAddress);
-//            db.insert(AbstractDb.Tables.HD_ACCOUNT_ADDRESS, null, cv);
-//        }
-//        db.setTransactionSuccessful();
-//        db.endTransaction();
     }
 
 
@@ -91,22 +82,7 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return issuedIndex[0];
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor cursor = db.rawQuery("select ifnull(max(address_index),-1) address_index " +
-//                        " from hd_account_addresses" +
-//                        " where path_type=? and is_issued=? and hd_account_id=?",
-//                new String[]{Integer.toString(pathType.getValue()), "1", String.valueOf(hdAccountId)});
-//        if (cursor.moveToNext()) {
-//            int idColumn = cursor.getColumnIndex(AbstractDb.HDAccountAddressesColumns
-//                    .ADDRESS_INDEX);
-//            if (idColumn != -1) {
-//                issuedIndex = cursor.getInt(idColumn);
-//            }
-//        }
-//        cursor.close();
-//        return issuedIndex;
     }
-
 
     @Override
     public int allGeneratedAddressCount(int hdAccountId, AbstractHD.PathType pathType) {
@@ -126,19 +102,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return count[0];
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor cursor = db.rawQuery("select ifnull(count(address),0) count " +
-//                        " from hd_account_addresses " +
-//                        " where path_type=? and hd_account_id=?",
-//                new String[]{Integer.toString(pathType.getValue()), String.valueOf(hdAccountId)});
-//        if (cursor.moveToNext()) {
-//            int idColumn = cursor.getColumnIndex("count");
-//            if (idColumn != -1) {
-//                count = cursor.getInt(idColumn);
-//            }
-//        }
-//        cursor.close();
-//        return count;
     }
 
     @Override
@@ -159,19 +122,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return address[0];
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor cursor = db.rawQuery("select address from hd_account_addresses" +
-//                        " where path_type=? and is_issued=? and hd_account_id=? order by address_index asc limit 1 ",
-//                new String[]{Integer.toString(AbstractHD.PathType.EXTERNAL_ROOT_PATH.getValue()),
-//                        "0", Integer.toString(hdAccountId)});
-//        if (cursor.moveToNext()) {
-//            int idColumn = cursor.getColumnIndex(AbstractDb.HDAccountAddressesColumns.ADDRESS);
-//            if (idColumn != -1) {
-//                address = cursor.getString(idColumn);
-//            }
-//        }
-//        cursor.close();
-//        return address;
     }
 
     @Override
@@ -198,19 +148,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return addressSet;
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        String sql = Utils.format("select address from hd_account_addresses where hd_account_id=? and address in (%s) "
-//                , Utils.joinString(temp, ","));
-//        Cursor cursor = db.rawQuery(sql, new String[] {Integer.toString(hdAccountId)});
-//        while (cursor.moveToNext()) {
-//            int idColumn = cursor.getColumnIndex(AbstractDb.HDAccountAddressesColumns.ADDRESS);
-//            if (idColumn != -1) {
-//                addressSet.add(cursor.getString(idColumn));
-//            }
-//        }
-//        cursor.close();
-//        return addressSet;
     }
 
     @Override
@@ -237,19 +174,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return addressSet;
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        String sql = Utils.format("select address from hd_account_addresses where address in (%s) "
-//                , Utils.joinString(temp, ","));
-//        Cursor cursor = db.rawQuery(sql, null);
-//        while (cursor.moveToNext()) {
-//            int idColumn = cursor.getColumnIndex(AbstractDb.HDAccountAddressesColumns.ADDRESS);
-//            if (idColumn != -1) {
-//                addressSet.add(cursor.getString(idColumn));
-//            }
-//        }
-//        cursor.close();
-//        return addressSet;
     }
 
     @Override
@@ -282,23 +206,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             });
         }
         return tx;
-
-//            SQLiteDatabase db = this.mDb.getReadableDatabase();
-//            String sql = Utils.format("select address,hd_account_id from hd_account_addresses where address in (%s) "
-//                    , strBuilder.substring(0, strBuilder.length() - 1));
-//            Cursor c = db.rawQuery(sql, null);
-//            while (c.moveToNext()) {
-//                String address = c.getString(0);
-//                int hdAccountId = c.getInt(1);
-//                for (Out out: tx.getOuts()) {
-//                    if (Utils.compareString(out.getOutAddress(), address)) {
-//                        out.setHDAccountId(hdAccountId);
-//                    }
-//                }
-//            }
-//            c.close();
-//        }
-//        return tx;
     }
 
     @Override
@@ -323,17 +230,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             });
         }
         return cnt[0];
-
-//            SQLiteDatabase db = this.mDb.getReadableDatabase();
-//            String sql = Utils.format("select count(0) cnt from hd_account_addresses where address in (%s) "
-//                    , strBuilder.substring(0, strBuilder.length() - 1));
-//            Cursor c = db.rawQuery(sql, null);
-//            if (c.moveToNext()) {
-//                cnt = c.getInt(0);
-//            }
-//            c.close();
-//        }
-//        return cnt;
     }
 
     @Override
@@ -358,16 +254,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             });
         }
         return hdAccountIdList;
-//            SQLiteDatabase db = this.mDb.getReadableDatabase();
-//            String sql = Utils.format("select distinct hd_account_id from hd_account_addresses where address in (%s) "
-//                    , strBuilder.substring(0, strBuilder.length() - 1));
-//            Cursor c = db.rawQuery(sql, null);
-//            while (c.moveToNext()) {
-//                hdAccountIdList.add(c.getInt(0));
-//            }
-//            c.close();
-//        }
-//        return hdAccountIdList;
     }
 
     @Override
@@ -390,21 +276,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return adressPubList;
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor cursor = db.rawQuery("select pub from hd_account_addresses where path_type=? and hd_account_id=?",
-//                new String[]{Integer.toString(pathType.getValue()), Integer.toString(hdAccountId)});
-//        while (cursor.moveToNext()) {
-//            try {
-//                int idColumn = cursor.getColumnIndex(AbstractDb.HDAccountAddressesColumns.PUB);
-//                if (idColumn != -1) {
-//                    adressPubList.add(Base58.decode(cursor.getString(idColumn)));
-//                }
-//            } catch (AddressFormatException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        cursor.close();
-//        return adressPubList;
     }
 
     public List<HDAccount.HDAccountAddress> getAllHDAddress(int hdAccountId) {
@@ -424,17 +295,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return adressPubList;
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor cursor = db.rawQuery("select address,pub,path_type,address_index,is_issued,is_synced,hd_account_id " +
-//                "from hd_account_addresses where hd_account_id=? ", new String[]{Integer.toString(hdAccountId)});
-//        while (cursor.moveToNext()) {
-//            HDAccount.HDAccountAddress hdAccountAddress = formatAddress(cursor);
-//            if (hdAccountAddress != null) {
-//                adressPubList.add(hdAccountAddress);
-//            }
-//        }
-//        cursor.close();
-//        return adressPubList;
     }
 
 
@@ -452,19 +312,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return outItems;
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(unspendOutSql,
-//                new String[]{Integer.toString(Out.OutStatus.unspent.getValue()), Integer.toString
-//                        (hdAccountId)});
-//        try {
-//            while (c.moveToNext()) {
-//                outItems.add(TxHelper.applyCursorOut(c));
-//            }
-//            c.close();
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        }
-//        return outItems;
     }
 
     @Override
@@ -482,28 +329,12 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return accountAddress[0];
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor cursor = db.rawQuery("select address,pub,path_type,address_index,is_issued," +
-//                        "is_synced,hd_account_id from hd_account_addresses" +
-//                        " where path_type=? and address_index=? and hd_account_id=?",
-//                new String[]{Integer.toString(type.getValue()), Integer.toString(index), Integer.toString(hdAccountId)});
-//        HDAccount.HDAccountAddress accountAddress = null;
-//        if (cursor.moveToNext()) {
-//            accountAddress = formatAddress(cursor);
-//        }
-//        cursor.close();
-//        return accountAddress;
     }
 
     @Override
     public void updateIssuedIndex(int hdAccountId, AbstractHD.PathType pathType, int index) {
         String sql = "update hd_account_addresses set is_issued=? where path_type=? and address_index<=? and hd_account_id=?";
         this.execUpdate(sql, new String[]{"1", Integer.toString(pathType.getValue()), Integer.toString(index), Integer.toString(hdAccountId)});
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        ContentValues cv = new ContentValues();
-//        cv.put(AbstractDb.HDAccountAddressesColumns.IS_ISSUED, 1);
-//        db.update(AbstractDb.Tables.HD_ACCOUNT_ADDRESS, cv, " path_type=? and address_index<=? and hd_account_id=? ",
-//                new String[]{Integer.toString(pathType.getValue()), Integer.toString(index), Integer.toString(hdAccountId)});
     }
 
 
@@ -527,13 +358,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return hdAccountAddressList;
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor cursor = db.rawQuery(sql, new String[] {Integer.toString(hdAccountId)});
-//        while (cursor.moveToNext()) {
-//            hdAccountAddressList.add(formatAddress(cursor));
-//        }
-//        cursor.close();
-//        return hdAccountAddressList;
     }
 
 
@@ -556,19 +380,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return sum[0];
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(unspendOutSql,
-//                new String[]{Integer.toString(Out.OutStatus.unspent.getValue()), Integer.toString
-//                        (hdAccountId)});
-//
-//        if (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("sum");
-//            if (idColumn != -1) {
-//                sum = c.getLong(idColumn);
-//            }
-//        }
-//        c.close();
-//        return sum;
     }
 
 
@@ -629,64 +440,13 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return txList;
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        try {
-//            String sql = "select distinct a.* " +
-//                    " from txs a,addresses_txs b,hd_account_addresses c" +
-//                    " where a.tx_hash=b.tx_hash and b.address=c.address and c.hd_account_id=? and a.block_no is null" +
-//                    " order by a.tx_hash";
-//            Cursor c = db.rawQuery(sql, new String[] {Integer.toString(hdAccountId)});
-//            while (c.moveToNext()) {
-//                Tx txItem = TxHelper.applyCursor(c);
-//                txItem.setIns(new ArrayList<In>());
-//                txItem.setOuts(new ArrayList<Out>());
-//                txList.add(txItem);
-//                txDict.put(new Sha256Hash(txItem.getTxHash()), txItem);
-//            }
-//            c.close();
-//            sql = "select distinct a.* " +
-//                    " from ins a, txs b,addresses_txs c,hd_account_addresses d" +
-//                    " where a.tx_hash=b.tx_hash and b.tx_hash=c.tx_hash and c.address=d.address" +
-//                    "   and b.block_no is null and d.hd_account_id=?" +
-//                    " order by a.tx_hash,a.in_sn";
-//            c = db.rawQuery(sql, new String[] {Integer.toString(hdAccountId)});
-//            while (c.moveToNext()) {
-//                In inItem = TxHelper.applyCursorIn(c);
-//                Tx tx = txDict.get(new Sha256Hash(inItem.getTxHash()));
-//                if (tx != null) {
-//                    tx.getIns().add(inItem);
-//                }
-//            }
-//            c.close();
-//
-//            sql = "select distinct a.* " +
-//                    " from outs a, txs b,addresses_txs c,hd_account_addresses d" +
-//                    " where a.tx_hash=b.tx_hash and b.tx_hash=c.tx_hash and c.address=d.address" +
-//                    "   and b.block_no is null and d.hd_account_id=?" +
-//                    " order by a.tx_hash,a.out_sn";
-//            c = db.rawQuery(sql, new String[] {Integer.toString(hdAccountId)});
-//            while (c.moveToNext()) {
-//                Out out = TxHelper.applyCursorOut(c);
-//                Tx tx = txDict.get(new Sha256Hash(out.getTxHash()));
-//                if (tx != null) {
-//                    tx.getOuts().add(out);
-//                }
-//            }
-//            c.close();
-//
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        }
-//        return txList;
     }
 
 
     @Override
     public List<HDAccount.HDAccountAddress> getSigningAddressesForInputs(int hdAccountId, List<In> inList) {
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
         final List<HDAccount.HDAccountAddress> hdAccountAddressList =
                 new ArrayList<HDAccount.HDAccountAddress>();
-//        Cursor c;
         for (In in : inList) {
             String sql = "select a.address,a.path_type,a.address_index,a.is_synced,a.hd_account_id" +
                     " from hd_account_addresses a ,outs b" +
@@ -702,12 +462,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
                     return null;
                 }
             });
-//            c = db.rawQuery(sql, new String[]{Base58.encode(in.getPrevTxHash()), Integer.toString
-//                    (outPoint.getOutSn()), Integer.toString(hdAccountId)});
-//            if (c.moveToNext()) {
-//                hdAccountAddressList.add(formatAddress(c));
-//            }
-//            c.close();
         }
         return hdAccountAddressList;
     }
@@ -718,11 +472,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
         String sql = "update hd_account_addresses set is_synced=? where address=? and hd_account_id=?";
         this.execUpdate(sql, new String[]{address.isSyncedComplete() ? "1" : "0", address.getAddress()
                 , Integer.toString(hdAccountId)});
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        ContentValues cv = new ContentValues();
-//        cv.put(AbstractDb.HDAccountAddressesColumns.IS_SYNCED, address.isSyncedComplete() ? 1 : 0);
-//        db.update(AbstractDb.Tables.HD_ACCOUNT_ADDRESS, cv, "address=? and hd_account_id=?"
-//                , new String[]{address.getAddress(), Integer.toString(hdAccountId)});
     }
 
     @Override
@@ -730,22 +479,12 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
         String sql = "update hd_account_addresses set is_synced=? where path_type=? and address_index>? and hd_account_id=?";
         this.execUpdate(sql, new String[]{"1", Integer.toString(pathType.getValue())
                 , Integer.toString(index), Integer.toString(hdAccountId)});
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        ContentValues cv = new ContentValues();
-//        cv.put(AbstractDb.HDAccountAddressesColumns.IS_SYNCED, 1);
-//        db.update(AbstractDb.Tables.HD_ACCOUNT_ADDRESS, cv, "path_type=? and address_index>? and hd_account_id=?"
-//                , new String[]{Integer.toString(pathType.getValue()), Integer.toString(index), Integer.toString(hdAccountId)});
     }
 
     @Override
     public void setSyncedNotComplete() {
         String sql = "update hd_account_addresses set is_synced=?";
         this.execUpdate(sql, new String[]{"0"});
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        ContentValues cv = new ContentValues();
-//        cv.put(AbstractDb.HDAccountAddressesColumns.IS_SYNCED, 0);
-//        db.update(AbstractDb.Tables.HD_ACCOUNT_ADDRESS, cv, null
-//                , null);
     }
 
     @Override
@@ -764,17 +503,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return cnt[0];
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor cursor = db.rawQuery(sql, new String[]{"0", Integer.toString(hdAccountId)});
-//        int cnt = 0;
-//        if (cursor.moveToNext()) {
-//            int idColumn = cursor.getColumnIndex("cnt");
-//            if (idColumn != -1) {
-//                cnt = cursor.getInt(idColumn);
-//            }
-//        }
-//        cursor.close();
-//        return cnt;
     }
 
     @Override
@@ -802,31 +530,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             this.addInsAndOuts(db, item);
         }
         return txItemList;
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        String sql = "select distinct a.* " +
-//                " from txs a, addresses_txs b, hd_account_addresses c" +
-//                " where a.tx_hash=b.tx_hash and b.address=c.address " +
-//                "   and ((a.block_no is null) or (a.block_no is not null and a.block_no>?)) " +
-//                "   and c.hd_account_id=?" +
-//                " order by ifnull(a.block_no,4294967295) desc, a.tx_time desc" +
-//                " limit ?";
-//        Cursor c = db.rawQuery(sql, new String[]{Integer.toString(greaterThanBlockNo)
-//                , Integer.toString(hdAccountId), Integer.toString(limit)});
-//        try {
-//            while (c.moveToNext()) {
-//                Tx txItem = TxHelper.applyCursor(c);
-//                txItemList.add(txItem);
-//            }
-//
-//            for (Tx item : txItemList) {
-//                TxHelper.addInsAndOuts(db, item);
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        } finally {
-//            c.close();
-//        }
-//        return txItemList;
     }
 
     public void addInsAndOuts(IDb db, final Tx txItem) {
@@ -876,19 +579,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return sum[0];
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor cursor;
-//        cursor = db.rawQuery(sql, new String[]{Base58.encode(txHash),
-//                Integer.toString(hdAccountId)});
-//        if (cursor.moveToNext()) {
-//            int idColumn = cursor.getColumnIndex(AbstractDb.OutsColumns.OUT_VALUE);
-//            if (idColumn != -1) {
-//                sum = cursor.getLong(idColumn);
-//            }
-//        }
-//        cursor.close();
-//
-//        return sum;
     }
 
     @Override
@@ -947,55 +637,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             });
         }
         return txItemList;
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        try {
-//            String sql = "select distinct a.* " +
-//                    " from txs a,addresses_txs b,hd_account_addresses c" +
-//                    " where a.tx_hash=b.tx_hash and b.address=c.address and c.hd_account_id=?" +
-//                    " order by ifnull(block_no,4294967295) desc,a.tx_hash";
-//            Cursor c = db.rawQuery(sql, new String[] {Integer.toString(hdAccountId)});
-//            StringBuilder txsStrBuilder = new StringBuilder();
-//            while (c.moveToNext()) {
-//                Tx txItem = TxHelper.applyCursor(c);
-//                txItem.setIns(new ArrayList<In>());
-//                txItem.setOuts(new ArrayList<Out>());
-//                txItemList.add(txItem);
-//                txDict.put(new Sha256Hash(txItem.getTxHash()), txItem);
-//                txsStrBuilder.append("'").append(Base58.encode(txItem.getTxHash())).append("'")
-//                        .append(",");
-//            }
-//            c.close();
-//
-//            if (txsStrBuilder.length() > 1) {
-//                String txs = txsStrBuilder.substring(0, txsStrBuilder.length() - 1);
-//                sql = Utils.format("select b.* from ins b where b.tx_hash in (%s)" +
-//                        " order by b.tx_hash ,b.in_sn", txs);
-//                c = db.rawQuery(sql, null);
-//                while (c.moveToNext()) {
-//                    In inItem = TxHelper.applyCursorIn(c);
-//                    Tx tx = txDict.get(new Sha256Hash(inItem.getTxHash()));
-//                    if (tx != null) {
-//                        tx.getIns().add(inItem);
-//                    }
-//                }
-//                c.close();
-//                sql = Utils.format("select b.* from outs b where b.tx_hash in (%s)" +
-//                        " order by b.tx_hash,b.out_sn", txs);
-//                c = db.rawQuery(sql, null);
-//                while (c.moveToNext()) {
-//                    Out out = TxHelper.applyCursorOut(c);
-//                    Tx tx = txDict.get(new Sha256Hash(out.getTxHash()));
-//                    if (tx != null) {
-//                        tx.getOuts().add(out);
-//                    }
-//                }
-//                c.close();
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        }
-//        return txItemList;
     }
 
     @Override
@@ -1059,63 +700,7 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             });
         }
         return txItemList;
-//        try {
-//            String sql = "select distinct a.* " +
-//                    " from txs a,addresses_txs b,hd_account_addresses c" +
-//                    " where a.tx_hash=b.tx_hash and b.address=c.address and c.hd_account_id=?" +
-//                    " order by ifnull(block_no,4294967295) desc,a.tx_hash" +
-//                    " limit ?,?";
-////            String sql = "select * from txs where tx_hash in " +
-////                    inQueryTxHashOfHDAccount +
-////                    " order by" +
-////                    " ifnull(block_no,4294967295) desc limit ?,? ";
-//            Cursor c = db.rawQuery(sql, new String[]{Integer.toString(hdAccountId)
-//                    , Integer.toString((page - 1) * BitherjSettings.TX_PAGE_SIZE)
-//                    , Integer.toString(BitherjSettings.TX_PAGE_SIZE)
-//            });
-//            StringBuilder txsStrBuilder = new StringBuilder();
-//            while (c.moveToNext()) {
-//                Tx txItem = TxHelper.applyCursor(c);
-//                txItem.setIns(new ArrayList<In>());
-//                txItem.setOuts(new ArrayList<Out>());
-//                txItemList.add(txItem);
-//                txDict.put(new Sha256Hash(txItem.getTxHash()), txItem);
-//                txsStrBuilder.append("'").append(Base58.encode(txItem.getTxHash())).append("'")
-//                        .append(",");
-//            }
-//            c.close();
-//
-//            if (txsStrBuilder.length() > 1) {
-//                String txs = txsStrBuilder.substring(0, txsStrBuilder.length() - 1);
-//                sql = Utils.format("select b.* from ins b where b.tx_hash in (%s)" +
-//                        " order by b.tx_hash ,b.in_sn", txs);
-//                c = db.rawQuery(sql, null);
-//                while (c.moveToNext()) {
-//                    In inItem = TxHelper.applyCursorIn(c);
-//                    Tx tx = txDict.get(new Sha256Hash(inItem.getTxHash()));
-//                    if (tx != null) {
-//                        tx.getIns().add(inItem);
-//                    }
-//                }
-//                c.close();
-//                sql = Utils.format("select b.* from outs b where b.tx_hash in (%s)" +
-//                        " order by b.tx_hash,b.out_sn", txs);
-//                c = db.rawQuery(sql, null);
-//                while (c.moveToNext()) {
-//                    Out out = TxHelper.applyCursorOut(c);
-//                    Tx tx = txDict.get(new Sha256Hash(out.getTxHash()));
-//                    if (tx != null) {
-//                        tx.getOuts().add(out);
-//                    }
-//                }
-//                c.close();
-//            }
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        }
-//        return txItemList;
     }
-
 
     @Override
     public int hdAccountTxCount(int hdAccountId) {
@@ -1134,15 +719,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return result[0];
-//        Cursor c = db.rawQuery(sql, new String[] {Integer.toString(hdAccountId)});
-//        if (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("cnt");
-//            if (idColumn != -1) {
-//                result = c.getInt(idColumn);
-//            }
-//        }
-//        c.close();
-//        return result;
     }
 
     @Override
@@ -1167,18 +743,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return result[0];
-//        Cursor c = db.rawQuery(sql, new String[]{Integer.toString(pathType.getValue())
-//                , Integer.toString(Out.OutStatus.unspent.getValue())
-//                , Integer.toString(hdAccountId)
-//        });
-//        if (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("cnt");
-//            if (idColumn != -1) {
-//                result = c.getInt(idColumn);
-//            }
-//        }
-//        c.close();
-//        return result;
     }
 
     @Override
@@ -1201,25 +765,6 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
             }
         });
         return outList;
-
-//        try {
-//            SQLiteDatabase db = this.mDb.getReadableDatabase();
-//            String sql = "select * from outs where out_address in " +
-//                    "(select address from hd_account_addresses where path_type =? and " +
-//                    "out_status=?) " +
-//                    "and hd_account_id=?";
-//            Cursor c = db.rawQuery(sql, new String[]{Integer.toString(pathType.getValue())
-//                    , Integer.toString(Out.OutStatus.unspent.getValue())
-//                    , Integer.toString(hdAccountId)
-//            });
-//            while (c.moveToNext()) {
-//                outList.add(TxHelper.applyCursorOut(c));
-//            }
-//            c.close();
-//        } catch (AddressFormatException e) {
-//            e.printStackTrace();
-//        }
-//        return outList;
     }
 
     private HDAccount.HDAccountAddress formatAddress(ICursor c) {
@@ -1267,19 +812,4 @@ public abstract class AbstractHDAccountAddressProvider implements IProvider, IHD
                 ternalRootType, index, isIssued, isSynced, hdAccountId);
         return hdAccountAddress;
     }
-
-
-//    private ContentValues getHDMAddressCV(HDAccount.HDAccountAddress hdAccountAddress) {
-//        ContentValues cv = new ContentValues();
-//        cv.put(AbstractDb.HDAccountAddressesColumns.HD_ACCOUNT_ID, hdAccountAddress.getHdAccountId());
-//        cv.put(AbstractDb.HDAccountAddressesColumns.PUB, Base58.encode(hdAccountAddress.getPub()));
-//        cv.put(AbstractDb.HDAccountAddressesColumns.ADDRESS, hdAccountAddress.getAddress());
-//        cv.put(AbstractDb.HDAccountAddressesColumns.PATH_TYPE, hdAccountAddress.getPathType()
-//                .getValue());
-//        cv.put(AbstractDb.HDAccountAddressesColumns.ADDRESS_INDEX, hdAccountAddress.getIndex());
-//        cv.put(AbstractDb.HDAccountAddressesColumns.IS_ISSUED, hdAccountAddress.isIssued() ? 1 : 0);
-//        cv.put(AbstractDb.HDAccountAddressesColumns.IS_SYNCED, hdAccountAddress.isSyncedComplete
-//                () ? 1 : 0);
-//        return cv;
-//    }
 }

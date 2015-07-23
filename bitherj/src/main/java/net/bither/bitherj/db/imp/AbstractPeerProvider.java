@@ -51,16 +51,6 @@ public abstract class AbstractPeerProvider implements IProvider, IPeerProvider {
             }
         });
         return peers;
-//        SQLiteDatabase db = mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(sql, null);
-//        while (c.moveToNext()) {
-//            Peer peer = applyCursor(c);
-//            if (peer != null) {
-//                peers.add(peer);
-//            }
-//        }
-//        c.close();
-//        return peers;
     }
 
     @Override
@@ -96,37 +86,6 @@ public abstract class AbstractPeerProvider implements IProvider, IPeerProvider {
             this.execUpdate(writeDb, sql, new String[]{Long.toString(i)});
         }
         writeDb.endTransaction();
-
-
-//        SQLiteDatabase db = mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(sql, null);
-//        while (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex(AbstractDb.PeersColumns.PEER_ADDRESS);
-//            if (idColumn != -1) {
-//                long peerAddress = c.getLong(idColumn);
-//                boolean in = false;
-//                for (InetAddress a : peerAddrsses) {
-//                    if (Utils.parseLongFromAddress(a) == peerAddress) {
-//                        in = true;
-//                        break;
-//                    }
-//                }
-//                if (!in) {
-//                    needDeletePeers.add(peerAddress);
-//                }
-//            }
-//
-//        }
-//        c.close();
-//        db = mDb.getWritableDatabase();
-//        db.beginTransaction();
-//        for (long i : needDeletePeers) {
-//            db.delete(AbstractDb.Tables.PEERS, AbstractDb.PeersColumns
-//                    .PEER_ADDRESS + "=?", new String[]{Long.toString(i)});
-//        }
-//        db.setTransactionSuccessful();
-//        db.endTransaction();
-
     }
 
     @Override
@@ -163,56 +122,13 @@ public abstract class AbstractPeerProvider implements IProvider, IPeerProvider {
                         , Integer.toString(item.getPeerConnectedCnt())});
             }
             writeDb.endTransaction();
-
-//            SQLiteDatabase db = this.mDb.getWritableDatabase();
-//            db.beginTransaction();
-//
-//            for (Peer item : addItems) {
-//
-//                ContentValues cv = new ContentValues();
-//                applyContentValues(item, cv);
-//                db.insert(AbstractDb.Tables.PEERS, null, cv);
-//            }
-//
-//            db.setTransactionSuccessful();
-//            db.endTransaction();
         }
-    }
-
-    public void updatePeersTimestamp(List<InetAddress> peerAddresses) {
-        long timestamp = new Date().getTime();
-        IDb writeDb = this.getWriteDb();
-        writeDb.beginTransaction();
-        String sql = "update peers set peer_timestamp=? where peer_address=?";
-        for (InetAddress peerAddress : peerAddresses) {
-            this.execUpdate(writeDb, sql, new String[]{Long.toString(timestamp)
-                    , Long.toString(Utils.parseLongFromAddress(peerAddress))});
-        }
-        writeDb.endTransaction();
-
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        db.beginTransaction();
-//        for (InetAddress peerAddress : peerAddresses) {
-//            ContentValues cv = new ContentValues();
-//            cv.put(AbstractDb.PeersColumns.PEER_TIMESTAMP, timestamp);
-//            db.update(AbstractDb.Tables.PEERS, cv, AbstractDb.PeersColumns
-//                    .PEER_ADDRESS + "=?", new String[]{Long.toString(Utils.parseLongFromAddress
-//                    (peerAddress))});
-//        }
-//        db.setTransactionSuccessful();
-//        db.endTransaction();
     }
 
     @Override
     public void removePeer(InetAddress address) {
         String sql = "delete from peers where peer_address=?";
         this.execUpdate(sql, new String[] {Long.toString(Utils.parseLongFromAddress(address))});
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        if (db.isOpen()) {
-//            db.delete(AbstractDb.Tables.PEERS, AbstractDb.PeersColumns
-//                    .PEER_ADDRESS + "=?", new String[]{Long.toString(Utils.parseLongFromAddress
-//                    (address))});
-//        }
     }
 
     public void conncetFail(InetAddress address) {
@@ -237,40 +153,12 @@ public abstract class AbstractPeerProvider implements IProvider, IPeerProvider {
             sql = "update peers set peer_connected_cnt=2 where peer_address=?";
             this.execUpdate(sql, new String[]{Long.toString(addressLong)});
         }
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(sql, null);
-//        int cnt = 0;
-//        if (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("cnt");
-//            if (idColumn != -1) {
-//                cnt = c.getInt(idColumn);
-//            }
-//
-//        }
-//        c.close();
-//        db = this.mDb.getWritableDatabase();
-//        if (cnt == 0) {
-//            sql = "update peers set peer_connected_cnt=peer_connected_cnt+1 where peer_address="
-//                    + Long.toString(addressLong);
-//            db.execSQL(sql);
-//        } else {
-//            sql = "update peers set peer_connected_cnt=2 where peer_address=" + Long.toString
-//                    (addressLong);
-//            db.execSQL(sql);
-//        }
     }
 
     public void connectSucceed(InetAddress address) {
         String sql = "update peers set peer_connected_cnt=?,peer_timestamp=? where peer_address=?";
         long addressLong = Utils.parseLongFromAddress(address);
         this.execUpdate(sql, new String[] {"1", Long.toString(new Date().getTime()), Long.toString(addressLong)});
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        ContentValues cv = new ContentValues();
-//        cv.put(AbstractDb.PeersColumns.PEER_CONNECTED_CNT, 1);
-//        cv.put(AbstractDb.PeersColumns.PEER_TIMESTAMP, new Date().getTime());
-//        db.update(AbstractDb.Tables.PEERS, cv, "peer_address=?",
-//                new String[]{Long.toString(addressLong)});
     }
 
     public List<Peer> getPeersWithLimit(int limit) {
@@ -288,28 +176,11 @@ public abstract class AbstractPeerProvider implements IProvider, IPeerProvider {
             }
         });
         return peerItemList;
-
-//        List<Peer> peerItemList = new ArrayList<Peer>();
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        String sql = "select * from peers order by peer_address limit " + Integer.toString(limit);
-//        Cursor c = db.rawQuery(sql, null);
-//        while (c.moveToNext()) {
-//            Peer peer = applyCursor(c);
-//            if (peer != null) {
-//                peerItemList.add(peer);
-//            }
-//        }
-//        c.close();
-//
-//        return peerItemList;
     }
 
     public void clearIPV6() {
         String sql = "delete from peers where peer_address>? or peer_address<? or peer_address=0";
         this.execUpdate(sql, new String[]{Integer.toString(Integer.MAX_VALUE), Integer.toString(Integer.MIN_VALUE)});
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        db.delete(AbstractDb.Tables.PEERS, "peer_address>? or peer_address<? or peer_address=0"
-//                , new String[]{Integer.toString(Integer.MAX_VALUE), Integer.toString(Integer.MIN_VALUE)});
     }
 
     public void cleanPeers() {
@@ -346,59 +217,13 @@ public abstract class AbstractPeerProvider implements IProvider, IPeerProvider {
             if (timestamp[0] > 0) {
                 sql = "delete from peers where peer_connected_cnt<>1 and peer_timestamp<=?";
                 this.execUpdate(sql, new String[]{Long.toString(timestamp[0])});
-//                db = this.mDb.getWritableDatabase();
-//                db.delete(AbstractDb.Tables.PEERS, "peer_connected_cnt<>1 and " +
-//                        "peer_timestamp<=?", new String[]{Long.toString(timestamp[0])});
             }
         }
-
-
-//        SQLiteDatabase db = this.mDb.getReadableDatabase();
-//        Cursor c = db.rawQuery(disconnectingPeerCntSql, null);
-//        if (c.moveToNext()) {
-//            int idColumn = c.getColumnIndex("cnt");
-//            if (idColumn != -1) {
-//                disconnectingPeerCnt = c.getInt(idColumn);
-//            }
-//        }
-//        c.close();
-//        if (disconnectingPeerCnt > maxPeerSaveCnt) {
-//            String sql = "select peer_timestamp from peers where peer_connected_cnt<>1 " +
-//                    " limit 1 offset " + Integer.toString
-//                    (maxPeerSaveCnt);
-//            c = db.rawQuery(sql, null);
-//            long timestamp = 0;
-//            if (c.moveToNext()) {
-//                int idColumn = c.getColumnIndex(AbstractDb.PeersColumns.PEER_TIMESTAMP);
-//                if (idColumn != -1) {
-//                    timestamp = c.getLong(idColumn);
-//                }
-//            }
-//            c.close();
-//            if (timestamp > 0) {
-//                db = this.mDb.getWritableDatabase();
-//                db.delete(AbstractDb.Tables.PEERS, "peer_connected_cnt<>1 and " +
-//                        "peer_timestamp<=?", new String[]{Long.toString(timestamp)});
-//            }
-//        }
     }
-
-//    private void applyContentValues(Peer item, ContentValues cv) {
-//        cv.put(AbstractDb.PeersColumns.PEER_ADDRESS, Utils.parseLongFromAddress(item
-//                .getPeerAddress()));
-//        cv.put(AbstractDb.PeersColumns.PEER_CONNECTED_CNT, item.getPeerConnectedCnt());
-//        cv.put(AbstractDb.PeersColumns.PEER_PORT, item.getPeerPort());
-//        cv.put(AbstractDb.PeersColumns.PEER_SERVICES, item.getPeerServices());
-//        cv.put(AbstractDb.PeersColumns.PEER_TIMESTAMP, item.getPeerTimestamp());
-//
-//    }
 
     private void deleteUnknowHost(long address) {
         String sql = "delete from peers where peer_address=?";
         this.execUpdate(sql, new String[]{Long.toString(address)});
-//        SQLiteDatabase db = this.mDb.getWritableDatabase();
-//        db.delete(AbstractDb.Tables.PEERS, "peer_address=?"
-//                , new String[]{Long.toString(address)});
     }
 
     private Peer applyCursor(ICursor c) {
@@ -444,11 +269,5 @@ public abstract class AbstractPeerProvider implements IProvider, IPeerProvider {
         this.execUpdate(writeDb, "drop table peers", null);
         this.execUpdate(writeDb, AbstractDb.CREATE_PEER_SQL, null);
         writeDb.endTransaction();
-//        SQLiteDatabase db = mDb.getWritableDatabase();
-//        db.beginTransaction();
-//        db.execSQL("drop table " + AbstractDb.Tables.PEERS + ";");
-//        db.execSQL(AbstractDb.CREATE_PEER_SQL);
-//        db.setTransactionSuccessful();
-//        db.endTransaction();
     }
 }

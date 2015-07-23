@@ -103,29 +103,30 @@ public abstract class AbstractHDAccountProvider implements IProvider, IHDAccount
     protected abstract int insertHDAccountToDb(IDb db, String encryptedMnemonicSeed, String encryptSeed
             , String firstAddress, boolean isXrandom, byte[] externalPub, byte[] internalPub);
 
-    protected boolean hasPasswordSeed(IDb db) {
-        String sql = "select count(0) cnt from password_seed where password_seed is not null";
-        final int[] count = {0};
-        this.execQueryOneRecord(db, sql, null, new Function<ICursor, Void>() {
-            @Nullable
-            @Override
-            public Void apply(@Nullable ICursor c) {
-                int idColumn = c.getColumnIndex("cnt");
-                if (idColumn != -1) {
-                    count[0] = c.getInt(idColumn);
-                }
-                return null;
-            }
-        });
-        return count[0] > 0;
-    }
-
-    protected void addPasswordSeed(IDb db, PasswordSeed passwordSeed) {
-        if (!Utils.isEmpty(passwordSeed.toPasswordSeedString())) {
-            String sql = "update password_seed set password_seed=?";
-            this.execUpdate(db, sql, new String[] {passwordSeed.toPasswordSeedString()});
-        }
-    }
+    protected abstract boolean hasPasswordSeed(IDb db);
+//    protected boolean hasPasswordSeed(IDb db) {
+//        String sql = "select count(0) cnt from password_seed where password_seed is not null";
+//        final int[] count = {0};
+//        this.execQueryOneRecord(db, sql, null, new Function<ICursor, Void>() {
+//            @Nullable
+//            @Override
+//            public Void apply(@Nullable ICursor c) {
+//                int idColumn = c.getColumnIndex("cnt");
+//                if (idColumn != -1) {
+//                    count[0] = c.getInt(idColumn);
+//                }
+//                return null;
+//            }
+//        });
+//        return count[0] > 0;
+//    }
+    protected abstract void addPasswordSeed(IDb db, PasswordSeed passwordSeed);
+//    protected void addPasswordSeed(IDb db, PasswordSeed passwordSeed) {
+//        if (!Utils.isEmpty(passwordSeed.toPasswordSeedString())) {
+//            String sql = "update password_seed set password_seed=?";
+//            this.execUpdate(db, sql, new String[] {passwordSeed.toPasswordSeedString()});
+//        }
+//    }
 
     @Override
     public int addMonitoredHDAccount(String firstAddress, boolean isXrandom, byte[] externalPub, byte[] internalPub) {
