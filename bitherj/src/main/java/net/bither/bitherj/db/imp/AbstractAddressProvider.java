@@ -308,7 +308,7 @@ public abstract class AbstractAddressProvider extends AbstractProvider implement
 
     public void addPasswordSeed(IDb db, PasswordSeed passwordSeed) {
         if (!Utils.isEmpty(passwordSeed.toPasswordSeedString())) {
-            String sql = "update password_seed set password_seed=?";
+            String sql = "insert into password_seed (password_seed) values (?)";
             this.execUpdate(db, sql, new String[] {passwordSeed.toPasswordSeedString()});
         }
     }
@@ -666,7 +666,7 @@ public abstract class AbstractAddressProvider extends AbstractProvider implement
         if (isExist[0]) {
             IDb writeDb = this.getWriteDb();
             writeDb.beginTransaction();
-            sql = "update hdm_addresses set pub_key_remote=?,address where hd_seed_id=? and hd_seed_index=?";
+            sql = "update hdm_addresses set pub_key_remote=?,address=? where hd_seed_id=? and hd_seed_index=?";
             for (int i = 0; i < addresses.size(); i++) {
                 HDMAddress address = addresses.get(i);
                 this.execUpdate(writeDb, sql, new String[]{Base58.encode(address.getPubRemote())
