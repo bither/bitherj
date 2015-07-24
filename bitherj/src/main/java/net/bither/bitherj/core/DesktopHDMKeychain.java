@@ -42,12 +42,15 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class DesktopHDMKeychain extends AbstractHD {
 
     public static final String DesktopHDMKeychainPlaceHolder = "DesktopHDMKeychain";
     private long balance = 0;
     private static final int LOOK_AHEAD_SIZE = 100;
+
+    private LinkedBlockingQueue<HashMap<String, Long>> sendRequestList = new LinkedBlockingQueue<HashMap<String, Long>>();
 
     public static interface DesktopHDMFetchOtherSignatureDelegate {
         List<TransactionSignature> getOtherSignature(Tx tx,
@@ -855,5 +858,7 @@ public class DesktopHDMKeychain extends AbstractHD {
         return AbstractDb.desktopTxProvider.externalAddress();
     }
 
-
+    public LinkedBlockingQueue<HashMap<String, Long>> getSendRequestList() {
+        return this.sendRequestList;
+    }
 }
