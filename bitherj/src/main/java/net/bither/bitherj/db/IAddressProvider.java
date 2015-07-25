@@ -5,6 +5,7 @@ import net.bither.bitherj.core.HDMAddress;
 import net.bither.bitherj.core.HDMBId;
 import net.bither.bitherj.core.HDMKeychain;
 import net.bither.bitherj.crypto.PasswordSeed;
+import net.bither.bitherj.db.imp.base.IDb;
 
 import java.util.List;
 import java.util.Map;
