@@ -21,25 +21,25 @@ public interface ICursor {
 
 //    int getPosition();
 
-    boolean move(int var1);
+//    boolean move(int var1);
 
-    boolean moveToPosition(int var1);
-
-    boolean moveToFirst();
-
-    boolean moveToLast();
+//    boolean moveToPosition(int var1);
+//
+//    boolean moveToFirst();
+//
+//    boolean moveToLast();
 
     boolean moveToNext();
 
-    boolean moveToPrevious();
+//    boolean moveToPrevious();
 
-    boolean isFirst();
-
-    boolean isLast();
-
-    boolean isBeforeFirst();
-
-    boolean isAfterLast();
+//    boolean isFirst();
+//
+//    boolean isLast();
+//
+//    boolean isBeforeFirst();
+//
+//    boolean isAfterLast();
 
     int getColumnIndex(String var1);
 
