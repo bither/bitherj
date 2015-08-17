@@ -53,41 +53,6 @@ public abstract class AbstractPeerProvider extends AbstractProvider implements I
     }
 
     @Override
-    public void deletePeersNotInAddresses(final List<InetAddress> peerAddrsses) {
-        final List<InetAddress> peerAddrssList = peerAddrsses;
-        final List<Long> needDeletePeers = new ArrayList<Long>();
-        String sql = "select peer_address from peers";
-        this.execQueryLoop(sql, null, new Function<ICursor, Void>() {
-            @Nullable
-            @Override
-            public Void apply(@Nullable ICursor c) {
-                int idColumn = c.getColumnIndex(AbstractDb.PeersColumns.PEER_ADDRESS);
-                if (idColumn != -1) {
-                    long peerAddress = c.getLong(idColumn);
-                    boolean in = false;
-                    for (InetAddress a : peerAddrssList) {
-                        if (Utils.parseLongFromAddress(a) == peerAddress) {
-                            in = true;
-                            break;
-                        }
-                    }
-                    if (!in) {
-                        needDeletePeers.add(peerAddress);
-                    }
-                }
-                return null;
-            }
-        });
-        IDb writeDb = this.getWriteDb();
-        writeDb.beginTransaction();
-        sql = "delete from peers where peer_address=?";
-        for (long i : needDeletePeers) {
-            this.execUpdate(writeDb, sql, new String[]{Long.toString(i)});
-        }
-        writeDb.endTransaction();
-    }
-
-    @Override
     public ArrayList<InetAddress> exists(ArrayList<InetAddress> peerAddresses) {
         ArrayList<InetAddress> exists = new ArrayList<InetAddress>();
         List<Peer> peerItemList = getAllPeers();

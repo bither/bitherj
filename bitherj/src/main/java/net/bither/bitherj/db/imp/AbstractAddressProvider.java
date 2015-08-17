@@ -784,21 +784,6 @@ public abstract class AbstractAddressProvider extends AbstractProvider implement
     }
 
     @Override
-    public String getAlias(String address) {
-        String sql = "select alias from aliases where address=?";
-        final String[] alias = {null};
-        this.execQueryOneRecord(sql, new String[]{address}, new Function<ICursor, Void>() {
-            @Nullable
-            @Override
-            public Void apply(@Nullable ICursor c) {
-                alias[0] = c.getString(0);
-                return null;
-            }
-        });
-        return alias[0];
-    }
-
-    @Override
     public Map<String, String> getAliases() {
         String sql = "select * from aliases";
         final Map<String, String> aliasList = new HashMap<String, String>();
@@ -833,24 +818,6 @@ public abstract class AbstractAddressProvider extends AbstractProvider implement
             String sql = "insert or replace into aliases(address,alias) values(?,?)";
             this.execUpdate(sql, new String[]{address, alias});
         }
-    }
-
-    @Override
-    public int getVanityLen(String address) {
-        String sql = "select vanity_len from vanity_address where address=?";
-        final int[] len = {Address.VANITY_LEN_NO_EXSITS};
-        this.execQueryOneRecord(sql, new String[]{address}, new Function<ICursor, Void>() {
-            @Nullable
-            @Override
-            public Void apply(@Nullable ICursor c) {
-                int idColumn = c.getColumnIndex(AbstractDb.VanityAddressColumns.VANITY_LEN);
-                if (idColumn != -1) {
-                    len[0] = c.getInt(idColumn);
-                }
-                return null;
-            }
-        });
-        return len[0];
     }
 
     @Override

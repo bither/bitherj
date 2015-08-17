@@ -25,72 +25,64 @@ import java.util.HashMap;
 import java.util.List;
 
 public interface ITxProvider {
-    public List<Tx> getTxAndDetailByAddress(String address);
+    List<Tx> getTxAndDetailByAddress(String address);
 
-    public List<Tx> getTxAndDetailByAddress(String address, int page);
+    List<Tx> getTxAndDetailByAddress(String address, int page);
 
-    public List<Tx> getPublishedTxs();
+    List<Tx> getPublishedTxs();
 
-    public Tx getTxDetailByTxHash(byte[] txHash);
+    Tx getTxDetailByTxHash(byte[] txHash);
 
-    public long sentFromAddress(byte[] txHash, String address);
+    long sentFromAddress(byte[] txHash, String address);
 
-    public boolean isExist(byte[] txHash);
+    boolean isExist(byte[] txHash);
 
-    public void add(Tx txItem);
+    void add(Tx txItem);
 
-    public void addTxs(List<Tx> txItems);
+    void addTxs(List<Tx> txItems);
 
-    public void remove(byte[] txHash);
-
-
-    public boolean isAddressContainsTx(String address, Tx txItem);
-
-    public boolean isTxDoubleSpendWithConfirmedTx(Tx tx);
-
-    public List<String> getInAddresses(Tx tx);
+    void remove(byte[] txHash);
 
 
-    public void confirmTx(int blockNo, List<byte[]> txHashes);
+    boolean isAddressContainsTx(String address, Tx txItem);
 
-    public void unConfirmTxByBlockNo(int blockNo);
+    boolean isTxDoubleSpendWithConfirmedTx(Tx tx);
 
-    public List<Tx> getUnspendTxWithAddress(String address);
+    List<String> getInAddresses(Tx tx);
 
-    public List<Out> getUnspendOutWithAddress(String address);
+
+    void confirmTx(int blockNo, List<byte[]> txHashes);
+
+    void unConfirmTxByBlockNo(int blockNo);
+
+    List<Tx> getUnspendTxWithAddress(String address);
+
+    List<Out> getUnspendOutWithAddress(String address);
 
     // for calculate balance
-    public long getConfirmedBalanceWithAddress(String address);
+    long getConfirmedBalanceWithAddress(String address);
 
-    public List<Tx> getUnconfirmedTxWithAddress(String address);
+    List<Tx> getUnconfirmedTxWithAddress(String address);
 
-//    public List<Out> getUnSpendOutCanSpendWithAddress(String address);
-//
-//    public List<Out> getUnSpendOutButNotConfirmWithAddress(String address);
+    int txCount(String address);
 
-    public int txCount(String address);
+    long totalReceive(String address);
 
-    public long totalReceive(String address);
+    void txSentBySelfHasSaw(byte[] txHash);
 
-    public void txSentBySelfHasSaw(byte[] txHash);
+    List<Out> getOuts();
 
-    public List<Out> getOuts();
+    List<In> getRelatedIn(String address);
 
-//    public List<Out> getUnSpentOuts();
-
-    public List<In> getRelatedIn(String address);
-
-    public List<Tx> getRecentlyTxsByAddress(String address, int greateThanBlockNo, int limit);
-
-//    public List<Long> txInValues(byte[] txHash);
+    List<Tx> getRecentlyTxsByAddress(String address, int greateThanBlockNo, int limit);
 
     // do not check tx 's dependency fo now
-    public HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem);
+    HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem);
 
     // complete in signature
-    public void completeInSignature(List<In> ins);
+    void completeInSignature(List<In> ins);
 
-    public int needCompleteInSignature(String address);
+    int needCompleteInSignature(String address);
 
-    public void clearAllTx();
+    void clearAllTx();
 }

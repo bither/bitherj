@@ -22,23 +22,23 @@ import java.util.List;
 
 public interface IDesktopAddressProvider {
 
-    public int addHDKey(String encryptedMnemonicSeed, String encryptHdSeed,
-                        String firstAddress, boolean isXrandom, String addressOfPS
+    int addHDKey(String encryptedMnemonicSeed, String encryptHdSeed,
+                 String firstAddress, boolean isXrandom, String addressOfPS
             , byte[] externalPub, byte[] internalPub);
 
-    public void addHDMPub(List<byte[]> externalPubs, List<byte[]> internalPubs);
+    void addHDMPub(List<byte[]> externalPubs, List<byte[]> internalPubs);
 
-    public List<byte[]> getExternalPubs();
+    List<byte[]> getExternalPubs();
 
-    public List<byte[]> getInternalPubs();
+    List<byte[]> getInternalPubs();
 
-    public boolean isHDSeedFromXRandom(int hdSeedId);
+    boolean isHDSeedFromXRandom(int hdSeedId);
 
-    public String getEncryptMnemonicSeed(int hdSeedId);
+    String getEncryptMnemonicSeed(int hdSeedId);
 
-    public String getEncryptHDSeed(int hdSeedId);
+    String getEncryptHDSeed(int hdSeedId);
 
-    public String getHDMFristAddress(int hdSeedId);
+    String getHDMFristAddress(int hdSeedId);
 
-    public List<Integer> getDesktopKeyChainSeed();
+    List<Integer> getDesktopKeyChainSeed();
 }
