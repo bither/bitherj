@@ -573,20 +573,20 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
         return txItemList;
     }
 
-    public List<Out> getUnspendOutWithAddress(String address) {
-        final List<Out> outItems = new ArrayList<Out>();
-        String unspendOutSql = "select a.* from outs a,txs b where a.tx_hash=b.tx_hash " +
-                " and a.out_address=? and a.out_status=?";
-        this.execQueryLoop(unspendOutSql, new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())}, new Function<ICursor, Void>() {
-            @Nullable
-            @Override
-            public Void apply(@Nullable ICursor c) {
-                outItems.add(applyCursorOut(c));
-                return null;
-            }
-        });
-        return outItems;
-    }
+//    public List<Out> getUnspendOutWithAddress(String address) {
+//        final List<Out> outItems = new ArrayList<Out>();
+//        String unspendOutSql = "select a.* from outs a,txs b where a.tx_hash=b.tx_hash " +
+//                " and a.out_address=? and a.out_status=?";
+//        this.execQueryLoop(unspendOutSql, new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())}, new Function<ICursor, Void>() {
+//            @Nullable
+//            @Override
+//            public Void apply(@Nullable ICursor c) {
+//                outItems.add(applyCursorOut(c));
+//                return null;
+//            }
+//        });
+//        return outItems;
+//    }
 
     public long getConfirmedBalanceWithAddress(String address) {
         final long[] sum = {0};
@@ -720,20 +720,20 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
         return outItemList;
     }
 
-    public List<In> getRelatedIn(String address) {
-        final List<In> list = new ArrayList<In>();
-        String sql = "select ins.* from ins,addresses_txs " +
-                "where ins.tx_hash=addresses_txs.tx_hash and addresses_txs.address=? ";
-        this.execQueryLoop(sql, new String[]{address}, new Function<ICursor, Void>() {
-            @Nullable
-            @Override
-            public Void apply(@Nullable ICursor c) {
-                list.add(applyCursorIn(c));
-                return null;
-            }
-        });
-        return list;
-    }
+//    public List<In> getRelatedIn(String address) {
+//        final List<In> list = new ArrayList<In>();
+//        String sql = "select ins.* from ins,addresses_txs " +
+//                "where ins.tx_hash=addresses_txs.tx_hash and addresses_txs.address=? ";
+//        this.execQueryLoop(sql, new String[]{address}, new Function<ICursor, Void>() {
+//            @Nullable
+//            @Override
+//            public Void apply(@Nullable ICursor c) {
+//                list.add(applyCursorIn(c));
+//                return null;
+//            }
+//        });
+//        return list;
+//    }
 
     public List<Tx> getRecentlyTxsByAddress(String address, int greateThanBlockNo, int limit) {
         final List<Tx> txItemList = new ArrayList<Tx>();
@@ -758,31 +758,31 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
         return txItemList;
     }
 
-    public HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem) {
-        HashMap<Sha256Hash, Tx> result = new HashMap<Sha256Hash, Tx>();
-        IDb db = this.getReadDb();
-
-        for (In inItem : txItem.getIns()) {
-            final Tx tx = new Tx();
-            final boolean[] isExists = {false};
-            String sql = "select * from txs where tx_hash=?";
-            this.execQueryOneRecord(db, sql, new String[]{Base58.encode(inItem.getTxHash())}, new Function<ICursor, Void>() {
-                @Nullable
-                @Override
-                public Void apply(@Nullable ICursor c) {
-                    applyCursor(c, tx);
-                    isExists[0] = true;
-                    return null;
-                }
-            });
-            if (!isExists[0]) {
-                continue;
-            }
-            addInsAndOuts(db, tx);
-            result.put(new Sha256Hash(tx.getTxHash()), tx);
-        }
-        return result;
-    }
+//    public HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem) {
+//        HashMap<Sha256Hash, Tx> result = new HashMap<Sha256Hash, Tx>();
+//        IDb db = this.getReadDb();
+//
+//        for (In inItem : txItem.getIns()) {
+//            final Tx tx = new Tx();
+//            final boolean[] isExists = {false};
+//            String sql = "select * from txs where tx_hash=?";
+//            this.execQueryOneRecord(db, sql, new String[]{Base58.encode(inItem.getTxHash())}, new Function<ICursor, Void>() {
+//                @Nullable
+//                @Override
+//                public Void apply(@Nullable ICursor c) {
+//                    applyCursor(c, tx);
+//                    isExists[0] = true;
+//                    return null;
+//                }
+//            });
+//            if (!isExists[0]) {
+//                continue;
+//            }
+//            addInsAndOuts(db, tx);
+//            result.put(new Sha256Hash(tx.getTxHash()), tx);
+//        }
+//        return result;
+//    }
 
     public void clearAllTx() {
 //        SQLiteDatabase db = mDb.getWritableDatabase();

@@ -167,19 +167,19 @@ public abstract class AbstractBlockProvider extends AbstractProvider implements 
         return item[0];
     }
 
-    public List<byte[]> exists(List<byte[]> blockHashes) {
-        List<byte[]> exists = new ArrayList<byte[]>();
-        List<Block> blockItems = getAllBlocks();
-        for (Block blockItm : blockItems) {
-            for (byte[] bytes : exists) {
-                if (Arrays.equals(bytes, blockItm.getBlockHash())) {
-                    exists.add(bytes);
-                    break;
-                }
-            }
-        }
-        return exists;
-    }
+//    public List<byte[]> exists(List<byte[]> blockHashes) {
+//        List<byte[]> exists = new ArrayList<byte[]>();
+//        List<Block> blockItems = getAllBlocks();
+//        for (Block blockItm : blockItems) {
+//            for (byte[] bytes : exists) {
+//                if (Arrays.equals(bytes, blockItm.getBlockHash())) {
+//                    exists.add(bytes);
+//                    break;
+//                }
+//            }
+//        }
+//        return exists;
+//    }
 
     public void addBlocks(List<Block> blockItemList) {
         List<Block> addBlockList = new ArrayList<Block>();

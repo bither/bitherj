@@ -24,7 +24,7 @@ import java.util.List;
 
 public interface IPeerProvider {
 
-    ArrayList<InetAddress> exists(ArrayList<InetAddress> peerAddresses);
+//    ArrayList<InetAddress> exists(ArrayList<InetAddress> peerAddresses);
 
     void addPeers(List<Peer> items);
 

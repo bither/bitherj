@@ -57,7 +57,7 @@ public interface ITxProvider {
 
     List<Tx> getUnspendTxWithAddress(String address);
 
-    List<Out> getUnspendOutWithAddress(String address);
+//    List<Out> getUnspendOutWithAddress(String address);
 
     // for calculate balance
     long getConfirmedBalanceWithAddress(String address);
@@ -72,12 +72,12 @@ public interface ITxProvider {
 
     List<Out> getOuts();
 
-    List<In> getRelatedIn(String address);
+//    List<In> getRelatedIn(String address);
 
     List<Tx> getRecentlyTxsByAddress(String address, int greateThanBlockNo, int limit);
 
     // do not check tx 's dependency fo now
-    HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem);
+//    HashMap<Sha256Hash, Tx> getTxDependencies(Tx txItem);
 
     // complete in signature
     void completeInSignature(List<In> ins);

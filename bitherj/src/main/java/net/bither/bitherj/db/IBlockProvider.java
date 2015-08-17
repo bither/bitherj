@@ -41,7 +41,7 @@ public interface IBlockProvider {
 
     Block getMainChainBlock(byte[] blockHash);
 
-    List<byte[]> exists(List<byte[]> blockHashes);
+//    List<byte[]> exists(List<byte[]> blockHashes);
 
     void addBlocks(List<Block> blockItemList);
 

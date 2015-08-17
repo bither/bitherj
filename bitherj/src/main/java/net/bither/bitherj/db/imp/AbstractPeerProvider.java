@@ -52,17 +52,17 @@ public abstract class AbstractPeerProvider extends AbstractProvider implements I
         return peers;
     }
 
-    @Override
-    public ArrayList<InetAddress> exists(ArrayList<InetAddress> peerAddresses) {
-        ArrayList<InetAddress> exists = new ArrayList<InetAddress>();
-        List<Peer> peerItemList = getAllPeers();
-        for (Peer item : peerItemList) {
-            if (peerAddresses.contains(item.getPeerAddress())) {
-                exists.add(item.getPeerAddress());
-            }
-        }
-        return exists;
-    }
+//    @Override
+//    public ArrayList<InetAddress> exists(ArrayList<InetAddress> peerAddresses) {
+//        ArrayList<InetAddress> exists = new ArrayList<InetAddress>();
+//        List<Peer> peerItemList = getAllPeers();
+//        for (Peer item : peerItemList) {
+//            if (peerAddresses.contains(item.getPeerAddress())) {
+//                exists.add(item.getPeerAddress());
+//            }
+//        }
+//        return exists;
+//    }
 
     @Override
     public void addPeers(List<Peer> items) {
