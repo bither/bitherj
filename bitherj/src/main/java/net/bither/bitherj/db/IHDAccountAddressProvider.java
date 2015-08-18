@@ -82,4 +82,6 @@ public interface IHDAccountAddressProvider {
     int getUnspendOutCountByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
 
     List<Out> getUnspendOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
+
+    boolean requestNewReceivingAddress();
 }
