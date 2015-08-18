@@ -353,7 +353,7 @@ public class HDAccount extends Address {
     }
 
     public boolean requestNewReceivingAddress() {
-        boolean result = AbstractDb.hdAccountAddressProvider.requestNewReceivingAddress();
+        boolean result = AbstractDb.hdAccountAddressProvider.requestNewReceivingAddress(this.hdSeedId);
         if (result) {
             supplyEnoughKeys(true);
         }
