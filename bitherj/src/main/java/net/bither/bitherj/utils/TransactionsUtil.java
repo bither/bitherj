@@ -193,15 +193,21 @@ public class TransactionsUtil {
     private static void getTxForHDAccountMoitored(int hdSeedId) throws Exception {
         for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
             HDAccount.HDAccountAddress hdAccountAddress;
-            boolean hasTx = true;
+//            boolean hasTx = true;
+            int unusedAddressCnt = 0; //HDAccount.MaxUnusedNewAddressCount
+            int maxUnusedAddressCount = 1;
+            if (pathType.equals(AbstractHD.PathType.EXTERNAL_ROOT_PATH)) {
+                maxUnusedAddressCount = HDAccount.MaxUnusedNewAddressCount;
+            }
             int addressIndex = 0;
-            while (hasTx) {
+            while (unusedAddressCnt < maxUnusedAddressCount) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
                 int storeBlockHeight = storedBlock.getBlockNo();
                 hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId,
                         pathType, addressIndex);
                 if (hdAccountAddress == null) {
-                    hasTx = false;
+//                    hasTx = false;
+                    unusedAddressCnt += 1;
                     log.warn("AccountAddress", "address is null path {} ,index {}", pathType, addressIndex);
                     continue;
                 }
@@ -246,9 +252,11 @@ public class TransactionsUtil {
                         AddressManager.getInstance().getHDAccountMonitored().updateIssuedInternalIndex(addressIndex);
                     }
                     AddressManager.getInstance().getHDAccountMonitored().supplyEnoughKeys(false);
-                    hasTx = true;
+//                    hasTx = true;
+                    unusedAddressCnt = 0;
                 } else {
-                    hasTx = false;
+//                    hasTx = false;
+                    unusedAddressCnt += 1;
                     AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, addressIndex);
                 }
             }
@@ -261,15 +269,21 @@ public class TransactionsUtil {
     private static void getTxForHDAccount(int hdSeedId) throws Exception {
         for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
             HDAccount.HDAccountAddress hdAccountAddress;
-            boolean hasTx = true;
+//            boolean hasTx = true;
+            int unusedAddressCnt = 0; //HDAccount.MaxUnusedNewAddressCount
+            int maxUnusedAddressCount = 1;
+            if (pathType.equals(AbstractHD.PathType.EXTERNAL_ROOT_PATH)) {
+                maxUnusedAddressCount = HDAccount.MaxUnusedNewAddressCount;
+            }
             int addressIndex = 0;
-            while (hasTx) {
+            while (unusedAddressCnt < maxUnusedAddressCount) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
                 int storeBlockHeight = storedBlock.getBlockNo();
                 hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId,
                         pathType, addressIndex);
                 if (hdAccountAddress == null) {
-                    hasTx = false;
+//                    hasTx = false;
+                    unusedAddressCnt += 1;
                     log.warn("AccountAddress", "address is null path {} ,index {}", pathType, addressIndex);
                     continue;
                 }
@@ -314,9 +328,11 @@ public class TransactionsUtil {
                         AddressManager.getInstance().getHDAccountHot().updateIssuedInternalIndex(addressIndex);
                     }
                     AddressManager.getInstance().getHDAccountHot().supplyEnoughKeys(false);
-                    hasTx = true;
+//                    hasTx = true;
+                    unusedAddressCnt = 0;
                 } else {
-                    hasTx = false;
+//                    hasTx = false;
+                    unusedAddressCnt += 1;
                     AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, addressIndex);
                 }
             }
