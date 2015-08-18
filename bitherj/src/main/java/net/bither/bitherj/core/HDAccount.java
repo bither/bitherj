@@ -332,7 +332,6 @@ public class HDAccount extends Address {
     public int issuedExternalIndex() {
         return AbstractDb.hdAccountAddressProvider.issuedIndex(this.hdSeedId, AbstractHD.PathType
                 .EXTERNAL_ROOT_PATH);
-
     }
 
     private int allGeneratedInternalAddressCount() {
@@ -352,6 +351,14 @@ public class HDAccount extends Address {
         return AbstractDb.hdAccountAddressProvider.addressForPath(this.hdSeedId, type, index);
     }
 
+    public boolean requestNewReceivingAddress() {
+        boolean result = AbstractDb.hdAccountAddressProvider.requestNewReceivingAddress();
+        if (result) {
+            supplyEnoughKeys(true);
+        }
+        return result;
+    }
+
     public void onNewTx(Tx tx, Tx.TxNotificationType txNotificationType) {
         supplyEnoughKeys(true);
         long deltaBalance = getDeltaBalance();
@@ -359,7 +366,6 @@ public class HDAccount extends Address {
                         HDAccountMonitoredPlaceHolder, tx, txNotificationType,
                 deltaBalance);
     }
-
 
     public boolean isTxRelated(Tx tx, List<String> inAddresses) {
         return getRelatedAddressesForTx(tx, inAddresses).size() > 0;
