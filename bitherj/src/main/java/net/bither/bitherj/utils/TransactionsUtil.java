@@ -284,7 +284,7 @@ public class TransactionsUtil {
                 if (hdAccountAddress == null) {
 //                    hasTx = false;
                     unusedAddressCnt += 1;
-                    log.warn("AccountAddress", "address is null path {} ,index {}", pathType, addressIndex);
+                    log.warn("AccountAddress is null path {} ,index {}", pathType, addressIndex);
                     continue;
                 }
                 if (hdAccountAddress.isSyncedComplete()) {
