@@ -195,12 +195,12 @@ public class TransactionsUtil {
             HDAccount.HDAccountAddress hdAccountAddress;
 //            boolean hasTx = true;
             int unusedAddressCnt = 0; //HDAccount.MaxUnusedNewAddressCount
-            int maxUnusedAddressCount = 1;
+            int maxUnusedAddressCount = 0;
             if (pathType.equals(AbstractHD.PathType.EXTERNAL_ROOT_PATH)) {
                 maxUnusedAddressCount = HDAccount.MaxUnusedNewAddressCount;
             }
             int addressIndex = 0;
-            while (unusedAddressCnt < maxUnusedAddressCount) {
+            while (unusedAddressCnt <= maxUnusedAddressCount) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
                 int storeBlockHeight = storedBlock.getBlockNo();
                 hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId,
@@ -271,12 +271,12 @@ public class TransactionsUtil {
             HDAccount.HDAccountAddress hdAccountAddress;
 //            boolean hasTx = true;
             int unusedAddressCnt = 0; //HDAccount.MaxUnusedNewAddressCount
-            int maxUnusedAddressCount = 1;
+            int maxUnusedAddressCount = 0;
             if (pathType.equals(AbstractHD.PathType.EXTERNAL_ROOT_PATH)) {
                 maxUnusedAddressCount = HDAccount.MaxUnusedNewAddressCount;
             }
             int addressIndex = 0;
-            while (unusedAddressCnt < maxUnusedAddressCount) {
+            while (unusedAddressCnt <= maxUnusedAddressCount) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
                 int storeBlockHeight = storedBlock.getBlockNo();
                 hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId,
