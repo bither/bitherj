@@ -770,10 +770,10 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
     public boolean requestNewReceivingAddress(int hdAccountId) {
         int issuedIndex = this.issuedIndex(hdAccountId, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
         final boolean[] result = {false};
-        if (issuedIndex > HDAccount.MaxUnusedNewAddressCount) {
+        if (issuedIndex >= HDAccount.MaxUnusedNewAddressCount) {
             String sql = "select count(0) from hd_account_addresses a,outs b " +
-                    " where a.address=b.out_address and a.hd_account_id=? and a.address_index>=? and a.is_issued=?";
-            this.execQueryOneRecord(sql, new String[]{Integer.toString(hdAccountId), Integer.toString(issuedIndex - HDAccount.MaxUnusedNewAddressCount - 1), "1"}, new Function<ICursor, Void>() {
+                    " where a.address=b.out_address and a.hd_account_id=? and a.path_type=0 and a.address_index>? and a.is_issued=?";
+            this.execQueryOneRecord(sql, new String[]{Integer.toString(hdAccountId), Integer.toString(issuedIndex - HDAccount.MaxUnusedNewAddressCount + 1), "1"}, new Function<ICursor, Void>() {
                 @Nullable
                 @Override
                 public Void apply(@Nullable ICursor c) {
