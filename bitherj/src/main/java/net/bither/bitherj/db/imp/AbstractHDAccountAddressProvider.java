@@ -773,7 +773,7 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
         if (issuedIndex > HDAccount.MaxUnusedNewAddressCount) {
             String sql = "select count(0) from hd_account_addresses a,outs b " +
                     " where a.address=b.out_address and a.hd_account_id=? and a.address_index>=? and a.is_issued=?";
-            this.execQueryOneRecord(sql, new String[]{Integer.toString(hdAccountId), Integer.toString(issuedIndex - HDAccount.MaxUnusedNewAddressCount), "1"}, new Function<ICursor, Void>() {
+            this.execQueryOneRecord(sql, new String[]{Integer.toString(hdAccountId), Integer.toString(issuedIndex - HDAccount.MaxUnusedNewAddressCount - 1), "1"}, new Function<ICursor, Void>() {
                 @Nullable
                 @Override
                 public Void apply(@Nullable ICursor c) {
