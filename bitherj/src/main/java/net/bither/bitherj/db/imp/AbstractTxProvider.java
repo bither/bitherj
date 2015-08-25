@@ -1071,7 +1071,7 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
         String existSql = "select count(0) cnt from outs where tx_hash=? and out_sn=?";
         String updateHDAccountIdSql = "update outs set hd_account_id=? where tx_hash=? and out_sn=?";
         String queryHDAddressSql = "select hd_account_id,path_type,address_index from hd_account_addresses where address=?";
-        String updateHDAddressIssuedSql = "update hd_account_addresses set is_issued=? where path_type=? and address_index=? and hd_account_id=?";
+        String updateHDAddressIssuedSql = "update hd_account_addresses set is_issued=? where path_type=? and address_index<=? and hd_account_id=?";
         String queryPrevTxHashSql = "select tx_hash from ins where prev_tx_hash=? and prev_out_sn=?";
         String updateOutStatusSql = "update outs set out_status=? where tx_hash=? and out_sn=?";
         final List<AddressTx> addressTxes = new ArrayList<AddressTx>();
