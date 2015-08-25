@@ -257,13 +257,11 @@ public class TransactionsUtil {
                 } else {
 //                    hasTx = false;
                     unusedAddressCnt += 1;
-                    AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, addressIndex);
                 }
+                addressIndex++;
             }
-            addressIndex++;
+            AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, addressIndex - 1);
         }
-
-
     }
 
     private static void getTxForHDAccount(int hdSeedId) throws Exception {
