@@ -1096,26 +1096,27 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
                     this.execUpdate(db, updateHDAccountIdSql, new String[]{
                             Integer.toString(outItem.getHDAccountId()), Base58.encode(txItem.getTxHash())
                             , Integer.toString(outItem.getOutSn())});
-                    final int[] tmpHDAccountId = {-1};
-                    final int[] tmpPathType = {0};
-                    final int[] tmpAddressIndex = {0};
-                    this.execQueryOneRecord(db, queryHDAddressSql, new String[]{outItem.getOutAddress()}, new Function<ICursor, Void>() {
-                        @Nullable
-                        @Override
-                        public Void apply(@Nullable ICursor c) {
-                            tmpHDAccountId[0] = c.getInt(0);
-                            tmpPathType[0] = c.getInt(1);
-                            tmpAddressIndex[0] = c.getInt(2);
-                            return null;
-                        }
-                    });
-                    if (tmpHDAccountId[0] > 0) {
-                        this.execUpdate(db, updateHDAddressIssuedSql
-                                , new String[]{"1", Integer.toString(tmpPathType[0])
-                                    , Integer.toString(tmpAddressIndex[0])
-                                    , Integer.toString(tmpHDAccountId[0])});
+                }
+            }
+            if (outItem.getHDAccountId() > -1) {
+                final int[] tmpHDAccountId = {-1};
+                final int[] tmpPathType = {0};
+                final int[] tmpAddressIndex = {0};
+                this.execQueryOneRecord(db, queryHDAddressSql, new String[]{outItem.getOutAddress()}, new Function<ICursor, Void>() {
+                    @Nullable
+                    @Override
+                    public Void apply(@Nullable ICursor c) {
+                        tmpHDAccountId[0] = c.getInt(0);
+                        tmpPathType[0] = c.getInt(1);
+                        tmpAddressIndex[0] = c.getInt(2);
+                        return null;
                     }
-
+                });
+                if (tmpHDAccountId[0] > 0) {
+                    this.execUpdate(db, updateHDAddressIssuedSql
+                            , new String[]{"1", Integer.toString(tmpPathType[0])
+                            , Integer.toString(tmpAddressIndex[0])
+                            , Integer.toString(tmpHDAccountId[0])});
                 }
             }
             if (!Utils.isEmpty(outItem.getOutAddress())) {
