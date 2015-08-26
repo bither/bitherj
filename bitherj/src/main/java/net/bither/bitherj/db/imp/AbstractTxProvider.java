@@ -206,7 +206,7 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
     }
 
     public Tx getTxDetailByTxHash(byte[] txHash) {
-        final Tx txItem = new Tx();
+        final Tx[] txItem = {null};
         final boolean[] txExists = {false};
         String txHashStr = Base58.encode(txHash);
         String sql = "select * from txs where tx_hash=?";
@@ -215,15 +215,15 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
             @Nullable
             @Override
             public Void apply(@Nullable ICursor c) {
-                applyCursor(c, txItem);
+                txItem[0] = applyCursor(c);
                 txExists[0] = true;
                 return null;
             }
         });
         if (txExists[0]) {
-            addInsAndOuts(db, txItem);
+            addInsAndOuts(db, txItem[0]);
         }
-        return txItem;
+        return txItem[0];
     }
 
     @Override
