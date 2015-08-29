@@ -77,31 +77,11 @@ public interface IHDAccountAddressProvider {
 
     List<Out> getUnspendOutByHDAccount(int hdAccountId);
 
-    List<Tx> getRecentlyTxsByAccount(int hdAccountId, int greateThanBlockNo, int limit);
+    List<Tx> getRecentlyTxsByAccount(int hdAccountId, int greaterThanBlockNo, int limit);
 
     int getUnspendOutCountByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
 
     List<Out> getUnspendOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
 
-//    int addHDAccount(String encryptedMnemonicSeed, String encryptSeed
-//            , String firstAddress, boolean isXrandom, String addressOfPS
-//            , byte[] externalPub, byte[] internalPub);
-//
-//    int addMonitoredHDAccount(boolean isXrandom, byte[] externalPub, byte[] internalPub);
-//
-//    String getHDFirstAddress(int hdSeedId);
-//
-//    byte[] getExternalPub(int hdSeedId);
-//
-//    byte[] getInternalPub(int hdSeedId);
-//
-//    String getHDAccountEncryptSeed(int hdSeedId);
-//
-//    String getHDAccountEncryptMnemonicSeed(int hdSeedId);
-//
-//    boolean hdAccountIsXRandom(int seedId);
-//
-//    List<Integer> getHDAccountSeeds();
-//
-//    boolean hasHDAccountCold();
+    boolean requestNewReceivingAddress(int hdAccountId);
 }

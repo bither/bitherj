@@ -18,8 +18,13 @@
 
 package net.bither.bitherj.db;
 
-import net.bither.bitherj.core.*;
-import org.omg.CORBA.PUBLIC_MEMBER;
+import net.bither.bitherj.core.AbstractHD;
+import net.bither.bitherj.core.DesktopHDMAddress;
+import net.bither.bitherj.core.DesktopHDMKeychain;
+import net.bither.bitherj.core.HDMAddress;
+import net.bither.bitherj.core.In;
+import net.bither.bitherj.core.Out;
+import net.bither.bitherj.core.Tx;
 
 import java.util.HashSet;
 import java.util.List;
@@ -28,43 +33,43 @@ import java.util.List;
  * Created by nn on 15/6/15.
  */
 public interface IDesktopTxProvider {
-    public void addAddress(List<DesktopHDMAddress> address);
+    void addAddress(List<DesktopHDMAddress> address);
 
-    public int maxHDMAddressPubIndex();
+    int maxHDMAddressPubIndex();
 
-    public String externalAddress();
+    String externalAddress();
 
-    public boolean hasAddress();
+    boolean hasAddress();
 
-    public long getHDAccountConfirmedBanlance(int hdSeedId);
+    long getHDAccountConfirmedBanlance(int hdSeedId);
 
-    public HashSet<String> getBelongAccountAddresses(List<String> addressList);
+    HashSet<String> getBelongAccountAddresses(List<String> addressList);
 
-    public void updateIssuedIndex(AbstractHD.PathType pathType, int index);
+    void updateIssuedIndex(AbstractHD.PathType pathType, int index);
 
-    public int issuedIndex(AbstractHD.PathType pathType);
+    int issuedIndex(AbstractHD.PathType pathType);
 
-    public int allGeneratedAddressCount(AbstractHD.PathType pathType);
+    int allGeneratedAddressCount(AbstractHD.PathType pathType);
 
-    public void updateSyncdForIndex(AbstractHD.PathType pathType, int index);
+    void updateSyncdForIndex(AbstractHD.PathType pathType, int index);
 
-    public void updateSyncdComplete(DesktopHDMAddress address);
+    void updateSyncdComplete(DesktopHDMAddress address);
 
-    public List<Tx> getHDAccountUnconfirmedTx();
+    List<Tx> getHDAccountUnconfirmedTx();
 
-    public List<HDMAddress.Pubs> getPubs(AbstractHD.PathType pathType);
+    List<HDMAddress.Pubs> getPubs(AbstractHD.PathType pathType);
 
-    public int getUnspendOutCountByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
+    int getUnspendOutCountByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
 
-    public List<Out> getUnspendOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
+    List<Out> getUnspendOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
 
-    public DesktopHDMAddress addressForPath(DesktopHDMKeychain keychain, AbstractHD.PathType type, int index);
+    DesktopHDMAddress addressForPath(DesktopHDMKeychain keychain, AbstractHD.PathType type, int index);
 
-    public List<DesktopHDMAddress> getSigningAddressesForInputs(DesktopHDMKeychain keychain, List<In> inList);
+    List<DesktopHDMAddress> getSigningAddressesForInputs(DesktopHDMKeychain keychain, List<In> inList);
 
-    public List<DesktopHDMAddress> belongAccount(DesktopHDMKeychain keychain, List<String> addresses);
+    List<DesktopHDMAddress> belongAccount(DesktopHDMKeychain keychain, List<String> addresses);
 
-    public List<Out> getUnspendOutByHDAccount(int hdAccountId);
+    List<Out> getUnspendOutByHDAccount(int hdAccountId);
 
-    public int unSyncedAddressCount();
+    int unSyncedAddressCount();
 }

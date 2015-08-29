@@ -17,7 +17,11 @@
 package net.bither.bitherj.utils;
 
 import net.bither.bitherj.BitherjSettings;
-import net.bither.bitherj.core.*;
+import net.bither.bitherj.core.Address;
+import net.bither.bitherj.core.AddressManager;
+import net.bither.bitherj.core.HDAccount;
+import net.bither.bitherj.core.HDAccountCold;
+import net.bither.bitherj.core.HDMKeychain;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
@@ -211,7 +215,14 @@ public class PrivateKeyUtil {
                 content += QRCodeUtil.QR_CODE_SPLIT + hdAccount.getQRCodeFullEncryptPrivKey();
             }
         }
-
+        HDAccountCold hdAccountCold = AddressManager.getInstance().getHDAccountCold();
+        if (hdAccountCold != null) {
+            if (Utils.isEmpty(content)) {
+                content += hdAccountCold.getQRCodeFullEncryptPrivKey();
+            } else {
+                content += QRCodeUtil.QR_CODE_SPLIT + hdAccountCold.getQRCodeFullEncryptPrivKey();
+            }
+        }
         return content;
     }
 
@@ -238,7 +249,30 @@ public class PrivateKeyUtil {
             }
         }
         return hdmKeychain;
+    }
 
+    public static HDAccountCold getHDAccountCold(String str, CharSequence password) {
+        HDAccountCold hdAccountCold = null;
+        String[] strs = QRCodeUtil.splitOfPasswordSeed(str);
+        if (strs.length % 3 != 0) {
+            log.error("Backup: PrivateKeyFromString format error");
+            return null;
+        }
+        for (int i = 0;
+             i < strs.length;
+             i += 3) {
+
+            if (strs[i].indexOf(QRCodeUtil.HD_QR_CODE_FLAG) == 0) {
+                try {
+                    String encryptedString = strs[i].substring(1) + QRCodeUtil.QR_CODE_SPLIT + strs[i + 1]
+                            + QRCodeUtil.QR_CODE_SPLIT + strs[i + 2];
+                    hdAccountCold = new HDAccountCold(new EncryptedData(encryptedString), password);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return hdAccountCold;
     }
 
     public static List<Address> getECKeysFromBackupString(String str, CharSequence password) {
@@ -252,6 +286,9 @@ public class PrivateKeyUtil {
              i < strs.length;
              i += 3) {
             if (strs[i].indexOf(QRCodeUtil.HDM_QR_CODE_FLAG) == 0) {
+                continue;
+            }
+            if (strs[i].indexOf(QRCodeUtil.HD_QR_CODE_FLAG) == 0){
                 continue;
             }
             String encryptedString = strs[i] + QRCodeUtil.QR_CODE_SPLIT + strs[i + 1]
@@ -388,6 +425,17 @@ public class PrivateKeyUtil {
                 backupString += QRCodeUtil.HD_QR_CODE_FLAG + Base58.bas58ToHexWithAddress(address)
                         + QRCodeUtil.QR_CODE_SPLIT
                         + hdAccount.getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
+            } catch (AddressFormatException e) {
+                e.printStackTrace();
+            }
+        }
+        HDAccountCold hdAccountCold = AddressManager.getInstance().getHDAccountCold();
+        if (hdAccountCold != null) {
+            try {
+                String address = hdAccountCold.getFirstAddressFromDb();
+                backupString += QRCodeUtil.HD_QR_CODE_FLAG + Base58.bas58ToHexWithAddress
+                        (address) + QRCodeUtil.QR_CODE_SPLIT + hdAccountCold
+                        .getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
             } catch (AddressFormatException e) {
                 e.printStackTrace();
             }

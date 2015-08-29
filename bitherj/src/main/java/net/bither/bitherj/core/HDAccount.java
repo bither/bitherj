@@ -48,6 +48,7 @@ import java.util.Set;
 public class HDAccount extends Address {
     public static final String HDAccountPlaceHolder = "HDAccount";
     public static final String HDAccountMonitoredPlaceHolder = "HDAccountMonitored";
+    public static final int MaxUnusedNewAddressCount = 20;
 
     public interface HDAccountGenerationDelegate {
         void onHDAccountGenerationProgress(double progress);
@@ -281,7 +282,7 @@ public class HDAccount extends Address {
              i < firstIndex + count;
              i++) {
             as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD.PathType
-                    .INTERNAL_ROOT_PATH, i, isSyncedComplete,hdSeedId));
+                    .INTERNAL_ROOT_PATH, i, isSyncedComplete, hdSeedId));
         }
         AbstractDb.hdAccountAddressProvider.addAddress(as);
         log.info("HD supplied {} internal addresses", as.size());
@@ -296,7 +297,7 @@ public class HDAccount extends Address {
              i < firstIndex + count;
              i++) {
             as.add(new HDAccountAddress(root.deriveSoftened(i).getPubKey(), AbstractHD.PathType
-                    .EXTERNAL_ROOT_PATH, i, isSyncedComplete,hdSeedId));
+                    .EXTERNAL_ROOT_PATH, i, isSyncedComplete, hdSeedId));
         }
         AbstractDb.hdAccountAddressProvider.addAddress(as);
         log.info("HD supplied {} external addresses", as.size());
@@ -332,7 +333,6 @@ public class HDAccount extends Address {
     public int issuedExternalIndex() {
         return AbstractDb.hdAccountAddressProvider.issuedIndex(this.hdSeedId, AbstractHD.PathType
                 .EXTERNAL_ROOT_PATH);
-
     }
 
     private int allGeneratedInternalAddressCount() {
@@ -352,6 +352,14 @@ public class HDAccount extends Address {
         return AbstractDb.hdAccountAddressProvider.addressForPath(this.hdSeedId, type, index);
     }
 
+    public boolean requestNewReceivingAddress() {
+        boolean result = AbstractDb.hdAccountAddressProvider.requestNewReceivingAddress(this.hdSeedId);
+        if (result) {
+            supplyEnoughKeys(true);
+        }
+        return result;
+    }
+
     public void onNewTx(Tx tx, Tx.TxNotificationType txNotificationType) {
         supplyEnoughKeys(true);
         long deltaBalance = getDeltaBalance();
@@ -359,7 +367,6 @@ public class HDAccount extends Address {
                         HDAccountMonitoredPlaceHolder, tx, txNotificationType,
                 deltaBalance);
     }
-
 
     public boolean isTxRelated(Tx tx, List<String> inAddresses) {
         return getRelatedAddressesForTx(tx, inAddresses).size() > 0;

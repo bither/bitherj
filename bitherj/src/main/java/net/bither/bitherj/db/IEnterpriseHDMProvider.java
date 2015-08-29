@@ -24,27 +24,27 @@ import java.util.List;
 public interface IEnterpriseHDMProvider {
 
 
-    public String getEnterpriseEncryptMnemonicSeed(int hdSeedId);
+    String getEnterpriseEncryptMnemonicSeed(int hdSeedId);
 
-    public String getEnterpriseEncryptHDSeed(int hdSeedId);
+    String getEnterpriseEncryptHDSeed(int hdSeedId);
 
-    public String getEnterpriseHDFristAddress(int hdSeedId);
+    String getEnterpriseHDFristAddress(int hdSeedId);
 
-    public boolean isEnterpriseHDMSeedFromXRandom(int hdSeedId);
+    boolean isEnterpriseHDMSeedFromXRandom(int hdSeedId);
 
-    public void addEnterpriseHDMAddress(List<EnterpriseHDMAddress> enterpriseHDMAddressList);
+    void addEnterpriseHDMAddress(List<EnterpriseHDMAddress> enterpriseHDMAddressList);
 
-    public List<EnterpriseHDMAddress> getEnterpriseHDMAddress(EnterpriseHDMKeychain keychain);
+    List<EnterpriseHDMAddress> getEnterpriseHDMAddress(EnterpriseHDMKeychain keychain);
 
-    public void addMultiSignSet(int n, int m);
+    void addMultiSignSet(int n, int m);
 
-    public void updateSyncComplete(EnterpriseHDMAddress enterpriseHDMAddress);
+    void updateSyncComplete(EnterpriseHDMAddress enterpriseHDMAddress);
 
-    public List<Integer> getEnterpriseHDMKeychainIds();
+    List<Integer> getEnterpriseHDMKeychainIds();
 
-    public int getEnterpriseHDMSeedId();
+    int getEnterpriseHDMSeedId();
 
-    public int getPubCount();
+    int getPubCount();
 
-    public int getThreshold();
+    int getThreshold();
 }

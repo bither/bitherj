@@ -23,35 +23,35 @@ import java.util.List;
 
 public interface IBlockProvider {
 
-    public List<Block> getAllBlocks();
+    List<Block> getAllBlocks();
 
-    public List<Block> getBlocksFrom(int blockNo);
+    List<Block> getBlocksFrom(int blockNo);
 
-    public List<Block> getLimitBlocks(int limit);
+    List<Block> getLimitBlocks(int limit);
 
-    public int getBlockCount();
+    int getBlockCount();
 
-    public Block getLastBlock();
+    Block getLastBlock();
 
-    public Block getLastOrphanBlock();
+    Block getLastOrphanBlock();
 
-    public Block getBlock(byte[] blockHash);
+    Block getBlock(byte[] blockHash);
 
-    public Block getOrphanBlockByPrevHash(byte[] prevHash);
+    Block getOrphanBlockByPrevHash(byte[] prevHash);
 
-    public Block getMainChainBlock(byte[] blockHash);
+    Block getMainChainBlock(byte[] blockHash);
 
-    public List<byte[]> exists(List<byte[]> blockHashes);
+//    List<byte[]> exists(List<byte[]> blockHashes);
 
-    public void addBlocks(List<Block> blockItemList);
+    void addBlocks(List<Block> blockItemList);
 
-    public void addBlock(Block item);
+    void addBlock(Block item);
 
-    public void updateBlock(byte[] blockHash, boolean isMain);
+    void updateBlock(byte[] blockHash, boolean isMain);
 
-    public void removeBlock(byte[] blockHash);
+    void removeBlock(byte[] blockHash);
 
-    public void cleanOldBlock();
+    void cleanOldBlock();
 
 
 }

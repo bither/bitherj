@@ -14,27 +14,16 @@
  * limitations under the License.
  */
 
-package net.bither.bitherj.db;
+package net.bither.bitherj.db.imp.base;
 
-import net.bither.bitherj.core.Peer;
+import com.google.common.base.Function;
 
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
+public interface IDb {
+    void beginTransaction();
+    void endTransaction();
+    void close();
 
-public interface IPeerProvider {
-
-//    ArrayList<InetAddress> exists(ArrayList<InetAddress> peerAddresses);
-
-    void addPeers(List<Peer> items);
-
-    void removePeer(InetAddress address);
-
-    void connectSucceed(InetAddress address);
-
-    List<Peer> getPeersWithLimit(int limit);
-
-    void cleanPeers();
-
-    void recreate();
+    void execUpdate(String sql, String[] params);
+    void execQueryOneRecord(String sql, String[] params, Function<ICursor, Void> func);
+    void execQueryLoop(String sql, String[] params, Function<ICursor, Void> func);
 }
