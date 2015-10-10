@@ -488,7 +488,7 @@ public class PeerManager {
         addRelayedPeers(peers);
     }
 
-    public void relayedTransaction(final Peer fromPeer, final Tx tx) {
+    public void relayedTransaction(final Peer fromPeer, final Tx tx, final boolean isConfirmed) {
         if (!isRunning()) {
             return;
         }
@@ -499,7 +499,7 @@ public class PeerManager {
             @Override
             public void run() {
                 boolean isRel = AddressManager.getInstance().registerTx(tx, Tx.TxNotificationType
-                        .txReceive);
+                        .txReceive, isConfirmed);
                 if (isRel) {
                     boolean isAlreadyInDb = AbstractDb.txProvider.isExist(tx.getTxHash());
 
@@ -796,7 +796,7 @@ public class PeerManager {
             throw new PublishUnsignedTxException();
         }
 
-        AddressManager.getInstance().registerTx(tx, Tx.TxNotificationType.txSend);
+        AddressManager.getInstance().registerTx(tx, Tx.TxNotificationType.txSend, false);
 
         publishedTx.put(new Sha256Hash(tx.getTxHash()), tx);
 

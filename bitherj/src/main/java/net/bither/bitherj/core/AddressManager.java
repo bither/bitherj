@@ -127,7 +127,7 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         }
     }
 
-    public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {
+    public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType, boolean isConfirmed) {
         if (AbstractDb.txProvider.isTxDoubleSpendWithConfirmedTx(tx)) {
             // double spend with confirmed tx
             return false;
