@@ -33,6 +33,7 @@ import net.bither.bitherj.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -213,6 +214,7 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
         IDb db = this.getReadDb();
         this.execQueryOneRecord(db, sql, new String[]{txHashStr}, new Function<ICursor, Void>() {
             @Nullable
+
             @Override
             public Void apply(@Nullable ICursor c) {
                 txItem[0] = applyCursor(c);
@@ -1143,6 +1145,39 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
             }
         }
         return addressTxes;
+    }
+
+    public byte[] isIdentify(Tx tx) {
+        HashSet<String> result = new HashSet<String>();
+
+        for (In in : tx.getIns()) {
+            String queryPrevTxHashSql = "select tx_hash from ins where prev_tx_hash=? and prev_out_sn=?";
+            final HashSet<String> each = new HashSet<String>();
+            this.execQueryOneRecord(this.getReadDb(), queryPrevTxHashSql, new String[]{Base58.encode(in.getPrevTxHash())
+                    , Integer.toString(in.getInSn())}, new Function<ICursor, Void>() {
+                @Nullable
+                @Override
+                public Void apply(@Nullable ICursor c) {
+                    each.add(c.getString(0));
+                    return null;
+                }
+            });
+            each.remove(Base58.encode(tx.getTxHash()));
+            result.retainAll(each);
+            if (result.size() == 0) {
+                break;
+            }
+        }
+        if (result.size() == 0) {
+            return new byte[0];
+        } else {
+            try {
+                return Base58.decode((String) result.toArray()[0]);
+            } catch (AddressFormatException e) {
+                e.printStackTrace();
+                return new byte[0];
+            }
+        }
     }
 
     protected abstract void insertOutToDb(IDb db, Out out);

@@ -84,5 +84,7 @@ public interface ITxProvider {
 
     int needCompleteInSignature(String address);
 
+    byte[] isIdentify(Tx tx);
+
     void clearAllTx();
 }
