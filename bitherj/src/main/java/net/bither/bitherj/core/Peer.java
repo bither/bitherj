@@ -280,7 +280,7 @@ public class Peer extends PeerSocketHandler {
                 }
             }
             if (!stillNeedDependency) {
-                PeerManager.instance().relayedTransaction(this, eachTx);
+                PeerManager.instance().relayedTransaction(this, eachTx, true);
                 checkedTxs.add(eachTx);
             }
         }
@@ -335,7 +335,7 @@ public class Peer extends PeerSocketHandler {
                     }
                 }
                 if (!stillNeedDependency) {
-                    PeerManager.instance().relayedTransaction(this, eachTx);
+                    PeerManager.instance().relayedTransaction(this, eachTx, false);
                     checkedTxs.add(eachTx);
                 }
             } else {
@@ -550,7 +550,7 @@ public class Peer extends PeerSocketHandler {
 
     private void processTransaction(Tx tx) throws VerificationException {
         if (currentFilteredBlock != null) { // we're collecting tx messages for a merkleblock
-            PeerManager.instance().relayedTransaction(this, tx);
+            PeerManager.instance().relayedTransaction(this, tx, true);
             // we can't we byte array hash or BigInteger as the key.
             // byte array can't be compared
             // BigInteger can't be cast back to byte array
@@ -604,7 +604,7 @@ public class Peer extends PeerSocketHandler {
                 valid = false;
             }
             if (valid && !tx.hasDustOut()) {
-                PeerManager.instance().relayedTransaction(this, tx);
+                PeerManager.instance().relayedTransaction(this, tx, false);
             }
             /*
             log.info("peer[{}:{}] receive tx {}", this.peerAddress.getHostAddress(),
