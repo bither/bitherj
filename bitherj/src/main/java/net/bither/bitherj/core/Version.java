@@ -17,6 +17,6 @@
 package net.bither.bitherj.core;
 
 public class Version {
-    public static final String version = "1.3.7";
+    public static final String version = "1.4.0";
     public static final String name = "Bitherj";
 }
