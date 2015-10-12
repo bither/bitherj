@@ -278,7 +278,7 @@ public class Peer extends PeerSocketHandler {
                 }
             }
             if (!stillNeedDependency) {
-                PeerManager.instance().relayedTransaction(this, eachTx, true);
+                PeerManager.instance().relayedTransaction(this, eachTx, false);
                 checkedTxs.add(eachTx);
             }
         }
