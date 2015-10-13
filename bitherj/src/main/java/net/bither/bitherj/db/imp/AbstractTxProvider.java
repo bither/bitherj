@@ -1154,7 +1154,7 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
             String queryPrevTxHashSql = "select tx_hash from ins where prev_tx_hash=? and prev_out_sn=?";
             final HashSet<String> each = new HashSet<String>();
             this.execQueryOneRecord(this.getReadDb(), queryPrevTxHashSql, new String[]{Base58.encode(in.getPrevTxHash())
-                    , Integer.toString(in.getInSn())}, new Function<ICursor, Void>() {
+                    , Integer.toString(in.getPrevOutSn())}, new Function<ICursor, Void>() {
                 @Nullable
                 @Override
                 public Void apply(@Nullable ICursor c) {
