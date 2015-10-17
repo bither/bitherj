@@ -20,6 +20,7 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.db.imp.AbstractTxProvider;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
@@ -173,7 +174,18 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         return this.desktopHDMKeychains;
     }
 
-    public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType) {
+    public boolean registerTx(Tx tx, Tx.TxNotificationType txNotificationType, boolean isConfirmed) {
+        if (isConfirmed) {
+            byte[] existTx = AbstractDb.txProvider.isIdentify(tx);
+            if (existTx.length > 0) {
+                AbstractDb.txProvider.remove(existTx);
+            }
+        } else {
+            byte[] existTx = AbstractDb.txProvider.isIdentify(tx);
+            if (existTx.length > 0) {
+                return false;
+            }
+        }
         if (AbstractDb.txProvider.isTxDoubleSpendWithConfirmedTx(tx)) {
             // double spend with confirmed tx
             return false;
