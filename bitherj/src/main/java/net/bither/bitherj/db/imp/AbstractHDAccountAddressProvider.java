@@ -773,7 +773,7 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
         String sql = "select count(0) cnt from outs o, ins i, txs t, hd_account_addresses a " +
                 "  where o.tx_hash=i.prev_tx_hash and o.out_sn=i.prev_out_sn and t.tx_hash=i.tx_hash " +
                 "    and o.out_address=a.address and a.path_type=?" +
-                "    and o.out_status=? and t.block_no is null a.and hd_account_id=?";
+                "    and o.out_status=? and t.block_no is null and a.hd_account_id=?";
         this.execQueryOneRecord(sql, new String[]{Integer.toString(pathType.getValue())
                 , Integer.toString(Out.OutStatus.spent.getValue())
                 , Integer.toString(hdAccountId)
