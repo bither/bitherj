@@ -767,6 +767,53 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
     }
 
     @Override
+    public int getUnconfirmedSpentOutCountByHDAccountWithPath(int hdAccountId, AbstractHD.PathType
+            pathType) {
+        final int[] result = {0};
+        String sql = "select count(o.tx_hash) cnt from outs o, ins i, txs t " +
+        "where o.tx_hash=i.prev_tx_hash and o.out_sn=i.prev_out_sn and t.tx_hash=i.tx_hash and o.out_address in " +
+        "(select address from hd_account_addresses where path_type =?) and o.out_status=? and t.block_no is null " +
+        "and hd_account_id=?";
+        this.execQueryOneRecord(sql, new String[]{Integer.toString(pathType.getValue())
+                , Integer.toString(Out.OutStatus.spent.getValue())
+                , Integer.toString(hdAccountId)
+        }, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                int idColumn = c.getColumnIndex("cnt");
+                if (idColumn != -1) {
+                    result[0] = c.getInt(idColumn);
+                }
+                return null;
+            }
+        });
+        return result[0];
+    }
+
+    @Override
+    public List<Out> getUnconfirmedSpentOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType
+            pathType) {
+        String sql = "select o.* from outs o, ins i, txs t " +
+        "where o.tx_hash=i.prev_tx_hash and o.out_sn=i.prev_out_sn and t.tx_hash=i.tx_hash and o.out_address in " +
+        "(select address from hd_account_addresses where path_type =?) and o.out_status=? and t.block_no is null " +
+        "and hd_account_id=?";
+        final List<Out> outList = new ArrayList<Out>();
+        this.execQueryLoop(sql, new String[]{Integer.toString(pathType.getValue())
+                , Integer.toString(Out.OutStatus.spent.getValue())
+                , Integer.toString(hdAccountId)
+        }, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                outList.add(AbstractTxProvider.applyCursorOut(c));
+                return null;
+            }
+        });
+        return outList;
+    }
+
+    @Override
     public boolean requestNewReceivingAddress(int hdAccountId) {
         int issuedIndex = this.issuedIndex(hdAccountId, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
         final boolean[] result = {false};

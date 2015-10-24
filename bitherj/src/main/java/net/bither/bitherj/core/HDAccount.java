@@ -604,7 +604,9 @@ public class HDAccount extends Address {
     public int elementCountForBloomFilter() {
         return allGeneratedExternalAddressCount() * 2 + AbstractDb.hdAccountAddressProvider
                 .getUnspendOutCountByHDAccountWithPath(getHdSeedId(), AbstractHD.PathType
-                        .INTERNAL_ROOT_PATH);
+                        .INTERNAL_ROOT_PATH) + AbstractDb.hdAccountAddressProvider
+                .getUnconfirmedSpentOutCountByHDAccountWithPath(getHdSeedId(), AbstractHD
+                        .PathType.INTERNAL_ROOT_PATH);
     }
 
     public void addElementsForBloomFilter(BloomFilter filter) {
@@ -615,6 +617,11 @@ public class HDAccount extends Address {
             filter.insert(Utils.sha256hash160(pub));
         }
         List<Out> outs = AbstractDb.hdAccountAddressProvider.getUnspendOutByHDAccountWithPath
+                (getHdSeedId(), AbstractHD.PathType.INTERNAL_ROOT_PATH);
+        for (Out out : outs) {
+            filter.insert(out.getOutpointData());
+        }
+        outs = AbstractDb.hdAccountAddressProvider.getUnconfirmedSpentOutByHDAccountWithPath
                 (getHdSeedId(), AbstractHD.PathType.INTERNAL_ROOT_PATH);
         for (Out out : outs) {
             filter.insert(out.getOutpointData());
