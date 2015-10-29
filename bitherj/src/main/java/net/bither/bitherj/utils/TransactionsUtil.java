@@ -195,10 +195,7 @@ public class TransactionsUtil {
             HDAccount.HDAccountAddress hdAccountAddress;
 //            boolean hasTx = true;
             int unusedAddressCnt = 0; //HDAccount.MaxUnusedNewAddressCount
-            int maxUnusedAddressCount = 0;
-            if (pathType.equals(AbstractHD.PathType.EXTERNAL_ROOT_PATH)) {
-                maxUnusedAddressCount = HDAccount.MaxUnusedNewAddressCount;
-            }
+            int maxUnusedAddressCount = HDAccount.MaxUnusedNewAddressCount;
             int addressIndex = 0;
             while (unusedAddressCnt <= maxUnusedAddressCount) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
@@ -208,10 +205,12 @@ public class TransactionsUtil {
                 if (hdAccountAddress == null) {
 //                    hasTx = false;
                     unusedAddressCnt += 1;
-                    log.warn("AccountAddress", "address is null path {} ,index {}", pathType, addressIndex);
+                    log.warn("hd monitor address is null path {} ,index {}", pathType, addressIndex);
                     continue;
                 }
                 if (hdAccountAddress.isSyncedComplete()) {
+                    log.info("hd monitor address is synced path {} ,index {}, {}", pathType,
+                            addressIndex, hdAccountAddress.getAddress());
                     addressIndex++;
                     continue;
                 }
@@ -219,6 +218,8 @@ public class TransactionsUtil {
                 int txSum = 0;
                 boolean needGetTxs = true;
                 int page = 1;
+
+                log.info("hd monitor address will sync path {} ,index {}, {}", pathType, addressIndex, hdAccountAddress.getAddress());
                 while (needGetTxs) {
                     BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
                             hdAccountAddress.getAddress(), page);
@@ -242,6 +243,7 @@ public class TransactionsUtil {
                     BlockChain.getInstance().rollbackBlock(apiBlockCount);
                 }
 
+                log.info("hd monitor address did sync {} tx, path {} ,index {}, {}", txSum, pathType, addressIndex, hdAccountAddress.getAddress());
                 hdAccountAddress.setSyncedComplete(true);
                 AddressManager.getInstance().getHDAccountMonitored().updateSyncComplete(hdAccountAddress);
 
@@ -269,10 +271,7 @@ public class TransactionsUtil {
             HDAccount.HDAccountAddress hdAccountAddress;
 //            boolean hasTx = true;
             int unusedAddressCnt = 0; //HDAccount.MaxUnusedNewAddressCount
-            int maxUnusedAddressCount = 0;
-            if (pathType.equals(AbstractHD.PathType.EXTERNAL_ROOT_PATH)) {
-                maxUnusedAddressCount = HDAccount.MaxUnusedNewAddressCount;
-            }
+            int maxUnusedAddressCount = HDAccount.MaxUnusedNewAddressCount;
             int addressIndex = 0;
             while (unusedAddressCnt <= maxUnusedAddressCount) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
@@ -282,10 +281,12 @@ public class TransactionsUtil {
                 if (hdAccountAddress == null) {
 //                    hasTx = false;
                     unusedAddressCnt += 1;
-                    log.warn("AccountAddress is null path {} ,index {}", pathType, addressIndex);
+                    log.warn("hd address is null path {} ,index {}", pathType, addressIndex);
                     continue;
                 }
                 if (hdAccountAddress.isSyncedComplete()) {
+                    log.info("hd address is synced path {} ,index {}, {}", pathType,
+                            addressIndex, hdAccountAddress.getAddress());
                     addressIndex++;
                     continue;
                 }
@@ -293,6 +294,8 @@ public class TransactionsUtil {
                 int txSum = 0;
                 boolean needGetTxs = true;
                 int page = 1;
+
+                log.info("hd address will sync path {} ,index {}, {}", pathType, addressIndex, hdAccountAddress.getAddress());
                 while (needGetTxs) {
                     BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
                             hdAccountAddress.getAddress(), page);
@@ -316,6 +319,7 @@ public class TransactionsUtil {
                     BlockChain.getInstance().rollbackBlock(apiBlockCount);
                 }
 
+                log.info("hd address did sync {} tx, path {} ,index {}, {}", txSum, pathType, addressIndex, hdAccountAddress.getAddress());
                 hdAccountAddress.setSyncedComplete(true);
                 AddressManager.getInstance().getHDAccountHot().updateSyncComplete(hdAccountAddress);
 
