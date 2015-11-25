@@ -772,7 +772,13 @@ public class Peer extends PeerSocketHandler {
     private void processVersionMessage(VersionMessage version) {
         this.versionMessage = version;
         this.version = version.clientVersion;
+        log.debug("Peer " + getPeerAddress().getHostAddress() + " got version : " + version.toString());
         if (this.version < BitherjSettings.MIN_PROTO_VERSION) {
+            close();
+            return;
+        }
+        if(!version.canRelayTx()){
+            log.info("Peer " + getPeerAddress().getHostAddress() + " can not relay tx, give up.");
             close();
             return;
         }
