@@ -195,27 +195,33 @@ public class TransactionsUtil {
     private static void getTxForHDAccount() throws Exception {
         for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
             HDAccount.HDAccountAddress hdAccountAddress;
-            boolean hasTx = true;
+//            boolean hasTx = true;
+            int unusedAddressCnt = 0; //HDAccount.MaxUnusedNewAddressCount
+            int maxUnusedAddressCount = HDAccount.MaxUnusedNewAddressCount;
             int addressIndex = 0;
-            while (hasTx) {
+            while (unusedAddressCnt <= maxUnusedAddressCount) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
                 int storeBlockHeight = storedBlock.getBlockNo();
-                hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(
-                        pathType, addressIndex);
+                hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(pathType,
+                        addressIndex);
                 if (hdAccountAddress == null) {
-                    hasTx = false;
-                    log.warn("AccountAddress", "address is null path {} ,index {}", pathType, addressIndex);
+//                    hasTx = false;
+                    unusedAddressCnt += 1;
+                    log.warn("hd address is null path {} ,index {}", pathType, addressIndex);
                     continue;
                 }
                 if (hdAccountAddress.isSyncedComplete()) {
+                    log.info("hd address is synced path {} ,index {}, {}", pathType,
+                            addressIndex, hdAccountAddress.getAddress());
                     addressIndex++;
                     continue;
                 }
-                List<Tx> transactions = new ArrayList<Tx>();
                 int apiBlockCount = 0;
                 int txSum = 0;
                 boolean needGetTxs = true;
                 int page = 1;
+
+                log.info("hd address will sync path {} ,index {}, {}", pathType, addressIndex, hdAccountAddress.getAddress());
                 while (needGetTxs) {
                     BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
                             hdAccountAddress.getAddress(), page);
@@ -226,39 +232,40 @@ public class TransactionsUtil {
                         apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                     }
                     int txCnt = jsonObject.getInt(TX_CNT);
-                    List<Tx> temp = TransactionsUtil.getTransactionsFromBither(
+                    List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(
                             jsonObject, storeBlockHeight);
-                    transactions.addAll(temp);
+                    transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
+                    Collections.sort(transactions, new ComparatorTx());
+                    AddressManager.getInstance().getHdAccount().initTxs(transactions);
                     txSum = txSum + transactions.size();
-                    needGetTxs = txSum < txCnt;
+                    needGetTxs = transactions.size() > 0;
                     page++;
                 }
                 if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
                     BlockChain.getInstance().rollbackBlock(apiBlockCount);
                 }
-                transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
-                Collections.sort(transactions, new ComparatorTx());
-                AddressManager.getInstance().getHdAccount().initTxs(transactions);
+
+                log.info("hd address did sync {} tx, path {} ,index {}, {}", txSum, pathType, addressIndex, hdAccountAddress.getAddress());
                 hdAccountAddress.setSyncedComplete(true);
                 AddressManager.getInstance().getHdAccount().updateSyncComplete(hdAccountAddress);
 
-                if (transactions.size() > 0) {
+                if (txSum > 0) {
                     if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
                         AddressManager.getInstance().getHdAccount().updateIssuedExternalIndex(addressIndex);
                     } else {
                         AddressManager.getInstance().getHdAccount().updateIssuedInternalIndex(addressIndex);
                     }
                     AddressManager.getInstance().getHdAccount().supplyEnoughKeys(false);
-                    hasTx = true;
+//                    hasTx = true;
+                    unusedAddressCnt = 0;
                 } else {
-                    hasTx = false;
-                    AbstractDb.hdAccountProvider.updateSyncdForIndex(pathType, addressIndex);
+//                    hasTx = false;
+                    unusedAddressCnt += 1;
                 }
+                addressIndex++;
             }
-            addressIndex++;
+            AbstractDb.hdAccountProvider.updateSyncdForIndex(pathType, addressIndex - 1);
         }
-
-
     }
 
     private static void getTxForAddress() throws Exception {

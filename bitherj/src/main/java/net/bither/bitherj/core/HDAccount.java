@@ -47,6 +47,7 @@ import java.util.Set;
 
 public class HDAccount extends Address {
     public static final String HDAccountPlaceHolder = "HDAccount";
+    public static final int MaxUnusedNewAddressCount = 20;
 
     public interface HDAccountGenerationDelegate {
         void onHDAccountGenerationProgress(double progress);
