@@ -1,0 +1,17 @@
+package net.bither.bitherj.utils;
+import net.bither.bitherj.utils.Base58;
+import net.bither.bitherj.utils.Utils;
+/**
+ * Created by wanglin on 2015/12/18.
+ */
+public class Base58Check extends Base58 {
+
+    public static CharSequence encodeCheckedAndVersion(byte[] input ,int verInt){
+
+        byte[] result = new byte[1+input.length+4];
+        result[0]=(byte)verInt;
+        System.arraycopy(input,0,result,1,input.length);
+        byte[] check = Utils.doubleDigest(result, 0, (1+input.length));
+        System.arraycopy(check,0,result,(1+input.length),4);
+        return encode(result);
+    }
