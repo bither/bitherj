@@ -195,8 +195,6 @@ public abstract class AbstractHD {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-
     }
 
     protected void wipeHDSeed() {

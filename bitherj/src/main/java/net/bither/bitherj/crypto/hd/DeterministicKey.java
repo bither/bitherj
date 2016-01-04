@@ -23,13 +23,14 @@ import com.google.common.collect.ImmutableList;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.KeyCrypter;
 import net.bither.bitherj.crypto.KeyCrypterException;
-import net.bither.bitherj.utils.Sha256Hash;
+import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Utils;
 
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import javax.annotation.Nullable;
@@ -134,15 +135,16 @@ public class DeterministicKey extends ECKey {
      * Returns RIPE-MD160(SHA256(pub key bytes)).
      */
     public byte[] getIdentifier() {
-        return new Sha256Hash(getPubKey()).getBytes();
+        return Utils.sha256hash160(getPubKey());
     }
 
     /**
      * Returns the first 32 bits of the result of {@link #getIdentifier()}.
      */
-    public byte[] getFingerprint() {
-        // TODO: why is this different than armory's fingerprint? BIP 32: "The first 32 bits of the identifier are called the fingerprint."
-        return Arrays.copyOfRange(getIdentifier(), 0, 4);
+    public int getFingerprint() {
+        // TODO: why is this different than armory's fingerprint? BIP 32: "The first 32 bits
+        // of the identifier are called the fingerprint."
+        return ByteBuffer.wrap(Arrays.copyOfRange(getIdentifier(), 0, 4)).getInt();
     }
 
     @Nullable
@@ -361,6 +363,38 @@ public class DeterministicKey extends ECKey {
 
     public void clearChainCode() {
         Utils.wipeBytes(chainCode);
+    }
+
+    public String serializePubB58() {
+        return toBase58(serialize(true));
+    }
+
+    public String serializePrivB58() {
+        return toBase58(serialize(false));
+    }
+
+    static String toBase58(byte[] ser) {
+        return Base58.encode(addChecksum(ser));
+    }
+
+    public byte[] serializePublic() {
+        return serialize(true);
+    }
+
+    public byte[] serializePrivate() {
+        return serialize(false);
+    }
+
+    private byte[] serialize(boolean pub) {
+        ByteBuffer ser = ByteBuffer.allocate(78);
+        ser.putInt(pub ? 0x0488B21E : 0x0488ADE4);
+        ser.put((byte) getDepth());
+        ser.putInt(getParent() == null ? 0 : getParent().getFingerprint());
+        ser.putInt(getChildNumber().i());
+        ser.put(getChainCode());
+        ser.put(pub ? getPubKey() : getPrivKeyBytes33());
+        assert ser.position() == 78;
+        return ser.array();
     }
 
     public byte[] getPubKeyExtended() {

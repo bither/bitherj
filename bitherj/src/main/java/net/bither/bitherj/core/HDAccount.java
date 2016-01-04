@@ -765,6 +765,20 @@ public class HDAccount extends Address {
         }
     }
 
+    public String xPubB58(CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        DeterministicKey master = masterKey(password);
+        DeterministicKey purpose = master.deriveHardened(44);
+        DeterministicKey coinType = purpose.deriveHardened(0);
+        DeterministicKey account = coinType.deriveHardened(0);
+        String xpub = account.serializePubB58();
+        master.wipe();
+        purpose.wipe();
+        coinType.wipe();
+        account.wipe();
+        return xpub;
+    }
+
     protected void wipeHDSeed() {
         if (hdSeed == null) {
             return;
