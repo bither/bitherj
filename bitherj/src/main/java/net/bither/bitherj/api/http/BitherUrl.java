@@ -72,4 +72,8 @@ public class BitherUrl {
     //other
     public static final String BLOCKCHAIN_INFO_ADDRESS_URL = "http://blockchain.info/address/";
     public static final String BLOCKMETA_ADDRESS_URL = "http://www.blockmeta.com/address/";
+
+    //blockChain.info Api
+    public static final String BLOCKCHAIN_INFO_GET_LASTST_BLOCK = "https://blockchain.info/latestblock";
+    public static final String BLOCKCHAIN_INFO_GET_SPVBLOCK_API = "https://blockchain.info/block-height/%ld?format=json";
 }
