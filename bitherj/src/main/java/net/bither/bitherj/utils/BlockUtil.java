@@ -42,11 +42,12 @@ public class BlockUtil {
     private static final String BITS = "bits";
     private static final String NONCE = "nonce";
     private static final String BLOCK_NO = "block_no";
+    private static final String HEIGHT = "height";
 
     public  static Block getLatestBlockHeight(JSONObject jsonObject)
             throws Exception {
-        long latestHeight = jsonObject.getLong("height");
-        long height = 0;
+        int latestHeight = jsonObject.getInt("height");
+        int height = 0;
         if (latestHeight % 2016 !=0){
             height = latestHeight - (latestHeight%2016);
         }else {
@@ -57,6 +58,20 @@ public class BlockUtil {
         Block block = null;
         block = blockChainDownloadSpvApi.getResult();
         return block;
+    }
+    public static Block formatStoreBlockFromBlockChainInfo(JSONObject jsonObject)
+        throws JSONException{
+        long ver = jsonObject.getLong(VER);
+        int height = jsonObject.getInt(HEIGHT);
+        String prevBlock = jsonObject.getString(PREV_BLOCK);
+        String mrklRoot = jsonObject.getString(MRKL_ROOT);
+        int time = jsonObject.getInt(TIME);
+        long difficultyTarget = jsonObject.getLong(BITS);
+        long nonce = jsonObject.getLong(NONCE);
+
+        return BlockUtil.getStoredBlock(ver, prevBlock, mrklRoot, time,
+                difficultyTarget, nonce, height);
+
     }
 
     public static Block formatStoredBlock(JSONObject jsonObject)
@@ -102,7 +117,6 @@ public class BlockUtil {
         }
         Block block = null;
         try {
-
             BlockChainGetLatestBlockApi blockChainGetLatestBlockApi = new BlockChainGetLatestBlockApi();
             blockChainGetLatestBlockApi.handleHttpGet();
             block = blockChainGetLatestBlockApi.getResult();
@@ -111,8 +125,6 @@ public class BlockUtil {
                 downloadSpvApi.handleHttpGet();
                 block = downloadSpvApi.getResult();
             }
-
-
         } catch (Exception e) {
             e.printStackTrace();
             AbstractApp.notificationService.sendBroadcastGetSpvBlockComplete(false);

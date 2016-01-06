@@ -12,19 +12,17 @@ import org.json.JSONString;
 
 
 public class BlockChainDownloadSpvApi extends HttpGetResponse<Block> {
-    public BlockChainDownloadSpvApi (long height){
+    public BlockChainDownloadSpvApi (int height){
         String url = Utils.format(BitherUrl.BLOCKCHAIN_INFO_GET_SPVBLOCK_API, height);
+        System.out.print(url);
         setUrl(url);
     }
 
     @Override
     public void setResult(String response) throws Exception {
         JSONObject jsonObject = new JSONObject(response);
-        System.out.print(jsonObject);
         JSONArray jsonArray = jsonObject.getJSONArray("blocks");
-        System.out.print(jsonArray);
-        JSONObject jsonObject1 = jsonArray.getJSONObject(0);
-        System.out.print(jsonObject1);
-        this.result = BlockUtil.formatStoredBlock(jsonObject1);
+        JSONObject jsonObject1 = (JSONObject) jsonArray.get(0);
+        this.result = BlockUtil.formatStoreBlockFromBlockChainInfo(jsonObject1);
     }
 }
