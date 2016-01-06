@@ -14,7 +14,6 @@ import org.json.JSONString;
 public class BlockChainDownloadSpvApi extends HttpGetResponse<Block> {
     public BlockChainDownloadSpvApi (int height){
         String url = Utils.format(BitherUrl.BLOCKCHAIN_INFO_GET_SPVBLOCK_API, height);
-        System.out.print(url);
         setUrl(url);
     }
 
