@@ -20,7 +20,10 @@ import net.bither.bitherj.api.http.BitherUrl;
 import net.bither.bitherj.api.http.HttpGetResponse;
 import net.bither.bitherj.utils.Utils;
 
+
 public class BitherMytransactionsApi extends HttpGetResponse<String> {
+    public static final int bitherWebType = 0;
+    public static final int blockChainWebType = 1;
 
     public BitherMytransactionsApi(String address) {
         this(address, 1);
@@ -34,6 +37,46 @@ public class BitherMytransactionsApi extends HttpGetResponse<String> {
         }
         setUrl(url);
     }
+
+    /**
+     * Improve this method
+     * Get data from 1. bither.net
+     *               2. blockchain.info
+     */
+    public BitherMytransactionsApi(String address, int page, int flag) {
+        switch (flag) {
+            case bitherWebType:{
+                String url = Utils.format(BitherUrl.BITHER_Q_MYTRANSACTIONS, address);
+                if (page > 0) {
+                    url = url + "/p/" + page;
+                }
+                setUrl(url);
+                break;
+            }
+            case blockChainWebType: {
+                String url = Utils.format(BitherUrl.BITHER_BC_GET_BY_ADDRESS, address);
+                setUrl(url);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+
+    public BitherMytransactionsApi() {
+        setUrl(BitherUrl.BITHER_BC_LATEST_BLOCK);
+    }
+
+    public BitherMytransactionsApi(int txIndex) {
+        // String url = Utils.format(BitherUrl.BITHER_BC_TX_INDEX, txIndex);
+        String url = String.format(BitherUrl.BITHER_BC_TX_INDEX, txIndex);
+        setUrl(url);
+    }
+
+    /**
+     *  end
+     */
 
     @Override
     public void setResult(String response) throws Exception {
