@@ -306,30 +306,36 @@ public class TransactionsUtil {
                             apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                         }
                         int txCnt = jsonObject.getInt(TX_CNT);
+                        // TODO: HDAccount
                         transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
                         transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
+
+                        Collections.sort(transactions, new ComparatorTx());
+                        // address.initTxs(transactions);
+                        AddressManager.getInstance().getHDAccountMonitored().initTxs(transactions);
+
+                        txSum = txSum + transactions.size();
+                        needGetTxs = transactions.size() > 0;
+                        page++;
+
                     }else {
                         // TODO: get the latest block number from blockChain.info
-                        BitherMytransactionsApi bitherMytransactionsApiBlockChain = new BitherMytransactionsApi();
-                        bitherMytransactionsApiBlockChain.handleHttpGet();
-                        String txResult1 = bitherMytransactionsApiBlockChain.getResult();
-                        JSONObject jsonObjectBlockChain = new JSONObject(txResult1);
+                        JSONObject jsonObjectBlockChain = getLatestBlockNumberFromBlockchain();
                         if (!jsonObjectBlockChain.isNull(BLOCK_CHAIN_HEIGHT)) {
                             apiBlockCount = jsonObjectBlockChain.getInt(BLOCK_CHAIN_HEIGHT);
                         }
                         int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
                         // TODO: get transactions from blockChain.info
-                        transactions = TransactionsUtil.getTransactionsFromBlockChain(jsonObjectBlockChain, storeBlockHeight);
+                        transactions = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
                         transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
 
-                    }
+                        Collections.sort(transactions, new ComparatorTx());
+                        // address.initTxs(transactions);
+                        AddressManager.getInstance().getHDAccountMonitored().initTxs(transactions);
+                        txSum = txSum + transactions.size();
+                        needGetTxs = false;
 
-                    Collections.sort(transactions, new ComparatorTx());
-                    // address.initTxs(transactions);
-                    AddressManager.getInstance().getHDAccountMonitored().initTxs(transactions);
-                    txSum = txSum + transactions.size();
-                    needGetTxs = transactions.size() > 0;
-                    page++;
+                    }
                 }
                 /*
                 while (needGetTxs) {
@@ -422,31 +428,34 @@ public class TransactionsUtil {
                             apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                         }
                         int txCnt = jsonObject.getInt(TX_CNT);
-                        // List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
                         transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
                         transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
+
+                        Collections.sort(transactions, new ComparatorTx());
+                        // address.initTxs(transactions);
+                        AddressManager.getInstance().getHDAccountHot().initTxs(transactions);
+                        txSum = txSum + transactions.size();
+                        needGetTxs = transactions.size() > 0;
+                        page++;
+
                     }else {
                         // TODO: get the latest block number from blockChain.info
-                        BitherMytransactionsApi bitherMytransactionsApiBlockChain = new BitherMytransactionsApi();
-                        bitherMytransactionsApiBlockChain.handleHttpGet();
-                        String txResult1 = bitherMytransactionsApiBlockChain.getResult();
-                        JSONObject jsonObjectBlockChain = new JSONObject(txResult1);
+                        JSONObject jsonObjectBlockChain = getLatestBlockNumberFromBlockchain();
                         if (!jsonObjectBlockChain.isNull(BLOCK_CHAIN_HEIGHT)) {
                             apiBlockCount = jsonObjectBlockChain.getInt(BLOCK_CHAIN_HEIGHT);
                         }
                         int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
                         // TODO: get transactions from blockChain.info
-                        transactions = TransactionsUtil.getTransactionsFromBlockChain(jsonObjectBlockChain, storeBlockHeight);
+                        transactions = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
                         transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
 
-                    }
+                        Collections.sort(transactions, new ComparatorTx());
+                        // address.initTxs(transactions);
+                        AddressManager.getInstance().getHDAccountHot().initTxs(transactions);
+                        txSum = txSum + transactions.size();
+                        needGetTxs = false;
 
-                    Collections.sort(transactions, new ComparatorTx());
-                    // address.initTxs(transactions);
-                    AddressManager.getInstance().getHDAccountHot().initTxs(transactions);
-                    txSum = txSum + transactions.size();
-                    needGetTxs = transactions.size() > 0;
-                    page++;
+                    }
                 }
                 /*
                 while (needGetTxs) {
@@ -533,31 +542,34 @@ public class TransactionsUtil {
                             apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                         }
                         int txCnt = jsonObject.getInt(TX_CNT);
-                        // List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
                         transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
                         transactions = AddressManager.getInstance().compressTxsForDesktopHDM(transactions);
+
+                        Collections.sort(transactions, new ComparatorTx());
+                        // address.initTxs(transactions);
+                        desktopHDMKeychain.initTxs(transactions);
+                        txSum = txSum + transactions.size();
+                        needGetTxs = transactions.size() > 0;
+                        page++;
+
                     }else {
                         // TODO: get the latest block number from blockChain.info
-                        BitherMytransactionsApi bitherMytransactionsApiBlockChain = new BitherMytransactionsApi();
-                        bitherMytransactionsApiBlockChain.handleHttpGet();
-                        String txResult1 = bitherMytransactionsApiBlockChain.getResult();
-                        JSONObject jsonObjectBlockChain = new JSONObject(txResult1);
+                        JSONObject jsonObjectBlockChain = getLatestBlockNumberFromBlockchain();
                         if (!jsonObjectBlockChain.isNull(BLOCK_CHAIN_HEIGHT)) {
                             apiBlockCount = jsonObjectBlockChain.getInt(BLOCK_CHAIN_HEIGHT);
                         }
                         int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
                         // TODO: get transactions from blockChain.info
-                        transactions = TransactionsUtil.getTransactionsFromBlockChain(jsonObjectBlockChain, storeBlockHeight);
+                        transactions = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
                         transactions = AddressManager.getInstance().compressTxsForDesktopHDM(transactions);
 
-                    }
+                        Collections.sort(transactions, new ComparatorTx());
+                        // address.initTxs(transactions);
+                        desktopHDMKeychain.initTxs(transactions);
+                        txSum = txSum + transactions.size();
+                        needGetTxs = false;
 
-                    Collections.sort(transactions, new ComparatorTx());
-                    // address.initTxs(transactions);
-                    desktopHDMKeychain.initTxs(transactions);
-                    txSum = txSum + transactions.size();
-                    needGetTxs = transactions.size() > 0;
-                    page++;
+                    }
                 }
                 /*
                 while (needGetTxs) {
@@ -630,7 +642,6 @@ public class TransactionsUtil {
                             apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                         }
                         int txCnt = jsonObject.getInt(TX_CNT);
-                        // List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
                         transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
                         transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
 
@@ -642,12 +653,6 @@ public class TransactionsUtil {
 
                     }else {
                         // TODO: get the latest block number from blockChain.info
-                        /*
-                        BitherMytransactionsApi bitherMytransactionsApiBlockChain = new BitherMytransactionsApi();
-                        bitherMytransactionsApiBlockChain.handleHttpGet();
-                        String txResultBlockChain = bitherMytransactionsApiBlockChain.getResult();
-                        JSONObject jsonObjectBlockChain = new JSONObject(txResultBlockChain);
-                        */
                         JSONObject jsonObjectBlockChain = getLatestBlockNumberFromBlockchain();
                         if (!jsonObjectBlockChain.isNull(BLOCK_CHAIN_HEIGHT)) {
                             apiBlockCount = jsonObjectBlockChain.getInt(BLOCK_CHAIN_HEIGHT);
