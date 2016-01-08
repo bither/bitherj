@@ -247,9 +247,10 @@ public class TransactionsUtil {
             return;
         }
         // TODO: web type
-        getTxForAddress(1);
+        getTxForAddress(AbstractApp.bitherjSetting.getApiConfig().value());
         if (AddressManager.getInstance().getHdAccount() != null) {
-            getTxForHDAccount(AddressManager.getInstance().getHdAccount().getHdSeedId(), 1);
+            getTxForHDAccount(AddressManager.getInstance().getHdAccount().getHdSeedId(),
+                    AbstractApp.bitherjSetting.getApiConfig().value());
         }
     }
 
