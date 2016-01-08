@@ -31,6 +31,7 @@ public class BitherUrl {
         public static final String BITHER_HDM_DOMAIN = "hdm.bither.net";
         public static final String BLOCK_CHAIN_INFO = "blockChain.info";
 
+
         public static final String BITHER_BITCOIN = Utils.format(FORMAT_HTTP, BITHER_BITCOIN_DOMAIN);
         public static final String BITHER_USER = Utils.format(FORMAT_HTTP, BITHER_USER_DOMAIN);
         public static final String BITHER_STATS = Utils.format(FORMAT_HTTP, BITHER_STATS_DOMAIN);
@@ -40,8 +41,27 @@ public class BitherUrl {
         public static final String BITHER_URL = Utils.format(FORMAT_HTTP, "bither.net");
         public static final String BLOCK_CHAIN = Utils.format(FORMAT_HTTPS,BLOCK_CHAIN_INFO);
 
+        // BlockChain.info
+        public static final String BITHER_BLOCKCHAIN_DOMAIN = "blockchain.info";
+        public static final String BITHER_BLOCKCHAIN = Utils.format(FORMAT_HTTPS, BITHER_BLOCKCHAIN_DOMAIN);
+
+        // chain.btc.com
+        public static final String BITHER_CHAINBTC_DOMAIN = "chain.btc.com";
+        public static final String BITHER_CHAINBTC_URL = Utils.format(FORMAT_HTTPS, BITHER_DNS.BITHER_CHAINBTC_DOMAIN);
+
 
     }
+
+    // bither blockChain
+    public static final String BITHER_BC_GET_BY_ADDRESS = BITHER_DNS.BITHER_BLOCKCHAIN + "rawaddr/%s";
+    public static final String BITHER_BC_LATEST_BLOCK = BITHER_DNS.BITHER_BLOCKCHAIN + "latestblock";
+    public static final String BITHER_BC_TX_INDEX = BITHER_DNS.BITHER_BLOCKCHAIN + "rawtx/%d?format=hex";
+
+    // bither chainBtc
+    public static final String BITHER_CHAINBTC_GET_BY_ADDRESS = BITHER_DNS.BITHER_CHAINBTC_URL + "api/v1/address/%s";
+    public static final String BITHER_CHAINBTC_LATEST_BLOCK = BITHER_DNS.BITHER_CHAINBTC_URL + "api/v1/latestblock";
+    public static final String BITHER_CHAINBTC_TX_INDEX = BITHER_DNS.BITHER_CHAINBTC_URL + "rawtx/";
+
 
     // bither user
     public static final String BITHER_GET_COOKIE_URL = BITHER_DNS.BITHER_USER + "api/v1/cookie";
