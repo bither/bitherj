@@ -20,7 +20,11 @@ import net.bither.bitherj.api.http.BitherUrl;
 import net.bither.bitherj.api.http.HttpGetResponse;
 import net.bither.bitherj.core.Block;
 import net.bither.bitherj.utils.BlockUtil;
+import net.bither.bitherj.utils.Utils;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class DownloadSpvApi extends HttpGetResponse<Block> {
@@ -31,11 +35,7 @@ public class DownloadSpvApi extends HttpGetResponse<Block> {
 
     @Override
     public void setResult(String response) throws Exception {
-
-
         JSONObject jsonObject = new JSONObject(response);
         this.result = BlockUtil.formatStoredBlock(jsonObject);
-
     }
-
 }
