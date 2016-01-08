@@ -292,6 +292,8 @@ public class TransactionsUtil {
                 boolean needGetTxs = true;
                 int page = 1;
 
+                List<Tx> transactions;
+
                 log.info("hd monitor address will sync path {} ,index {}, {}", pathType, addressIndex, hdAccountAddress.getAddress());
                 while (needGetTxs) {
                     BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
