@@ -94,6 +94,19 @@ public class BitherjSettings {
         COLD, HOT
     }
 
+    public static enum ApiConfig {
+        BLOCKCHAIN_INFO(1), BITHER_NET(0);
+
+        private int value;
+        ApiConfig(int value){
+            this.value = value;
+        }
+
+        public int value(){
+            return value;
+        }
+    }
+
     public static final String PRIVATE_KEY_FILE_NAME = "%s/%s.key";
     public static final String WATCH_ONLY_FILE_NAME = "%s/%s.pub";
 
