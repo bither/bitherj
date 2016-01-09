@@ -248,7 +248,7 @@ public class TransactionsUtil {
             return;
         }
         // TODO: web type
-        int flag = AbstractApp.bitherjSetting.getApiConfig().ordinal();
+        int flag = AbstractApp.bitherjSetting.getApiConfig().value();
         getTxForAddress(flag);
         if (AddressManager.getInstance().getHDAccountHot() != null) {
             getTxForHDAccount(AddressManager.getInstance().getHDAccountHot().getHdSeedId(), flag);
