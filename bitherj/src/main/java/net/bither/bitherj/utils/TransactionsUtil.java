@@ -243,11 +243,12 @@ public class TransactionsUtil {
     }
 
 
-    public static void getMyTxFromBither(final int flag) throws Exception {
+    public static void getMyTxFromBither() throws Exception {
         if (AbstractApp.bitherjSetting.getAppMode() != BitherjSettings.AppMode.HOT) {
             return;
         }
         // TODO: web type
+        int flag = AbstractApp.bitherjSetting.getApiConfig().ordinal();
         getTxForAddress(flag);
         if (AddressManager.getInstance().getHDAccountHot() != null) {
             getTxForHDAccount(AddressManager.getInstance().getHDAccountHot().getHdSeedId(), flag);
