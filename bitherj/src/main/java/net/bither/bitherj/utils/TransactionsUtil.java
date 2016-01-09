@@ -250,147 +250,10 @@ public class TransactionsUtil {
         // TODO: web type
         int flag = AbstractApp.bitherjSetting.getApiConfig().value();
         getTxForAddress(flag);
-        if (AddressManager.getInstance().getHDAccountHot() != null) {
-            getTxForHDAccount(AddressManager.getInstance().getHDAccountHot().getHdSeedId(), flag);
-        }
-        if(AddressManager.getInstance().hasHDAccountMonitored()){
-            getTxForHDAccountMoitored(AddressManager.getInstance().getHDAccountMonitored().getHdSeedId(), flag);
-
-        }
-        if (AddressManager.getInstance().hasDesktopHDMKeychain()) {
-            DesktopHDMKeychain desktopHDMKeychain = AddressManager.getInstance().getDesktopHDMKeychains().get(0);
-            getTxForDesktopHDM(desktopHDMKeychain, flag);
-
+        if (AddressManager.getInstance().getHdAccount() != null) {
+            getTxForHDAccount(AddressManager.getInstance().getHdAccount().getHdSeedId(), flag);
         }
 
-    }
-    private static void getTxForHDAccountMoitored(int hdSeedId, final int webType) throws Exception {
-        for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
-            HDAccount.HDAccountAddress hdAccountAddress;
-//            boolean hasTx = true;
-            int unusedAddressCnt = 0; //HDAccount.MaxUnusedNewAddressCount
-            int maxUnusedAddressCount = HDAccount.MaxUnusedNewAddressCount;
-            int addressIndex = 0;
-            while (unusedAddressCnt <= maxUnusedAddressCount) {
-                Block storedBlock = BlockChain.getInstance().getLastBlock();
-                int storeBlockHeight = storedBlock.getBlockNo();
-                hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId,
-                        pathType, addressIndex);
-                if (hdAccountAddress == null) {
-//                    hasTx = false;
-                    unusedAddressCnt += 1;
-                    log.warn("hd monitor address is null path {} ,index {}", pathType, addressIndex);
-                    continue;
-                }
-                if (hdAccountAddress.isSyncedComplete()) {
-                    log.info("hd monitor address is synced path {} ,index {}, {}", pathType,
-                            addressIndex, hdAccountAddress.getAddress());
-                    addressIndex++;
-                    continue;
-                }
-
-                int apiBlockCount = 0;
-                int txSum = 0;
-                boolean needGetTxs = true;
-                int page = 1;
-
-                List<Tx> transactions;
-
-                log.info("hd monitor address will sync path {} ,index {}, {}", pathType, addressIndex, hdAccountAddress.getAddress());
-                while (needGetTxs) {
-                    // TODO: get data from bither.net else from blockchain.info
-                    if (webType == 0) {
-                        BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
-                                hdAccountAddress.getAddress(), page);
-                        bitherMytransactionsApi.handleHttpGet();
-                        String txResult = bitherMytransactionsApi.getResult();
-                        JSONObject jsonObject = new JSONObject(txResult);
-
-                        if (!jsonObject.isNull(BLOCK_COUNT)) {
-                            apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
-                        }
-                        int txCnt = jsonObject.getInt(TX_CNT);
-                        // TODO: HDAccount
-                        transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
-                        transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
-
-                        Collections.sort(transactions, new ComparatorTx());
-                        // address.initTxs(transactions);
-                        AddressManager.getInstance().getHDAccountMonitored().initTxs(transactions);
-
-                        txSum = txSum + transactions.size();
-                        needGetTxs = transactions.size() > 0;
-                        page++;
-
-                    }else {
-                        BlockChainMytransactionsApi blockChainMytransactionsApi = new BlockChainMytransactionsApi(hdAccountAddress.getAddress());
-                        blockChainMytransactionsApi.handleHttpGet();
-                        String txResult = blockChainMytransactionsApi.getResult();
-                        JSONObject jsonObject = new JSONObject(txResult);
-                        // TODO: get the latest block number from blockChain.info
-                        JSONObject jsonObjectBlockChain = getLatestBlockNumberFromBlockchain();
-                        if (!jsonObjectBlockChain.isNull(BLOCK_CHAIN_HEIGHT)) {
-                            apiBlockCount = jsonObjectBlockChain.getInt(BLOCK_CHAIN_HEIGHT);
-                        }
-                        int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
-                        // TODO: get transactions from blockChain.info
-                        transactions = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
-                        transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
-
-                        Collections.sort(transactions, new ComparatorTx());
-                        // address.initTxs(transactions);
-                        AddressManager.getInstance().getHDAccountMonitored().initTxs(transactions);
-                        txSum = txSum + transactions.size();
-                        needGetTxs = false;
-
-                    }
-                }
-                /*
-                while (needGetTxs) {
-                    BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
-                            hdAccountAddress.getAddress(), page, flag);
-                    bitherMytransactionsApi.handleHttpGet();
-                    String txResult = bitherMytransactionsApi.getResult();
-                    JSONObject jsonObject = new JSONObject(txResult);
-                    if (!jsonObject.isNull(BLOCK_COUNT)) {
-                        apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
-                    }
-                    int txCnt = jsonObject.getInt(TX_CNT);
-                    List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(
-                            jsonObject, storeBlockHeight);
-                    transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
-                    Collections.sort(transactions, new ComparatorTx());
-                    AddressManager.getInstance().getHDAccountMonitored().initTxs(transactions);
-                    txSum = txSum + transactions.size();
-                    needGetTxs = transactions.size() > 0;
-                    page++;
-                }
-                */
-                if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
-                    BlockChain.getInstance().rollbackBlock(apiBlockCount);
-                }
-
-                log.info("hd monitor address did sync {} tx, path {} ,index {}, {}", txSum, pathType, addressIndex, hdAccountAddress.getAddress());
-                hdAccountAddress.setSyncedComplete(true);
-                AddressManager.getInstance().getHDAccountMonitored().updateSyncComplete(hdAccountAddress);
-
-                if (txSum > 0) {
-                    if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-                        AddressManager.getInstance().getHDAccountMonitored().updateIssuedExternalIndex(addressIndex);
-                    } else {
-                        AddressManager.getInstance().getHDAccountMonitored().updateIssuedInternalIndex(addressIndex);
-                    }
-                    AddressManager.getInstance().getHDAccountMonitored().supplyEnoughKeys(false);
-//                    hasTx = true;
-                    unusedAddressCnt = 0;
-                } else {
-//                    hasTx = false;
-                    unusedAddressCnt += 1;
-                }
-                addressIndex++;
-            }
-            AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, addressIndex - 1);
-        }
     }
 
     private static void getTxForHDAccount(int hdSeedId, final int webType) throws Exception {
@@ -403,7 +266,7 @@ public class TransactionsUtil {
             while (unusedAddressCnt <= maxUnusedAddressCount) {
                 Block storedBlock = BlockChain.getInstance().getLastBlock();
                 int storeBlockHeight = storedBlock.getBlockNo();
-                hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId,
+                hdAccountAddress = AbstractDb.hdAccountProvider.addressForPath(
                         pathType, addressIndex);
                 if (hdAccountAddress == null) {
 //                    hasTx = false;
@@ -444,7 +307,7 @@ public class TransactionsUtil {
 
                         Collections.sort(transactions, new ComparatorTx());
                         // address.initTxs(transactions);
-                        AddressManager.getInstance().getHDAccountHot().initTxs(transactions);
+                        AddressManager.getInstance().getHdAccount().initTxs(transactions);
                         txSum = txSum + transactions.size();
                         needGetTxs = transactions.size() > 0;
                         page++;
@@ -466,7 +329,7 @@ public class TransactionsUtil {
 
                         Collections.sort(transactions, new ComparatorTx());
                         // address.initTxs(transactions);
-                        AddressManager.getInstance().getHDAccountHot().initTxs(transactions);
+                        AddressManager.getInstance().getHdAccount().initTxs(transactions);
                         txSum = txSum + transactions.size();
                         needGetTxs = false;
 
@@ -487,7 +350,7 @@ public class TransactionsUtil {
                             jsonObject, storeBlockHeight);
                     transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
                     Collections.sort(transactions, new ComparatorTx());
-                    AddressManager.getInstance().getHDAccountHot().initTxs(transactions);
+                    AddressManager.getInstance().getHdAccount().initTxs(transactions);
                     txSum = txSum + transactions.size();
                     needGetTxs = transactions.size() > 0;
                     page++;
@@ -499,15 +362,15 @@ public class TransactionsUtil {
 
                 log.info("hd address did sync {} tx, path {} ,index {}, {}", txSum, pathType, addressIndex, hdAccountAddress.getAddress());
                 hdAccountAddress.setSyncedComplete(true);
-                AddressManager.getInstance().getHDAccountHot().updateSyncComplete(hdAccountAddress);
+                AddressManager.getInstance().getHdAccount().updateSyncComplete(hdAccountAddress);
 
                 if (txSum > 0) {
                     if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-                        AddressManager.getInstance().getHDAccountHot().updateIssuedExternalIndex(addressIndex);
+                        AddressManager.getInstance().getHdAccount().updateIssuedExternalIndex(addressIndex);
                     } else {
-                        AddressManager.getInstance().getHDAccountHot().updateIssuedInternalIndex(addressIndex);
+                        AddressManager.getInstance().getHdAccount().updateIssuedInternalIndex(addressIndex);
                     }
-                    AddressManager.getInstance().getHDAccountHot().supplyEnoughKeys(false);
+                    AddressManager.getInstance().getHdAccount().supplyEnoughKeys(false);
 //                    hasTx = true;
                     unusedAddressCnt = 0;
                 } else {
@@ -516,127 +379,8 @@ public class TransactionsUtil {
                 }
                 addressIndex++;
             }
-            AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, addressIndex - 1);
+            AbstractDb.hdAccountProvider.updateSyncdForIndex(pathType, addressIndex - 1);
         }
-    }
-
-    private static void getTxForDesktopHDM(DesktopHDMKeychain desktopHDMKeychain, final int webType) throws Exception {
-        for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
-            DesktopHDMAddress desktopHDMAddress;
-            boolean hasTx = true;
-            int addressIndex = 0;
-            while (hasTx) {
-                Block storedBlock = BlockChain.getInstance().getLastBlock();
-                int storeBlockHeight = storedBlock.getBlockNo();
-                desktopHDMAddress = AbstractDb.desktopTxProvider.addressForPath(desktopHDMKeychain,
-                        pathType, addressIndex);
-                if (desktopHDMAddress == null) {
-                    hasTx = false;
-                    log.warn("AccountAddress", "address is null path {} ,index {}", pathType, addressIndex);
-                    continue;
-                }
-                if (desktopHDMAddress.isSyncComplete()) {
-                    addressIndex++;
-                    continue;
-                }
-                int apiBlockCount = 0;
-                int txSum = 0;
-                boolean needGetTxs = true;
-                int page = 1;
-                // TODO
-                List<Tx> transactions;
-
-                while (needGetTxs) {
-                    // TODO: get data from bither.net else from blockchain.info
-                    if (webType == 0) {
-                        BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
-                                desktopHDMAddress.getAddress(), page);
-                        bitherMytransactionsApi.handleHttpGet();
-                        String txResult = bitherMytransactionsApi.getResult();
-                        JSONObject jsonObject = new JSONObject(txResult);
-
-                        if (!jsonObject.isNull(BLOCK_COUNT)) {
-                            apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
-                        }
-                        int txCnt = jsonObject.getInt(TX_CNT);
-                        transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
-                        transactions = AddressManager.getInstance().compressTxsForDesktopHDM(transactions);
-
-                        Collections.sort(transactions, new ComparatorTx());
-                        // address.initTxs(transactions);
-                        desktopHDMKeychain.initTxs(transactions);
-                        txSum = txSum + transactions.size();
-                        needGetTxs = transactions.size() > 0;
-                        page++;
-
-                    }else {
-                        BlockChainMytransactionsApi blockChainMytransactionsApi = new BlockChainMytransactionsApi(desktopHDMAddress.getAddress());
-                        blockChainMytransactionsApi.handleHttpGet();
-                        String txResult = blockChainMytransactionsApi.getResult();
-                        JSONObject jsonObject = new JSONObject(txResult);
-                        // TODO: get the latest block number from blockChain.info
-                        JSONObject jsonObjectBlockChain = getLatestBlockNumberFromBlockchain();
-                        if (!jsonObjectBlockChain.isNull(BLOCK_CHAIN_HEIGHT)) {
-                            apiBlockCount = jsonObjectBlockChain.getInt(BLOCK_CHAIN_HEIGHT);
-                        }
-                        int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
-                        // TODO: get transactions from blockChain.info
-                        transactions = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
-                        transactions = AddressManager.getInstance().compressTxsForDesktopHDM(transactions);
-
-                        Collections.sort(transactions, new ComparatorTx());
-                        // address.initTxs(transactions);
-                        desktopHDMKeychain.initTxs(transactions);
-                        txSum = txSum + transactions.size();
-                        needGetTxs = false;
-
-                    }
-                }
-                /*
-                while (needGetTxs) {
-                    BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
-                            desktopHDMAddress.getAddress(), page, flag);
-                    bitherMytransactionsApi.handleHttpGet();
-                    String txResult = bitherMytransactionsApi.getResult();
-                    JSONObject jsonObject = new JSONObject(txResult);
-                    if (!jsonObject.isNull(BLOCK_COUNT)) {
-                        apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
-                    }
-                    int txCnt = jsonObject.getInt(TX_CNT);
-                    List<Tx> transactions = TransactionsUtil.getTransactionsFromBither(
-                            jsonObject, storeBlockHeight);
-                    transactions = AddressManager.getInstance().compressTxsForDesktopHDM(transactions);
-                    Collections.sort(transactions, new ComparatorTx());
-                    desktopHDMKeychain.initTxs(transactions);
-                    txSum = txSum + transactions.size();
-                    needGetTxs = transactions.size() > 0;
-                    page++;
-                }
-                */
-                if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
-                    BlockChain.getInstance().rollbackBlock(apiBlockCount);
-                }
-
-                desktopHDMAddress.setSyncComplete(true);
-                desktopHDMKeychain.updateSyncComplete(desktopHDMAddress);
-
-                if (txSum > 0) {
-                    if (pathType == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-                        desktopHDMKeychain.updateIssuedExternalIndex(addressIndex);
-                    } else {
-                        desktopHDMKeychain.updateIssuedInternalIndex(addressIndex);
-                    }
-                    desktopHDMKeychain.supplyEnoughKeys(false);
-                    hasTx = true;
-                } else {
-                    hasTx = false;
-                    AbstractDb.desktopTxProvider.updateSyncdForIndex(pathType, addressIndex);
-                }
-            }
-            addressIndex++;
-        }
-
-
     }
 
     private static void getTxForAddress(final int webType) throws Exception {
