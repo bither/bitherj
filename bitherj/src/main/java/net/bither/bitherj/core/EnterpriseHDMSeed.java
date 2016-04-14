@@ -34,6 +34,7 @@ import java.util.List;
  * Created by songchenwen on 15/6/2.
  */
 public class EnterpriseHDMSeed extends AbstractHD {
+    public static final String XPubPrefix = "EHDM:";
 
     public EnterpriseHDMSeed(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
