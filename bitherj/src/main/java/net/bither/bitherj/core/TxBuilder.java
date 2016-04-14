@@ -214,20 +214,20 @@ public class TxBuilder {
     static List<Out> getCanSpendOuts(List<Tx> txs) {
         List<Out> result = new ArrayList<Out>();
         for (Tx tx : txs) {
-            if (tx.getBlockNo() != Tx.TX_UNCONFIRMED || tx.getSource() == Tx.SourceType.self.getValue()) {
+//            if (tx.getBlockNo() != Tx.TX_UNCONFIRMED || tx.getSource() == Tx.SourceType.self.getValue()) {
                 result.add(tx.getOuts().get(0));
-            }
+//            }
         }
         return result;
     }
 
     static List<Out> getCanNotSpendOuts(List<Tx> txs) {
         List<Out> result = new ArrayList<Out>();
-        for (Tx tx : txs) {
-            if (tx.getBlockNo() == Tx.TX_UNCONFIRMED && tx.getSource() == Tx.SourceType.network.getValue()) {
-                result.add(tx.getOuts().get(0));
-            }
-        }
+//        for (Tx tx : txs) {
+//            if (tx.getBlockNo() == Tx.TX_UNCONFIRMED && tx.getSource() == Tx.SourceType.network.getValue()) {
+//                result.add(tx.getOuts().get(0));
+//            }
+//        }
         return result;
     }
 }
