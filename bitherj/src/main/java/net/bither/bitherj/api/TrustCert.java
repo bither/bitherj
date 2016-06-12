@@ -46,6 +46,9 @@ public class TrustCert {
     public KeyStore getKeyStore() throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
         KeyStore localTrustStore = KeyStore.getInstance(type);
+        if (localTrustStore == null) {
+            return null;
+        }
         try {
             localTrustStore.load(input, password);
         } finally {

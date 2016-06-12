@@ -32,6 +32,10 @@ public final class ConnectHttps {
     public static void trustCerts(TrustCert cert) {
         try {
             KeyStore localTrustStore = cert.getKeyStore();
+            if (localTrustStore == null) {
+                log.error("can not load key due to no key store instance for type");
+                return;
+            }
             BitherTrustManager trustManager = new BitherTrustManager(localTrustStore);
 
             SSLContext sc = SSLContext.getInstance("SSL");
@@ -42,7 +46,7 @@ public final class ConnectHttps {
             e.printStackTrace();
             log.error("can not load key store https will be disabled");
             if (BitherjSettings.DEV_DEBUG) {
-                throw new RuntimeException(e);
+//                throw new RuntimeException(e);
             }
         }
     }
