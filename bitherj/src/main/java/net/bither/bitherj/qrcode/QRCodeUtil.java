@@ -143,10 +143,8 @@ public class QRCodeUtil {
             }
             String splitStr = str.substring(start, end);
             String pageString = "";
-            if (num > 1) {
-                pageString = Integer.toString(num - 1) + QR_CODE_SPLIT
-                        + Integer.toString(i) + QR_CODE_SPLIT;
-            }
+            pageString = Integer.toString(num - 1) + QR_CODE_SPLIT
+                    + Integer.toString(i) + QR_CODE_SPLIT;
             stringList.add(pageString + splitStr);
         }
         return stringList;
