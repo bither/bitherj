@@ -49,6 +49,7 @@ public class QRCodeUtil {
     public static final String HDM_QR_CODE_FLAG = "-";
     public static final String Enterprise_HDM_QR_CODE_FLAG = "?";
     public static final String HD_QR_CODE_FLAG = "%";
+    public static final String HD_MONITOR_QR_PREFIX = "BitherHD:";
 
 
     public static String[] splitString(String str) {
