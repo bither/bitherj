@@ -43,6 +43,8 @@ public abstract class ISetting {
 
     public abstract BitherjSettings.TransactionFeeMode getTransactionFeeMode();
 
+    public abstract BitherjSettings.ApiConfig getApiConfig();
+
     public abstract File getPrivateDir(String dirName);
 
     public abstract boolean isApplicationRunInForeground();

@@ -49,6 +49,7 @@ public class QRCodeUtil {
     public static final String HDM_QR_CODE_FLAG = "-";
     public static final String Enterprise_HDM_QR_CODE_FLAG = "?";
     public static final String HD_QR_CODE_FLAG = "%";
+    public static final String HD_MONITOR_QR_PREFIX = "BitherHD:";
 
 
     public static String[] splitString(String str) {
@@ -142,10 +143,8 @@ public class QRCodeUtil {
             }
             String splitStr = str.substring(start, end);
             String pageString = "";
-            if (num > 1) {
-                pageString = Integer.toString(num - 1) + QR_CODE_SPLIT
-                        + Integer.toString(i) + QR_CODE_SPLIT;
-            }
+            pageString = Integer.toString(num - 1) + QR_CODE_SPLIT
+                    + Integer.toString(i) + QR_CODE_SPLIT;
             stringList.add(pageString + splitStr);
         }
         return stringList;

@@ -20,7 +20,10 @@ import net.bither.bitherj.api.http.BitherUrl;
 import net.bither.bitherj.api.http.HttpGetResponse;
 import net.bither.bitherj.utils.Utils;
 
+
 public class BitherMytransactionsApi extends HttpGetResponse<String> {
+    public static final int bitherWebType = 0;
+    public static final int blockChainWebType = 1;
 
     public BitherMytransactionsApi(String address) {
         this(address, 1);

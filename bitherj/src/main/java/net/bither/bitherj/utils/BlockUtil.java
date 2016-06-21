@@ -19,6 +19,8 @@ package net.bither.bitherj.utils;
 
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
+import net.bither.bitherj.api.BlockChainDownloadSpvApi;
+import net.bither.bitherj.api.BlockChainGetLatestBlockApi;
 import net.bither.bitherj.api.DownloadSpvApi;
 import net.bither.bitherj.core.Block;
 import net.bither.bitherj.core.BlockChain;
@@ -39,6 +41,37 @@ public class BlockUtil {
     private static final String BITS = "bits";
     private static final String NONCE = "nonce";
     private static final String BLOCK_NO = "block_no";
+    private static final String HEIGHT = "height";
+
+    public  static Block getLatestBlockHeight(JSONObject jsonObject)
+            throws Exception {
+        int latestHeight = jsonObject.getInt("height");
+        int height = 0;
+        if (latestHeight % 2016 !=0){
+            height = latestHeight - (latestHeight%2016);
+        }else {
+            height = latestHeight;
+        }
+        BlockChainDownloadSpvApi blockChainDownloadSpvApi = new BlockChainDownloadSpvApi(height);
+        blockChainDownloadSpvApi.handleHttpGet();
+        Block block = null;
+        block = blockChainDownloadSpvApi.getResult();
+        return block;
+    }
+    public static Block formatStoreBlockFromBlockChainInfo(JSONObject jsonObject)
+        throws JSONException{
+        long ver = jsonObject.getLong(VER);
+        int height = jsonObject.getInt(HEIGHT);
+        String prevBlock = jsonObject.getString(PREV_BLOCK);
+        String mrklRoot = jsonObject.getString(MRKL_ROOT);
+        int time = jsonObject.getInt(TIME);
+        long difficultyTarget = jsonObject.getLong(BITS);
+        long nonce = jsonObject.getLong(NONCE);
+
+        return BlockUtil.getStoredBlock(ver, prevBlock, mrklRoot, time,
+                difficultyTarget, nonce, height);
+
+    }
 
     public static Block formatStoredBlock(JSONObject jsonObject)
             throws JSONException {
@@ -56,7 +89,6 @@ public class BlockUtil {
 
     public static Block formatStoredBlock(JSONObject jsonObject, int hegih)
             throws JSONException {
-
         long ver = jsonObject.getLong(VER);
         String prevBlock = jsonObject.getString(PREV_BLOCK);
         String mrklRoot = jsonObject.getString(MRKL_ROOT);
@@ -89,6 +121,16 @@ public class BlockUtil {
             block = downloadSpvApi.getResult();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        try {
+            if (block == null) {
+                BlockChainGetLatestBlockApi blockChainGetLatestBlockApi = new
+                        BlockChainGetLatestBlockApi();
+                blockChainGetLatestBlockApi.handleHttpGet();
+                block = blockChainGetLatestBlockApi.getResult();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
             AbstractApp.notificationService.sendBroadcastGetSpvBlockComplete(false);
             throw e;
         }
@@ -103,5 +145,6 @@ public class BlockUtil {
         }
         return block;
     }
+
 
 }

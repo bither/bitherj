@@ -34,11 +34,12 @@ import java.util.List;
  * Created by songchenwen on 15/6/2.
  */
 public class EnterpriseHDMSeed extends AbstractHD {
+    public static final String XPubPrefix = "EHDM:";
 
-    public EnterpriseHDMSeed(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
+    public EnterpriseHDMSeed(byte[] mnemonicSeed, boolean isXRandom,CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         this.mnemonicSeed = mnemonicSeed;
-        isFromXRandom = false;
+        isFromXRandom = isXRandom;
         String firstAddress = null;
         EncryptedData encryptedMnemonicSeed = null;
         EncryptedData encryptedHDSeed = null;
@@ -55,6 +56,11 @@ public class EnterpriseHDMSeed extends AbstractHD {
         hdSeedId = AbstractDb.addressProvider.addEnterpriseHDKey(encryptedMnemonicSeed.toEncryptedString(),
                 encryptedHDSeed.toEncryptedString(), firstAddress, isFromXRandom, address);
 
+    }
+
+    public EnterpriseHDMSeed(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        this(mnemonicSeed, false, password);
     }
 
     // Create With Random

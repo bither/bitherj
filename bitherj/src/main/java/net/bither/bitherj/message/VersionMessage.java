@@ -314,6 +314,10 @@ public class VersionMessage extends Message {
         }
     }
 
+    public boolean canRelayTx(){
+        return relayTxesBeforeFilter;
+    }
+
     private static void checkSubVerComponent(String component) {
         if (component.contains("/") || component.contains("(") || component.contains(")")) {
             throw new IllegalArgumentException("name contains invalid characters");
