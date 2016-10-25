@@ -113,7 +113,7 @@ public class BitherjSettings {
     public static final boolean ensureMinRequiredFee = true;
 
     public enum TransactionFeeMode {
-        Normal(10000), Low(1000), High(20000);
+        Normal(10000), High(20000), Higher(50000);
 
         private int satoshi;
 
