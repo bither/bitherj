@@ -18,6 +18,7 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
+import net.bither.bitherj.BitherjSettings.ApiConfig;
 import net.bither.bitherj.ISetting;
 import net.bither.bitherj.NotificationService;
 import net.bither.bitherj.api.TrustCert;
@@ -94,6 +95,12 @@ public class TestImplAbstractApp extends AbstractApp {
                 return cookieStore;
             }
 
+			@Override
+			public ApiConfig getApiConfig() {
+				// TODO Auto-generated method stub
+				// MC: missing from bitherj project
+				return null;
+			}
 
         };
     }
