@@ -23,7 +23,14 @@ public interface IDb {
     void endTransaction();
     void close();
 
+    @Deprecated
     void execUpdate(String sql, String[] params);
+    @Deprecated
     void execQueryOneRecord(String sql, String[] params, Function<ICursor, Void> func);
+    @Deprecated
     void execQueryLoop(String sql, String[] params, Function<ICursor, Void> func);
+
+    void execUpdate(String sql, Object[] params);
+    void execQueryOneRecord(String sql, Object[] params, Function<ICursor, Void> func);
+    void execQueryLoop(String sql, Object[] params, Function<ICursor, Void> func);
 }
