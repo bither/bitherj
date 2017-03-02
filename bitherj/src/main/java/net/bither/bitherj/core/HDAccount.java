@@ -91,6 +91,7 @@ public class HDAccount extends Address {
 
     // Create With Random
     public HDAccount(SecureRandom random, CharSequence password, HDAccountGenerationDelegate generationDelegate) throws MnemonicException.MnemonicLengthException {
+        MnemonicCode.instanceForWord(null);
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
         mnemonicSeed = new byte[16];
         random.nextBytes(mnemonicSeed);

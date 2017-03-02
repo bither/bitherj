@@ -46,7 +46,7 @@ import java.util.Locale;
 public abstract class MnemonicCode {
     private static final Logger log = LoggerFactory.getLogger(MnemonicCode.class);
 
-    private ArrayList<String> wordList;
+    public ArrayList<String> wordList;
 
     private static String BIP39_ENGLISH_SHA256 =
             "ad90bf3beb7b0eb7e5acd74727dc0da96e0a280a258354e7293fb7e211ac03db";
@@ -61,12 +61,23 @@ public abstract class MnemonicCode {
 
     private static MnemonicCode instance;
 
+    private static MnemonicCode importInstance;
+
     public static void setInstance(MnemonicCode i) {
         instance = i;
     }
 
     public static MnemonicCode instance() {
-        return instance;
+        if (importInstance == null) {
+            return instance;
+        } else {
+            return importInstance;
+        }
+    }
+
+    public static MnemonicCode instanceForWord(MnemonicCode i) {
+        importInstance = i;
+        return i;
     }
 
     /**
@@ -76,7 +87,7 @@ public abstract class MnemonicCode {
         this(BIP39_ENGLISH_SHA256);
     }
 
-    protected abstract InputStream openWordList() throws IOException;
+    protected abstract ArrayList<String> openWordList() throws IOException, IllegalArgumentException;
 
     /**
      * Creates an MnemonicCode object, initializing with words read from the supplied input
@@ -84,33 +95,7 @@ public abstract class MnemonicCode {
      * is supplied the digest of the words will be checked.
      */
     public MnemonicCode(String wordListDigest) throws IOException, IllegalArgumentException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(openWordList(), "UTF-8"));
-        this.wordList = new ArrayList<String>(2048);
-        MessageDigest md;
-        try {
-            md = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException ex) {
-            throw new RuntimeException(ex);        // Can't happen.
-        }
-        String word;
-        while ((word = br.readLine()) != null) {
-            md.update(word.getBytes());
-            this.wordList.add(word);
-        }
-        br.close();
-
-        if (this.wordList.size() != 2048) {
-            throw new IllegalArgumentException("input stream did not contain 2048 words");
-        }
-
-        // If a wordListDigest is supplied check to make sure it matches.
-        if (wordListDigest != null) {
-            byte[] digest = md.digest();
-            String hexdigest = Utils.bytesToHexString(digest).toLowerCase(Locale.US);
-            if (!hexdigest.equals(wordListDigest)) {
-                throw new IllegalArgumentException("wordlist digest mismatch");
-            }
-        }
+        this.wordList = openWordList();
     }
 
     /**
@@ -118,6 +103,21 @@ public abstract class MnemonicCode {
      */
     public List<String> getWordList() {
         return wordList;
+    }
+
+    public ArrayList<String> getWordListForInputStream(InputStream inputStream) throws IOException, IllegalArgumentException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+        ArrayList<String> words = new ArrayList<String>(2048);
+        String word;
+        while ((word = br.readLine()) != null) {
+            words.add(word);
+        }
+        br.close();
+
+        if (words.size() != 2048) {
+            throw new IllegalArgumentException("input stream did not contain 2048 words");
+        }
+        return words;
     }
 
     /**
@@ -132,7 +132,16 @@ public abstract class MnemonicCode {
         // used as a pseudo-random function. Desired length of the
         // derived key is 512 bits (= 64 bytes).
         //
-        String pass = Joiner.on(' ').join(words);
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0;
+             i < words.size();
+             i++) {
+            builder.append(words.get(i));
+            if (i < words.size() - 1) {
+                builder.append(" ");
+            }
+        }
+        String pass = builder.toString();
         String salt = "mnemonic" + passphrase;
 
         long start = System.currentTimeMillis();
@@ -163,7 +172,7 @@ public abstract class MnemonicCode {
         int wordindex = 0;
         for (String word : words) {
             // Find the words index in the wordlist.
-            int ndx = Collections.binarySearch(this.wordList, word);
+            int ndx = this.wordList.indexOf(word);
             if (ndx < 0) {
                 throw new MnemonicException.MnemonicWordException(word);
             }

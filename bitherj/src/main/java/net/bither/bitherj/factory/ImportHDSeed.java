@@ -44,7 +44,17 @@ public abstract class ImportHDSeed {
     protected SecureCharSequence password;
 
     private ImportHDSeedType importPrivateKeyType;
+    private MnemonicCode mnemonicCode = MnemonicCode.instance();
 
+
+    public ImportHDSeed(ImportHDSeedType importHDSeedType
+            , String content, List<String> worlds, SecureCharSequence password, MnemonicCode mnemonicCode) {
+        this.content = content;
+        this.password = password;
+        this.importPrivateKeyType = importHDSeedType;
+        this.worlds = worlds;
+        this.mnemonicCode = mnemonicCode;
+    }
 
     public ImportHDSeed(ImportHDSeedType importHDSeedType
             , String content, List<String> worlds, SecureCharSequence password) {
@@ -83,7 +93,7 @@ public abstract class ImportHDSeed {
 
             case HDMColdPhrase:
                 try {
-                    byte[] mnemonicCodeSeed = MnemonicCode.instance().toEntropy(worlds);
+                    byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
                     HDMKeychain hdmKeychain = new HDMKeychain(mnemonicCodeSeed, password);
                     return hdmKeychain;
                 } catch (Exception e) {
@@ -100,7 +110,6 @@ public abstract class ImportHDSeed {
     public HDAccountCold importHDAccountCold() {
         switch (importPrivateKeyType) {
             case HDSeedQRCode:
-
                 if (content.indexOf(QRCodeUtil.HD_QR_CODE_FLAG) == 0) {
                     String keyString = content.substring(1);
                     String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keyString);
@@ -125,10 +134,11 @@ public abstract class ImportHDSeed {
                 }
             case HDSeedPhrase:
                 try {
-                    byte[] mnemonicCodeSeed = MnemonicCode.instance().toEntropy(worlds);
+                    byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
                     HDAccountCold hdAccount = new HDAccountCold(mnemonicCodeSeed, password, false);
                     return hdAccount;
                 } catch (Exception e) {
+                    MnemonicCode.instanceForWord(null);
                     e.printStackTrace();
                     importError(IMPORT_FAILED);
                 }
@@ -165,10 +175,11 @@ public abstract class ImportHDSeed {
                 }
             case HDSeedPhrase:
                 try {
-                    byte[] mnemonicCodeSeed = MnemonicCode.instance().toEntropy(worlds);
+                    byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
                     HDAccount hdAccount = new HDAccount(mnemonicCodeSeed, password, false);
                     return hdAccount;
                 } catch (Exception e) {
+                    MnemonicCode.instanceForWord(null);
                     e.printStackTrace();
                     importError(IMPORT_FAILED);
                 }
