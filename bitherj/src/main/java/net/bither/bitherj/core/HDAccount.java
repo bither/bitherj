@@ -65,20 +65,22 @@ public class HDAccount extends Address {
     protected int hdSeedId = -1;
     protected boolean isFromXRandom;
     private boolean hasSeed;
+    private MnemonicCode mnemonicCode = MnemonicCode.instance();
 
     private static final Logger log = LoggerFactory.getLogger(HDAccount.class);
 
     public HDAccount(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
-        this(mnemonicSeed, password, true);
+        this(MnemonicCode.instance(), mnemonicSeed, password, true);
     }
 
-    public HDAccount(byte[] mnemonicSeed, CharSequence password, boolean isSyncedComplete) throws
+    public HDAccount(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password, boolean isSyncedComplete) throws
             MnemonicException
             .MnemonicLengthException {
         super();
+        this.mnemonicCode = mnemonicCode;
         this.mnemonicSeed = mnemonicSeed;
-        hdSeed = seedFromMnemonic(mnemonicSeed);
+        hdSeed = seedFromMnemonic(mnemonicCode, mnemonicSeed);
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         EncryptedData encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password,
@@ -91,11 +93,10 @@ public class HDAccount extends Address {
 
     // Create With Random
     public HDAccount(SecureRandom random, CharSequence password, HDAccountGenerationDelegate generationDelegate) throws MnemonicException.MnemonicLengthException {
-        MnemonicCode.instanceForWord(null);
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
         mnemonicSeed = new byte[16];
         random.nextBytes(mnemonicSeed);
-        hdSeed = seedFromMnemonic(mnemonicSeed);
+        hdSeed = seedFromMnemonic(mnemonicCode, mnemonicSeed);
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         EncryptedData encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password,
                 isFromXRandom);
@@ -111,7 +112,7 @@ public class HDAccount extends Address {
             isSyncedComplete)
             throws MnemonicException.MnemonicLengthException {
         mnemonicSeed = encryptedMnemonicSeed.decrypt(password);
-        hdSeed = seedFromMnemonic(mnemonicSeed);
+        hdSeed = seedFromMnemonic(mnemonicCode, mnemonicSeed);
         isFromXRandom = encryptedMnemonicSeed.isXRandom();
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
@@ -715,7 +716,7 @@ public class HDAccount extends Address {
     public List<String> getSeedWords(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         decryptMnemonicSeed(password);
-        List<String> words = MnemonicCode.instance().toMnemonic(mnemonicSeed);
+        List<String> words = mnemonicCode.toMnemonic(mnemonicSeed);
         wipeMnemonicSeed();
         return words;
     }
@@ -730,7 +731,7 @@ public class HDAccount extends Address {
             byte[] hdCopy = Arrays.copyOf(hdSeed, hdSeed.length);
             boolean hdSeedSafe = Utils.compareString(getFirstAddressFromDb(),
                     getFirstAddressFromSeed(null));
-            boolean mnemonicSeedSafe = Arrays.equals(seedFromMnemonic(mnemonicSeed), hdCopy);
+            boolean mnemonicSeedSafe = Arrays.equals(seedFromMnemonic(mnemonicCode, mnemonicSeed), hdCopy);
             Utils.wipeBytes(hdCopy);
             wipeHDSeed();
             wipeMnemonicSeed();
@@ -798,10 +799,9 @@ public class HDAccount extends Address {
         return hdSeedId;
     }
 
-    public static final byte[] seedFromMnemonic(byte[] mnemonicSeed) throws MnemonicException
+    public static final byte[] seedFromMnemonic(MnemonicCode mnemonicCode, byte[] mnemonicSeed) throws MnemonicException
             .MnemonicLengthException {
-        MnemonicCode mnemonic = MnemonicCode.instance();
-        return mnemonic.toSeed(mnemonic.toMnemonic(mnemonicSeed), "");
+        return mnemonicCode.toSeed(mnemonicCode.toMnemonic(mnemonicSeed), "");
     }
 
     public boolean isFromXRandom() {

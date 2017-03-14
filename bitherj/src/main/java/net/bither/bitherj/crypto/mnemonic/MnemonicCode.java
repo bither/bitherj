@@ -17,25 +17,19 @@
  */
 
 package net.bither.bitherj.crypto.mnemonic;
-
-import com.google.common.base.Joiner;
-
 import net.bither.bitherj.utils.Sha256Hash;
-import net.bither.bitherj.utils.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 
 
 /**
@@ -43,10 +37,15 @@ import java.util.Locale;
  * <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">the BIP 39 specification</a>
  */
 
+
+
+
 public abstract class MnemonicCode {
     private static final Logger log = LoggerFactory.getLogger(MnemonicCode.class);
 
-    public ArrayList<String> wordList;
+    private MnemonicWordList mnemonicWordList = MnemonicWordList.English;
+
+    private ArrayList<String> wordList;
 
     private static String BIP39_ENGLISH_SHA256 =
             "ad90bf3beb7b0eb7e5acd74727dc0da96e0a280a258354e7293fb7e211ac03db";
@@ -61,33 +60,85 @@ public abstract class MnemonicCode {
 
     private static MnemonicCode instance;
 
-    private static MnemonicCode importInstance;
-
     public static void setInstance(MnemonicCode i) {
         instance = i;
     }
 
     public static MnemonicCode instance() {
-        if (importInstance == null) {
-            return instance;
-        } else {
-            return importInstance;
-        }
+        return instance;
     }
 
-    public static MnemonicCode instanceForWord(MnemonicCode i) {
-        importInstance = i;
+    public static MnemonicCode instanceForWord(MnemonicCode i, String word) {
+        if (i.getWordList(word) == null) {
+            return null;
+        }
+        i.wordList = i.getWordList(word);
         return i;
     }
 
-    /**
-     * Initialise from the included word list. Won't work on Android.
-     */
+    public void setWordList(ArrayList<String> wordList, MnemonicWordList mnemonicWordList) {
+        this.wordList = wordList;
+        this.mnemonicWordList = mnemonicWordList;
+    }
+
+    public void setMnemonicWordList(MnemonicWordList mnemonicWordList) {
+        ArrayList<String> wordList = getWordList(mnemonicWordList);
+        if (wordList != null) {
+            this.wordList = wordList;
+            this.mnemonicWordList = mnemonicWordList;
+        }
+    }
+
+    private ArrayList<String> getWordList(String word) {
+        try {
+            HashMap<MnemonicWordList, InputStream> wordListMap = openWordList();
+            Iterator iter = wordListMap.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry entry = (Map.Entry) iter.next();
+                InputStream value = (InputStream) entry.getValue();
+                ArrayList<String> words = getWordListForInputStream(value);
+                if (words.contains(word)) {
+                    MnemonicWordList key = (MnemonicWordList) entry.getKey();
+                    mnemonicWordList = key;
+                    return words;
+                }
+            }
+        } catch (IOException e) {
+            return null;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+        return null;
+    }
+
+    private ArrayList<String> getWordList(MnemonicWordList mnemonicWordList) {
+        try {
+            HashMap<MnemonicWordList, InputStream> wordListMap = openWordList();
+            Iterator iter = wordListMap.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry entry = (Map.Entry) iter.next();
+                Object key = entry.getKey();
+                if (key.equals(mnemonicWordList)) {
+                    InputStream value = (InputStream) entry.getValue();
+                    return getWordListForInputStream(value);
+                }
+            }
+        } catch (IOException e) {
+            return null;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+        return null;
+    }
+
+        /**
+         * Initialise from the included word list. Won't work on Android.
+         */
     public MnemonicCode() throws IOException {
         this(BIP39_ENGLISH_SHA256);
     }
 
-    protected abstract ArrayList<String> openWordList() throws IOException, IllegalArgumentException;
+    protected abstract HashMap<MnemonicWordList, InputStream> openWordList() throws IOException, IllegalArgumentException;
 
     /**
      * Creates an MnemonicCode object, initializing with words read from the supplied input
@@ -95,7 +146,17 @@ public abstract class MnemonicCode {
      * is supplied the digest of the words will be checked.
      */
     public MnemonicCode(String wordListDigest) throws IOException, IllegalArgumentException {
-        this.wordList = openWordList();
+        HashMap<MnemonicWordList, InputStream> wordListMap = openWordList();
+        Iterator iter = wordListMap.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            Object key = entry.getKey();
+            if (key.equals(mnemonicWordList)) {
+                InputStream value = (InputStream) entry.getValue();
+                this.wordList = getWordListForInputStream(value);
+                return;
+            }
+        }
     }
 
     /**
@@ -103,6 +164,10 @@ public abstract class MnemonicCode {
      */
     public List<String> getWordList() {
         return wordList;
+    }
+
+    public MnemonicWordList getMnemonicWordList() {
+        return mnemonicWordList;
     }
 
     public ArrayList<String> getWordListForInputStream(InputStream inputStream) throws IOException, IllegalArgumentException {

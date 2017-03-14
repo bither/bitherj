@@ -138,7 +138,6 @@ public abstract class ImportHDSeed {
                     HDAccountCold hdAccount = new HDAccountCold(mnemonicCodeSeed, password, false);
                     return hdAccount;
                 } catch (Exception e) {
-                    MnemonicCode.instanceForWord(null);
                     e.printStackTrace();
                     importError(IMPORT_FAILED);
                 }
@@ -176,10 +175,9 @@ public abstract class ImportHDSeed {
             case HDSeedPhrase:
                 try {
                     byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
-                    HDAccount hdAccount = new HDAccount(mnemonicCodeSeed, password, false);
+                    HDAccount hdAccount = new HDAccount(mnemonicCode, mnemonicCodeSeed, password, false);
                     return hdAccount;
                 } catch (Exception e) {
-                    MnemonicCode.instanceForWord(null);
                     e.printStackTrace();
                     importError(IMPORT_FAILED);
                 }
