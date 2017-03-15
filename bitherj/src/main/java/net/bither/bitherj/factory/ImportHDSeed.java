@@ -23,6 +23,7 @@ import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
+import net.bither.bitherj.crypto.mnemonic.MnemonicWordList;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
@@ -149,8 +150,9 @@ public abstract class ImportHDSeed {
     public HDAccount importHDAccount() {
         switch (importPrivateKeyType) {
             case HDSeedQRCode:
-                if (content.indexOf(MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag()) == 0) {
-                    String keyString = content.substring(1);
+                int hdQrCodeFlagLength = MnemonicWordList.getHdQrCodeFlagLength(content, mnemonicCode.getMnemonicWordList());
+                if (hdQrCodeFlagLength > 0) {
+                    String keyString = content.substring(hdQrCodeFlagLength);
                     String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keyString);
                     String encreyptString = Utils.joinString(new String[]{passwordSeeds[0], passwordSeeds[1], passwordSeeds[2]}, QRCodeUtil.QR_CODE_SPLIT);
                     PasswordSeed passwordSeed = PasswordSeed.getPasswordSeed();
