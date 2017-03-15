@@ -69,9 +69,9 @@ public class HDAccount extends Address {
 
     private static final Logger log = LoggerFactory.getLogger(HDAccount.class);
 
-    public HDAccount(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
+    public HDAccount(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
-        this(MnemonicCode.instance(), mnemonicSeed, password, true);
+        this(mnemonicCode, mnemonicSeed, password, true);
     }
 
     public HDAccount(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password, boolean isSyncedComplete) throws
@@ -108,9 +108,10 @@ public class HDAccount extends Address {
     }
 
     //use in import
-    public HDAccount(EncryptedData encryptedMnemonicSeed, CharSequence password, boolean
+    public HDAccount(MnemonicCode mnemonicCode, EncryptedData encryptedMnemonicSeed, CharSequence password, boolean
             isSyncedComplete)
             throws MnemonicException.MnemonicLengthException {
+        this.mnemonicCode = mnemonicCode;
         mnemonicSeed = encryptedMnemonicSeed.decrypt(password);
         hdSeed = seedFromMnemonic(mnemonicCode, mnemonicSeed);
         isFromXRandom = encryptedMnemonicSeed.isXRandom();

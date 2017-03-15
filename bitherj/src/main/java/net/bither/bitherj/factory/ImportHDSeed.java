@@ -111,8 +111,9 @@ public abstract class ImportHDSeed {
     public HDAccountCold importHDAccountCold() {
         switch (importPrivateKeyType) {
             case HDSeedQRCode:
-                if (content.indexOf(mnemonicCode.getMnemonicWordList().getHdQrCodeFlag()) == 0) {
-                    String keyString = content.substring(1);
+                int hdQrCodeFlagLength = MnemonicWordList.getHdQrCodeFlagLength(content, mnemonicCode.getMnemonicWordList());
+                if (hdQrCodeFlagLength > 0) {
+                    String keyString = content.substring(hdQrCodeFlagLength);
                     String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keyString);
                     String encreyptString = Utils.joinString(new String[]{passwordSeeds[0],
                             passwordSeeds[1], passwordSeeds[2]}, QRCodeUtil.QR_CODE_SPLIT);
@@ -122,7 +123,7 @@ public abstract class ImportHDSeed {
                         return null;
                     }
                     try {
-                        return new HDAccountCold(new EncryptedData(encreyptString), password);
+                        return new HDAccountCold(mnemonicCode, new EncryptedData(encreyptString), password);
                     } catch (Exception e) {
                         importError(IMPORT_FAILED);
                         e.printStackTrace();
@@ -161,7 +162,7 @@ public abstract class ImportHDSeed {
                         return null;
                     }
                     try {
-                        return new HDAccount(new EncryptedData(encreyptString)
+                        return new HDAccount(mnemonicCode, new EncryptedData(encreyptString)
                                 , password, false);
                     } catch (Exception e) {
                         importError(IMPORT_FAILED);

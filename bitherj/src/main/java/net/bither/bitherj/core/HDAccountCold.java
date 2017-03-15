@@ -83,20 +83,20 @@ public class HDAccountCold extends AbstractHD {
         externalKey.wipe();
     }
 
-    public HDAccountCold(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
+    public HDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
-        this(MnemonicCode.instance(), mnemonicSeed, password, false);
+        this(mnemonicCode, mnemonicSeed, password, false);
     }
 
-    public HDAccountCold(SecureRandom random, CharSequence password) throws MnemonicException
+    public HDAccountCold(MnemonicCode mnemonicCode, SecureRandom random, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
-        this(MnemonicCode.instance(), randomByteFromSecureRandom(random, 16), password, random.getClass().getCanonicalName
+        this(mnemonicCode, randomByteFromSecureRandom(random, 16), password, random.getClass().getCanonicalName
                 ().indexOf("XRandom") >= 0);
     }
 
-    public HDAccountCold(EncryptedData encryptedMnemonicSeed, CharSequence password) throws
+    public HDAccountCold(MnemonicCode mnemonicCode, EncryptedData encryptedMnemonicSeed, CharSequence password) throws
             MnemonicException.MnemonicLengthException {
-        this(MnemonicCode.instance(), encryptedMnemonicSeed.decrypt(password), password, encryptedMnemonicSeed.isXRandom());
+        this(mnemonicCode, encryptedMnemonicSeed.decrypt(password), password, encryptedMnemonicSeed.isXRandom());
     }
 
     public HDAccountCold(int hdSeedId) {

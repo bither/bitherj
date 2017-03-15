@@ -33,6 +33,7 @@ import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.crypto.bip38.Bip38;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
+import net.bither.bitherj.crypto.mnemonic.MnemonicWordList;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.qrcode.SaltForQRCode;
@@ -252,7 +253,7 @@ public class PrivateKeyUtil {
         return hdmKeychain;
     }
 
-    public static HDAccountCold getHDAccountCold(String str, CharSequence password) {
+    public static HDAccountCold getHDAccountCold(MnemonicCode mnemonicCode, String str, CharSequence password) {
         HDAccountCold hdAccountCold = null;
         String[] strs = QRCodeUtil.splitOfPasswordSeed(str);
         if (strs.length % 3 != 0) {
@@ -262,11 +263,12 @@ public class PrivateKeyUtil {
         for (int i = 0;
              i < strs.length;
              i += 3) {
-            if (strs[i].indexOf(MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag()) == 0) {
+            int hdQrCodeFlagLength = MnemonicWordList.getHdQrCodeFlagLength(strs[i], mnemonicCode.getMnemonicWordList());
+            if (hdQrCodeFlagLength > 0) {
                 try {
-                    String encryptedString = strs[i].substring(1) + QRCodeUtil.QR_CODE_SPLIT + strs[i + 1]
+                    String encryptedString = strs[i].substring(hdQrCodeFlagLength) + QRCodeUtil.QR_CODE_SPLIT + strs[i + 1]
                             + QRCodeUtil.QR_CODE_SPLIT + strs[i + 2];
-                    hdAccountCold = new HDAccountCold(new EncryptedData(encryptedString), password);
+                    hdAccountCold = new HDAccountCold(mnemonicCode, new EncryptedData(encryptedString), password);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
