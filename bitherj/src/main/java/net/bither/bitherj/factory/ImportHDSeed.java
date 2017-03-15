@@ -44,7 +44,7 @@ public abstract class ImportHDSeed {
     protected SecureCharSequence password;
 
     private ImportHDSeedType importPrivateKeyType;
-    private MnemonicCode mnemonicCode = MnemonicCode.instance();
+    protected MnemonicCode mnemonicCode = MnemonicCode.instance();
 
 
     public ImportHDSeed(ImportHDSeedType importHDSeedType
@@ -110,7 +110,7 @@ public abstract class ImportHDSeed {
     public HDAccountCold importHDAccountCold() {
         switch (importPrivateKeyType) {
             case HDSeedQRCode:
-                if (content.indexOf(QRCodeUtil.HD_QR_CODE_FLAG) == 0) {
+                if (content.indexOf(mnemonicCode.getMnemonicWordList().getHdQrCodeFlag()) == 0) {
                     String keyString = content.substring(1);
                     String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keyString);
                     String encreyptString = Utils.joinString(new String[]{passwordSeeds[0],
@@ -135,7 +135,7 @@ public abstract class ImportHDSeed {
             case HDSeedPhrase:
                 try {
                     byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
-                    HDAccountCold hdAccount = new HDAccountCold(mnemonicCodeSeed, password, false);
+                    HDAccountCold hdAccount = new HDAccountCold(mnemonicCode, mnemonicCodeSeed, password, false);
                     return hdAccount;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -149,8 +149,7 @@ public abstract class ImportHDSeed {
     public HDAccount importHDAccount() {
         switch (importPrivateKeyType) {
             case HDSeedQRCode:
-
-                if (content.indexOf(QRCodeUtil.HD_QR_CODE_FLAG) == 0) {
+                if (content.indexOf(MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag()) == 0) {
                     String keyString = content.substring(1);
                     String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keyString);
                     String encreyptString = Utils.joinString(new String[]{passwordSeeds[0], passwordSeeds[1], passwordSeeds[2]}, QRCodeUtil.QR_CODE_SPLIT);

@@ -28,16 +28,14 @@ import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
+import net.bither.bitherj.crypto.mnemonic.MnemonicWordList;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.script.ScriptBuilder;
-import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,10 +52,11 @@ public class HDAccountCold extends AbstractHD {
 
     private static final Logger log = LoggerFactory.getLogger(HDAccountCold.class);
 
-    public HDAccountCold(byte[] mnemonicSeed, CharSequence password, boolean isFromXRandom)
+    public HDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password, boolean isFromXRandom)
             throws MnemonicException.MnemonicLengthException {
+        this.mnemonicCode = mnemonicCode;
         this.mnemonicSeed = mnemonicSeed;
-        hdSeed = seedFromMnemonic(mnemonicSeed);
+        hdSeed = seedFromMnemonic(mnemonicSeed, mnemonicCode);
         this.isFromXRandom = isFromXRandom;
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
@@ -86,18 +85,18 @@ public class HDAccountCold extends AbstractHD {
 
     public HDAccountCold(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
-        this(mnemonicSeed, password, false);
+        this(MnemonicCode.instance(), mnemonicSeed, password, false);
     }
 
     public HDAccountCold(SecureRandom random, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
-        this(randomByteFromSecureRandom(random, 16), password, random.getClass().getCanonicalName
+        this(MnemonicCode.instance(), randomByteFromSecureRandom(random, 16), password, random.getClass().getCanonicalName
                 ().indexOf("XRandom") >= 0);
     }
 
     public HDAccountCold(EncryptedData encryptedMnemonicSeed, CharSequence password) throws
             MnemonicException.MnemonicLengthException {
-        this(encryptedMnemonicSeed.decrypt(password), password, encryptedMnemonicSeed.isXRandom());
+        this(MnemonicCode.instance(), encryptedMnemonicSeed.decrypt(password), password, encryptedMnemonicSeed.isXRandom());
     }
 
     public HDAccountCold(int hdSeedId) {
@@ -160,7 +159,7 @@ public class HDAccountCold extends AbstractHD {
             byte[] hdCopy = Arrays.copyOf(hdSeed, hdSeed.length);
             boolean hdSeedSafe = Utils.compareString(getFirstAddressFromDb(),
                     getFirstAddressFromSeed(null));
-            boolean mnemonicSeedSafe = Arrays.equals(seedFromMnemonic(mnemonicSeed), hdCopy);
+            boolean mnemonicSeedSafe = Arrays.equals(seedFromMnemonic(mnemonicSeed, mnemonicCode), hdCopy);
             Utils.wipeBytes(hdCopy);
             wipeHDSeed();
             wipeMnemonicSeed();
@@ -187,7 +186,7 @@ public class HDAccountCold extends AbstractHD {
     }
 
     public String getQRCodeFullEncryptPrivKey() {
-        return QRCodeUtil.HD_QR_CODE_FLAG + getFullEncryptPrivKey();
+        return MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag() + getFullEncryptPrivKey();
     }
 
     private static byte[] randomByteFromSecureRandom(SecureRandom random, int length) {

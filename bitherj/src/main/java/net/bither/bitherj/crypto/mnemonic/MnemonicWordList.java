@@ -13,7 +13,21 @@ public enum MnemonicWordList {
     private static final String ENGLISH = "English";
     private static final String ZH_CN = "ZhCN";
     private static final String ZH_TW = "ZhTw";
+    private static final String EN_HD_QR_CODE_FLAG = "%";
+    private static final String ZH_CN_HD_QR_CODE_FLAG = "%1%";
+    private static final String ZH_TW_HD_QR_CODE_FLAG = "%2%";
 
+    public String getHdQrCodeFlag() {
+        switch (this) {
+            case English:
+                return EN_HD_QR_CODE_FLAG;
+            case ZhCN:
+                return ZH_CN_HD_QR_CODE_FLAG;
+            case ZhTw:
+                return ZH_TW_HD_QR_CODE_FLAG;
+        }
+        return EN_HD_QR_CODE_FLAG;
+    }
 
     public String getMnemonicWordListValue() {
         switch (this) {

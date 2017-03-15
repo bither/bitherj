@@ -246,7 +246,7 @@ public class HDAccount extends Address {
         if (!hasPrivKey()) {
             return null;
         }
-        return QRCodeUtil.HD_QR_CODE_FLAG + getFullEncryptPrivKey();
+        return MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag() + getFullEncryptPrivKey();
     }
 
     public byte[] getInternalPub() {
