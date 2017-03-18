@@ -38,8 +38,8 @@ public abstract class ImportHDSeed {
     public static final int NOT_HDM_COLD_SEED = 1;
     public static final int PASSWORD_WRONG = 3;
     public static final int IMPORT_FAILED = 4;
-
     public static final int NOT_HD_ACCOUNT_SEED = 5;
+    public static final int DUPLICATED_HD_ACCOUNT_SEED = 6;
     private String content;
     private List<String> worlds;
     protected SecureCharSequence password;
@@ -164,9 +164,13 @@ public abstract class ImportHDSeed {
                     try {
                         return new HDAccount(mnemonicCode, new EncryptedData(encreyptString)
                                 , password, false);
-                    } catch (Exception e) {
-                        importError(IMPORT_FAILED);
+                    } catch (HDAccount.DuplicatedHDAccountException e) {
                         e.printStackTrace();
+                        importError(DUPLICATED_HD_ACCOUNT_SEED);
+                        return null;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        importError(IMPORT_FAILED);
                         return null;
                     }
 
@@ -179,6 +183,9 @@ public abstract class ImportHDSeed {
                     byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
                     HDAccount hdAccount = new HDAccount(mnemonicCode, mnemonicCodeSeed, password, false);
                     return hdAccount;
+                }  catch (HDAccount.DuplicatedHDAccountException e) {
+                    e.printStackTrace();
+                    importError(DUPLICATED_HD_ACCOUNT_SEED);
                 } catch (Exception e) {
                     e.printStackTrace();
                     importError(IMPORT_FAILED);
