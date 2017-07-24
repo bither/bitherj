@@ -768,6 +768,24 @@ public class HDAccount extends Address {
         }
     }
 
+    public DeterministicKey getInternalKey(int index, CharSequence password) {
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey externalChainRoot = getChainRootKey(accountKey, AbstractHD.PathType
+                    .INTERNAL_ROOT_PATH);
+            DeterministicKey key = externalChainRoot.deriveSoftened(index);
+            master.wipe();
+            accountKey.wipe();
+            externalChainRoot.wipe();
+            return key;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public String xPubB58(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         DeterministicKey master = masterKey(password);
@@ -816,6 +834,7 @@ public class HDAccount extends Address {
         private AbstractHD.PathType pathType;
         private boolean isSyncedComplete;
         private boolean isIssued;
+        private long balance;
 
 
         private int hdAccountId;
@@ -877,6 +896,62 @@ public class HDAccount extends Address {
         public void setHdAccountId(int hdAccountId) {
             this.hdAccountId = hdAccountId;
         }
+
+        public long getBalance() {
+            this.balance = AbstractDb.txProvider.getConfirmedBalanceWithAddress(getAddress())
+                    + this.calculateUnconfirmedBalance();
+            return balance;
+        }
+
+        private long calculateUnconfirmedBalance() {
+            long balance = 0;
+
+            List<Tx> txs = AbstractDb.txProvider.getUnconfirmedTxWithAddress(this.address);
+            Collections.sort(txs);
+
+            Set<byte[]> invalidTx = new HashSet<byte[]>();
+            Set<OutPoint> spentOut = new HashSet<OutPoint>();
+            Set<OutPoint> unspendOut = new HashSet<OutPoint>();
+
+            for (int i = txs.size() - 1; i >= 0; i--) {
+                Set<OutPoint> spent = new HashSet<OutPoint>();
+                Tx tx = txs.get(i);
+
+                Set<byte[]> inHashes = new HashSet<byte[]>();
+                for (In in : tx.getIns()) {
+                    spent.add(new OutPoint(in.getPrevTxHash(), in.getPrevOutSn()));
+                    inHashes.add(in.getPrevTxHash());
+                }
+
+                if (tx.getBlockNo() == Tx.TX_UNCONFIRMED
+                        && (Utils.isIntersects(spent, spentOut) || Utils.isIntersects(inHashes, invalidTx))) {
+                    invalidTx.add(tx.getTxHash());
+                    continue;
+                }
+
+                spentOut.addAll(spent);
+                for (Out out : tx.getOuts()) {
+                    if (Utils.compareString(this.getAddress(), out.getOutAddress())) {
+                        unspendOut.add(new OutPoint(tx.getTxHash(), out.getOutSn()));
+                        balance += out.getOutValue();
+                    }
+                }
+                spent.clear();
+                spent.addAll(unspendOut);
+                spent.retainAll(spentOut);
+                for (OutPoint o : spent) {
+                    Tx tx1 = AbstractDb.txProvider.getTxDetailByTxHash(o.getTxHash());
+                    unspendOut.remove(o);
+                    for (Out out : tx1.getOuts()) {
+                        if (out.getOutSn() == o.getOutSn()) {
+                            balance -= out.getOutValue();
+                        }
+                    }
+                }
+            }
+            return balance;
+        }
+
     }
 
     public static final boolean checkDuplicated(byte[] ex, byte[] in) {
@@ -885,5 +960,29 @@ public class HDAccount extends Address {
 
     public static class DuplicatedHDAccountException extends RuntimeException {
 
+    }
+
+    public List<HDAccountAddress> getHdHotAddresses(int page, AbstractHD.PathType pathType,CharSequence password){
+        ArrayList<HDAccountAddress> addresses = new ArrayList<HDAccountAddress>();
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey pathTypeKey = getChainRootKey(accountKey, pathType);
+            for (int i = (page -1) * 10;i < page * 10; i ++) {
+                DeterministicKey key = pathTypeKey.deriveSoftened(i);
+                HDAccountAddress hdAccountAddress = new HDAccountAddress
+                        (key.toAddress(),key.getPubKeyExtended(),pathType,i,false,true,hdSeedId);
+
+                addresses.add(hdAccountAddress);
+            }
+            master.wipe();
+            accountKey.wipe();
+            pathTypeKey.wipe();
+            return addresses;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

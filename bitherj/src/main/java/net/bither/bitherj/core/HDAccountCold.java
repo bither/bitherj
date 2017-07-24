@@ -23,25 +23,31 @@ import com.google.common.collect.Collections2;
 
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
+import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
-import net.bither.bitherj.crypto.mnemonic.MnemonicWordList;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -216,6 +222,57 @@ public class HDAccountCold extends AbstractHD {
         return result;
     }
 
+
+    public byte[] getInternalPub() {
+        return AbstractDb.hdAccountProvider.getInternalPub(hdSeedId);
+    }
+
+    public byte[] getExternalPub() {
+        return AbstractDb.hdAccountProvider.getExternalPub(hdSeedId);
+    }
+
+    public HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index) {
+        DeterministicKey root = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                (type == AbstractHD.PathType.EXTERNAL_ROOT_PATH ? getExternalPub() : getInternalPub());
+      return new HDAccount.HDAccountAddress(root.deriveSoftened(index).getPubKey(), type, index, true, hdSeedId);
+    }
+
+    public DeterministicKey getExternalKey(int index, CharSequence password) {
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey externalChainRoot = getChainRootKey(accountKey, AbstractHD.PathType
+                    .EXTERNAL_ROOT_PATH);
+            DeterministicKey key = externalChainRoot.deriveSoftened(index);
+            master.wipe();
+            accountKey.wipe();
+            externalChainRoot.wipe();
+            return key;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public DeterministicKey getInternalKey(int index, CharSequence password) {
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey externalChainRoot = getChainRootKey(accountKey, AbstractHD.PathType
+                    .INTERNAL_ROOT_PATH);
+            DeterministicKey key = externalChainRoot.deriveSoftened(index);
+            master.wipe();
+            accountKey.wipe();
+            externalChainRoot.wipe();
+            return key;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public String xPubB58(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         DeterministicKey master = masterKey(password);
@@ -228,5 +285,29 @@ public class HDAccountCold extends AbstractHD {
         coinType.wipe();
         account.wipe();
         return xpub;
+    }
+
+    public List<HDAccount.HDAccountAddress> getHdColdAddresses(int page, AbstractHD.PathType pathType,CharSequence password){
+        ArrayList<HDAccount.HDAccountAddress> addresses = new ArrayList<HDAccount.HDAccountAddress>();
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey pathTypeKey = getChainRootKey(accountKey, pathType);
+            for (int i = (page -1) * 10;i < page * 10; i ++) {
+                DeterministicKey key = pathTypeKey.deriveSoftened(i);
+                HDAccount.HDAccountAddress hdAccountAddress = new HDAccount.HDAccountAddress
+                        (key.toAddress(),key.getPubKeyExtended(),pathType,i,false,true,hdSeedId);
+
+                addresses.add(hdAccountAddress);
+            }
+            master.wipe();
+            accountKey.wipe();
+            pathTypeKey.wipe();
+            return addresses;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
