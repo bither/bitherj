@@ -29,6 +29,7 @@ import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.script.ScriptOpCodes;
 import net.bither.bitherj.utils.PrivateKeyUtil;
+import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
@@ -42,6 +43,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -57,6 +59,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static net.bither.bitherj.utils.Utils.doubleDigest;
 import static net.bither.bitherj.utils.Utils.uint32ToByteStreamLE;
+import static net.bither.bitherj.utils.Utils.uint64ToByteStreamLE;
 
 public class Tx extends Message implements Comparable<Tx> {
     public enum TxNotificationType {
@@ -1195,6 +1198,90 @@ public class Tx extends Message implements Comparable<Tx> {
         } catch (IOException e) {
             throw new RuntimeException(e);  // Cannot happen.
         }
+    }
+
+    public synchronized byte[] hashForSignatureWitness(int inputIndex, Script scriptCode,
+                                                       BigInteger prevValue, TransactionSignature
+                                                               .SigHash type, boolean
+                                                               anyoneCanPay) {
+        byte[] connectedScript = scriptCode.getProgram();
+        return hashForSignatureWitness(inputIndex, connectedScript, prevValue, type, anyoneCanPay);
+    }
+
+    public synchronized byte[] hashForSignatureWitness(int inputIndex, byte[] connectedScript,
+                                                       BigInteger prevValue, TransactionSignature
+                                                               .SigHash type, boolean
+                                                               anyoneCanPay) {
+        byte sigHashType = (byte) TransactionSignature.calcSigHashValue(type, anyoneCanPay);
+        ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(length == UNKNOWN_LENGTH ?
+                256 : length + 4);
+        try {
+            byte[] hashPrevouts = new byte[32];
+            byte[] hashSequence = new byte[32];
+            byte[] hashOutputs = new byte[32];
+            anyoneCanPay = (sigHashType & TransactionSignature.SIGHASH_ANYONECANPAY_VALUE) ==
+                    TransactionSignature.SIGHASH_ANYONECANPAY_VALUE;
+
+            if (!anyoneCanPay) {
+                ByteArrayOutputStream bosHashPrevouts = new UnsafeByteArrayOutputStream(256);
+                for (int i = 0;
+                     i < this.ins.size();
+                     ++i) {
+                    bosHashPrevouts.write(this.ins.get(i).getOutpoint().getTxHash());
+                    uint32ToByteStreamLE(this.ins.get(i).getOutpoint().getOutSn(), bosHashPrevouts);
+                }
+                hashPrevouts = Sha256Hash.createDouble(bosHashPrevouts.toByteArray()).getBytes();
+            }
+
+            if (!anyoneCanPay && type != TransactionSignature.SigHash.SINGLE && type !=
+                    TransactionSignature.SigHash.NONE) {
+                ByteArrayOutputStream bosSequence = new UnsafeByteArrayOutputStream(256);
+                for (int i = 0;
+                     i < this.ins.size();
+                     ++i) {
+                    uint32ToByteStreamLE(this.ins.get(i).getInSequence(), bosSequence);
+                }
+                hashSequence = Sha256Hash.createDouble(bosSequence.toByteArray()).getBytes();
+            }
+
+            if (type != TransactionSignature.SigHash.SINGLE && type != TransactionSignature
+                    .SigHash.NONE) {
+                ByteArrayOutputStream bosHashOutputs = new UnsafeByteArrayOutputStream(256);
+                for (int i = 0;
+                     i < this.outs.size();
+                     ++i) {
+                    uint64ToByteStreamLE(BigInteger.valueOf(this.outs.get(i).getOutValue()),
+                            bosHashOutputs);
+                    bosHashOutputs.write(new VarInt(this.outs.get(i).getOutScript().length)
+                            .encode());
+                    bosHashOutputs.write(this.outs.get(i).getOutScript());
+                }
+                hashOutputs = Sha256Hash.createDouble(bosHashOutputs.toByteArray()).getBytes();
+            } else if (type == TransactionSignature.SigHash.SINGLE && inputIndex < outs.size()) {
+                ByteArrayOutputStream bosHashOutputs = new UnsafeByteArrayOutputStream(256);
+                uint64ToByteStreamLE(BigInteger.valueOf(this.outs.get(inputIndex).getOutValue()),
+                        bosHashOutputs);
+                bosHashOutputs.write(new VarInt(this.outs.get(inputIndex).getOutScript().length)
+                        .encode());
+                bosHashOutputs.write(this.outs.get(inputIndex).getOutScript());
+                hashOutputs = Sha256Hash.createDouble(bosHashOutputs.toByteArray()).getBytes();
+            }
+            uint32ToByteStreamLE(1, bos);
+            bos.write(hashPrevouts);
+            bos.write(hashSequence);
+            bos.write(ins.get(inputIndex).getOutpoint().getTxHash());
+            uint32ToByteStreamLE(ins.get(inputIndex).getOutpoint().getOutSn(), bos);
+            bos.write(new VarInt(connectedScript.length).encode());
+            bos.write(connectedScript);
+            uint64ToByteStreamLE(prevValue, bos);
+            uint32ToByteStreamLE(ins.get(inputIndex).getInSequence(), bos);
+            bos.write(hashOutputs);
+            uint32ToByteStreamLE(0, bos);
+            uint32ToByteStreamLE(0x000000ff & sigHashType, bos);
+        } catch (IOException e) {
+            throw new RuntimeException(e);  // Cannot happen.
+        }
+        return Sha256Hash.createDouble(bos.toByteArray()).getBytes();
     }
 
     @Override
