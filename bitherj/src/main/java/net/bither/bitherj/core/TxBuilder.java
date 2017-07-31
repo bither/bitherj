@@ -91,7 +91,7 @@ public class TxBuilder {
         }
     }
 
-    public Tx buildTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
+    public Tx buildTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses,boolean isBtc) throws TxBuilderException {
         Script scriptPubKey = null;
         if (address.isHDM()) {
             scriptPubKey = new Script(address.getPubKey());
@@ -106,8 +106,15 @@ public class TxBuilder {
         for (long amount : amounts) {
             value += amount;
         }
-        List<Tx> unspendTxs = AbstractDb.txProvider.getUnspendTxWithAddress(address.getAddress());
-        List<Out> unspendOuts = getUnspendOuts(unspendTxs);
+        List<Tx> unspendTxs;
+        List<Out> unspendOuts;
+        if (isBtc) {
+            unspendTxs = AbstractDb.txProvider.getUnspendTxWithAddress(address.getAddress());
+            unspendOuts = getUnspendOuts(unspendTxs);
+        } else {
+            unspendOuts = AbstractDb.txProvider.getUnspentOutputByBlockNo(BitherjSettings.BTCFORKBLOCKNO,address.getAddress());
+            unspendTxs = AbstractDb.txProvider.getUnspendTxWithAddress(address.getAddress(),unspendOuts);
+        }
         List<Out> canSpendOuts = getCanSpendOuts(unspendTxs);
         List<Out> canNotSpendOuts = getCanNotSpendOuts(unspendTxs);
         if (value > getAmount(unspendOuts)) {

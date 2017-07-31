@@ -575,6 +575,34 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
         return txItemList;
     }
 
+    @Override
+    public List<Tx> getUnspendTxWithAddress(String address, final List<Out> outs) {
+        String unspendOutSql = "select a.*,b.tx_ver,b.tx_locktime,b.tx_time,b.block_no,b.source,ifnull(b.block_no,0)*a.out_value coin_depth " +
+                "from outs a,txs b where a.tx_hash=b.tx_hash" +
+                " and a.out_address=?";
+        final List<Tx> txItemList = new ArrayList<Tx>();
+
+        this.execQueryLoop(unspendOutSql, new String[]{address}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                Out outItem = applyCursorOut(c);
+                if (outs.contains(outItem)) {
+                    int idColumn = c.getColumnIndex("coin_depth");
+                    Tx txItem = applyCursor(c);
+                    if (idColumn != -1) {
+                        outItem.setCoinDepth(c.getLong(idColumn));
+                    }
+                    outItem.setTx(txItem);
+                    txItem.setOuts(new ArrayList<Out>());
+                    txItem.getOuts().add(outItem);
+                    txItemList.add(txItem);
+                }
+                return null;
+            }
+        });
+        return txItemList;
+    }
 //    public List<Out> getUnspendOutWithAddress(String address) {
 //        final List<Out> outItems = new ArrayList<Out>();
 //        String unspendOutSql = "select a.* from outs a,txs b where a.tx_hash=b.tx_hash " +
@@ -664,6 +692,54 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
         return txList;
     }
 
+    public List<Out> getUnspentOutputByBlockNo(long blockNo,String address) {
+        final List<Out> outItems = new ArrayList<Out>();
+        String sqlPreUnspentOut = "select a.* from outs a,txs b where a.tx_hash=b.tx_hash and " +
+                "a.out_address=? and a.out_status=? and b.block_no is not null and " +
+                "b.block_no<?";
+        String sqlPostSpentOuts = "select a.* from outs a, txs out_b, ins i, txs b " +
+                "where a.tx_hash=out_b.tx_hash and a.out_sn=i.prev_out_sn and " +
+                "a.tx_hash=i.prev_tx_hash and a.out_address=? and b.tx_hash=i.tx_hash and " +
+                "a.out_status=? and out_b.block_no is not null and " +
+                "out_b.block_no<? and (b.block_no>=? or b.block_no is null)";
+
+        this.execQueryLoop(sqlPreUnspentOut, new String[] {address,Integer.toString(0),
+                Long.toString(blockNo)}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                outItems.add(applyCursorOut(c));
+                return null;
+            }
+        });
+
+        this.execQueryLoop(sqlPostSpentOuts, new String[] {address,Integer.toString(1),
+                Long.toString(blockNo),Long.toString(blockNo)}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                outItems.add(applyCursorOut(c));
+                return null;
+            }
+        });
+        return outItems;
+    }
+
+    public Out getTxPreOut(byte[] txHash,int OutSn) {
+        final List<Out> outItems = new ArrayList<Out>();
+        String sql = "select a.* from outs a where a.tx_hash=? and a.out_sn=?";
+        this.execQueryOneRecord(sql, new String[]{Base58.encode(txHash),Integer.toString(OutSn)},
+                new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                outItems.add(applyCursorOut(c));
+                return null;
+            }
+        });
+        return outItems.get(0);
+
+    }
     public int txCount(String address) {
         final int[] result = {0};
         String sql = "select count(0) cnt from addresses_txs where address=?";

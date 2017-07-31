@@ -41,6 +41,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import static net.bither.bitherj.db.imp.AbstractTxProvider.applyCursorOut;
+
 public abstract class AbstractHDAccountAddressProvider extends AbstractProvider implements IHDAccountAddressProvider {
 
     @Override
@@ -881,5 +883,38 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
         hdAccountAddress = new HDAccount.HDAccountAddress(address, pubs,
                 ternalRootType, index, isIssued, isSynced, hdAccountId);
         return hdAccountAddress;
+    }
+
+    public List<Out> getUnspentOutputByBlockNo(long blockNo, int hdSeedId) {
+        final List<Out> outItems = new ArrayList<Out>();
+        String sqlPreUnspentOut = "select a.* from outs a,txs b where a.tx_hash=b.tx_hash and " +
+                "a.hd_account_id=? and a.out_status=? and b.block_no is not null and " +
+                "b.block_no<?";
+        String sqlPostSpentOuts = "select a.* from outs a, txs out_b, ins i, txs b " +
+                "where a.tx_hash=out_b.tx_hash and a.out_sn=i.prev_out_sn and " +
+                "a.tx_hash=i.prev_tx_hash and a.hd_account_id=? and b.tx_hash=i.tx_hash and " +
+                "a.out_status=? and out_b.block_no is not null and " +
+                "out_b.block_no<? and (b.block_no>=? or b.block_no is null)";
+
+        this.execQueryLoop(sqlPreUnspentOut, new String[] {Integer.toString(hdSeedId),Integer.toString(0),
+                Long.toString(blockNo)}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                outItems.add(applyCursorOut(c));
+                return null;
+            }
+        });
+
+        this.execQueryLoop(sqlPostSpentOuts, new String[] {Integer.toString(hdSeedId),Integer.toString(1),
+                Long.toString(blockNo),Long.toString(blockNo)}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                outItems.add(applyCursorOut(c));
+                return null;
+            }
+        });
+        return outItems;
     }
 }

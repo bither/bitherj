@@ -174,7 +174,12 @@ public class QRCodeTxTransport implements Serializable {
         TxTransportType txTransportType = TxTransportType.ColdHD;
         List<HDAccount.HDAccountAddress> addresses = account.getSigningAddressesForInputs(tx
                 .getIns());
-        List<byte[]> hashes = tx.getUnsignedInHashes();
+        List<byte[]> hashes;
+        if (tx.isBtc()) {
+             hashes = tx.getUnsignedInHashes();
+        } else {
+            hashes = tx.getBccForkUnsignedInHashes();
+        }
 
         QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
 

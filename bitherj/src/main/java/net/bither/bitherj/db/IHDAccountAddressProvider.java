@@ -89,4 +89,6 @@ public interface IHDAccountAddressProvider {
     List<Out> getUnconfirmedSpentOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
 
     boolean requestNewReceivingAddress(int hdAccountId);
+
+    List<Out> getUnspentOutputByBlockNo(long BlockNo, int hdSeedId);
 }

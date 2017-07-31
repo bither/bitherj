@@ -20,7 +20,6 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.db.AbstractDb;
-import net.bither.bitherj.db.imp.AbstractTxProvider;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
@@ -1016,5 +1015,13 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
             }
         }
         return result;
+    }
+
+    public long getAmount(List<Out> outs) {
+        long amount = 0;
+        for (Out out : outs) {
+            amount += out.getOutValue();
+        }
+        return amount;
     }
 }

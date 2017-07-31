@@ -19,9 +19,12 @@ package net.bither.bitherj.script;
 
 import com.google.common.collect.Lists;
 
+import net.bither.bitherj.core.In;
+import net.bither.bitherj.core.Out;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
@@ -1308,8 +1311,17 @@ public class Script {
         boolean sigValid = false;
         try {
             TransactionSignature sig = TransactionSignature.decodeFromBitcoin(sigBytes, false);
-            byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
-            sigValid = ECKey.verify(hash, sig, pubKey);
+            if (sig.sighashFlags == TransactionSignature.SigHash.BCCFORK.value) {
+                In in = txContainingThis.getIns().get(index);
+                Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(),in.getPrevOutSn());
+                byte[] hash = txContainingThis.hashForSignatureWitness(index,
+                        connectedScript,BigInteger.valueOf(out.getOutValue()),
+                        TransactionSignature.SigHash.BCCFORK,false);
+                sigValid = ECKey.verify(hash, sig, pubKey);
+            } else {
+                byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
+                sigValid = ECKey.verify(hash, sig, pubKey);
+            }
         } catch (Exception e1) {
             // There is (at least) one exception that could be hit here (EOFException, if the sig is too short)
             // Because I can't verify there aren't more, we use a very generic Exception catch
@@ -1374,9 +1386,19 @@ public class Script {
             // more expensive than hashing, its not a big deal.
             try {
                 TransactionSignature sig = TransactionSignature.decodeFromBitcoin(sigs.getFirst(), false);
-                byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
-                if (ECKey.verify(hash, sig, pubKey))
-                    sigs.pollFirst();
+                if (sig.sighashFlags == TransactionSignature.SigHash.BCCFORK.value) {
+                    In in = txContainingThis.getIns().get(index);
+                    Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
+                    byte[] hash = txContainingThis.hashForSignatureWitness(index,
+                            connectedScript, BigInteger.valueOf(out.getOutValue()),
+                            TransactionSignature.SigHash.BCCFORK, false);
+                    if (ECKey.verify(hash, sig, pubKey))
+                        sigs.pollFirst();
+                } else {
+                    byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
+                    if (ECKey.verify(hash, sig, pubKey))
+                        sigs.pollFirst();
+                }
             } catch (Exception e) {
                 // There is (at least) one exception that could be hit here (EOFException, if the sig is too short)
                 // Because I can't verify there aren't more, we use a very generic Exception catch

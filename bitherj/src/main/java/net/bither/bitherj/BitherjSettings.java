@@ -61,7 +61,7 @@ public class BitherjSettings {
     public static final int TARGET_TIMESPAN = 14 * 24 * 60 * 60;  // 2 weeks per difficulty cycle, on average.
     public static final int TARGET_SPACING = 10 * 60;  // 10 minutes per block.
     public static final int INTERVAL = TARGET_TIMESPAN / TARGET_SPACING;
-
+    public static final int BTCFORKBLOCKNO = 477768;
 
     public static final long TX_UNCONFIRMED = Long.MAX_VALUE;
 

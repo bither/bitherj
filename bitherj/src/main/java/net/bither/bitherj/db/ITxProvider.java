@@ -19,9 +19,7 @@ package net.bither.bitherj.db;
 import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.Out;
 import net.bither.bitherj.core.Tx;
-import net.bither.bitherj.utils.Sha256Hash;
 
-import java.util.HashMap;
 import java.util.List;
 
 public interface ITxProvider {
@@ -57,7 +55,12 @@ public interface ITxProvider {
 
     List<Tx> getUnspendTxWithAddress(String address);
 
+    List<Tx> getUnspendTxWithAddress(String address,List<Out> unSpentOuts);
 //    List<Out> getUnspendOutWithAddress(String address);
+
+    List<Out> getUnspentOutputByBlockNo(long BlockNo,String address);
+
+    Out getTxPreOut(byte[] txHash,int OutSn);
 
     // for calculate balance
     long getConfirmedBalanceWithAddress(String address);

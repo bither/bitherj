@@ -58,6 +58,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static net.bither.bitherj.utils.Utils.doubleDigest;
+import static net.bither.bitherj.utils.Utils.format;
 import static net.bither.bitherj.utils.Utils.uint32ToByteStreamLE;
 import static net.bither.bitherj.utils.Utils.uint64ToByteStreamLE;
 
@@ -159,11 +160,19 @@ public class Tx extends Message implements Comparable<Tx> {
     private int sawByPeerCnt;
     private List<In> ins;
     private List<Out> outs;
+    private boolean isBtc = true;
 
 //    public int length;
 
     private transient int optimalEncodingMessageSize;
 
+    public boolean isBtc() {
+        return isBtc;
+    }
+
+    public void setBtc(boolean btc) {
+        isBtc = btc;
+    }
 
     public int getBlockNo() {
         return blockNo;
@@ -1209,8 +1218,8 @@ public class Tx extends Message implements Comparable<Tx> {
     }
 
     public synchronized byte[] hashForSignatureWitness(int inputIndex, byte[] connectedScript,
-                                                       BigInteger prevValue, TransactionSignature
-                                                               .SigHash type, boolean
+                                                       BigInteger prevValue,
+                                                       TransactionSignature.SigHash type, boolean
                                                                anyoneCanPay) {
         byte sigHashType = (byte) TransactionSignature.calcSigHashValue(type, anyoneCanPay);
         ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(length == UNKNOWN_LENGTH ?
@@ -1523,10 +1532,19 @@ public class Tx extends Message implements Comparable<Tx> {
 
     public List<byte[]> getUnsignedInHashes() {
         List<byte[]> result = new ArrayList<byte[]>();
-        for (In in : this.getIns()) {
-            byte sigHashType = (byte) TransactionSignature.calcSigHashValue(TransactionSignature
-                    .SigHash.ALL, false);
-            result.add(this.hashForSignature(in.getInSn(), in.getPrevOutScript(), sigHashType));
+        if (isBtc) {
+            for (In in : this.getIns()) {
+                byte sigHashType = (byte) TransactionSignature.calcSigHashValue(TransactionSignature
+                        .SigHash.ALL, false);
+                result.add(this.hashForSignature(in.getInSn(), in.getPrevOutScript(), sigHashType));
+            }
+        } else {
+            for (int i = 0; i < this.getIns().size(); i++) {
+                In in = getIns().get(i);
+                Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
+                result.add(this.hashForSignatureWitness(i, in.getPrevOutScript(), BigInteger.valueOf(out.getOutValue()),
+                        TransactionSignature.SigHash.BCCFORK, false));
+            }
         }
         return result;
     }
@@ -1676,5 +1694,17 @@ public class Tx extends Message implements Comparable<Tx> {
             }
         }
         return false;
+    }
+
+    public List<byte[]> getBccForkUnsignedInHashes() {
+        List<byte[]> result = new ArrayList<byte[]>();
+        for (int i=0;i<this.getIns().size();i++) {
+            In in = getIns().get(i);
+           Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(),in.getPrevOutSn());
+            result.add(this.hashForSignatureWitness(i,
+                    in.getPrevOutScript(),BigInteger.valueOf(out.getOutValue()),
+                    TransactionSignature.SigHash.BCCFORK,false));
+        }
+        return result;
     }
 }
