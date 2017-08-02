@@ -15,7 +15,7 @@ public class BccBroadCastApi extends HttpsPostResponse<String> {
     String rawTx;
 
     public BccBroadCastApi(String rawTx) {
-        String url = Utils.format("https://bitpie.songchenwen.com/api/v1/bcc/broadcast");
+        String url = Utils.format("https://bitpie.getcai.com/api/v1/bcc/broadcast");
         setUrl(url);
         this.rawTx = rawTx;
     }

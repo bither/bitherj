@@ -10,7 +10,7 @@ import net.bither.bitherj.utils.Utils;
 public class BccHasAddressApi extends HttpGetResponse<String>{
 
     public BccHasAddressApi(String address) {
-        String url = Utils.format("https://bitpie.songchenwen.com/api/v1/bcc/has/address/%s",address);
+        String url = Utils.format("https://bitpie.getcai.com/api/v1/bcc/has/address/%s",address);
         setUrl(url);
     }
 
