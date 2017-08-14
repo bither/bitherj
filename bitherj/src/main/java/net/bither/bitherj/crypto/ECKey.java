@@ -295,6 +295,10 @@ public class ECKey implements Serializable {
         return pub;
     }
 
+    public BigInteger getPriv() {
+        return priv;
+    }
+
     /**
      * Gets the public key in the form of an elliptic curve point object from Bouncy Castle.
      */

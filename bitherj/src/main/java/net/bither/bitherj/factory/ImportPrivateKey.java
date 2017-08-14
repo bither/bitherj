@@ -48,7 +48,7 @@ public abstract class ImportPrivateKey {
     private String content;
     private SecureCharSequence password;
 
-    private ImportPrivateKeyType importPrivateKeyType;
+    protected ImportPrivateKeyType importPrivateKeyType;
 
 
     public ImportPrivateKey(ImportPrivateKeyType importPrivateKeyType
@@ -86,7 +86,44 @@ public abstract class ImportPrivateKey {
                 ecKey.clearPrivateKey();
             }
         }
+    }
 
+    public Address initPrivateKey(boolean isCompress) {
+        ECKey ecKey = getEckey();
+        ECKey resultKey = null;
+        try {
+            if (ecKey == null) {
+                importError();
+                return null;
+            } else {
+                resultKey =  new ECKey(ecKey.getPriv(), null, isCompress);
+                if (resultKey == null) {
+                    importError();
+                    return null;
+                }
+                return addECKey(resultKey);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            importError(IMPORT_FAILED);
+            return null;
+        } finally {
+            password.wipe();
+            if (ecKey != null) {
+                ecKey.clearPrivateKey();
+            }
+            if (resultKey != null) {
+                resultKey.clearPrivateKey();
+            }
+        }
+    }
+
+    private void importError() {
+        if (importPrivateKeyType == ImportPrivateKeyType.BitherQrcode) {
+            importError(PASSWORD_WRONG);
+        } else {
+            importError(IMPORT_FAILED);
+        }
     }
 
 
@@ -108,7 +145,6 @@ public abstract class ImportPrivateKey {
             password.wipe();
             importError(PRIVATE_KEY_ALREADY_EXISTS);
             return null;
-
         } else {
             if (importPrivateKeyType == ImportPrivateKeyType.BitherQrcode) {
                 PasswordSeed passwordSeed = PasswordSeed.getPasswordSeed();
@@ -121,10 +157,7 @@ public abstract class ImportPrivateKey {
                 password.wipe();
             }
             return address;
-
-
         }
-
     }
 
 
