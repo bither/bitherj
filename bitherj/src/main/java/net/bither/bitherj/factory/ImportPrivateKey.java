@@ -88,6 +88,35 @@ public abstract class ImportPrivateKey {
         }
     }
 
+    public ECKey initEcKey(boolean isCompress) {
+        ECKey ecKey = getEckey();
+        ECKey resultKey = null;
+        try {
+            if (ecKey == null) {
+                importError();
+                return null;
+            } else {
+                resultKey = new ECKey(ecKey.getPriv(), null, isCompress);
+                if (resultKey == null) {
+                    importError();
+                    return null;
+                }
+                return resultKey;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            importError(IMPORT_FAILED);
+            return null;
+        } finally {
+            if (ecKey != null) {
+                ecKey.clearPrivateKey();
+            }
+            if (resultKey != null) {
+                resultKey.clearPrivateKey();
+            }
+        }
+    }
+
     public Address initPrivateKey(boolean isCompress) {
         ECKey ecKey = getEckey();
         ECKey resultKey = null;
@@ -96,7 +125,7 @@ public abstract class ImportPrivateKey {
                 importError();
                 return null;
             } else {
-                resultKey =  new ECKey(ecKey.getPriv(), null, isCompress);
+                resultKey = new ECKey(ecKey.getPriv(), null, isCompress);
                 if (resultKey == null) {
                     importError();
                     return null;
@@ -116,6 +145,16 @@ public abstract class ImportPrivateKey {
                 resultKey.clearPrivateKey();
             }
         }
+    }
+
+    public Boolean getIsCompressed() {
+        ECKey ecKey = getEckey();
+        if (ecKey == null) {
+            return null;
+        } else {
+            ecKey.clearPrivateKey();
+        }
+        return ecKey.isCompressed();
     }
 
     private void importError() {
