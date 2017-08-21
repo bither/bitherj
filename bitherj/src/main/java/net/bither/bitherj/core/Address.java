@@ -290,11 +290,11 @@ public class Address implements Comparable<Address> {
     }
 
     public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
-        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses,true);
+        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, true);
     }
 
-    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses,boolean isBtc) throws TxBuilderException {
-        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses,isBtc);
+    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses, boolean isBtc) throws TxBuilderException {
+        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, isBtc);
     }
 
     public Tx buildTx(long amount, String address) throws TxBuilderException {
@@ -309,14 +309,22 @@ public class Address implements Comparable<Address> {
         return buildTx(changeAddress, amounts, addresses);
     }
 
-    public Tx buildTx(long amount, String address, String changeAddress,boolean isBtc) throws TxBuilderException {
+    public Tx buildTx(long amount, String address, String changeAddress, boolean isBtc) throws TxBuilderException {
         List<Long> amounts = new ArrayList<Long>();
         amounts.add(amount);
         List<String> addresses = new ArrayList<String>();
         addresses.add(address);
-        return buildTx(changeAddress, amounts, addresses,isBtc);
+        return buildTx(changeAddress, amounts, addresses, isBtc);
     }
 
+    public List<Tx> buildBccTx(long amount, String address, String changeAddress) throws TxBuilderException {
+        List<Long> amounts = new ArrayList<Long>();
+        amounts.add(amount);
+        List<String> addresses = new ArrayList<String>();
+        addresses.add(address);
+        List<Tx> txs = TxBuilder.getInstance().buildBccTx(this, changeAddress, amounts, addresses);
+        return txs;
+    }
 
     public List<Tx> getRecentlyTxs(int confirmationCnt, int limit) {
         int blockNo = BlockChain.getInstance().lastBlock.getBlockNo() - confirmationCnt + 1;
@@ -332,7 +340,7 @@ public class Address implements Comparable<Address> {
         for (String h : unsignedInHashes) {
             hashes.add(Utils.hexStringToByteArray(h));
         }
-        List<byte[]> resultHashes = signHashes(hashes, passphrase,TransactionSignature.SigHash.ALL);
+        List<byte[]> resultHashes = signHashes(hashes, passphrase, TransactionSignature.SigHash.ALL);
         ArrayList<String> resultStrs = new ArrayList<String>();
         for (byte[] h : resultHashes) {
             resultStrs.add(Utils.bytesToHexString(h));
@@ -379,11 +387,11 @@ public class Address implements Comparable<Address> {
 
     }
 
-    public void signTx(Tx tx, CharSequence passphrase,boolean isBtc) {
+    public void signTx(Tx tx, CharSequence passphrase, boolean isBtc) {
         if (isBtc) {
-            tx.signWithSignatures(this.signHashes(tx.getUnsignedInHashes(), passphrase,TransactionSignature.SigHash.ALL));
+            tx.signWithSignatures(this.signHashes(tx.getUnsignedInHashes(), passphrase, TransactionSignature.SigHash.ALL));
         } else {
-            tx.signWithSignatures(this.signHashes(tx.getBccForkUnsignedInHashes(), passphrase,TransactionSignature.SigHash.BCCFORK));
+            tx.signWithSignatures(this.signHashes(tx.getBccForkUnsignedInHashes(), passphrase, TransactionSignature.SigHash.BCCFORK));
         }
     }
 

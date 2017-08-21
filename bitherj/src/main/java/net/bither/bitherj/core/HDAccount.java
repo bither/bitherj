@@ -555,68 +555,68 @@ public class HDAccount extends Address {
         return tx;
     }
 
-    public Tx newForkTx(String toAddresses, Long amounts, CharSequence password) throws
+    public List<Tx> newForkTx(String toAddresses, Long amounts, CharSequence password) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
         if (password != null && !hasPrivKey()) {
             throw new RuntimeException("Can not sign without private key");
         }
-        Tx tx = newForkTx(toAddresses, amounts);
-        List<HDAccountAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
-        assert signingAddresses.size() == tx.getIns().size();
-        DeterministicKey master = masterKey(password);
-        if (master == null) {
-            return null;
-        }
-        DeterministicKey accountKey = getAccount(master);
-        DeterministicKey external = getChainRootKey(accountKey, AbstractHD.PathType
-                .EXTERNAL_ROOT_PATH);
-        DeterministicKey internal = getChainRootKey(accountKey, AbstractHD.PathType
-                .INTERNAL_ROOT_PATH);
-        accountKey.wipe();
-        master.wipe();
-        List<byte[]> unsignedHashes = tx.getBccForkUnsignedInHashes();
-        assert unsignedHashes.size() == signingAddresses.size();
-        ArrayList<byte[]> signatures = new ArrayList<byte[]>();
-        HashMap<String, DeterministicKey> addressToKeyMap = new HashMap<String, DeterministicKey>
-                (signingAddresses.size());
-        for (int i = 0;
-             i < signingAddresses.size();
-             i++) {
-            HDAccountAddress a = signingAddresses.get(i);
-            byte[] unsigned = unsignedHashes.get(i);
-
-            if (!addressToKeyMap.containsKey(a.getAddress())) {
-                if (a.getPathType() == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
-                    addressToKeyMap.put(a.getAddress(), external.deriveSoftened(a.index));
-                } else {
-                    addressToKeyMap.put(a.getAddress(), internal.deriveSoftened(a.index));
-                }
+        List<Tx> txs = newForkTx(toAddresses, amounts);
+        for (Tx tx: txs) {
+            List<HDAccountAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
+            assert signingAddresses.size() == tx.getIns().size();
+            DeterministicKey master = masterKey(password);
+            if (master == null) {
+                return null;
             }
-            DeterministicKey key = addressToKeyMap.get(a.getAddress());
-            assert key != null;
-            TransactionSignature signature = new TransactionSignature(key.sign(unsigned, null),
-                    TransactionSignature.SigHash.BCCFORK, false);
-            signatures.add(ScriptBuilder.createInputScript(signature, key).getProgram());
-        }
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey external = getChainRootKey(accountKey, AbstractHD.PathType
+                    .EXTERNAL_ROOT_PATH);
+            DeterministicKey internal = getChainRootKey(accountKey, AbstractHD.PathType
+                    .INTERNAL_ROOT_PATH);
+            accountKey.wipe();
+            master.wipe();
+            List<byte[]> unsignedHashes = tx.getBccForkUnsignedInHashes();
+            assert unsignedHashes.size() == signingAddresses.size();
+            ArrayList<byte[]> signatures = new ArrayList<byte[]>();
+            HashMap<String, DeterministicKey> addressToKeyMap = new HashMap<String, DeterministicKey>
+                    (signingAddresses.size());
+            for (int i = 0;
+                 i < signingAddresses.size();
+                 i++) {
+                HDAccountAddress a = signingAddresses.get(i);
+                byte[] unsigned = unsignedHashes.get(i);
 
-        tx.signWithSignatures(signatures);
-        assert tx.verifySignatures();
-        external.wipe();
-        internal.wipe();
-        for (DeterministicKey key : addressToKeyMap.values()) {
-            key.wipe();
+                if (!addressToKeyMap.containsKey(a.getAddress())) {
+                    if (a.getPathType() == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
+                        addressToKeyMap.put(a.getAddress(), external.deriveSoftened(a.index));
+                    } else {
+                        addressToKeyMap.put(a.getAddress(), internal.deriveSoftened(a.index));
+                    }
+                }
+                DeterministicKey key = addressToKeyMap.get(a.getAddress());
+                assert key != null;
+                TransactionSignature signature = new TransactionSignature(key.sign(unsigned, null),
+                        TransactionSignature.SigHash.BCCFORK, false);
+                signatures.add(ScriptBuilder.createInputScript(signature, key).getProgram());
+            }
+
+            tx.signWithSignatures(signatures);
+            assert tx.verifySignatures();
+            external.wipe();
+            internal.wipe();
+            for (DeterministicKey key : addressToKeyMap.values()) {
+                key.wipe();
+            }
         }
-            return tx;
+        return txs;
     }
 
-    public Tx newForkTx(String toAddress, Long amount) throws TxBuilderException,
+    public List<Tx> newForkTx(String toAddress, Long amount) throws TxBuilderException,
             MnemonicException.MnemonicLengthException {
         List<Out> outs = AbstractDb.hdAccountAddressProvider.getUnspentOutputByBlockNo(BitherjSettings.BTCFORKBLOCKNO,hdSeedId);
-        Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, toAddress, Arrays
-                .asList(amount), Arrays.asList(toAddress));
-        return tx;
+        List<Tx> txs = TxBuilder.getInstance().buildBccTxsFromAllAddress(outs, toAddress, Arrays.asList(amount), Arrays.asList(toAddress));
+        return txs;
     }
-
 
     public Tx newTx(String toAddress, Long amount) throws TxBuilderException, MnemonicException
             .MnemonicLengthException {
