@@ -127,7 +127,7 @@ public class BitherjSettings {
     }
 
     public enum MarketType {
-        BITSTAMP, BTCE, BTCCHINA, OKCOIN, HUOBI, CHBTC, BTCTRADE, BITFINEX,
+        BITSTAMP, BTCCHINA, OKCOIN, HUOBI, CHBTC, BTCTRADE, BITFINEX,
         COINBASE, MARKET796;
 
 
@@ -136,22 +136,20 @@ public class BitherjSettings {
     public static MarketType getMarketType(int value) {
         switch (value) {
             case 2:
-                return MarketType.BTCE;
-            case 3:
                 return MarketType.HUOBI;
-            case 4:
+            case 3:
                 return MarketType.OKCOIN;
-            case 5:
+            case 4:
                 return MarketType.BTCCHINA;
-            case 6:
+            case 5:
                 return MarketType.CHBTC;
-            case 7:
+            case 6:
                 return MarketType.BITFINEX;
-            case 8:
+            case 7:
                 return MarketType.MARKET796;
-            case 9:
+            case 8:
                 return MarketType.COINBASE;
-            case 10:
+            case 9:
                 return MarketType.BTCTRADE;
         }
         return MarketType.BITSTAMP;
@@ -159,24 +157,22 @@ public class BitherjSettings {
 
     public static int getMarketValue(MarketType marketType) {
         switch (marketType) {
-            case BTCE:
-                return 2;
             case HUOBI:
-                return 3;
+                return 2;
             case OKCOIN:
-                return 4;
+                return 3;
             case BTCCHINA:
-                return 5;
+                return 4;
             case CHBTC:
-                return 6;
+                return 5;
             case BITFINEX:
-                return 7;
+                return 6;
             case MARKET796:
-                return 8;
+                return 7;
             case COINBASE:
-                return 9;
+                return 8;
             case BTCTRADE:
-                return 10;
+                return 9;
 
 
         }
