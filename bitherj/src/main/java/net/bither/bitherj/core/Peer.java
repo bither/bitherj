@@ -786,6 +786,13 @@ public class Peer extends PeerSocketHandler {
 
         versionLastBlockHeight = version.bestHeight;
 
+        if ((peerServices & VersionMessage.NODE_BITCOIN_CASH) == VersionMessage.NODE_BITCOIN_CASH) {
+            log.info("{}: Peer follows an incompatible block chain.", this);
+            // Shut down the channel gracefully.
+            close();
+            return;
+        }
+
         sendMessage(new VersionAck());
     }
 
