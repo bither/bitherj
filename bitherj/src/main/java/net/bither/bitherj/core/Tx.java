@@ -1707,4 +1707,15 @@ public class Tx extends Message implements Comparable<Tx> {
         }
         return result;
     }
+
+    public List<byte[]> getUnsignedHashesForBcc(long[] prevOutValue) {
+        List<byte[]> result = new ArrayList<byte[]>();
+        for (int i = 0;i<this.getIns().size();i++) {
+            In in = this.getIns().get(i);
+            byte[] sigHash = hashForSignatureWitness(i,in.getPrevOutScript(),BigInteger.valueOf(prevOutValue[i]),TransactionSignature
+                    .SigHash.BCCFORK,false);
+            result.add(sigHash);
+        }
+        return result;
+    }
 }
