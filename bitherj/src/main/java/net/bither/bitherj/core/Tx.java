@@ -141,10 +141,21 @@ public class Tx extends Message implements Comparable<Tx> {
         this(msg, 0, msg.length);
     }
 
+    public Tx(byte[] msg, boolean isDetectBcc) {
+        this(msg, 0, msg.length,isDetectBcc);
+    }
+
     public Tx(byte[] msg, int offset, int length) {
         super(msg, offset, length);
         blockNo = TX_UNCONFIRMED;
         this.txTime = (int) (new Date().getTime() / 1000);
+    }
+
+    public Tx(byte[] msg, int offset, int length,boolean isDetectBcc) {
+        super(msg, offset, length);
+        blockNo = TX_UNCONFIRMED;
+        this.txTime = (int) (new Date().getTime() / 1000);
+        this.isDetectBcc = isDetectBcc;
     }
 
     public static final int TX_UNCONFIRMED = Integer.MAX_VALUE;
@@ -161,6 +172,7 @@ public class Tx extends Message implements Comparable<Tx> {
     private List<In> ins;
     private List<Out> outs;
     private boolean isBtc = true;
+    private boolean isDetectBcc = false;
 
 //    public int length;
 
@@ -264,6 +276,14 @@ public class Tx extends Message implements Comparable<Tx> {
 
     public void setOuts(List<Out> outs) {
         this.outs = outs;
+    }
+
+    public boolean isDetectBcc() {
+        return isDetectBcc;
+    }
+
+    public void setDetectBcc(boolean detectBcc) {
+        isDetectBcc = detectBcc;
     }
 
     public int getSawByPeerCnt() {
