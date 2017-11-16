@@ -128,54 +128,25 @@ public class BitherjSettings {
     }
 
     public enum MarketType {
-        BITSTAMP, BTCCHINA, OKCOIN, HUOBI, CHBTC, BTCTRADE, BITFINEX,
-        COINBASE, MARKET796;
-
-
+        BITSTAMP, BITFINEX, COINBASE;
     }
 
     public static MarketType getMarketType(int value) {
         switch (value) {
             case 2:
-                return MarketType.HUOBI;
-            case 3:
-                return MarketType.OKCOIN;
-            case 4:
-                return MarketType.BTCCHINA;
-            case 5:
-                return MarketType.CHBTC;
-            case 6:
                 return MarketType.BITFINEX;
-            case 7:
-                return MarketType.MARKET796;
-            case 8:
+            case 3:
                 return MarketType.COINBASE;
-            case 9:
-                return MarketType.BTCTRADE;
         }
         return MarketType.BITSTAMP;
     }
 
     public static int getMarketValue(MarketType marketType) {
         switch (marketType) {
-            case HUOBI:
-                return 2;
-            case OKCOIN:
-                return 3;
-            case BTCCHINA:
-                return 4;
-            case CHBTC:
-                return 5;
             case BITFINEX:
-                return 6;
-            case MARKET796:
-                return 7;
+                return 2;
             case COINBASE:
-                return 8;
-            case BTCTRADE:
-                return 9;
-
-
+                return 3;
         }
         return 1;
     }

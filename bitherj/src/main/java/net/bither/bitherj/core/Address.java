@@ -326,6 +326,15 @@ public class Address implements Comparable<Address> {
         return txs;
     }
 
+    public List<Tx> buildBccTx(long amount, String address, String changeAddress,List<Out> outs) throws TxBuilderException {
+        List<Long> amounts = new ArrayList<Long>();
+        amounts.add(amount);
+        List<String> addresses = new ArrayList<String>();
+        addresses.add(address);
+        List<Tx> txs = TxBuilder.getInstance().buildBccTx(this, changeAddress, amounts, addresses,outs);
+        return txs;
+    }
+
     public List<Tx> getRecentlyTxs(int confirmationCnt, int limit) {
         int blockNo = BlockChain.getInstance().lastBlock.getBlockNo() - confirmationCnt + 1;
         return AbstractDb.txProvider.getRecentlyTxsByAddress(this.address, blockNo, limit);
@@ -393,6 +402,15 @@ public class Address implements Comparable<Address> {
         } else {
             tx.signWithSignatures(this.signHashes(tx.getSplitCoinForkUnsignedInHashes(coin.getSplitCoin()), passphrase, coin.getSigHash()));
         }
+    }
+
+    public void signTx(Tx tx, CharSequence passphrase, boolean isBtc,List<Out> outs) {
+        long [] preOutValue = new long[outs.size()];
+        for (int idx = 0; idx < outs.size();idx++) {
+            preOutValue[idx] = outs.get(idx).getOutValue();
+        }
+        List<byte[]> unsignedHashes = tx.getUnsignedHashesForBcc(preOutValue);
+        tx.signWithSignatures(this.signHashes(unsignedHashes, passphrase, TransactionSignature.SigHash.BCCFORK));
     }
 
     public void completeInSignature(List<In> ins) {

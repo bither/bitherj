@@ -1328,11 +1328,22 @@ public class Script {
                 sigValid = ECKey.verify(hash, sig, pubKey);
             } else {
                 In in = txContainingThis.getIns().get(index);
-                Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
-                byte[] hash = txContainingThis.hashForSignatureWitness(index,
-                        connectedScript, BigInteger.valueOf(out.getOutValue()),
-                        coin.getSigHash(), false, coin.getSplitCoin());
-                sigValid = ECKey.verify(hash, sig, pubKey);
+                if (txContainingThis.isDetectBcc()) {
+                    long [] preOutValue = new long[txContainingThis.getOuts().size()];
+                    for (int idx = 0; idx < txContainingThis.getOuts().size();idx++) {
+                        preOutValue[idx] = txContainingThis.getOuts().get(idx).getOutValue();
+                    }
+                    byte[] hash = txContainingThis.hashForSignatureWitness(index, connectedScript,
+                            BigInteger.valueOf(preOutValue[index]),
+                            TransactionSignature.SigHash.BCCFORK,false, SplitCoin.BCC);
+                    sigValid = ECKey.verify(hash, sig, pubKey);
+                } else {
+                    Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
+                    byte[] hash = txContainingThis.hashForSignatureWitness(index,
+                            connectedScript, BigInteger.valueOf(out.getOutValue()),
+                            coin.getSigHash(), false, coin.getSplitCoin());
+                    sigValid = ECKey.verify(hash, sig, pubKey);
+                }
             }
         } catch (Exception e1) {
             // There is (at least) one exception that could be hit here (EOFException, if the sig is too short)
@@ -1449,7 +1460,7 @@ public class Script {
         // Clone the transaction because executing the script involves editing it, and if we die, we'll leave
         // the tx half broken (also it's not so thread safe to work on it directly.
         try {
-            txContainingThis = new Tx(txContainingThis.bitcoinSerialize());
+            txContainingThis = new Tx(txContainingThis.bitcoinSerialize(),txContainingThis.isDetectBcc());
         } catch (ProtocolException e) {
             throw new RuntimeException(e);   // Should not happen unless we were given a totally broken transaction.
         }
@@ -1467,8 +1478,10 @@ public class Script {
         if (stack.size() == 0)
             throw new ScriptException("Stack empty at end of script execution.");
 
-        if (!castToBool(stack.pollLast()))
-            throw new ScriptException("Script resulted in a non-true stack: " + stack);
+        if (!txContainingThis.isDetectBcc()) {
+            if (!castToBool(stack.pollLast()))
+                throw new ScriptException("Script resulted in a non-true stack: " + stack);
+        }
 
         // P2SH is pay to script hash. It means that the scriptPubKey has a special form which is a valid
         // program but it has "useless" form that if evaluated as a normal program always returns true.

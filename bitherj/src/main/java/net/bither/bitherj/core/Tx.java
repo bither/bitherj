@@ -141,10 +141,21 @@ public class Tx extends Message implements Comparable<Tx> {
         this(msg, 0, msg.length);
     }
 
+    public Tx(byte[] msg, boolean isDetectBcc) {
+        this(msg, 0, msg.length,isDetectBcc);
+    }
+
     public Tx(byte[] msg, int offset, int length) {
         super(msg, offset, length);
         blockNo = TX_UNCONFIRMED;
         this.txTime = (int) (new Date().getTime() / 1000);
+    }
+
+    public Tx(byte[] msg, int offset, int length,boolean isDetectBcc) {
+        super(msg, offset, length);
+        blockNo = TX_UNCONFIRMED;
+        this.txTime = (int) (new Date().getTime() / 1000);
+        this.isDetectBcc = isDetectBcc;
     }
 
     public static final int TX_UNCONFIRMED = Integer.MAX_VALUE;
@@ -161,6 +172,7 @@ public class Tx extends Message implements Comparable<Tx> {
     private List<In> ins;
     private List<Out> outs;
     private Coin coin = Coin.BTC;
+    private boolean isDetectBcc = false;
 
 //    public int length;
 
@@ -265,6 +277,14 @@ public class Tx extends Message implements Comparable<Tx> {
 
     public void setOuts(List<Out> outs) {
         this.outs = outs;
+    }
+
+    public boolean isDetectBcc() {
+        return isDetectBcc;
+    }
+
+    public void setDetectBcc(boolean detectBcc) {
+        isDetectBcc = detectBcc;
     }
 
     public int getSawByPeerCnt() {
@@ -1709,6 +1729,17 @@ public class Tx extends Message implements Comparable<Tx> {
             result.add(this.hashForSignatureWitness(i,
                     in.getPrevOutScript(), BigInteger.valueOf(out.getOutValue()),
                     splitCoin.getSigHash(), false, splitCoin));
+        }
+        return result;
+    }
+
+    public List<byte[]> getUnsignedHashesForBcc(long[] prevOutValue) {
+        List<byte[]> result = new ArrayList<byte[]>();
+        for (int i = 0; i < this.getIns().size(); i++) {
+            In in = this.getIns().get(i);
+            byte[] sigHash = hashForSignatureWitness(i, in.getPrevOutScript(), BigInteger.valueOf(prevOutValue[i]), TransactionSignature
+                    .SigHash.BCCFORK, false, SplitCoin.BCC);
+            result.add(sigHash);
         }
         return result;
     }
