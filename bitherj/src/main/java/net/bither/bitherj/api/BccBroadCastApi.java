@@ -1,6 +1,7 @@
 package net.bither.bitherj.api;
 
 import net.bither.bitherj.api.http.HttpsPostResponse;
+import net.bither.bitherj.core.SplitCoin;
 import net.bither.bitherj.utils.Utils;
 
 import java.util.HashMap;
@@ -14,8 +15,8 @@ public class BccBroadCastApi extends HttpsPostResponse<String> {
 
     String rawTx;
 
-    public BccBroadCastApi(String rawTx) {
-        String url = Utils.format("https://bitpie.getcai.com/api/v1/bcc/broadcast");
+    public BccBroadCastApi(String rawTx, SplitCoin splitCoin) {
+        String url = Utils.format("https://bitpie.getcai.com/api/v1/%s/broadcast", splitCoin.getUrlCode());
         setUrl(url);
         this.rawTx = rawTx;
     }

@@ -160,18 +160,19 @@ public class Tx extends Message implements Comparable<Tx> {
     private int sawByPeerCnt;
     private List<In> ins;
     private List<Out> outs;
-    private boolean isBtc = true;
+    private Coin coin = Coin.BTC;
 
 //    public int length;
 
     private transient int optimalEncodingMessageSize;
 
-    public boolean isBtc() {
-        return isBtc;
+
+    public Coin getCoin() {
+        return coin;
     }
 
-    public void setBtc(boolean btc) {
-        isBtc = btc;
+    public void setCoin(Coin coin) {
+        this.coin = coin;
     }
 
     public int getBlockNo() {
@@ -391,7 +392,7 @@ public class Tx extends Message implements Comparable<Tx> {
     public long amountSentToAddress(String address) {
         long amount = 0;
         for (Out out : getOuts()) {
-            if (Utils.compareString(out.getOutAddress(), address)) {
+            if (Utils.compareString(out.getOutAddress(coin), address)) {
                 amount += out.getOutValue();
             }
         }
@@ -1212,16 +1213,16 @@ public class Tx extends Message implements Comparable<Tx> {
     public synchronized byte[] hashForSignatureWitness(int inputIndex, Script scriptCode,
                                                        BigInteger prevValue, TransactionSignature
                                                                .SigHash type, boolean
-                                                               anyoneCanPay) {
+                                                               anyoneCanPay, SplitCoin splitCoin) {
         byte[] connectedScript = scriptCode.getProgram();
-        return hashForSignatureWitness(inputIndex, connectedScript, prevValue, type, anyoneCanPay);
+        return hashForSignatureWitness(inputIndex, connectedScript, prevValue, type, anyoneCanPay, splitCoin);
     }
 
     public synchronized byte[] hashForSignatureWitness(int inputIndex, byte[] connectedScript,
                                                        BigInteger prevValue,
                                                        TransactionSignature.SigHash type, boolean
-                                                               anyoneCanPay) {
-        byte sigHashType = (byte) TransactionSignature.calcSigHashValue(type, anyoneCanPay);
+                                                               anyoneCanPay, SplitCoin splitCoin) {
+        int sigHashType = TransactionSignature.calcSigHashValue(type, anyoneCanPay);
         ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(length == UNKNOWN_LENGTH ?
                 256 : length + 4);
         try {
@@ -1286,7 +1287,7 @@ public class Tx extends Message implements Comparable<Tx> {
             uint32ToByteStreamLE(ins.get(inputIndex).getInSequence(), bos);
             bos.write(hashOutputs);
             uint32ToByteStreamLE(0, bos);
-            uint32ToByteStreamLE(0x000000ff & sigHashType, bos);
+            uint32ToByteStreamLE(splitCoin == SplitCoin.BTG ? (1|0x40|(79<<8)) : 0x000000ff & sigHashType, bos);
         } catch (IOException e) {
             throw new RuntimeException(e);  // Cannot happen.
         }
@@ -1532,19 +1533,23 @@ public class Tx extends Message implements Comparable<Tx> {
 
     public List<byte[]> getUnsignedInHashes() {
         List<byte[]> result = new ArrayList<byte[]>();
-        if (isBtc) {
-            for (In in : this.getIns()) {
-                byte sigHashType = (byte) TransactionSignature.calcSigHashValue(TransactionSignature
-                        .SigHash.ALL, false);
-                result.add(this.hashForSignature(in.getInSn(), in.getPrevOutScript(), sigHashType));
-            }
-        } else {
-            for (int i = 0; i < this.getIns().size(); i++) {
-                In in = getIns().get(i);
-                Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
-                result.add(this.hashForSignatureWitness(i, in.getPrevOutScript(), BigInteger.valueOf(out.getOutValue()),
-                        TransactionSignature.SigHash.BCCFORK, false));
-            }
+        TransactionSignature.SigHash sigHash = coin.getSigHash();
+        switch (coin) {
+            case BTC:
+                for (In in : this.getIns()) {
+                    byte sigHashType = (byte) TransactionSignature.calcSigHashValue(sigHash, false);
+                    result.add(this.hashForSignature(in.getInSn(), in.getPrevOutScript(), sigHashType));
+                }
+                break;
+            case BCC:
+            case BTG:
+                for (int i = 0; i < this.getIns().size(); i++) {
+                    In in = getIns().get(i);
+                    Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
+                    result.add(this.hashForSignatureWitness(i, in.getPrevOutScript(), BigInteger.valueOf(out.getOutValue()),
+                            sigHash, false, coin.getSplitCoin()));
+                }
+                break;
         }
         return result;
     }
@@ -1696,14 +1701,14 @@ public class Tx extends Message implements Comparable<Tx> {
         return false;
     }
 
-    public List<byte[]> getBccForkUnsignedInHashes() {
+    public List<byte[]> getSplitCoinForkUnsignedInHashes(SplitCoin splitCoin) {
         List<byte[]> result = new ArrayList<byte[]>();
-        for (int i=0;i<this.getIns().size();i++) {
+        for (int i = 0; i < this.getIns().size(); i++) {
             In in = getIns().get(i);
-           Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(),in.getPrevOutSn());
+            Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
             result.add(this.hashForSignatureWitness(i,
-                    in.getPrevOutScript(),BigInteger.valueOf(out.getOutValue()),
-                    TransactionSignature.SigHash.BCCFORK,false));
+                    in.getPrevOutScript(), BigInteger.valueOf(out.getOutValue()),
+                    splitCoin.getSigHash(), false, splitCoin));
         }
         return result;
     }

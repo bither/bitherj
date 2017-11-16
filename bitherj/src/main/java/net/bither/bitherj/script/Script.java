@@ -19,8 +19,10 @@ package net.bither.bitherj.script;
 
 import com.google.common.collect.Lists;
 
+import net.bither.bitherj.core.Coin;
 import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.Out;
+import net.bither.bitherj.core.SplitCoin;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
@@ -396,6 +398,15 @@ public class Script {
             return Utils.toAddress(getPubKeyHash());
         else if (isSentToP2SH())
             return Utils.toP2SHAddress(this.getPubKeyHash());
+        else
+            throw new ScriptException("Cannot cast this script to a pay-to-address type");
+    }
+
+    public String getToAddress(Coin coin) throws ScriptException {
+        if (isSentToAddress())
+            return Utils.toAddress(getPubKeyHash(), coin);
+        else if (isSentToP2SH())
+            return Utils.toP2SHAddress(this.getPubKeyHash(), coin);
         else
             throw new ScriptException("Cannot cast this script to a pay-to-address type");
     }
@@ -1311,15 +1322,16 @@ public class Script {
         boolean sigValid = false;
         try {
             TransactionSignature sig = TransactionSignature.decodeFromBitcoin(sigBytes, false);
-            if (sig.sighashFlags == TransactionSignature.SigHash.BCCFORK.value) {
-                In in = txContainingThis.getIns().get(index);
-                Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(),in.getPrevOutSn());
-                byte[] hash = txContainingThis.hashForSignatureWitness(index,
-                        connectedScript,BigInteger.valueOf(out.getOutValue()),
-                        TransactionSignature.SigHash.BCCFORK,false);
+            Coin coin = txContainingThis.getCoin();
+            if (coin == Coin.BTC) {
+                byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
                 sigValid = ECKey.verify(hash, sig, pubKey);
             } else {
-                byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
+                In in = txContainingThis.getIns().get(index);
+                Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
+                byte[] hash = txContainingThis.hashForSignatureWitness(index,
+                        connectedScript, BigInteger.valueOf(out.getOutValue()),
+                        coin.getSigHash(), false, coin.getSplitCoin());
                 sigValid = ECKey.verify(hash, sig, pubKey);
             }
         } catch (Exception e1) {
@@ -1386,16 +1398,17 @@ public class Script {
             // more expensive than hashing, its not a big deal.
             try {
                 TransactionSignature sig = TransactionSignature.decodeFromBitcoin(sigs.getFirst(), false);
-                if (sig.sighashFlags == TransactionSignature.SigHash.BCCFORK.value) {
+                Coin coin = txContainingThis.getCoin();
+                if (coin == Coin.BTC) {
+                    byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
+                    if (ECKey.verify(hash, sig, pubKey))
+                        sigs.pollFirst();
+                } else {
                     In in = txContainingThis.getIns().get(index);
                     Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
                     byte[] hash = txContainingThis.hashForSignatureWitness(index,
                             connectedScript, BigInteger.valueOf(out.getOutValue()),
-                            TransactionSignature.SigHash.BCCFORK, false);
-                    if (ECKey.verify(hash, sig, pubKey))
-                        sigs.pollFirst();
-                } else {
-                    byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
+                            coin.getSigHash(), false, coin.getSplitCoin());
                     if (ECKey.verify(hash, sig, pubKey))
                         sigs.pollFirst();
                 }

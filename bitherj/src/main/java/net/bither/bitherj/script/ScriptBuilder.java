@@ -106,14 +106,14 @@ public class ScriptBuilder {
      */
     public static Script createOutputScript(String to) {
         try {
-            if (Utils.getAddressHeader(to) == BitherjSettings.p2shHeader) {
+            if (Utils.getAddressHeader(to) == BitherjSettings.p2shHeader || Utils.getAddressHeader(to) == BitherjSettings.btgP2shHeader) {
                 // OP_HASH160 <scriptHash> OP_EQUAL
                 return new ScriptBuilder()
                         .op(OP_HASH160)
                         .data(Utils.getAddressHash(to))
                         .op(OP_EQUAL)
                         .build();
-            } else if (Utils.getAddressHeader(to) == BitherjSettings.addressHeader)  {
+            } else if (Utils.getAddressHeader(to) == BitherjSettings.addressHeader || Utils.getAddressHeader(to) == BitherjSettings.btgAddressHeader)  {
                 // OP_DUP OP_HASH160 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
                 return new ScriptBuilder()
                         .op(OP_DUP)

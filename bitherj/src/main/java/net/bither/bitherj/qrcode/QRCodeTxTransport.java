@@ -18,10 +18,12 @@ package net.bither.bitherj.qrcode;
 
 import net.bither.bitherj.core.AbstractHD;
 import net.bither.bitherj.core.AddressManager;
+import net.bither.bitherj.core.Coin;
 import net.bither.bitherj.core.DesktopHDMAddress;
 import net.bither.bitherj.core.EnterpriseHDMAddress;
 import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.HDMAddress;
+import net.bither.bitherj.core.SplitCoin;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
@@ -175,10 +177,10 @@ public class QRCodeTxTransport implements Serializable {
         List<HDAccount.HDAccountAddress> addresses = account.getSigningAddressesForInputs(tx
                 .getIns());
         List<byte[]> hashes;
-        if (tx.isBtc()) {
+        if (tx.getCoin() == Coin.BTC) {
             hashes = tx.getUnsignedInHashes();
         } else {
-            hashes = tx.getBccForkUnsignedInHashes();
+            hashes = tx.getSplitCoinForkUnsignedInHashes(tx.getCoin().getSplitCoin());
         }
 
         QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
@@ -223,7 +225,7 @@ public class QRCodeTxTransport implements Serializable {
         return preSignString;
     }
 
-    public static String getBccHDAccountMonitoredUnsignedTx(List<Tx> txs, String toAddress, HDAccount account) {
+    public static String getSplitCoinHDAccountMonitoredUnsignedTx(List<Tx> txs, String toAddress, HDAccount account, SplitCoin splitCoin) {
         if (txs == null || txs.size() == 0) {
             return null;
         }
@@ -238,7 +240,7 @@ public class QRCodeTxTransport implements Serializable {
             amount += tx.amountSentToAddress(toAddress);
             fee += tx.getFee();
             List<HDAccount.HDAccountAddress> addresses = account.getSigningAddressesForInputs(tx.getIns());
-            List<byte[]> hashes = tx.getBccForkUnsignedInHashes();
+            List<byte[]> hashes = tx.getSplitCoinForkUnsignedInHashes(splitCoin);
             for (int i = 0;
                  i < addresses.size();
                  i++) {

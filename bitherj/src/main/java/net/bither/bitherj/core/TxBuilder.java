@@ -92,7 +92,7 @@ public class TxBuilder {
         }
     }
 
-    public List<Tx> buildBccTxsFromAllAddress(List<Out> unspendOuts, String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
+    public List<Tx> buildSplitCoinTxsFromAllAddress(List<Out> unspendOuts, String changeAddress, List<Long> amounts, List<String> addresses, SplitCoin splitCoin) throws TxBuilderException {
         long value = 0;
         for (long amount : amounts) {
             value += amount;
@@ -102,14 +102,14 @@ public class TxBuilder {
             throw new TxBuilderException.TxBuilderNotEnoughMoneyException(value - TxBuilder.getAmount(unspendOuts));
         }
 
-        List<Tx> emptyWalletTxs = getEmptyWalletTxs(addresses, changeAddress, unspendOuts, 1);
+        List<Tx> emptyWalletTxs = getEmptyWalletTxs(addresses, changeAddress, unspendOuts, 1, splitCoin);
         if (emptyWalletTxs == null || emptyWalletTxs.size() == 0) {
             throw new TxBuilderException();
         }
         return emptyWalletTxs;
     }
 
-    private List<Tx> getEmptyWalletTxs(List<String> addresses, String changeAddress, List<Out> unspendOuts, int splitNumber) {
+    private List<Tx> getEmptyWalletTxs(List<String> addresses, String changeAddress, List<Out> unspendOuts, int splitNumber, SplitCoin splitCoin) {
         List<Tx> emptyWalletTxs = new ArrayList<Tx>();
         int count = (unspendOuts.size() % splitNumber == (splitNumber - 1) && splitNumber != 1) ? (unspendOuts.size() / splitNumber + 1) : unspendOuts.size() / splitNumber;
         for (int i = 0; i < splitNumber; i++) {
@@ -119,19 +119,19 @@ public class TxBuilder {
             List<Long> amounts = Arrays.asList(TxBuilder.getAmount(outs));
             Tx emptyWalletTx = emptyWallet.buildTx(changeAddress, outs, prepareTx(amounts, addresses));
             if (emptyWalletTx != null && TxBuilder.estimationTxSize(emptyWalletTx.getIns().size(), emptyWalletTx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
-                emptyWalletTx.setBtc(false);
+                emptyWalletTx.setCoin(splitCoin.getCoin());
                 emptyWalletTxs.add(emptyWalletTx);
             } else if (emptyWalletTx != null) {
                 if (count == 1) {
                     return null;
                 }
-                return getEmptyWalletTxs(addresses, changeAddress, unspendOuts, splitNumber + 1);
+                return getEmptyWalletTxs(addresses, changeAddress, unspendOuts, splitNumber + 1, splitCoin);
             }
         }
         return emptyWalletTxs;
     }
 
-    public Tx buildTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses, boolean isBtc) throws TxBuilderException {
+    public Tx buildTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses, Coin coin) throws TxBuilderException {
         Script scriptPubKey = null;
         if (address.isHDM()) {
             scriptPubKey = new Script(address.getPubKey());
@@ -148,11 +148,11 @@ public class TxBuilder {
         }
         List<Tx> unspendTxs;
         List<Out> unspendOuts;
-        if (isBtc) {
+        if (coin == Coin.BTC) {
             unspendTxs = AbstractDb.txProvider.getUnspendTxWithAddress(address.getAddress());
             unspendOuts = getUnspendOuts(unspendTxs);
         } else {
-            unspendOuts = AbstractDb.txProvider.getUnspentOutputByBlockNo(BitherjSettings.BTCFORKBLOCKNO,address.getAddress());
+            unspendOuts = AbstractDb.txProvider.getUnspentOutputByBlockNo(coin.getForkBlockHeight(), address.getAddress());
             unspendTxs = AbstractDb.txProvider.getUnspendTxWithAddress(address.getAddress(),unspendOuts);
         }
         List<Out> canSpendOuts = getCanSpendOuts(unspendTxs);
@@ -199,7 +199,7 @@ public class TxBuilder {
         }
     }
 
-    public List<Tx> buildBccTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
+    public List<Tx> buildSplitCoinTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses, SplitCoin splitCoin) throws TxBuilderException {
         Script scriptPubKey = null;
         if (address.isHDM()) {
             scriptPubKey = new Script(address.getPubKey());
@@ -214,7 +214,7 @@ public class TxBuilder {
         for (long amount : amounts) {
             value += amount;
         }
-        List<Out> unspendOuts = AbstractDb.txProvider.getUnspentOutputByBlockNo(BitherjSettings.BTCFORKBLOCKNO,address.getAddress());
+        List<Out> unspendOuts = AbstractDb.txProvider.getUnspentOutputByBlockNo(splitCoin.getForkBlockHeight(),address.getAddress());
         List<Tx> unspendTxs =  AbstractDb.txProvider.getUnspendTxWithAddress(address.getAddress(),unspendOuts);
         List<Out> canSpendOuts = getCanSpendOuts(unspendTxs);
         List<Out> canNotSpendOuts = getCanNotSpendOuts(unspendTxs);
@@ -227,14 +227,14 @@ public class TxBuilder {
             throw new TxBuilderException.TxBuilderWaitConfirmException(TxBuilder.getAmount(canNotSpendOuts));
         }
 
-        List<Tx> txs = getEmptyWalletTxs(address, changeAddress, unspendTxs, addresses, scriptPubKey, 1);
+        List<Tx> txs = getEmptyWalletTxs(address, changeAddress, unspendTxs, addresses, scriptPubKey, 1, splitCoin.getCoin());
         if (txs == null || txs.size() == 0) {
             throw new TxBuilderException();
         }
         return txs;
     }
 
-    private List<Tx> getEmptyWalletTxs(Address address, String changeAddress, List<Tx> unspendTxs, List<String> addresses, Script scriptPubKey, int splitNumber) {
+    private List<Tx> getEmptyWalletTxs(Address address, String changeAddress, List<Tx> unspendTxs, List<String> addresses, Script scriptPubKey, int splitNumber, Coin coin) {
         List<Tx> emptyWalletTxs = new ArrayList<Tx>();
         int count = (unspendTxs.size() % splitNumber == (splitNumber - 1) && splitNumber != 1) ? (unspendTxs.size() / splitNumber + 1) : unspendTxs.size() / splitNumber;
         for (int i = 0; i < splitNumber; i++) {
@@ -245,13 +245,13 @@ public class TxBuilder {
             List<Long> amounts = Arrays.asList(TxBuilder.getAmount(outs));
             Tx emptyWalletTx = emptyWallet.buildTx(address, changeAddress, txs, prepareTx(amounts, addresses));
             if (emptyWalletTx != null && TxBuilder.estimationTxSize(emptyWalletTx.getIns().size(), scriptPubKey, emptyWalletTx.getOuts(), address.isCompressed()) <= BitherjSettings.MAX_TX_SIZE) {
-                emptyWalletTx.setBtc(false);
+                emptyWalletTx.setCoin(coin);
                 emptyWalletTxs.add(emptyWalletTx);
             } else if (emptyWalletTx != null) {
                 if (count == 1) {
                     return null;
                 }
-                return getEmptyWalletTxs(address, changeAddress, unspendTxs, addresses, scriptPubKey, splitNumber + 1);
+                return getEmptyWalletTxs(address, changeAddress, unspendTxs, addresses, scriptPubKey, splitNumber + 1, coin);
             }
         }
         return emptyWalletTxs;

@@ -23,6 +23,8 @@ import com.google.common.primitives.UnsignedLongs;
 
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
+import net.bither.bitherj.core.Coin;
+import net.bither.bitherj.core.SplitCoin;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.exception.AddressFormatException;
@@ -691,7 +693,6 @@ public class Utils {
         return data;
     }
 
-
     public static String toAddress(byte[] pubKeyHash) {
         checkArgument(pubKeyHash.length == 20, "Addresses are 160-bit hashes, " +
                 "so you must provide 20 bytes");
@@ -712,6 +713,36 @@ public class Utils {
                 "so you must provide 20 bytes");
 
         int version = BitherjSettings.p2shHeader;
+        checkArgument(version < 256 && version >= 0);
+
+        byte[] addressBytes = new byte[1 + pubKeyHash.length + 4];
+        addressBytes[0] = (byte) version;
+        System.arraycopy(pubKeyHash, 0, addressBytes, 1, pubKeyHash.length);
+        byte[] check = Utils.doubleDigest(addressBytes, 0, pubKeyHash.length + 1);
+        System.arraycopy(check, 0, addressBytes, pubKeyHash.length + 1, 4);
+        return Base58.encode(addressBytes);
+    }
+
+    public static String toAddress(byte[] pubKeyHash, Coin coin) {
+        checkArgument(pubKeyHash.length == 20, "Addresses are 160-bit hashes, " +
+                "so you must provide 20 bytes");
+
+        int version = coin.getAddressHeader();
+        checkArgument(version < 256 && version >= 0);
+
+        byte[] addressBytes = new byte[1 + pubKeyHash.length + 4];
+        addressBytes[0] = (byte) version;
+        System.arraycopy(pubKeyHash, 0, addressBytes, 1, pubKeyHash.length);
+        byte[] check = Utils.doubleDigest(addressBytes, 0, pubKeyHash.length + 1);
+        System.arraycopy(check, 0, addressBytes, pubKeyHash.length + 1, 4);
+        return Base58.encode(addressBytes);
+    }
+
+    public static String toP2SHAddress(byte[] pubKeyHash, Coin coin) {
+        checkArgument(pubKeyHash.length == 20, "Addresses are 160-bit hashes, " +
+                "so you must provide 20 bytes");
+
+        int version = coin.getP2shHeader();
         checkArgument(version < 256 && version >= 0);
 
         byte[] addressBytes = new byte[1 + pubKeyHash.length + 4];
@@ -915,6 +946,17 @@ public class Utils {
             int addressHeader = getAddressHeader(str);
             return (addressHeader == BitherjSettings.p2shHeader
                     || addressHeader == BitherjSettings.addressHeader);
+        } catch (final AddressFormatException x) {
+            x.printStackTrace();
+        }
+        return false;
+    }
+
+    public static boolean validBicoinGoldAddress(String str) {
+        try {
+            int addressHeader = getAddressHeader(str);
+            return (addressHeader == BitherjSettings.btgP2shHeader
+                    || addressHeader == BitherjSettings.btgAddressHeader);
         } catch (final AddressFormatException x) {
             x.printStackTrace();
         }

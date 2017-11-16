@@ -290,11 +290,11 @@ public class Address implements Comparable<Address> {
     }
 
     public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
-        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, true);
+        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, Coin.BTC);
     }
 
-    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses, boolean isBtc) throws TxBuilderException {
-        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, isBtc);
+    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses, Coin coin) throws TxBuilderException {
+        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, coin);
     }
 
     public Tx buildTx(long amount, String address) throws TxBuilderException {
@@ -309,20 +309,20 @@ public class Address implements Comparable<Address> {
         return buildTx(changeAddress, amounts, addresses);
     }
 
-    public Tx buildTx(long amount, String address, String changeAddress, boolean isBtc) throws TxBuilderException {
+    public Tx buildTx(long amount, String address, String changeAddress, Coin coin) throws TxBuilderException {
         List<Long> amounts = new ArrayList<Long>();
         amounts.add(amount);
         List<String> addresses = new ArrayList<String>();
         addresses.add(address);
-        return buildTx(changeAddress, amounts, addresses, isBtc);
+        return buildTx(changeAddress, amounts, addresses, coin);
     }
 
-    public List<Tx> buildBccTx(long amount, String address, String changeAddress) throws TxBuilderException {
+    public List<Tx> buildSplitCoinTx(long amount, String address, String changeAddress, SplitCoin splitCoin) throws TxBuilderException {
         List<Long> amounts = new ArrayList<Long>();
         amounts.add(amount);
         List<String> addresses = new ArrayList<String>();
         addresses.add(address);
-        List<Tx> txs = TxBuilder.getInstance().buildBccTx(this, changeAddress, amounts, addresses);
+        List<Tx> txs = TxBuilder.getInstance().buildSplitCoinTx(this, changeAddress, amounts, addresses, splitCoin);
         return txs;
     }
 
@@ -387,11 +387,11 @@ public class Address implements Comparable<Address> {
 
     }
 
-    public void signTx(Tx tx, CharSequence passphrase, boolean isBtc) {
-        if (isBtc) {
+    public void signTx(Tx tx, CharSequence passphrase, Coin coin) {
+        if (coin == Coin.BTC) {
             tx.signWithSignatures(this.signHashes(tx.getUnsignedInHashes(), passphrase, TransactionSignature.SigHash.ALL));
         } else {
-            tx.signWithSignatures(this.signHashes(tx.getBccForkUnsignedInHashes(), passphrase, TransactionSignature.SigHash.BCCFORK));
+            tx.signWithSignatures(this.signHashes(tx.getSplitCoinForkUnsignedInHashes(coin.getSplitCoin()), passphrase, coin.getSigHash()));
         }
     }
 

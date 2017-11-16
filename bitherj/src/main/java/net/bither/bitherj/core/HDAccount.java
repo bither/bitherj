@@ -555,12 +555,12 @@ public class HDAccount extends Address {
         return tx;
     }
 
-    public List<Tx> newForkTx(String toAddresses, Long amounts, CharSequence password) throws
+    public List<Tx> newForkTx(String toAddresses, Long amounts, CharSequence password, SplitCoin splitCoin) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
         if (password != null && !hasPrivKey()) {
             throw new RuntimeException("Can not sign without private key");
         }
-        List<Tx> txs = newForkTx(toAddresses, amounts);
+        List<Tx> txs = newForkTx(toAddresses, amounts, splitCoin);
         for (Tx tx: txs) {
             List<HDAccountAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
             assert signingAddresses.size() == tx.getIns().size();
@@ -575,7 +575,7 @@ public class HDAccount extends Address {
                     .INTERNAL_ROOT_PATH);
             accountKey.wipe();
             master.wipe();
-            List<byte[]> unsignedHashes = tx.getBccForkUnsignedInHashes();
+            List<byte[]> unsignedHashes = tx.getSplitCoinForkUnsignedInHashes(splitCoin);
             assert unsignedHashes.size() == signingAddresses.size();
             ArrayList<byte[]> signatures = new ArrayList<byte[]>();
             HashMap<String, DeterministicKey> addressToKeyMap = new HashMap<String, DeterministicKey>
@@ -596,7 +596,7 @@ public class HDAccount extends Address {
                 DeterministicKey key = addressToKeyMap.get(a.getAddress());
                 assert key != null;
                 TransactionSignature signature = new TransactionSignature(key.sign(unsigned, null),
-                        TransactionSignature.SigHash.BCCFORK, false);
+                        splitCoin.getSigHash(), false);
                 signatures.add(ScriptBuilder.createInputScript(signature, key).getProgram());
             }
 
@@ -611,10 +611,10 @@ public class HDAccount extends Address {
         return txs;
     }
 
-    public List<Tx> newForkTx(String toAddress, Long amount) throws TxBuilderException,
+    public List<Tx> newForkTx(String toAddress, Long amount, SplitCoin splitCoin) throws TxBuilderException,
             MnemonicException.MnemonicLengthException {
-        List<Out> outs = AbstractDb.hdAccountAddressProvider.getUnspentOutputByBlockNo(BitherjSettings.BTCFORKBLOCKNO,hdSeedId);
-        List<Tx> txs = TxBuilder.getInstance().buildBccTxsFromAllAddress(outs, toAddress, Arrays.asList(amount), Arrays.asList(toAddress));
+        List<Out> outs = AbstractDb.hdAccountAddressProvider.getUnspentOutputByBlockNo(splitCoin.getForkBlockHeight(), hdSeedId);
+        List<Tx> txs = TxBuilder.getInstance().buildSplitCoinTxsFromAllAddress(outs, toAddress, Arrays.asList(amount), Arrays.asList(toAddress), splitCoin);
         return txs;
     }
 

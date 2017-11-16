@@ -57,11 +57,12 @@ public class BitherjSettings {
     public static final long packetMagic = 0xf9beb4d9L;
     public static final int addressHeader = 0;
     public static final int p2shHeader = 5;
+    public static final int btgAddressHeader = 38;
+    public static final int btgP2shHeader = 23;
     public static final int dumpedPrivateKeyHeader = 128;
     public static final int TARGET_TIMESPAN = 14 * 24 * 60 * 60;  // 2 weeks per difficulty cycle, on average.
     public static final int TARGET_SPACING = 10 * 60;  // 10 minutes per block.
     public static final int INTERVAL = TARGET_TIMESPAN / TARGET_SPACING;
-    public static final int BTCFORKBLOCKNO = 478559;
 
     public static final long TX_UNCONFIRMED = Long.MAX_VALUE;
 
