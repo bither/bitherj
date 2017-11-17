@@ -141,8 +141,8 @@ public class Tx extends Message implements Comparable<Tx> {
         this(msg, 0, msg.length);
     }
 
-    public Tx(byte[] msg, boolean isDetectBcc) {
-        this(msg, 0, msg.length,isDetectBcc);
+    public Tx(byte[] msg, boolean isDetectBcc, Coin coin) {
+        this(msg, 0, msg.length,isDetectBcc, coin);
     }
 
     public Tx(byte[] msg, int offset, int length) {
@@ -151,11 +151,12 @@ public class Tx extends Message implements Comparable<Tx> {
         this.txTime = (int) (new Date().getTime() / 1000);
     }
 
-    public Tx(byte[] msg, int offset, int length,boolean isDetectBcc) {
+    public Tx(byte[] msg, int offset, int length,boolean isDetectBcc, Coin coin) {
         super(msg, offset, length);
         blockNo = TX_UNCONFIRMED;
         this.txTime = (int) (new Date().getTime() / 1000);
         this.isDetectBcc = isDetectBcc;
+        this.coin = coin;
     }
 
     public static final int TX_UNCONFIRMED = Integer.MAX_VALUE;

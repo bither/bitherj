@@ -83,5 +83,14 @@ public enum SplitCoin {
         }
         return BitherjSettings.addressHeader;
     }
+
+    public String getIsGatKey() {
+        switch (this) {
+            case BCC:
+                return "";
+            default:
+                return this.getName();
+        }
+    }
 }
 
