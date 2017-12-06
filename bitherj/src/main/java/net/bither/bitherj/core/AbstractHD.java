@@ -33,8 +33,29 @@ import java.util.List;
 
 public abstract class AbstractHD {
 
+    public enum PurposePathLevel {
+        Normal(44),
+        P2SHP2WPKH(49);
+
+        private int value;
+
+        PurposePathLevel(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public static PurposePathLevel getPurposePathLevel(PurposePathLevel... purposePathLevels) {
+        return purposePathLevels == null || purposePathLevels.length == 0 ? PurposePathLevel.Normal : purposePathLevels[0];
+    }
+
+
     public enum PathType {
-        EXTERNAL_ROOT_PATH(0), INTERNAL_ROOT_PATH(1);
+        EXTERNAL_ROOT_PATH(0), INTERNAL_ROOT_PATH(1),
+        EXTERNAL_BIP49_PATH(9),INTERNAL_BIP49_PATH(10);
         private int value;
 
         PathType(int value) {
@@ -44,8 +65,6 @@ public abstract class AbstractHD {
         public int getValue() {
             return this.value;
         }
-
-
     }
 
     public static class PathTypeIndex {
@@ -58,9 +77,21 @@ public abstract class AbstractHD {
         switch (value) {
             case 0:
                 return PathType.EXTERNAL_ROOT_PATH;
-            default:
+            case 1:
                 return PathType.INTERNAL_ROOT_PATH;
+            case 9:
+                return PathType.EXTERNAL_BIP49_PATH;
+            default:
+                return PathType.INTERNAL_BIP49_PATH;
         }
+    }
+
+    public static PathType getExternalType(PathType... pathTypes) {
+        return pathTypes == null || pathTypes.length == 0 ? PathType.EXTERNAL_ROOT_PATH : pathTypes[0];
+    }
+
+    public static PathType getInternalType(PathType... pathTypes) {
+        return  pathTypes == null || pathTypes.length == 0 ? PathType.INTERNAL_ROOT_PATH : pathTypes[0];
     }
 
     protected transient byte[] mnemonicSeed;
@@ -81,15 +112,14 @@ public abstract class AbstractHD {
         return accountKey.deriveSoftened(pathType.getValue());
     }
 
-    protected DeterministicKey getAccount(DeterministicKey master) {
-        DeterministicKey purpose = master.deriveHardened(44);
+    protected DeterministicKey getAccount(DeterministicKey master, PurposePathLevel... purposePathLevels) {
+        DeterministicKey purpose = master.deriveHardened(getPurposePathLevel(purposePathLevels).getValue());
         DeterministicKey coinType = purpose.deriveHardened(0);
         DeterministicKey account = coinType.deriveHardened(0);
         purpose.wipe();
         coinType.wipe();
         return account;
     }
-
 
     protected DeterministicKey masterKey(CharSequence password) throws MnemonicException
             .MnemonicLengthException {

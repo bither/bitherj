@@ -19,6 +19,8 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
+import net.bither.bitherj.crypto.hd.DeterministicKey;
+import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
@@ -161,6 +163,8 @@ public class Tx extends Message implements Comparable<Tx> {
     public static final int TX_UNCONFIRMED = Integer.MAX_VALUE;
     public static final long TX_VERSION = 1l;
     public static final long TX_LOCKTIME = 0l;
+    public static final int TX_MARKER = 0;
+    public static final int TX_FLAG = 1;
 
     private int blockNo;
     private byte[] txHash;
@@ -174,6 +178,10 @@ public class Tx extends Message implements Comparable<Tx> {
     private Coin coin = Coin.BTC;
     private boolean isDetectBcc = false;
     private byte[] blockHash;
+    private int txMark;
+    private int txFlag;
+    private byte[] witness;
+    private boolean isSegwitAddress = false;
 
 //    public int length;
 
@@ -302,6 +310,10 @@ public class Tx extends Message implements Comparable<Tx> {
 
     public void setSawByPeerCnt(int sawByPeerCnt) {
         this.sawByPeerCnt = sawByPeerCnt;
+    }
+
+    public boolean isSegwitAddress() {
+        return isSegwitAddress;
     }
 
     public void sawByPeer() {
@@ -1962,6 +1974,13 @@ public class Tx extends Message implements Comparable<Tx> {
         return result;
     }
 
+    public byte[] getUnsignedInHashes (byte[] redeemScript, In in) {
+            Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
+        byte[] signHash = this.hashForSignatureWitness(in.getInSn(), redeemScript, BigInteger.valueOf(out.getOutValue()),
+                    TransactionSignature
+                            .SigHash.ALL, false, null);
+        return signHash;
+    }
     public List<byte[]> getUnsignedInHashesForHDM(byte[] pubs) {
         List<byte[]> result = new ArrayList<byte[]>();
         for (In in : this.getIns()) {
@@ -2006,6 +2025,14 @@ public class Tx extends Message implements Comparable<Tx> {
         this.recalculateTxHash();
     }
 
+    public void signWithSignatures(List<byte[]> signatures, List<byte[]> witnesses) {
+        int i = 0;
+        for (In in : this.getIns()) {
+            in.setInSignature(signatures.get(i));
+            i++;
+        }
+        this.recalculateTxHash();
+    }
     public boolean isSigned() {
         boolean isSign = this.getIns().size() > 0;
         for (In in : this.getIns()) {

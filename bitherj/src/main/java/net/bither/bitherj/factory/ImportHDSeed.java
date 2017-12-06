@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.factory;
 
+import net.bither.bitherj.core.AbstractHD;
 import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.HDAccountCold;
 import net.bither.bitherj.core.HDMKeychain;
@@ -181,7 +182,8 @@ public abstract class ImportHDSeed {
             case HDSeedPhrase:
                 try {
                     byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
-                    HDAccount hdAccount = new HDAccount(mnemonicCode, mnemonicCodeSeed, password, false);
+                    HDAccount hdAccount = new HDAccount(mnemonicCode, mnemonicCodeSeed, password, false,
+                             AbstractHD.PurposePathLevel.P2SHP2WPKH);
                     return hdAccount;
                 }  catch (HDAccount.DuplicatedHDAccountException e) {
                     e.printStackTrace();

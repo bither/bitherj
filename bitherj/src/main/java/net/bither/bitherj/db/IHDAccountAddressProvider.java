@@ -37,7 +37,7 @@ public interface IHDAccountAddressProvider {
 
     void updateIssuedIndex(int hdAccountId, AbstractHD.PathType pathType, int index);
 
-    String externalAddress(int hdAccountId);
+    String externalAddress(int hdAccountId,AbstractHD.PathType... pathTypes);
 
 
     HashSet<String> getBelongAccountAddresses(int hdAccountId, List<String> addressList);
@@ -88,7 +88,7 @@ public interface IHDAccountAddressProvider {
 
     List<Out> getUnconfirmedSpentOutByHDAccountWithPath(int hdAccountId, AbstractHD.PathType pathType);
 
-    boolean requestNewReceivingAddress(int hdAccountId);
+    boolean requestNewReceivingAddress(int hdAccountId, AbstractHD.PathType... pathTypes);
 
     List<Out> getUnspentOutputByBlockNo(long BlockNo, int hdSeedId);
 }
