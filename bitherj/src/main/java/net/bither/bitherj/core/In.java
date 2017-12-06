@@ -49,6 +49,7 @@ public class In extends Message {
     private long inSequence;
     private Tx tx;
     private transient Out connectedOut;
+    private byte[] witness;
 
     public byte[] getTxHash() {
         return txHash;
@@ -106,6 +107,13 @@ public class In extends Message {
         this.inSequence = inSequence;
     }
 
+    public byte[] getWitness() {
+        return witness;
+    }
+
+    public void setWitness(byte[] witness) {
+        this.witness = witness;
+    }
     public OutPoint getOutpoint() {
         return new OutPoint(this.prevTxHash, this.prevOutSn);
     }

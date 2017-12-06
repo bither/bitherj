@@ -100,6 +100,9 @@ public class ECKey implements Serializable {
 
     private static final long serialVersionUID = -728224901792295832L;
 
+    private static final byte[] prefixRedeemScript = Utils.hexStringToByteArray("76a9");
+    private static final byte[] suffixRedeemScript = Utils.hexStringToByteArray("88ac");
+
     static {
         // Tell Bouncy Castle to precompute data that's needed during secp256k1 calculations. Increasing the width
         // number makes calculations faster, but at a cost of extra memory usage and with decreasing returns. 12 was
@@ -352,6 +355,22 @@ public class ECKey implements Serializable {
      */
     public String toAddress() {
         return Utils.toAddress(Utils.sha256hash160(pub));
+    }
+
+    public String toSegwitAddress() {
+        return Utils.toSegwitAddress(Utils.sha256hash160(pub));
+    }
+
+    public byte[] getRedeemScript() {
+        byte[] pubKeyHash = Utils.sha256hash160(pub);
+        assert (pubKeyHash.length == 20);
+
+        byte[] redeemScript = new byte[pubKeyHash.length + 1 + prefixRedeemScript.length + suffixRedeemScript.length];
+        System.arraycopy(prefixRedeemScript, 0, redeemScript, 0, prefixRedeemScript.length);
+        redeemScript[prefixRedeemScript.length] = (byte) pubKeyHash.length;
+        System.arraycopy(pubKeyHash, 0, redeemScript, prefixRedeemScript.length + 1, pubKeyHash.length);
+        System.arraycopy(suffixRedeemScript, 0, redeemScript, redeemScript.length - suffixRedeemScript.length, suffixRedeemScript.length);
+        return redeemScript;
     }
 
     /**

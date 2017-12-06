@@ -106,11 +106,13 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
     }
 
     @Override
-    public String externalAddress(int hdAccountId) {
+    public String externalAddress(int hdAccountId, AbstractHD.PathType... pathTypes) {
         String sql = "select address from hd_account_addresses" +
                 " where path_type=? and is_issued=? and hd_account_id=? order by address_index asc limit 1 ";
         final String[] address = {null};
-        this.execQueryOneRecord(sql, new String[]{Integer.toString(AbstractHD.PathType.EXTERNAL_ROOT_PATH.getValue())
+        AbstractHD.PathType pathType = pathTypes == null || pathTypes.length == 0 ? AbstractHD.PathType.EXTERNAL_ROOT_PATH
+                : pathTypes[0];
+        this.execQueryOneRecord(sql, new String[]{Integer.toString(pathType.getValue())
                 , "0", Integer.toString(hdAccountId)}, new Function<ICursor, Void>() {
             @Nullable
             @Override
@@ -816,8 +818,10 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
     }
 
     @Override
-    public boolean requestNewReceivingAddress(int hdAccountId) {
-        int issuedIndex = this.issuedIndex(hdAccountId, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+    public boolean requestNewReceivingAddress(int hdAccountId, AbstractHD.PathType... pathTypes) {
+        AbstractHD.PathType pathType = pathTypes == null || pathTypes.length == 0 ? AbstractHD.PathType.EXTERNAL_ROOT_PATH
+                : pathTypes[0];
+        int issuedIndex = this.issuedIndex(hdAccountId, pathType);
         final boolean[] result = {false};
         if (issuedIndex >= HDAccount.MaxUnusedNewAddressCount - 2) {
             String sql = "select count(0) from hd_account_addresses a,outs b " +
@@ -834,7 +838,7 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
             result[0] = true;
         }
         if (result[0]) {
-            this.updateIssuedIndex(hdAccountId, AbstractHD.PathType.EXTERNAL_ROOT_PATH, issuedIndex + 1);
+            this.updateIssuedIndex(hdAccountId, pathType, issuedIndex + 1);
         }
         return result[0];
     }
