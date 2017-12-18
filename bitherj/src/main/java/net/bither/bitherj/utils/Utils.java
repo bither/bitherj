@@ -966,8 +966,7 @@ public class Utils {
         try {
             int addressHeader = getAddressHeader(str);
             return (addressHeader == BitherjSettings.p2shHeader
-                    || addressHeader == BitherjSettings.addressHeader || addressHeader == BitherjSettings.btgP2shHeader
-                    || addressHeader == BitherjSettings.btgAddressHeader);
+                    || addressHeader == BitherjSettings.addressHeader);
         } catch (final AddressFormatException x) {
             x.printStackTrace();
         }
