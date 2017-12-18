@@ -8,7 +8,7 @@ import net.bither.bitherj.crypto.TransactionSignature;
  */
 
 public enum Coin {
-    BTC, BCC, BTG;
+    BTC, BCC, BTG,SBTC;
 
     public SplitCoin getSplitCoin() {
         switch (this) {
@@ -16,6 +16,8 @@ public enum Coin {
                 return SplitCoin.BCC;
             case BTG:
                 return SplitCoin.BTG;
+            case SBTC:
+                return SplitCoin.SBTC;
         }
         return SplitCoin.BCC;
     }
@@ -31,6 +33,8 @@ public enum Coin {
             case BCC:
             case BTG:
                 return TransactionSignature.SigHash.BCCFORK;
+            case SBTC:
+                return TransactionSignature.SigHash.SBTCFORK;
         }
         return TransactionSignature.SigHash.ALL;
     }

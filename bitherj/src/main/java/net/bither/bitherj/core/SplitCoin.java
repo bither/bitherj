@@ -8,7 +8,7 @@ import net.bither.bitherj.crypto.TransactionSignature;
  */
 
 public enum SplitCoin {
-    BCC, BTG;
+    BCC, BTG, SBTC;
 
     public String getName() {
         switch (this) {
@@ -16,6 +16,8 @@ public enum SplitCoin {
                 return "BCH";
             case BTG:
                 return "BTG";
+            case SBTC:
+                return "SBTC";
         }
         return "BCH";
     }
@@ -26,6 +28,8 @@ public enum SplitCoin {
                 return "bcc";
             case BTG:
                 return "btg";
+            case SBTC:
+                return "sbtc";
         }
         return "bcc";
     }
@@ -36,6 +40,8 @@ public enum SplitCoin {
                 return 478559;
             case BTG:
                 return 491407;
+            case SBTC:
+                return 498888;
         }
         return 478559;
     }
@@ -45,6 +51,8 @@ public enum SplitCoin {
             case BCC:
                 return "41";
             case BTG:
+                return "41";
+            case SBTC:
                 return "41";
         }
         return "41";
@@ -56,12 +64,19 @@ public enum SplitCoin {
                 return Coin.BCC;
             case BTG:
                 return Coin.BTG;
+            case SBTC:
+                return Coin.SBTC;
         }
         return Coin.BCC;
     }
 
     public TransactionSignature.SigHash getSigHash() {
-        return TransactionSignature.SigHash.BCCFORK;
+        switch (this) {
+            case SBTC:
+                return TransactionSignature.SigHash.SBTCFORK;
+            default:
+                return TransactionSignature.SigHash.BCCFORK;
+        }
     }
 
     public int getP2shHeader() {

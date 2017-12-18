@@ -1329,13 +1329,17 @@ public class Script {
             } else {
                 In in = txContainingThis.getIns().get(index);
                 if (txContainingThis.isDetectBcc()) {
-                    long [] preOutValue = new long[txContainingThis.getOuts().size()];
-                    for (int idx = 0; idx < txContainingThis.getOuts().size();idx++) {
+                    long[] preOutValue = new long[txContainingThis.getOuts().size()];
+                    for (int idx = 0; idx < txContainingThis.getOuts().size(); idx++) {
                         preOutValue[idx] = txContainingThis.getOuts().get(idx).getOutValue();
                     }
                     byte[] hash = txContainingThis.hashForSignatureWitness(index, connectedScript,
                             BigInteger.valueOf(preOutValue[index]),
-                            TransactionSignature.SigHash.BCCFORK,false, SplitCoin.BCC);
+                            TransactionSignature.SigHash.BCCFORK, false, SplitCoin.BCC);
+                    sigValid = ECKey.verify(hash, sig, pubKey);
+                }else if(coin == Coin.SBTC){
+                    byte[] hash = txContainingThis.hashForSignatureForSBTC(index,
+                            connectedScript, coin.getSigHash(),false);
                     sigValid = ECKey.verify(hash, sig, pubKey);
                 } else {
                     Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
@@ -1412,6 +1416,10 @@ public class Script {
                 Coin coin = txContainingThis.getCoin();
                 if (coin == Coin.BTC) {
                     byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
+                    if (ECKey.verify(hash, sig, pubKey))
+                        sigs.pollFirst();
+                }else if(coin == Coin.SBTC){
+                    byte[] hash = txContainingThis.hashForSignatureForSBTC(index, connectedScript, coin.getSigHash(),false);
                     if (ECKey.verify(hash, sig, pubKey))
                         sigs.pollFirst();
                 } else {
