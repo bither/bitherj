@@ -31,7 +31,8 @@ public class TransactionSignature extends ECKey.ECDSASignature {
         ALL(0),         // 1
         NONE(1),       // 2
         SINGLE(2),     // 3
-        BCCFORK(1|0x40|0);  // 65
+        BCCFORK(1|0x40|0),  // 65
+        SBTCFORK(1|0x40);  // 65
         public int value;
         private SigHash (int value) {
             this.value = value;
@@ -82,7 +83,9 @@ public class TransactionSignature extends ECKey.ECDSASignature {
         if (anyoneCanPay)
             sighashFlags |= SIGHASH_ANYONECANPAY_VALUE;
         if (mode == SigHash.BCCFORK) {
-           return sighashFlags = SigHash.BCCFORK.value;
+           return SigHash.BCCFORK.value;
+        }else if(mode == SigHash.SBTCFORK) {
+            return SigHash.SBTCFORK.value;
         }
         return sighashFlags;
     }
