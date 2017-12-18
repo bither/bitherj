@@ -753,6 +753,27 @@ public class Utils {
         return Base58.encode(addressBytes);
     }
 
+    public static String toSegwitAddress(byte[] pubKeyHash) {
+        assert (pubKeyHash.length == 20);
+
+        int version = BitherjSettings.p2shHeader;;
+        assert (version < 256 && version >= 0);
+
+        byte[] scriptSig = new byte[pubKeyHash.length + 2];
+        scriptSig[0] = 0x00;
+        scriptSig[1] = (byte) pubKeyHash.length;
+        System.arraycopy(pubKeyHash, 0, scriptSig, 2, pubKeyHash.length);
+        byte[] addressBytes = Utils.sha256hash160(scriptSig);
+
+        byte[] b = new byte[1 + addressBytes.length + 4];
+        b[0] = (byte) version;
+        System.arraycopy(addressBytes, 0, b, 1, addressBytes.length);
+        byte[] check = doubleDigest(b, 0, addressBytes.length + 1);
+        System.arraycopy(check, 0, b, addressBytes.length + 1, 4);
+        return Base58.encode(b);
+
+    }
+
     public static int getAddressHeader(String address) throws AddressFormatException {
         byte[] tmp = Base58.decodeChecked(address);
         return tmp[0] & 0xFF;
@@ -945,8 +966,7 @@ public class Utils {
         try {
             int addressHeader = getAddressHeader(str);
             return (addressHeader == BitherjSettings.p2shHeader
-                    || addressHeader == BitherjSettings.addressHeader || addressHeader == BitherjSettings.btgP2shHeader
-                    || addressHeader == BitherjSettings.btgAddressHeader);
+                    || addressHeader == BitherjSettings.addressHeader);
         } catch (final AddressFormatException x) {
             x.printStackTrace();
         }
