@@ -966,7 +966,11 @@ public class Utils {
         try {
             int addressHeader = getAddressHeader(str);
             return (addressHeader == BitherjSettings.p2shHeader
-                    || addressHeader == BitherjSettings.addressHeader);
+                    || addressHeader == BitherjSettings.addressHeader
+                    || addressHeader == BitherjSettings.btgP2shHeader
+                    || addressHeader == BitherjSettings.btgAddressHeader
+                    || addressHeader == BitherjSettings.btwP2shHeader
+                    || addressHeader == BitherjSettings.btwAddressHeader);
         } catch (final AddressFormatException x) {
             x.printStackTrace();
         }
@@ -982,6 +986,35 @@ public class Utils {
             x.printStackTrace();
         }
         return false;
+    }
+
+    public static boolean validSplitBitCoinAddress(String address,SplitCoin coin) {
+        try {
+            int addressHeader = getAddressHeader(address);
+            return (addressHeader == coin.getAddressHeader() || addressHeader == coin.getP2shHeader());
+        }catch (AddressFormatException error) {
+            error.printStackTrace();
+        }
+        return false;
+    }
+
+    public static Coin getCoinByAddressHeader(String address) {
+        if(address != null && !address.isEmpty()) {
+            try {
+                int addressHeader = getAddressHeader(address);
+                if (addressHeader == BitherjSettings.btgP2shHeader || addressHeader == BitherjSettings.btgAddressHeader) {
+                    return Coin.BTG;
+                } else if (addressHeader == BitherjSettings.btwP2shHeader || addressHeader == BitherjSettings.btwAddressHeader) {
+                    return Coin.BTW;
+                } else {
+                    return Coin.BTC;
+                }
+            } catch (AddressFormatException error) {
+                error.printStackTrace();
+            }
+        }
+
+        return Coin.BTC;
     }
 
     public static boolean isNubmer(Object obj) {

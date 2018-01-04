@@ -226,7 +226,7 @@ public class QRCodeTxTransport implements Serializable {
         return preSignString;
     }
 
-    public static String getSplitCoinHDAccountMonitoredUnsignedTx(List<Tx> txs, String toAddress, HDAccount account, SplitCoin splitCoin) {
+    public static String getSplitCoinHDAccountMonitoredUnsignedTx(List<Tx> txs, String toAddress, HDAccount account, SplitCoin splitCoin,String...blockHash) {
         if (txs == null || txs.size() == 0) {
             return null;
         }
@@ -240,6 +240,9 @@ public class QRCodeTxTransport implements Serializable {
         for (Tx tx : txs) {
             amount += tx.amountSentToAddress(toAddress);
             fee += tx.getFee();
+            if(blockHash != null && blockHash.length > 0) {
+                tx.setBlockHash(Utils.hexStringToByteArray(blockHash[0]));
+            }
             List<HDAccount.HDAccountAddress> addresses = account.getSigningAddressesForInputs(tx.getIns());
             List<byte[]> hashes = tx.getSplitCoinForkUnsignedInHashes(splitCoin);
             for (int i = 0;

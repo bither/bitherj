@@ -1337,9 +1337,13 @@ public class Script {
                             BigInteger.valueOf(preOutValue[index]),
                             TransactionSignature.SigHash.BCCFORK, false, SplitCoin.BCC);
                     sigValid = ECKey.verify(hash, sig, pubKey);
-                }else if(coin == Coin.SBTC){
+                }else if(coin == Coin.SBTC) {
                     byte[] hash = txContainingThis.hashForSignatureForSBTC(index,
-                            connectedScript, coin.getSigHash(),false);
+                            connectedScript, coin.getSigHash(), false);
+                    sigValid = ECKey.verify(hash, sig, pubKey);
+                }else if(coin == Coin.BCD) {
+                    byte[] hash = txContainingThis.hashForSignatureForBCD(index,
+                            connectedScript, coin.getSigHash(), false);
                     sigValid = ECKey.verify(hash, sig, pubKey);
                 } else {
                     Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
@@ -1418,8 +1422,12 @@ public class Script {
                     byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
                     if (ECKey.verify(hash, sig, pubKey))
                         sigs.pollFirst();
-                }else if(coin == Coin.SBTC){
-                    byte[] hash = txContainingThis.hashForSignatureForSBTC(index, connectedScript, coin.getSigHash(),false);
+                }else if(coin == Coin.SBTC) {
+                    byte[] hash = txContainingThis.hashForSignatureForSBTC(index, connectedScript, coin.getSigHash(), false);
+                    if (ECKey.verify(hash, sig, pubKey))
+                        sigs.pollFirst();
+                }else if(coin == Coin.BCD) {
+                    byte[] hash = txContainingThis.hashForSignatureForBCD(index, connectedScript, coin.getSigHash(), false);
                     if (ECKey.verify(hash, sig, pubKey))
                         sigs.pollFirst();
                 } else {
@@ -1467,11 +1475,11 @@ public class Script {
                                 boolean enforceP2SH) throws ScriptException {
         // Clone the transaction because executing the script involves editing it, and if we die, we'll leave
         // the tx half broken (also it's not so thread safe to work on it directly.
-        try {
-            txContainingThis = new Tx(txContainingThis.bitcoinSerialize(),txContainingThis.isDetectBcc(), txContainingThis.getCoin());
-        } catch (ProtocolException e) {
-            throw new RuntimeException(e);   // Should not happen unless we were given a totally broken transaction.
-        }
+//        try {
+//            txContainingThis = new Tx(txContainingThis.bitcoinSerialize(),txContainingThis.isDetectBcc(), txContainingThis.getCoin());
+//        } catch (ProtocolException e) {
+//            throw new RuntimeException(e);   // Should not happen unless we were given a totally broken transaction.
+//        }
         if (getProgram().length > 10000 || scriptPubKey.getProgram().length > 10000)
             throw new ScriptException("Script larger than 10,000 bytes");
 

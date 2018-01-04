@@ -555,13 +555,16 @@ public class HDAccount extends Address {
         return tx;
     }
 
-    public List<Tx> newForkTx(String toAddresses, Long amounts, CharSequence password, SplitCoin splitCoin) throws
+    public List<Tx> newForkTx(String toAddresses, Long amounts, CharSequence password, SplitCoin splitCoin, String...blockHash) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
         if (password != null && !hasPrivKey()) {
             throw new RuntimeException("Can not sign without private key");
         }
         List<Tx> txs = newForkTx(toAddresses, amounts, splitCoin);
         for (Tx tx: txs) {
+            if(blockHash != null && blockHash.length > 0) {
+                tx.setBlockHash(Utils.hexStringToByteArray(blockHash[0]));
+            }
             List<HDAccountAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
             assert signingAddresses.size() == tx.getIns().size();
             DeterministicKey master = masterKey(password);

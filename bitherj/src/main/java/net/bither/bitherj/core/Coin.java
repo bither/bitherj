@@ -8,7 +8,7 @@ import net.bither.bitherj.crypto.TransactionSignature;
  */
 
 public enum Coin {
-    BTC, BCC, BTG,SBTC;
+    BTC, BCC, BTG,SBTC,BTW, BCD;
 
     public SplitCoin getSplitCoin() {
         switch (this) {
@@ -18,6 +18,10 @@ public enum Coin {
                 return SplitCoin.BTG;
             case SBTC:
                 return SplitCoin.SBTC;
+            case BTW:
+                return SplitCoin.BTW;
+            case BCD:
+                return SplitCoin.BCD;
         }
         return SplitCoin.BCC;
     }
@@ -28,11 +32,15 @@ public enum Coin {
 
     public TransactionSignature.SigHash getSigHash() {
         switch (this) {
+            case BCD:
             case BTC:
                 return TransactionSignature.SigHash.ALL;
             case BCC:
-            case BTG:
                 return TransactionSignature.SigHash.BCCFORK;
+            case BTG:
+                return TransactionSignature.SigHash.BTGFORK;
+            case BTW:
+                return TransactionSignature.SigHash.BTWFORK;
             case SBTC:
                 return TransactionSignature.SigHash.SBTCFORK;
         }
@@ -52,6 +60,8 @@ public enum Coin {
         switch (this) {
             case BTG:
                 return BitherjSettings.btgP2shHeader;
+            case BTW:
+                return BitherjSettings.btwP2shHeader;
             default:
                 return BitherjSettings.p2shHeader;
         }
@@ -61,8 +71,14 @@ public enum Coin {
         switch (this) {
             case BTG:
                 return BitherjSettings.btgAddressHeader;
+            case BTW:
+                return BitherjSettings.btwAddressHeader;
             default:
                 return BitherjSettings.addressHeader;
         }
+    }
+
+    public long getSplitNormalFee() {
+        return getSplitCoin().getSplitNormalFee();
     }
 }

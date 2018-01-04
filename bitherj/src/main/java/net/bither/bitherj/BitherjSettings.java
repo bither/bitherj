@@ -59,6 +59,8 @@ public class BitherjSettings {
     public static final int p2shHeader = 5;
     public static final int btgAddressHeader = 38;
     public static final int btgP2shHeader = 23;
+    public static final int btwAddressHeader = 73;
+    public static final int btwP2shHeader = 31;
     public static final int dumpedPrivateKeyHeader = 128;
     public static final int TARGET_TIMESPAN = 14 * 24 * 60 * 60;  // 2 weeks per difficulty cycle, on average.
     public static final int TARGET_SPACING = 10 * 60;  // 10 minutes per block.
@@ -114,7 +116,7 @@ public class BitherjSettings {
     public static final boolean ensureMinRequiredFee = true;
 
     public enum TransactionFeeMode {
-        Normal(10000), High(20000), Higher(50000), TenX(100000);
+        Normal(10000), High(20000), Higher(50000), TenX(100000),TwentyX(200000);
 
         private int satoshi;
 
