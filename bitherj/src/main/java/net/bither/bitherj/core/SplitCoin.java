@@ -72,7 +72,7 @@ public enum SplitCoin {
             case BTW:
                 return "41";
             case BCD:
-                return "1";
+                return "01";
         }
         return "41";
     }
