@@ -1912,6 +1912,9 @@ public class Tx extends Message implements Comparable<Tx> {
                             sigHash, false));
                 }
                 break;
+            case BTP:
+            case BTN:
+            case BTF:
             case BTW:
             case BCC:
             case BTG:
