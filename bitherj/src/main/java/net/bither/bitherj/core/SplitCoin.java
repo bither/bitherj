@@ -10,7 +10,7 @@ import net.bither.bitherj.utils.Utils;
  */
 
 public enum SplitCoin {
-    BCC, BTG, SBTC, BTW, BCD;
+    BCC, BTG, SBTC, BTW, BCD, BTF, BTP, BTN;
 
     public String getName() {
         switch (this) {
@@ -24,6 +24,12 @@ public enum SplitCoin {
                 return "BTW";
             case BCD:
                 return "BCD";
+            case BTF:
+                return "BTF";
+            case BTP:
+                return "BTP";
+            case BTN:
+                return "BTN";
         }
         return "BCH";
     }
@@ -40,6 +46,12 @@ public enum SplitCoin {
                 return "btw";
             case BCD:
                 return "bcd";
+            case BTF:
+                return "btf";
+            case BTP:
+                return "btp";
+            case BTN:
+                return "btn";
         }
         return "bcc";
     }
@@ -56,6 +68,12 @@ public enum SplitCoin {
                 return 499777;
             case BCD:
                 return 495866;
+            case BTF:
+                return 500000;
+            case BTP:
+                return 499345;
+            case BTN:
+                return 501000;
 
         }
         return 478559;
@@ -64,11 +82,11 @@ public enum SplitCoin {
     public String getReplaceSignHash() {
         switch (this) {
             case BCC:
-                return "41";
+            case BTN:
+            case BTP:
+            case BTF:
             case BTG:
-                return "41";
             case SBTC:
-                return "41";
             case BTW:
                 return "41";
             case BCD:
@@ -89,6 +107,12 @@ public enum SplitCoin {
                 return Coin.BTW;
             case BCD:
                 return Coin.BCD;
+            case BTF:
+                return Coin.BTF;
+            case BTP:
+                return Coin.BTP;
+            case BTN:
+                return Coin.BTN;
         }
         return Coin.BCC;
     }
@@ -103,6 +127,12 @@ public enum SplitCoin {
                 return TransactionSignature.SigHash.BTGFORK;
             case BCD:
                 return TransactionSignature.SigHash.ALL;
+            case BTF:
+                return TransactionSignature.SigHash.BTFFORK;
+            case BTP:
+                return TransactionSignature.SigHash.BTPFORK;
+            case BTN:
+                return TransactionSignature.SigHash.BTNFORK;
             default:
                 return TransactionSignature.SigHash.BCCFORK;
         }
@@ -116,6 +146,10 @@ public enum SplitCoin {
                 return BitherjSettings.btgP2shHeader;
             case BTW:
                 return BitherjSettings.btwP2shHeader;
+            case BTF:
+                return BitherjSettings.btfP2shHeader;
+            case BTP:
+                return BitherjSettings.btpP2shHeader;
         }
         return BitherjSettings.p2shHeader;
     }
@@ -128,6 +162,10 @@ public enum SplitCoin {
                 return BitherjSettings.btgAddressHeader;
             case BTW:
                 return BitherjSettings.btwAddressHeader;
+            case BTF:
+                return BitherjSettings.btfAddressHeader;
+            case BTP:
+                return BitherjSettings.btpAddressHeader;
         }
         return BitherjSettings.addressHeader;
     }
@@ -146,6 +184,7 @@ public enum SplitCoin {
             case BTW:
                 return UnitUtil.BitcoinUnit.BTW;
             case BCD:
+            case BTP:
                 return UnitUtil.BitcoinUnit.BCD;
             default:
                 return UnitUtil.BitcoinUnit.BTC;
@@ -156,9 +195,25 @@ public enum SplitCoin {
         switch (this) {
             case BTW:
                 return 1000;
+            case BTF:
+            case BTP:
+            case BTN:
+                return 10000;
             default:
                 return Utils.getFeeBase();
         }
+    }
+
+    public boolean sigHashTypeAsBtgSame() {
+        switch (this) {
+            case BTN:
+            case BTP:
+            case BTF:
+            case BTW:
+            case BTG:
+                return true;
+        }
+        return false;
     }
 }
 

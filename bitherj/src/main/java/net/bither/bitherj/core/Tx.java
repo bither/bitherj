@@ -1632,7 +1632,7 @@ public class Tx extends Message implements Comparable<Tx> {
             uint32ToByteStreamLE(ins.get(inputIndex).getInSequence(), bos);
             bos.write(hashOutputs);
             uint32ToByteStreamLE(0, bos);
-            if(splitCoin == SplitCoin.BTG || splitCoin == SplitCoin.BTW) {
+            if(splitCoin.sigHashTypeAsBtgSame()) {
                 uint32ToByteStreamLE(sigHashType,bos);
             }else {
                 uint32ToByteStreamLE(0x000000ff & sigHashType, bos);

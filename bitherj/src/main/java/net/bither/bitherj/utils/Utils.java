@@ -964,13 +964,10 @@ public class Utils {
 
     public static boolean validBicoinAddress(String str) {
         try {
-            int addressHeader = getAddressHeader(str);
-            return (addressHeader == BitherjSettings.p2shHeader
-                    || addressHeader == BitherjSettings.addressHeader
-                    || addressHeader == BitherjSettings.btgP2shHeader
-                    || addressHeader == BitherjSettings.btgAddressHeader
-                    || addressHeader == BitherjSettings.btwP2shHeader
-                    || addressHeader == BitherjSettings.btwAddressHeader);
+
+            return (BitherjSettings.validAddressPrefixPubkey(getAddressHeader(str)) ||
+            BitherjSettings.validAddressPrefixScript(getAddressHeader(str)));
+
         } catch (final AddressFormatException x) {
             x.printStackTrace();
         }
