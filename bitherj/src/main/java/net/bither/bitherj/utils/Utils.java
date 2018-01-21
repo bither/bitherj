@@ -999,10 +999,14 @@ public class Utils {
         if(address != null && !address.isEmpty()) {
             try {
                 int addressHeader = getAddressHeader(address);
-                if (addressHeader == BitherjSettings.btgP2shHeader || addressHeader == BitherjSettings.btgAddressHeader) {
+                if (addressHeader == SplitCoin.BTG.getP2shHeader() || addressHeader == SplitCoin.BTG.getAddressHeader()) {
                     return Coin.BTG;
-                } else if (addressHeader == BitherjSettings.btwP2shHeader || addressHeader == BitherjSettings.btwAddressHeader) {
+                } else if (addressHeader == SplitCoin.BTW.getP2shHeader() || addressHeader == SplitCoin.BTW.getAddressHeader()) {
                     return Coin.BTW;
+                } else if (addressHeader == SplitCoin.BTF.getP2shHeader() || addressHeader == SplitCoin.BTF.getAddressHeader()) {
+                    return Coin.BTF;
+                } else if (addressHeader == SplitCoin.BTP.getP2shHeader() || addressHeader == SplitCoin.BTP.getAddressHeader()) {
+                    return Coin.BTP;
                 } else {
                     return Coin.BTC;
                 }
