@@ -39,13 +39,13 @@ public enum Coin {
 
     public TransactionSignature.SigHash getSigHash() {
         switch (this) {
-            case BCD:
             case BTF:
                 return  TransactionSignature.SigHash.BTFFORK;
             case BTP:
                 return  TransactionSignature.SigHash.BTPFORK;
             case BTN:
                 return  TransactionSignature.SigHash.BTNFORK;
+            case BCD:
             case BTC:
                 return TransactionSignature.SigHash.ALL;
             case BCC:
