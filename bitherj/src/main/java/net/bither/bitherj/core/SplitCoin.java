@@ -1,11 +1,8 @@
 package net.bither.bitherj.core;
 
-import com.sun.org.apache.bcel.internal.generic.RETURN;
-
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.utils.UnitUtil;
-import net.bither.bitherj.utils.Utils;
 
 /**
  * Created by Hzz on 2017/11/16.
