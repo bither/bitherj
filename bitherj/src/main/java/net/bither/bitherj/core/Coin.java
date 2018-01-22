@@ -2,6 +2,7 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.TransactionSignature;
+import net.bither.bitherj.utils.Utils;
 
 /**
  * Created by Hzz on 2017/11/16.
@@ -99,6 +100,9 @@ public enum Coin {
     }
 
     public long getSplitNormalFee() {
+        if(this == BTC) {
+            return Utils.getFeeBase();
+        }
         return getSplitCoin().getSplitNormalFee();
     }
 }

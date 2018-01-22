@@ -1,5 +1,7 @@
 package net.bither.bitherj.core;
 
+import com.sun.org.apache.bcel.internal.generic.RETURN;
+
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.utils.UnitUtil;
@@ -195,12 +197,11 @@ public enum SplitCoin {
         switch (this) {
             case BTW:
                 return 1000;
-            case BTF:
+            case BCD:
             case BTP:
-            case BTN:
                 return 10000;
             default:
-                return Utils.getFeeBase();
+                return 100000;
         }
     }
 
