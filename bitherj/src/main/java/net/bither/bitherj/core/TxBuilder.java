@@ -426,8 +426,9 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
         }
 
         int size = TxBuilder.estimationTxSize(outs.size(), scriptPubKey, tx.getOuts(), address.isCompressed());
+
         if (size > 1000) {
-            fees = (size / 1000 + 1) * Utils.getFeeBase();
+            fees = (size / 1000 + 1) * fees;
         }
 
         // note : like bitcoinj, empty wallet will not check min output
@@ -484,7 +485,7 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 
         int size = TxBuilder.estimationTxSize(outs.size(), scriptPubKey, tx.getOuts(), address.isCompressed());
         if (size > 1000) {
-            fees = (size / 1000 + 1) * Utils.getFeeBase();
+            fees = (size / 1000 + 1) * fees;
         }
 
         // note : like bitcoinj, empty wallet will not check min output
@@ -535,7 +536,7 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 
         int size = TxBuilder.estimationTxSize(outs.size(), tx.getOuts().size());
         if (size > 1000) {
-            fees = (size / 1000 + 1) * Utils.getFeeBase();
+            fees = (size / 1000 + 1) * fees;
         }
 
         // note : like bitcoinj, empty wallet will not check min output
