@@ -93,7 +93,7 @@ public class BitherUrl {
 
     //other
     public static final String BLOCKCHAIN_INFO_ADDRESS_URL = "http://blockchain.info/address/";
-    public static final String BLOCKMETA_ADDRESS_URL = "http://www.blockmeta.com/address/";
+    public static final String BTC_COM_ADDRESS_URL = "https://btc.com/";
 
     //blockChain.info Api
     public static final String BLOCKCHAIN_INFO_GET_LASTST_BLOCK = BITHER_DNS.BLOCK_CHAIN+"latestblock";
