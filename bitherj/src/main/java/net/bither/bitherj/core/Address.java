@@ -51,6 +51,7 @@ public class Address implements Comparable<Address> {
     protected String encryptPrivKey;
 
     protected byte[] pubKey;
+    protected byte[] pubKeyUnCompressed;
     protected String address;
 
     protected boolean syncComplete = false;
@@ -394,6 +395,23 @@ public class Address implements Comparable<Address> {
         return result;
 
 
+    }
+
+    public byte[] getPubKeyUnCompressed() {
+        return pubKeyUnCompressed;
+    }
+
+    public String signHash(String hashHex, CharSequence passphrase) {
+        ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getFullEncryptPrivKey(), passphrase);
+        pubKey = key.getPubKey();
+        if (key == null) {
+            throw new PasswordException("do not decrypt eckey");
+        }
+        KeyParameter assKey = key.getKeyCrypter().deriveKey(passphrase);
+        String result = key.signHash(hashHex, assKey);
+        this.pubKeyUnCompressed = key.getPubKeyUnCompressed();
+        key.clearPrivateKey();
+        return result;
     }
 
     public void signTx(Tx tx, CharSequence passphrase, Coin coin) {

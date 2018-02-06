@@ -116,6 +116,7 @@ public class ECKey implements Serializable {
     // TODO: Redesign this class to use consistent internals and more efficient serialization.
     protected BigInteger priv;
     protected byte[] pub;
+    protected byte[] pubKeyUnCompressed;
     private boolean isFromXRandom = false;
     // Creation time of the key in seconds since the epoch, or zero if the key was deserialized from a version that did
     // not have this field.
@@ -295,6 +296,10 @@ public class ECKey implements Serializable {
         return pub;
     }
 
+    public byte[] getPubKeyUnCompressed() {
+        return pubKeyUnCompressed;
+    }
+
     public BigInteger getPriv() {
         return priv;
     }
@@ -467,6 +472,48 @@ public class ECKey implements Serializable {
     @VisibleForTesting
     public static boolean FAKE_SIGNATURES = false;
 
+    public ECDSASignature signH(byte[] input, @Nullable KeyParameter aesKey) throws KeyCrypterException {
+        if (FAKE_SIGNATURES)
+            return TransactionSignature.dummy();
+
+        // The private key bytes to use for signing.
+        BigInteger privateKeyForSigning;
+
+        if (isEncrypted()) {
+            // The private key needs decrypting before use.
+            if (aesKey == null) {
+                throw new KeyCrypterException("This ECKey is encrypted but no decryption key has been supplied.");
+            }
+
+            if (keyCrypter == null) {
+                throw new KeyCrypterException("There is no KeyCrypter to decrypt the private key for signing.");
+            }
+
+            privateKeyForSigning = new BigInteger(1, keyCrypter.decrypt(encryptedPrivateKey, aesKey));
+            // Check encryption was correct.
+            if (!Arrays.equals(pub, publicKeyFromPrivate(privateKeyForSigning, isCompressed())))
+                throw new KeyCrypterException("Could not decrypt bytes");
+        } else {
+            // No decryption of private key required.
+            if (priv == null) {
+                throw new KeyCrypterException("This ECKey does not have the private key necessary for signing.");
+            } else {
+                privateKeyForSigning = priv;
+            }
+        }
+        System.out.println("private key: " + Utils.bytesToHexString(Utils.bigIntegerToBytes(privateKeyForSigning, 32)));
+
+        this.pubKeyUnCompressed = publicKeyFromPrivate(privateKeyForSigning, false);
+
+        ECDSASigner signer = new ECDSASigner(new HMacDSAKCalculator(new SHA256Digest()));
+        ECPrivateKeyParameters privKey = new ECPrivateKeyParameters(privateKeyForSigning, CURVE);
+        signer.init(true, privKey);
+        BigInteger[] components = signer.generateSignature(input);
+        final ECDSASignature signature = new ECDSASignature(components[0], components[1]);
+        signature.ensureCanonical();
+        return signature;
+    }
+
     /**
      * Signs the given hash and returns the R and S components as BigIntegers. In the Bitcoin protocol, they are
      * usually encoded using DER format, so you want {@link net.bither.bitherj.crypto.ECKey.ECDSASignature#encodeToDER()}
@@ -505,6 +552,9 @@ public class ECKey implements Serializable {
                 privateKeyForSigning = priv;
             }
         }
+        System.out.println("private key: " + Utils.bytesToHexString(Utils.bigIntegerToBytes(privateKeyForSigning, 32)));
+
+        this.pubKeyUnCompressed = publicKeyFromPrivate(privateKeyForSigning, false);
 
         ECDSASigner signer = new ECDSASigner(new HMacDSAKCalculator(new SHA256Digest()));
         ECPrivateKeyParameters privKey = new ECPrivateKeyParameters(privateKeyForSigning, CURVE);
@@ -512,6 +562,48 @@ public class ECKey implements Serializable {
         BigInteger[] components = signer.generateSignature(input);
         final ECDSASignature signature = new ECDSASignature(components[0], components[1]);
         signature.ensureCanonical();
+        return signature;
+    }
+
+    public ECDSASignature signWithoutEnsureCanonical(byte[] input, @Nullable KeyParameter aesKey) throws KeyCrypterException {
+        if (FAKE_SIGNATURES)
+            return TransactionSignature.dummy();
+
+        // The private key bytes to use for signing.
+        BigInteger privateKeyForSigning;
+
+        if (isEncrypted()) {
+            // The private key needs decrypting before use.
+            if (aesKey == null) {
+                throw new KeyCrypterException("This ECKey is encrypted but no decryption key has been supplied.");
+            }
+
+            if (keyCrypter == null) {
+                throw new KeyCrypterException("There is no KeyCrypter to decrypt the private key for signing.");
+            }
+
+            privateKeyForSigning = new BigInteger(1, keyCrypter.decrypt(encryptedPrivateKey, aesKey));
+            // Check encryption was correct.
+            if (!Arrays.equals(pub, publicKeyFromPrivate(privateKeyForSigning, isCompressed())))
+                throw new KeyCrypterException("Could not decrypt bytes");
+        } else {
+            // No decryption of private key required.
+            if (priv == null) {
+                throw new KeyCrypterException("This ECKey does not have the private key necessary for signing.");
+            } else {
+                privateKeyForSigning = priv;
+            }
+        }
+        System.out.println("private key: " + Utils.bytesToHexString(Utils.bigIntegerToBytes(privateKeyForSigning, 32)));
+
+        this.pubKeyUnCompressed = publicKeyFromPrivate(privateKeyForSigning, false);
+
+        ECDSASigner signer = new ECDSASigner(new HMacDSAKCalculator(new SHA256Digest()));
+        ECPrivateKeyParameters privKey = new ECPrivateKeyParameters(privateKeyForSigning, CURVE);
+        signer.init(true, privKey);
+        BigInteger[] components = signer.generateSignature(input);
+        final ECDSASignature signature = new ECDSASignature(components[0], components[1]);
+//        signature.ensureCanonical();
         return signature;
     }
 
@@ -628,6 +720,8 @@ public class ECKey implements Serializable {
         }
     }
 
+
+
     /**
      * Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
      * encoded string.
@@ -637,6 +731,15 @@ public class ECKey implements Serializable {
      */
     public String signMessage(String message) throws KeyCrypterException {
         return signMessage(message, null);
+    }
+
+    public String signHash(String hashHex) throws KeyCrypterException {
+        return signHash(hashHex, null);
+    }
+    public String signHash(String hashHex, KeyParameter aesKey) throws KeyCrypterException {
+        byte[] hashbytes = Utils.hexStringToByteArray(hashHex);
+        byte[] signData = signHashWithoutEnsureCanonical(hashbytes, aesKey);
+        return Utils.bytesToHexString(signData);
     }
 
     /**
@@ -666,6 +769,29 @@ public class ECKey implements Serializable {
                 break;
             }
         }
+
+        if (recId == -1)
+            throw new RuntimeException("Could not construct a recoverable key. This should never happen.");
+        int headerByte = recId + 27 + (isCompressed() ? 4 : 0);
+        byte[] sigData = new byte[65];  // 1 header + 32 bytes for R + 32 bytes for S
+        sigData[0] = (byte) headerByte;
+        System.arraycopy(Utils.bigIntegerToBytes(sig.r, 32), 0, sigData, 1, 32);
+        System.arraycopy(Utils.bigIntegerToBytes(sig.s, 32), 0, sigData, 33, 32);
+        return sigData;
+    }
+
+    public byte[] signHashWithoutEnsureCanonical(byte[] hash, @Nullable KeyParameter aesKey) throws KeyCrypterException {
+        ECDSASignature sig = signWithoutEnsureCanonical(hash, aesKey);
+        // Now we have to work backwards to figure out the recId needed to recover the signature.
+        int recId = -1;
+        for (int i = 0; i < 4; i++) {
+            ECKey k = ECKey.recoverFromSignature(i, sig, hash, isCompressed());
+            if (k != null && Arrays.equals(k.pub, pub)) {
+                recId = i;
+                break;
+            }
+        }
+
         if (recId == -1)
             throw new RuntimeException("Could not construct a recoverable key. This should never happen.");
         int headerByte = recId + 27 + (isCompressed() ? 4 : 0);
