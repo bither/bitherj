@@ -552,8 +552,6 @@ public class ECKey implements Serializable {
                 privateKeyForSigning = priv;
             }
         }
-        System.out.println("private key: " + Utils.bytesToHexString(Utils.bigIntegerToBytes(privateKeyForSigning, 32)));
-
         this.pubKeyUnCompressed = publicKeyFromPrivate(privateKeyForSigning, false);
 
         ECDSASigner signer = new ECDSASigner(new HMacDSAKCalculator(new SHA256Digest()));
@@ -594,7 +592,6 @@ public class ECKey implements Serializable {
                 privateKeyForSigning = priv;
             }
         }
-        System.out.println("private key: " + Utils.bytesToHexString(Utils.bigIntegerToBytes(privateKeyForSigning, 32)));
 
         this.pubKeyUnCompressed = publicKeyFromPrivate(privateKeyForSigning, false);
 
@@ -791,7 +788,6 @@ public class ECKey implements Serializable {
                 break;
             }
         }
-
         if (recId == -1)
             throw new RuntimeException("Could not construct a recoverable key. This should never happen.");
         int headerByte = recId + 27 + (isCompressed() ? 4 : 0);
