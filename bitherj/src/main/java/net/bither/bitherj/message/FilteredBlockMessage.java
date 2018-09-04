@@ -68,10 +68,16 @@ public class FilteredBlockMessage extends Message {
 
     @Override
     protected void parse() throws ProtocolException {
-        byte[] headerBytes = new byte[BlockMessage.HEADER_SIZE];
-        System.arraycopy(bytes, 0, headerBytes, 0, BlockMessage.HEADER_SIZE);
-        block = new Block(headerBytes);
-        merkleTree = new PartialMerkleTree(bytes, BlockMessage.HEADER_SIZE);
+        byte[] headerBytes = new byte[BlockMessage.HEADER_SIZE + 20];
+        //System.arraycopy(bytes, 0, headerBytes, 0, BlockMessage.HEADER_SIZE);
+        byte size = bytes[BlockMessage.HEADER_SIZE];
+        System.arraycopy(bytes, 0, headerBytes, 0, BlockMessage.HEADER_SIZE+size+1);
+
+
+        block = new Block(headerBytes,BlockMessage.HEADER_SIZE + size + 1);
+        block.calculateHash(headerBytes, 0, BlockMessage.HEADER_SIZE + size + 1);
+
+        merkleTree = new PartialMerkleTree(bytes, BlockMessage.HEADER_SIZE + size + 1);
         length = BlockMessage.HEADER_SIZE + merkleTree.getMessageSize();
         block.setTxHashes(this.getTransactionHashes());
     }

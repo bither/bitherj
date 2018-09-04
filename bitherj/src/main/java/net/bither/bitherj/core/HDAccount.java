@@ -17,6 +17,7 @@
 package net.bither.bitherj.core;
 
 import net.bither.bitherj.AbstractApp;
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.KeyCrypterException;
@@ -28,7 +29,6 @@ import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.exception.TxBuilderException;
-import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
@@ -65,20 +65,22 @@ public class HDAccount extends Address {
     protected int hdSeedId = -1;
     protected boolean isFromXRandom;
     private boolean hasSeed;
+    private MnemonicCode mnemonicCode = MnemonicCode.instance();
 
     private static final Logger log = LoggerFactory.getLogger(HDAccount.class);
 
-    public HDAccount(byte[] mnemonicSeed, CharSequence password) throws MnemonicException
+    public HDAccount(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
-        this(mnemonicSeed, password, true);
+        this(mnemonicCode, mnemonicSeed, password, true);
     }
 
-    public HDAccount(byte[] mnemonicSeed, CharSequence password, boolean isSyncedComplete) throws
+    public HDAccount(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password, boolean isSyncedComplete) throws
             MnemonicException
             .MnemonicLengthException {
         super();
+        this.mnemonicCode = mnemonicCode;
         this.mnemonicSeed = mnemonicSeed;
-        hdSeed = seedFromMnemonic(mnemonicSeed);
+        hdSeed = seedFromMnemonic(mnemonicCode, mnemonicSeed);
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         EncryptedData encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password,
@@ -94,7 +96,7 @@ public class HDAccount extends Address {
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
         mnemonicSeed = new byte[16];
         random.nextBytes(mnemonicSeed);
-        hdSeed = seedFromMnemonic(mnemonicSeed);
+        hdSeed = seedFromMnemonic(mnemonicCode, mnemonicSeed);
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         EncryptedData encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password,
                 isFromXRandom);
@@ -106,11 +108,12 @@ public class HDAccount extends Address {
     }
 
     //use in import
-    public HDAccount(EncryptedData encryptedMnemonicSeed, CharSequence password, boolean
+    public HDAccount(MnemonicCode mnemonicCode, EncryptedData encryptedMnemonicSeed, CharSequence password, boolean
             isSyncedComplete)
             throws MnemonicException.MnemonicLengthException {
+        this.mnemonicCode = mnemonicCode;
         mnemonicSeed = encryptedMnemonicSeed.decrypt(password);
-        hdSeed = seedFromMnemonic(mnemonicSeed);
+        hdSeed = seedFromMnemonic(mnemonicCode, mnemonicSeed);
         isFromXRandom = encryptedMnemonicSeed.isXRandom();
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
@@ -244,7 +247,7 @@ public class HDAccount extends Address {
         if (!hasPrivKey()) {
             return null;
         }
-        return QRCodeUtil.HD_QR_CODE_FLAG + getFullEncryptPrivKey();
+        return MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag() + getFullEncryptPrivKey();
     }
 
     public byte[] getInternalPub() {
@@ -552,6 +555,118 @@ public class HDAccount extends Address {
         return tx;
     }
 
+    public List<Tx> newForkTx(String toAddresses, Long amounts, CharSequence password, SplitCoin splitCoin, String...blockHash) throws
+            TxBuilderException, MnemonicException.MnemonicLengthException {
+        if (password != null && !hasPrivKey()) {
+            throw new RuntimeException("Can not sign without private key");
+        }
+        List<Tx> txs = newForkTx(toAddresses, amounts, splitCoin);
+        for (Tx tx: txs) {
+            if(blockHash != null && blockHash.length > 0) {
+                tx.setBlockHash(Utils.hexStringToByteArray(blockHash[0]));
+            }
+            List<HDAccountAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
+            assert signingAddresses.size() == tx.getIns().size();
+            DeterministicKey master = masterKey(password);
+            if (master == null) {
+                return null;
+            }
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey external = getChainRootKey(accountKey, AbstractHD.PathType
+                    .EXTERNAL_ROOT_PATH);
+            DeterministicKey internal = getChainRootKey(accountKey, AbstractHD.PathType
+                    .INTERNAL_ROOT_PATH);
+            accountKey.wipe();
+            master.wipe();
+            List<byte[]> unsignedHashes = tx.getSplitCoinForkUnsignedInHashes(splitCoin);
+            assert unsignedHashes.size() == signingAddresses.size();
+            ArrayList<byte[]> signatures = new ArrayList<byte[]>();
+            HashMap<String, DeterministicKey> addressToKeyMap = new HashMap<String, DeterministicKey>
+                    (signingAddresses.size());
+            for (int i = 0;
+                 i < signingAddresses.size();
+                 i++) {
+                HDAccountAddress a = signingAddresses.get(i);
+                byte[] unsigned = unsignedHashes.get(i);
+
+                if (!addressToKeyMap.containsKey(a.getAddress())) {
+                    if (a.getPathType() == AbstractHD.PathType.EXTERNAL_ROOT_PATH) {
+                        addressToKeyMap.put(a.getAddress(), external.deriveSoftened(a.index));
+                    } else {
+                        addressToKeyMap.put(a.getAddress(), internal.deriveSoftened(a.index));
+                    }
+                }
+                DeterministicKey key = addressToKeyMap.get(a.getAddress());
+                assert key != null;
+                TransactionSignature signature = new TransactionSignature(key.sign(unsigned, null),
+                        splitCoin.getSigHash(), false);
+                signatures.add(ScriptBuilder.createInputScript(signature, key).getProgram());
+            }
+
+            tx.signWithSignatures(signatures);
+            assert tx.verifySignatures();
+            external.wipe();
+            internal.wipe();
+            for (DeterministicKey key : addressToKeyMap.values()) {
+                key.wipe();
+            }
+        }
+        return txs;
+    }
+
+    public List<Tx> extractBcc(String toAddresses, Long amounts, List<Out> outs, AbstractHD.PathType path, int index,CharSequence password) throws
+            TxBuilderException, MnemonicException.MnemonicLengthException {
+        if (password != null && !hasPrivKey()) {
+            throw new RuntimeException("Can not sign without private key");
+        }
+        List<Tx> txs = newForkTx(toAddresses, amounts, outs, SplitCoin.BCC);
+        for (Tx tx: txs) {
+            DeterministicKey master = masterKey(password);
+            if (master == null) {
+                return null;
+            }
+            long [] preOutValue = new long[outs.size()];
+            for (int idx = 0; idx < outs.size();idx++) {
+                preOutValue[idx] = outs.get(idx).getOutValue();
+            }
+            List<byte[]> unsignedHashes = tx.getUnsignedHashesForBcc(preOutValue);
+            assert unsignedHashes.size() == tx.getIns().size();
+            ArrayList<byte[]> signatures = new ArrayList<byte[]>();
+
+            for (int i = 0;
+                 i < tx.getIns().size();
+                 i++) {
+                byte[] unsigned = unsignedHashes.get(i);
+                DeterministicKey xPrivate  = getAccount(master);
+                DeterministicKey pathPrivate = xPrivate.deriveSoftened(path.getValue());
+                DeterministicKey key = pathPrivate.deriveSoftened(index);
+                pathPrivate.wipe();
+                assert key != null;
+                TransactionSignature signature = new TransactionSignature(key.sign(unsigned, null),
+                        TransactionSignature.SigHash.BCCFORK, false);
+                signatures.add(ScriptBuilder.createInputScript(signature, key).getProgram());
+                master.wipe();
+                key.wipe();
+            }
+            tx.signWithSignatures(signatures);
+            assert tx.verifySignatures();
+        }
+        return txs;
+    }
+
+    public List<Tx> newForkTx(String toAddress, Long amount, List<Out> outs, SplitCoin splitCoin) throws TxBuilderException,
+            MnemonicException.MnemonicLengthException {
+        List<Tx> txs = TxBuilder.getInstance().buildSplitCoinTxsFromAllAddress(outs, toAddress, Arrays.asList(amount), Arrays.asList(toAddress), splitCoin);
+        return txs;
+    }
+
+    public List<Tx> newForkTx(String toAddress, Long amount, SplitCoin splitCoin) throws TxBuilderException,
+            MnemonicException.MnemonicLengthException {
+        List<Out> outs = AbstractDb.hdAccountAddressProvider.getUnspentOutputByBlockNo(splitCoin.getForkBlockHeight(), hdSeedId);
+        List<Tx> txs = TxBuilder.getInstance().buildSplitCoinTxsFromAllAddress(outs, toAddress, Arrays.asList(amount), Arrays.asList(toAddress), splitCoin);
+        return txs;
+    }
+
     public Tx newTx(String toAddress, Long amount) throws TxBuilderException, MnemonicException
             .MnemonicLengthException {
         return newTx(new String[]{toAddress}, new Long[]{amount});
@@ -714,7 +829,7 @@ public class HDAccount extends Address {
     public List<String> getSeedWords(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         decryptMnemonicSeed(password);
-        List<String> words = MnemonicCode.instance().toMnemonic(mnemonicSeed);
+        List<String> words = mnemonicCode.toMnemonic(mnemonicSeed);
         wipeMnemonicSeed();
         return words;
     }
@@ -729,7 +844,7 @@ public class HDAccount extends Address {
             byte[] hdCopy = Arrays.copyOf(hdSeed, hdSeed.length);
             boolean hdSeedSafe = Utils.compareString(getFirstAddressFromDb(),
                     getFirstAddressFromSeed(null));
-            boolean mnemonicSeedSafe = Arrays.equals(seedFromMnemonic(mnemonicSeed), hdCopy);
+            boolean mnemonicSeedSafe = Arrays.equals(seedFromMnemonic(mnemonicCode, mnemonicSeed), hdCopy);
             Utils.wipeBytes(hdCopy);
             wipeHDSeed();
             wipeMnemonicSeed();
@@ -753,6 +868,24 @@ public class HDAccount extends Address {
             DeterministicKey accountKey = getAccount(master);
             DeterministicKey externalChainRoot = getChainRootKey(accountKey, AbstractHD.PathType
                     .EXTERNAL_ROOT_PATH);
+            DeterministicKey key = externalChainRoot.deriveSoftened(index);
+            master.wipe();
+            accountKey.wipe();
+            externalChainRoot.wipe();
+            return key;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public DeterministicKey getInternalKey(int index, CharSequence password) {
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey externalChainRoot = getChainRootKey(accountKey, AbstractHD.PathType
+                    .INTERNAL_ROOT_PATH);
             DeterministicKey key = externalChainRoot.deriveSoftened(index);
             master.wipe();
             accountKey.wipe();
@@ -797,10 +930,9 @@ public class HDAccount extends Address {
         return hdSeedId;
     }
 
-    public static final byte[] seedFromMnemonic(byte[] mnemonicSeed) throws MnemonicException
+    public static final byte[] seedFromMnemonic(MnemonicCode mnemonicCode, byte[] mnemonicSeed) throws MnemonicException
             .MnemonicLengthException {
-        MnemonicCode mnemonic = MnemonicCode.instance();
-        return mnemonic.toSeed(mnemonic.toMnemonic(mnemonicSeed), "");
+        return mnemonicCode.toSeed(mnemonicCode.toMnemonic(mnemonicSeed), "");
     }
 
     public boolean isFromXRandom() {
@@ -814,6 +946,7 @@ public class HDAccount extends Address {
         private AbstractHD.PathType pathType;
         private boolean isSyncedComplete;
         private boolean isIssued;
+        private long balance;
 
 
         private int hdAccountId;
@@ -875,6 +1008,62 @@ public class HDAccount extends Address {
         public void setHdAccountId(int hdAccountId) {
             this.hdAccountId = hdAccountId;
         }
+
+        public long getBalance() {
+            this.balance = AbstractDb.txProvider.getConfirmedBalanceWithAddress(getAddress())
+                    + this.calculateUnconfirmedBalance();
+            return balance;
+        }
+
+        private long calculateUnconfirmedBalance() {
+            long balance = 0;
+
+            List<Tx> txs = AbstractDb.txProvider.getUnconfirmedTxWithAddress(this.address);
+            Collections.sort(txs);
+
+            Set<byte[]> invalidTx = new HashSet<byte[]>();
+            Set<OutPoint> spentOut = new HashSet<OutPoint>();
+            Set<OutPoint> unspendOut = new HashSet<OutPoint>();
+
+            for (int i = txs.size() - 1; i >= 0; i--) {
+                Set<OutPoint> spent = new HashSet<OutPoint>();
+                Tx tx = txs.get(i);
+
+                Set<byte[]> inHashes = new HashSet<byte[]>();
+                for (In in : tx.getIns()) {
+                    spent.add(new OutPoint(in.getPrevTxHash(), in.getPrevOutSn()));
+                    inHashes.add(in.getPrevTxHash());
+                }
+
+                if (tx.getBlockNo() == Tx.TX_UNCONFIRMED
+                        && (Utils.isIntersects(spent, spentOut) || Utils.isIntersects(inHashes, invalidTx))) {
+                    invalidTx.add(tx.getTxHash());
+                    continue;
+                }
+
+                spentOut.addAll(spent);
+                for (Out out : tx.getOuts()) {
+                    if (Utils.compareString(this.getAddress(), out.getOutAddress())) {
+                        unspendOut.add(new OutPoint(tx.getTxHash(), out.getOutSn()));
+                        balance += out.getOutValue();
+                    }
+                }
+                spent.clear();
+                spent.addAll(unspendOut);
+                spent.retainAll(spentOut);
+                for (OutPoint o : spent) {
+                    Tx tx1 = AbstractDb.txProvider.getTxDetailByTxHash(o.getTxHash());
+                    unspendOut.remove(o);
+                    for (Out out : tx1.getOuts()) {
+                        if (out.getOutSn() == o.getOutSn()) {
+                            balance -= out.getOutValue();
+                        }
+                    }
+                }
+            }
+            return balance;
+        }
+
     }
 
     public static final boolean checkDuplicated(byte[] ex, byte[] in) {
@@ -883,5 +1072,29 @@ public class HDAccount extends Address {
 
     public static class DuplicatedHDAccountException extends RuntimeException {
 
+    }
+
+    public List<HDAccountAddress> getHdHotAddresses(int page, AbstractHD.PathType pathType,CharSequence password){
+        ArrayList<HDAccountAddress> addresses = new ArrayList<HDAccountAddress>();
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey pathTypeKey = getChainRootKey(accountKey, pathType);
+            for (int i = (page -1) * 10;i < page * 10; i ++) {
+                DeterministicKey key = pathTypeKey.deriveSoftened(i);
+                HDAccountAddress hdAccountAddress = new HDAccountAddress
+                        (key.toAddress(),key.getPubKeyExtended(),pathType,i,false,true,hdSeedId);
+
+                addresses.add(hdAccountAddress);
+            }
+            master.wipe();
+            accountKey.wipe();
+            pathTypeKey.wipe();
+            return addresses;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

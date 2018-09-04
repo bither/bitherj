@@ -1,18 +1,18 @@
 /*
-* Copyright 2014 http://Bither.net
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2014 http://Bither.net
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package net.bither.bitherj;
 
@@ -36,7 +36,7 @@ public class BitherjSettings {
 
     public static final int MAX_TX_SIZE = 100000;
     public static final int COMPRESS_OUT_NUM = 5;
-    public static final int TX_PAGE_SIZE = 20;
+    public static final int TX_PAGE_SIZE = 100;
 
     public static final String DONATE_ADDRESS = "1BitherUnNvB2NsfxMnbS35kS3DTPr7PW5";
 
@@ -53,15 +53,32 @@ public class BitherjSettings {
 
 
     public static final BigInteger proofOfWorkLimit = Utils.decodeCompactBits(0x1d00ffffL);
-    public static final int port = 8333;
-    public static final long packetMagic = 0xf9beb4d9L;
-    public static final int addressHeader = 0;
+    public static final int port = 9911;
+    //    public static final int port = 8333;
+    public static final long packetMagic = 0xe4e7e5e7L;
+//    public static final long packetMagic = 0xf9beb4d9L;
+
+
+    //    public static final int addressHeader = 0;
+    public static final int addressHeader = 23;
+
+    public static final int btgAddressHeader = 38;
+    public static final int btwAddressHeader = 73;
+    public static final int btfAddressHeader = 36;
+    public static final int btpAddressHeader = 56;
+
     public static final int p2shHeader = 5;
-    public static final int dumpedPrivateKeyHeader = 128;
+    //    public static final int btgP2shHeader = 23;
+    public static final int btgP2shHeader = 233;
+    public static final int btwP2shHeader = 31;
+    public static final int btfP2shHeader = 40;
+    public static final int btpP2shHeader = 58;
+
+    public static final int dumpedPrivateKeyHeader = 151;
+//    public static final int dumpedPrivateKeyHeader = 128;
     public static final int TARGET_TIMESPAN = 14 * 24 * 60 * 60;  // 2 weeks per difficulty cycle, on average.
     public static final int TARGET_SPACING = 10 * 60;  // 10 minutes per block.
     public static final int INTERVAL = TARGET_TIMESPAN / TARGET_SPACING;
-
 
     public static final long TX_UNCONFIRMED = Long.MAX_VALUE;
 
@@ -74,18 +91,27 @@ public class BitherjSettings {
      */
     public static final int spendableCoinbaseDepth = 100;
     public static final String[] dnsSeeds = new String[]{
-            "seed.bitcoin.sipa.be",        // Pieter Wuille
-            "dnsseed.bluematt.me",         // Matt Corallo
-            "seed.bitcoinstats.com",       // Chris Decker
-            "bitseed.xf2.org",
-            "seed.bitcoinstats.com",
-            "seed.bitnodes.io"
+            "seed.primecoin.org"
+//            "103.84.87.82"
+//            "192.168.1.7"
+//             "seed.ppcoin.net"
+            /*"primecoin.net",        // Pieter Wuille
+            "103.84.87.82",         // Matt Corallo
+            "xpm.altcointech.net",       // Chris Decker
+            "dnsseed.xpm.altcointech.net", //no
+            "xpm2.altcointech.net",   //no
+            "dnsseed.xpm2.altcointech.net",  //no
+            "primeseed.muuttuja.org",//   24
+            */
     };
 
     public static final long MAX_MONEY = 21000000l * 100000000l;
 
-    public static final byte[] GENESIS_BLOCK_HASH = Utils.reverseBytes(Hex.decode("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
+    //    public static final byte[] GENESIS_BLOCK_HASH = Utils.reverseBytes(Hex.decode("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
+    public static final byte[] GENESIS_BLOCK_HASH = Utils.reverseBytes(Hex.decode("963d17ba4dc753138078a2f56afb3af9674e2546822badff26837db9a0152106"));
+
     public static final int BLOCK_DIFFICULTY_INTERVAL = 2016;
+
     public static final int BITCOIN_REFERENCE_BLOCK_HEIGHT = 250000;
     public static final int MaxPeerConnections = 6;
     public static final int MaxPeerBackgroundConnections = 2;
@@ -98,11 +124,12 @@ public class BitherjSettings {
         BLOCKCHAIN_INFO(1), BITHER_NET(0);
 
         private int value;
-        ApiConfig(int value){
+
+        ApiConfig(int value) {
             this.value = value;
         }
 
-        public int value(){
+        public int value() {
             return value;
         }
     }
@@ -113,7 +140,8 @@ public class BitherjSettings {
     public static final boolean ensureMinRequiredFee = true;
 
     public enum TransactionFeeMode {
-        Normal(10000), Low(1000), High(20000);
+        Normal(1000000), High(2000000), Higher(5000000), TenX(10000000), TwentyX(20000000);
+
 
         private int satoshi;
 
@@ -127,60 +155,32 @@ public class BitherjSettings {
     }
 
     public enum MarketType {
-        BITSTAMP, BTCE, BTCCHINA, OKCOIN, HUOBI, CHBTC, BTCTRADE, BITFINEX,
-        COINBASE, MARKET796;
-
-
+        COINMARKETCAP ;
     }
 
     public static MarketType getMarketType(int value) {
-        switch (value) {
-            case 2:
-                return MarketType.BTCE;
-            case 3:
-                return MarketType.HUOBI;
-            case 4:
-                return MarketType.OKCOIN;
-            case 5:
-                return MarketType.BTCCHINA;
-            case 6:
-                return MarketType.CHBTC;
-            case 7:
-                return MarketType.BITFINEX;
-            case 8:
-                return MarketType.MARKET796;
-            case 9:
-                return MarketType.COINBASE;
-            case 10:
-                return MarketType.BTCTRADE;
-        }
-        return MarketType.BITSTAMP;
+
+        return MarketType.COINMARKETCAP;
     }
 
     public static int getMarketValue(MarketType marketType) {
-        switch (marketType) {
-            case BTCE:
-                return 2;
-            case HUOBI:
-                return 3;
-            case OKCOIN:
-                return 4;
-            case BTCCHINA:
-                return 5;
-            case CHBTC:
-                return 6;
-            case BITFINEX:
-                return 7;
-            case MARKET796:
-                return 8;
-            case COINBASE:
-                return 9;
-            case BTCTRADE:
-                return 10;
-
-
-        }
         return 1;
+    }
+
+    public static boolean validAddressPrefixPubkey(int pubkey) {
+        if (pubkey == addressHeader || pubkey == btgAddressHeader || pubkey == btwAddressHeader ||
+                pubkey == btfAddressHeader || pubkey == btpAddressHeader) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean validAddressPrefixScript(int script) {
+        if (script == p2shHeader || script == btgP2shHeader || script == btwP2shHeader ||
+                script == btfP2shHeader || script == btpP2shHeader) {
+            return true;
+        }
+        return false;
     }
 
     public enum KlineTimeType {

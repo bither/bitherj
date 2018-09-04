@@ -60,6 +60,11 @@ public class TestImplAbstractApp extends AbstractApp {
             }
 
             @Override
+            public BitherjSettings.ApiConfig getApiConfig() {
+                return BitherjSettings.ApiConfig.BITHER_NET;
+            }
+
+            @Override
             public File getPrivateDir(String dirName) {
                 File file = new File("test/wallet");
                 if (!file.exists()) {

@@ -29,6 +29,7 @@ import net.bither.bitherj.utils.VarInt;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -127,6 +128,27 @@ public class Block extends Message {
         this.blockNo = height;
         this.blockHash = calculateHash();
 
+
+    }
+
+    public String toString() {
+//new Date(this.blockTime)+
+        return " No=" + getBlockNo() + ",Ver=" + this.blockVer + "，prev=" + reverse((this.blockPrev)) + "|" + Hex.toHexString(this.blockPrev) + " root="
+                + reverse(this.blockRoot) + " Time=" + this.blockTime + " Bits=" + this.blockBits + " Hash=" + (reverse(this.blockHash));
+    }
+
+
+    public String reverse(byte[] keys) {
+        byte[] buffer = new byte[keys.length];
+        int k = 0;
+        for (int i = keys.length - 1; i >= 0; i--) {
+            buffer[k++] = keys[i];
+        }
+        return Hex.toHexString(buffer);
+    }
+
+    public void calculateHash(byte[] newBytes, int offset, int length) {
+        blockHash = Utils.doubleDigest(newBytes, offset, length);
     }
 
     /**
@@ -249,7 +271,9 @@ public class Block extends Message {
 
     public void verifyDifficultyFromPreviousBlock(Block prev) {
         // checkState(lock.isHeldByCurrentThread());
-
+        if(true){
+            return;//todo no verify
+        }
         // Is this supposed to be a difficulty transition point?
         if ((prev.getBlockNo() + 1) % BitherjSettings.BLOCK_DIFFICULTY_INTERVAL != 0) {
 
@@ -317,7 +341,10 @@ public class Block extends Message {
 
     public void verifyDifficultyFromPreviousBlock(Block prev, int transitionTime) {
         // checkState(lock.isHeldByCurrentThread());
-
+        if(true){
+            //todo:not verifyDifficultyFromPreviousBlock
+            return;
+        }
         // Is this supposed to be a difficulty transition point?
         if ((prev.getBlockNo() + 1) % BitherjSettings.BLOCK_DIFFICULTY_INTERVAL != 0) {
 
@@ -420,8 +447,9 @@ public class Block extends Message {
         //
         // Firstly we need to ensure this block does in fact represent real work done. If the difficulty is high
         // enough, it's probably been done by the network.
-        checkProofOfWork(true);
-        checkTimestamp();
+
+//        checkProofOfWork(true);
+//        checkTimestamp(); todo:verifyHeader
     }
 
     /**
@@ -664,7 +692,7 @@ public class Block extends Message {
         headerBytesValid = !headerParsed || false && length >= HEADER_SIZE;
 
         parseHeader();
-        parseTransactions();
+        //parseTransactions();
         length = cursor - offset;
     }
 

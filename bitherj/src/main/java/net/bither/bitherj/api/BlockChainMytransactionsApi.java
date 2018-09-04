@@ -9,13 +9,23 @@ import net.bither.bitherj.utils.Utils;
  */
 public class BlockChainMytransactionsApi extends HttpsGetResponse<String> {
 
+    public static final int length=100;
     @Override
     public void setResult(String response) throws Exception {
         this.result = response;
     }
+    public BlockChainMytransactionsApi(String address,int offset) {
+        String url = Utils.format(BitherUrl.GET_BY_ADDRESS, address);
+        StringBuilder stringBuilder=new StringBuilder(url);
+        stringBuilder.append("?offset=");
+        stringBuilder.append(offset);
+        stringBuilder.append("&length=");
+        stringBuilder.append(length);
+        setUrl(stringBuilder.toString());
+    }
 
     public BlockChainMytransactionsApi(String address) {
-        String url = Utils.format(BitherUrl.BITHER_BC_GET_BY_ADDRESS, address);
+        String url = Utils.format(BitherUrl.GET_BY_ADDRESS, address);
         setUrl(url);
     }
 
@@ -27,4 +37,5 @@ public class BlockChainMytransactionsApi extends HttpsGetResponse<String> {
         String url = String.format(BitherUrl.BITHER_BC_TX_INDEX, txIndex);
         setUrl(url);
     }
+
 }

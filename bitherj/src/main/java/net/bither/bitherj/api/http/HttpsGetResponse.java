@@ -1,6 +1,7 @@
 package net.bither.bitherj.api.http;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -10,11 +11,11 @@ public abstract class HttpsGetResponse<T> extends BaseHttpsResponse<T> {
     public void handleHttpGet() throws Exception {
         trustCerts();
         URL url;
-        HttpsURLConnection con = null;
+        HttpURLConnection con = null;
         try {
 
             url = new URL(getUrl());
-            con = (HttpsURLConnection) url.openConnection();
+            con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
             System.setProperty("sun.net.client.defaultConnectTimeout", String
                     .valueOf(HttpSetting.HTTP_CONNECTION_TIMEOUT));

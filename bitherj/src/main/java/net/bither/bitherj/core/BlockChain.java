@@ -34,7 +34,7 @@ public class BlockChain {
     private static BlockChain uniqueInstance = new BlockChain();
     private static final Logger log = LoggerFactory.getLogger(BlockChain.class);
     protected HashMap<byte[], Block> singleBlocks;
-    protected Block lastBlock;
+    public Block lastBlock;
     protected Block lastOrphanBlock;
 
     BlockChain() {

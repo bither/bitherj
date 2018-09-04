@@ -1,18 +1,18 @@
 /*
-* Copyright 2014 http://Bither.net
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2014 http://Bither.net
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package net.bither.bitherj.core;
 
@@ -174,6 +174,7 @@ public class PeerManager {
 
     public void notifyMaxConnectedPeerCountChange() {
         if (running.get()) {
+
             reconnect();
         }
     }
@@ -216,14 +217,21 @@ public class PeerManager {
                         p.connect();
                     }
                 }
+                //发送刷新节点广播
                 sendPeerCountChangeNotification();
                 if (connectedPeers.size() == 0) {
                     stop();
+                }
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         });
     }
 
+    //获取当前节点
     public List<Peer> getConnectedPeers() {
         return new ArrayList<Peer>(connectedPeers);
     }
@@ -1095,6 +1103,7 @@ public class PeerManager {
             double progress = (double) (lastBlockHeight - syncStartHeight) / (double) (downloadingPeer.getVersionLastBlockHeight() -
                     syncStartHeight);
             AbstractApp.notificationService.sendBroadcastProgressState(progress);
+
         } else {
             AbstractApp.notificationService.sendBroadcastProgressState(-1);
         }

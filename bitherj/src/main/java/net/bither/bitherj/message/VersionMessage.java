@@ -44,6 +44,7 @@ import javax.annotation.Nullable;
  */
 public class VersionMessage extends Message {
     private static final long serialVersionUID = 7313594258967483180L;
+    public static final int NODE_BITCOIN_CASH = 1 << 5;
 
     /**
      * A services flag that denotes whether the peer has a copy of the block chain or not.

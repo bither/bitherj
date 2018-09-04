@@ -23,6 +23,7 @@ import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
+import net.bither.bitherj.crypto.mnemonic.MnemonicWordList;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
@@ -37,14 +38,24 @@ public abstract class ImportHDSeed {
     public static final int NOT_HDM_COLD_SEED = 1;
     public static final int PASSWORD_WRONG = 3;
     public static final int IMPORT_FAILED = 4;
-
     public static final int NOT_HD_ACCOUNT_SEED = 5;
+    public static final int DUPLICATED_HD_ACCOUNT_SEED = 6;
     private String content;
     private List<String> worlds;
     protected SecureCharSequence password;
 
     private ImportHDSeedType importPrivateKeyType;
+    protected MnemonicCode mnemonicCode = MnemonicCode.instance();
 
+
+    public ImportHDSeed(ImportHDSeedType importHDSeedType
+            , String content, List<String> worlds, SecureCharSequence password, MnemonicCode mnemonicCode) {
+        this.content = content;
+        this.password = password;
+        this.importPrivateKeyType = importHDSeedType;
+        this.worlds = worlds;
+        this.mnemonicCode = mnemonicCode;
+    }
 
     public ImportHDSeed(ImportHDSeedType importHDSeedType
             , String content, List<String> worlds, SecureCharSequence password) {
@@ -83,7 +94,7 @@ public abstract class ImportHDSeed {
 
             case HDMColdPhrase:
                 try {
-                    byte[] mnemonicCodeSeed = MnemonicCode.instance().toEntropy(worlds);
+                    byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
                     HDMKeychain hdmKeychain = new HDMKeychain(mnemonicCodeSeed, password);
                     return hdmKeychain;
                 } catch (Exception e) {
@@ -100,9 +111,9 @@ public abstract class ImportHDSeed {
     public HDAccountCold importHDAccountCold() {
         switch (importPrivateKeyType) {
             case HDSeedQRCode:
-
-                if (content.indexOf(QRCodeUtil.HD_QR_CODE_FLAG) == 0) {
-                    String keyString = content.substring(1);
+                int hdQrCodeFlagLength = MnemonicWordList.getHdQrCodeFlagLength(content, mnemonicCode.getMnemonicWordList());
+                if (hdQrCodeFlagLength > 0) {
+                    String keyString = content.substring(hdQrCodeFlagLength);
                     String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keyString);
                     String encreyptString = Utils.joinString(new String[]{passwordSeeds[0],
                             passwordSeeds[1], passwordSeeds[2]}, QRCodeUtil.QR_CODE_SPLIT);
@@ -112,7 +123,7 @@ public abstract class ImportHDSeed {
                         return null;
                     }
                     try {
-                        return new HDAccountCold(new EncryptedData(encreyptString), password);
+                        return new HDAccountCold(mnemonicCode, new EncryptedData(encreyptString), password);
                     } catch (Exception e) {
                         importError(IMPORT_FAILED);
                         e.printStackTrace();
@@ -125,8 +136,8 @@ public abstract class ImportHDSeed {
                 }
             case HDSeedPhrase:
                 try {
-                    byte[] mnemonicCodeSeed = MnemonicCode.instance().toEntropy(worlds);
-                    HDAccountCold hdAccount = new HDAccountCold(mnemonicCodeSeed, password, false);
+                    byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
+                    HDAccountCold hdAccount = new HDAccountCold(mnemonicCode, mnemonicCodeSeed, password, false);
                     return hdAccount;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -140,9 +151,9 @@ public abstract class ImportHDSeed {
     public HDAccount importHDAccount() {
         switch (importPrivateKeyType) {
             case HDSeedQRCode:
-
-                if (content.indexOf(QRCodeUtil.HD_QR_CODE_FLAG) == 0) {
-                    String keyString = content.substring(1);
+                int hdQrCodeFlagLength = MnemonicWordList.getHdQrCodeFlagLength(content, mnemonicCode.getMnemonicWordList());
+                if (hdQrCodeFlagLength > 0) {
+                    String keyString = content.substring(hdQrCodeFlagLength);
                     String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keyString);
                     String encreyptString = Utils.joinString(new String[]{passwordSeeds[0], passwordSeeds[1], passwordSeeds[2]}, QRCodeUtil.QR_CODE_SPLIT);
                     PasswordSeed passwordSeed = PasswordSeed.getPasswordSeed();
@@ -151,11 +162,15 @@ public abstract class ImportHDSeed {
                         return null;
                     }
                     try {
-                        return new HDAccount(new EncryptedData(encreyptString)
+                        return new HDAccount(mnemonicCode, new EncryptedData(encreyptString)
                                 , password, false);
-                    } catch (Exception e) {
-                        importError(IMPORT_FAILED);
+                    } catch (HDAccount.DuplicatedHDAccountException e) {
                         e.printStackTrace();
+                        importError(DUPLICATED_HD_ACCOUNT_SEED);
+                        return null;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        importError(IMPORT_FAILED);
                         return null;
                     }
 
@@ -165,9 +180,12 @@ public abstract class ImportHDSeed {
                 }
             case HDSeedPhrase:
                 try {
-                    byte[] mnemonicCodeSeed = MnemonicCode.instance().toEntropy(worlds);
-                    HDAccount hdAccount = new HDAccount(mnemonicCodeSeed, password, false);
+                    byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
+                    HDAccount hdAccount = new HDAccount(mnemonicCode, mnemonicCodeSeed, password, false);
                     return hdAccount;
+                }  catch (HDAccount.DuplicatedHDAccountException e) {
+                    e.printStackTrace();
+                    importError(DUPLICATED_HD_ACCOUNT_SEED);
                 } catch (Exception e) {
                     e.printStackTrace();
                     importError(IMPORT_FAILED);

@@ -51,6 +51,7 @@ public class Address implements Comparable<Address> {
     protected String encryptPrivKey;
 
     protected byte[] pubKey;
+    protected byte[] pubKeyUnCompressed;
     protected String address;
 
     protected boolean syncComplete = false;
@@ -290,7 +291,11 @@ public class Address implements Comparable<Address> {
     }
 
     public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
-        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses);
+        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, Coin.BTC);
+    }
+
+    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses, Coin coin) throws TxBuilderException {
+        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, coin);
     }
 
     public Tx buildTx(long amount, String address) throws TxBuilderException {
@@ -303,6 +308,32 @@ public class Address implements Comparable<Address> {
         List<String> addresses = new ArrayList<String>();
         addresses.add(address);
         return buildTx(changeAddress, amounts, addresses);
+    }
+
+    public Tx buildTx(long amount, String address, String changeAddress, Coin coin) throws TxBuilderException {
+        List<Long> amounts = new ArrayList<Long>();
+        amounts.add(amount);
+        List<String> addresses = new ArrayList<String>();
+        addresses.add(address);
+        return buildTx(changeAddress, amounts, addresses, coin);
+    }
+
+    public List<Tx> buildSplitCoinTx(long amount, String address, String changeAddress, SplitCoin splitCoin) throws TxBuilderException {
+        List<Long> amounts = new ArrayList<Long>();
+        amounts.add(amount);
+        List<String> addresses = new ArrayList<String>();
+        addresses.add(address);
+        List<Tx> txs = TxBuilder.getInstance().buildSplitCoinTx(this, changeAddress, amounts, addresses, splitCoin);
+        return txs;
+    }
+
+    public List<Tx> buildBccTx(long amount, String address, String changeAddress,List<Out> outs) throws TxBuilderException {
+        List<Long> amounts = new ArrayList<Long>();
+        amounts.add(amount);
+        List<String> addresses = new ArrayList<String>();
+        addresses.add(address);
+        List<Tx> txs = TxBuilder.getInstance().buildBccTx(this, changeAddress, amounts, addresses,outs);
+        return txs;
     }
 
     public List<Tx> getRecentlyTxs(int confirmationCnt, int limit) {
@@ -319,7 +350,7 @@ public class Address implements Comparable<Address> {
         for (String h : unsignedInHashes) {
             hashes.add(Utils.hexStringToByteArray(h));
         }
-        List<byte[]> resultHashes = signHashes(hashes, passphrase);
+        List<byte[]> resultHashes = signHashes(hashes, passphrase, TransactionSignature.SigHash.ALL);
         ArrayList<String> resultStrs = new ArrayList<String>();
         for (byte[] h : resultHashes) {
             resultStrs.add(Utils.bytesToHexString(h));
@@ -327,7 +358,7 @@ public class Address implements Comparable<Address> {
         return resultStrs;
     }
 
-    public List<byte[]> signHashes(List<byte[]> unsignedInHashes, CharSequence passphrase) throws
+    public List<byte[]> signHashes(List<byte[]> unsignedInHashes, CharSequence passphrase, TransactionSignature.SigHash sigHash) throws
             PasswordException {
         ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getFullEncryptPrivKey(), passphrase);
         if (key == null) {
@@ -337,11 +368,16 @@ public class Address implements Comparable<Address> {
         List<byte[]> result = new ArrayList<byte[]>();
         for (byte[] unsignedInHash : unsignedInHashes) {
             TransactionSignature signature = new TransactionSignature(key.sign(unsignedInHash,
-                    assKey), TransactionSignature.SigHash.ALL, false);
+                    assKey), sigHash, false);
             result.add(ScriptBuilder.createInputScript(signature, key).getProgram());
         }
         key.clearPrivateKey();
         return result;
+    }
+
+    public List<byte[]> signHashes(List<byte[]> unsignedInHashes, CharSequence passphrase) throws
+            PasswordException {
+        return signHashes(unsignedInHashes, passphrase, TransactionSignature.SigHash.ALL);
     }
 
     public String signMessage(String msg, CharSequence passphrase) {
@@ -361,8 +397,38 @@ public class Address implements Comparable<Address> {
 
     }
 
-    public void signTx(Tx tx, CharSequence passphrase) {
-        tx.signWithSignatures(this.signHashes(tx.getUnsignedInHashes(), passphrase));
+    public byte[] getPubKeyUnCompressed() {
+        return pubKeyUnCompressed;
+    }
+
+    public String signHash(String hashHex, CharSequence passphrase) {
+        ECKey key = PrivateKeyUtil.getECKeyFromSingleString(this.getFullEncryptPrivKey(), passphrase);
+        pubKey = key.getPubKey();
+        if (key == null) {
+            throw new PasswordException("do not decrypt eckey");
+        }
+        KeyParameter assKey = key.getKeyCrypter().deriveKey(passphrase);
+        String result = key.signHash(hashHex, assKey);
+        this.pubKeyUnCompressed = key.getPubKeyUnCompressed();
+        key.clearPrivateKey();
+        return result;
+    }
+
+    public void signTx(Tx tx, CharSequence passphrase, Coin coin) {
+        if (coin == Coin.BTC) {
+            tx.signWithSignatures(this.signHashes(tx.getUnsignedInHashes(), passphrase, TransactionSignature.SigHash.ALL));
+        } else {
+            tx.signWithSignatures(this.signHashes(tx.getSplitCoinForkUnsignedInHashes(coin.getSplitCoin()), passphrase, coin.getSigHash()));
+        }
+    }
+
+    public void signTx(Tx tx, CharSequence passphrase, boolean isBtc,List<Out> outs) {
+        long [] preOutValue = new long[outs.size()];
+        for (int idx = 0; idx < outs.size();idx++) {
+            preOutValue[idx] = outs.get(idx).getOutValue();
+        }
+        List<byte[]> unsignedHashes = tx.getUnsignedHashesForBcc(preOutValue);
+        tx.signWithSignatures(this.signHashes(unsignedHashes, passphrase, TransactionSignature.SigHash.BCCFORK));
     }
 
     public void completeInSignature(List<In> ins) {

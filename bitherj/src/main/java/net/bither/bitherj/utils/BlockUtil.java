@@ -20,11 +20,14 @@ package net.bither.bitherj.utils;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.api.BlockChainDownloadSpvApi;
-import net.bither.bitherj.api.BlockChainGetLatestBlockApi;
+import net.bither.bitherj.api.BlockChainDownloadSpvApiNew;
+import net.bither.bitherj.api.BlockChainDownloadSpvApiNewBlock;
+import net.bither.bitherj.api.BlockChainGetLatestBlockNew;
 import net.bither.bitherj.api.DownloadSpvApi;
 import net.bither.bitherj.core.Block;
 import net.bither.bitherj.core.BlockChain;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -54,9 +57,46 @@ public class BlockUtil {
         }
         BlockChainDownloadSpvApi blockChainDownloadSpvApi = new BlockChainDownloadSpvApi(height);
         blockChainDownloadSpvApi.handleHttpGet();
-        Block block = null;
-        block = blockChainDownloadSpvApi.getResult();
+        Block block = blockChainDownloadSpvApi.getResult();
         return block;
+    }
+    public  static Block getLatestBlockHeightNew(JSONObject jsonObject)
+            throws Exception {
+        JSONArray array = jsonObject.getJSONArray("blocks");
+        JSONObject object = (JSONObject) array.get(0);
+        int latestHeight = object.getInt("height");
+        int height = 0;
+        if (latestHeight % 2016 !=0){
+            height = latestHeight - (latestHeight%2016);
+        }else {
+            height = latestHeight;
+        }
+        BlockChainDownloadSpvApiNew blockChainDownloadSpvApi = new BlockChainDownloadSpvApiNew(height);
+        blockChainDownloadSpvApi.handleHttpGet();
+        Block block = blockChainDownloadSpvApi.getResult();
+        return block;
+    }
+    public  static Block getLatestBlockHash(String hash)
+            throws Exception {
+
+        BlockChainDownloadSpvApiNewBlock blockChainDownloadSpvApi = new BlockChainDownloadSpvApiNewBlock(hash);
+        blockChainDownloadSpvApi.handleHttpGet();
+        Block block = blockChainDownloadSpvApi.getResult();
+        return block;
+    }
+    public static Block formatStoreBlockFromBlockChainInfoNew(JSONObject jsonObject)
+            throws JSONException{
+        long ver = jsonObject.getLong("version");
+        int height = jsonObject.getInt("height");
+        String prevBlock = jsonObject.getString("previousblockhash");
+        String mrklRoot = jsonObject.getString("merkleroot");
+        int time = jsonObject.getInt(TIME);
+        long difficultyTarget = Integer.parseInt(jsonObject.getString(BITS),16);
+        long nonce = jsonObject.getLong(NONCE);
+
+        return BlockUtil.getStoredBlock(ver, prevBlock, mrklRoot, time,
+                difficultyTarget, nonce, height);
+
     }
     public static Block formatStoreBlockFromBlockChainInfo(JSONObject jsonObject)
         throws JSONException{
@@ -115,17 +155,18 @@ public class BlockUtil {
             return null;
         }
         Block block = null;
-        try {
-            DownloadSpvApi downloadSpvApi = new DownloadSpvApi();
-            downloadSpvApi.handleHttpGet();
-            block = downloadSpvApi.getResult();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        try {
+//            DownloadSpvApi downloadSpvApi = new DownloadSpvApi();
+//            downloadSpvApi.handleHttpGet();
+//            block = downloadSpvApi.getResult();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
         try {
             if (block == null) {
-                BlockChainGetLatestBlockApi blockChainGetLatestBlockApi = new
-                        BlockChainGetLatestBlockApi();
+//                BlockChainGetLatestBlockApi blockChainGetLatestBlockApi = new BlockChainGetLatestBlockApi();
+                BlockChainGetLatestBlockNew blockChainGetLatestBlockApi = new BlockChainGetLatestBlockNew();
                 blockChainGetLatestBlockApi.handleHttpGet();
                 block = blockChainGetLatestBlockApi.getResult();
             }

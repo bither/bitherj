@@ -28,9 +28,20 @@ import java.math.BigInteger;
  */
 public class TransactionSignature extends ECKey.ECDSASignature {
     public enum SigHash {
-        ALL,         // 1
-        NONE,        // 2
-        SINGLE,      // 3
+        ALL(0),         // 1
+        NONE(1),       // 2
+        SINGLE(2),     // 3
+        BCCFORK(1|0x40|0),  // 65
+        BTGFORK(1|0x40|(79<<8)),
+        BTWFORK(1|0x40|87 << 8),
+        BTFFORK(1|0x40|70 << 8),
+        BTPFORK(1|0x40|80 << 8),
+        BTNFORK(1|0x40|88 << 8),
+        SBTCFORK(1|0x40);  // 65
+        public int value;
+        private SigHash (int value) {
+            this.value = value;
+        }
     }
 
     public static final byte SIGHASH_ANYONECANPAY_VALUE = (byte) 0x80;
@@ -76,6 +87,9 @@ public class TransactionSignature extends ECKey.ECDSASignature {
         int sighashFlags = mode.ordinal() + 1;
         if (anyoneCanPay)
             sighashFlags |= SIGHASH_ANYONECANPAY_VALUE;
+        if (mode != SigHash.ALL && mode != SigHash.NONE && mode != SigHash.SINGLE) {
+           return mode.value;
+        }
         return sighashFlags;
     }
 
@@ -143,8 +157,10 @@ public class TransactionSignature extends ECKey.ECDSASignature {
             return SigHash.NONE;
         else if (mode == SigHash.SINGLE.ordinal() + 1)
             return SigHash.SINGLE;
-        else
+        else if (mode == SigHash.ALL.ordinal() + 1)
             return SigHash.ALL;
+        else
+            return SigHash.BCCFORK;
     }
 
     /**

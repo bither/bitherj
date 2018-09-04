@@ -20,6 +20,7 @@ import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.api.BitherMytransactionsApi;
 import net.bither.bitherj.api.BlockChainMytransactionsApi;
+import net.bither.bitherj.api.http.BitherUrl;
 import net.bither.bitherj.core.*;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ScriptException;
@@ -60,54 +61,54 @@ public class TransactionsUtil {
     /**
      *  TODO: get data from blockChain.info
      */
-    private  static List<Tx> getTransactionsFromBlockChain(
-            JSONObject jsonObject, int storeBlockHeight) throws Exception {
-        List<Tx> transactions = new ArrayList<Tx>();
-        List<Block> blocks = AbstractDb.blockProvider.getAllBlocks();
-        Map<Integer, Integer> blockMapList = new HashMap<Integer, Integer>();
-        int minBlockNo = blocks.get(blocks.size() - 1).getBlockNo();
-        for (Block block : blocks) {
-            blockMapList.put(block.getBlockNo(), block.getBlockTime());
-            if (minBlockNo > block.getBlockNo()) {
-                minBlockNo = block.getBlockNo();
-            }
-        }
-
-        if (!jsonObject.isNull(BLOCK_CHAIN_TX)) {
-            JSONArray txsArray = jsonObject.getJSONArray(BLOCK_CHAIN_TXS);
-            for (int i = 0; i < txsArray.length(); i++) {
-                JSONObject txJSON = txsArray.getJSONObject(i);
-                if (!txJSON.has(BLOCK_CHAIN_BLOCK_HEIGHT)) {
-                    continue;
-                }
-                int height = txJSON.getInt(BLOCK_CHAIN_BLOCK_HEIGHT);
-                if (height > storeBlockHeight && storeBlockHeight > 0) {
-                    continue;
-                }
-                Integer timeKey = height;
-                if (height <= minBlockNo) {
-                    timeKey = minBlockNo;
-                }
-                // TODO: get single tx hex format data
-                int txIndex = txJSON.getInt(BLOCK_CHAIN_TX_INDEX);
-
-                String txHex = getTxHexByIndex(txIndex);
-
-                byte[] decodeTxHex = Hex.decode(txHex);
-                // byte[] txBytes = Base64.encode(decodeTxHex, Base64.DEFAULT);
-
-                Tx tx = new Tx(decodeTxHex);
-                tx.setBlockNo(height);
-
-                if (blockMapList.containsKey(timeKey)) {
-                    tx.setTxTime(blockMapList.get(timeKey));
-                }
-                transactions.add(tx);
-            }
-        }
-        return transactions;
-
-    }
+//    private  static List<Tx> getTransactionsFromBlockChain(
+//            JSONObject jsonObject, int storeBlockHeight) throws Exception {
+//        List<Tx> transactions = new ArrayList<Tx>();
+//        List<Block> blocks = AbstractDb.blockProvider.getAllBlocks();
+//        Map<Integer, Integer> blockMapList = new HashMap<Integer, Integer>();
+//        int minBlockNo = blocks.get(blocks.size() - 1).getBlockNo();
+//        for (Block block : blocks) {
+//            blockMapList.put(block.getBlockNo(), block.getBlockTime());
+//            if (minBlockNo > block.getBlockNo()) {
+//                minBlockNo = block.getBlockNo();
+//            }
+//        }
+//
+//        if (!jsonObject.isNull(BLOCK_CHAIN_TX)) {
+//            JSONArray txsArray = jsonObject.getJSONArray(BLOCK_CHAIN_TXS);
+//            for (int i = 0; i < txsArray.length(); i++) {
+//                JSONObject txJSON = txsArray.getJSONObject(i);
+//                if (!txJSON.has(BLOCK_CHAIN_BLOCK_HEIGHT)) {
+//                    continue;
+//                }
+//                int height = txJSON.getInt(BLOCK_CHAIN_BLOCK_HEIGHT);
+//                if (height > storeBlockHeight && storeBlockHeight > 0) {
+//                    continue;
+//                }
+//                Integer timeKey = height;
+//                if (height <= minBlockNo) {
+//                    timeKey = minBlockNo;
+//                }
+//                // TODO: get single tx hex format data
+//                int txIndex = txJSON.getInt(BLOCK_CHAIN_TX_INDEX);
+//
+//                String txHex = getTxHexByIndex(txIndex);
+//
+//                byte[] decodeTxHex = Hex.decode(txHex);
+//                // byte[] txBytes = Base64.encode(decodeTxHex, Base64.DEFAULT);
+//
+//                Tx tx = new Tx(decodeTxHex);
+//                tx.setBlockNo(height);
+//
+//                if (blockMapList.containsKey(timeKey)) {
+//                    tx.setTxTime(blockMapList.get(timeKey));
+//                }
+//                transactions.add(tx);
+//            }
+//        }
+//        return transactions;
+//
+//    }
 
     private static String getTxHexByIndex(int txIndex) throws Exception {
         BlockChainMytransactionsApi blockChainMytransactionsApi = new BlockChainMytransactionsApi(txIndex);
@@ -309,7 +310,7 @@ public class TransactionsUtil {
                         if (!jsonObject.isNull(BLOCK_COUNT)) {
                             apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                         }
-                        int txCnt = jsonObject.getInt(TX_CNT);
+//                        int txCnt = jsonObject.getInt(TX_CNT);
                         // TODO: HDAccount
                         transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
                         transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
@@ -332,7 +333,7 @@ public class TransactionsUtil {
                         if (!jsonObjectBlockChain.isNull(BLOCK_CHAIN_HEIGHT)) {
                             apiBlockCount = jsonObjectBlockChain.getInt(BLOCK_CHAIN_HEIGHT);
                         }
-                        int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
+//                        int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
                         // TODO: get transactions from blockChain.info
                         transactions = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
                         transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
@@ -438,7 +439,7 @@ public class TransactionsUtil {
                         if (!jsonObject.isNull(BLOCK_COUNT)) {
                             apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
                         }
-                        int txCnt = jsonObject.getInt(TX_CNT);
+//                        int txCnt = jsonObject.getInt(TX_CNT);
                         transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
                         transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
 
@@ -459,7 +460,7 @@ public class TransactionsUtil {
                         if (!jsonObjectBlockChain.isNull(BLOCK_CHAIN_HEIGHT)) {
                             apiBlockCount = jsonObjectBlockChain.getInt(BLOCK_CHAIN_HEIGHT);
                         }
-                        int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
+//                        int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
                         // TODO: get transactions from blockChain.info
                         transactions = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
                         transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
@@ -639,16 +640,123 @@ public class TransactionsUtil {
 
     }
 
-    private static void getTxForAddress(final int webType) throws Exception {
+//    private static void getTxForAddress(final int webType) throws Exception {
+//        for (Address address : AddressManager.getInstance().getAllAddresses()) {
+//            Block storedBlock = BlockChain.getInstance().getLastBlock();
+//            int storeBlockHeight = storedBlock.getBlockNo();
+//            if (!address.isSyncComplete()) {
+//                int apiBlockCount = 0;
+//                int txSum = 0;
+//                boolean needGetTxs = true;
+//                int page = 1;
+//                // TODO
+//                List<Tx> transactions = new ArrayList<Tx>();
+//
+//                while (needGetTxs) {
+//
+//                    // TODO: get data from bither.net else from blockchain.info
+//                    if (webType == 0) {
+//                        BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
+//                                address.getAddress(), page);
+//                        bitherMytransactionsApi.handleHttpGet();
+//                        String txResult = bitherMytransactionsApi.getResult();
+//                        JSONObject jsonObject = new JSONObject(txResult);
+//
+//                        if (!jsonObject.isNull(BLOCK_COUNT)) {
+//                            apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
+//                        }
+//                        int txCnt = jsonObject.getInt(TX_CNT);
+//                        transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
+//                        transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
+//
+//                        Collections.sort(transactions, new ComparatorTx());
+//                        address.initTxs(transactions);
+//                        txSum = txSum + transactions.size();
+//                        needGetTxs = transactions.size() > 0;
+//                        page++;
+//
+//                    }else {
+//                        BlockChainMytransactionsApi blockChainMytransactionsApi = new BlockChainMytransactionsApi(address.getAddress());
+//                        blockChainMytransactionsApi.handleHttpGet();
+//                        String txResult = blockChainMytransactionsApi.getResult();
+//                        JSONObject jsonObject = new JSONObject(txResult);
+//                        // TODO: get the latest block number from blockChain.info
+//                        JSONObject jsonObjectBlockChain = getLatestBlockNumberFromBlockchain();
+//                        if (!jsonObjectBlockChain.isNull(BLOCK_CHAIN_HEIGHT)) {
+//                            apiBlockCount = jsonObjectBlockChain.getInt(BLOCK_CHAIN_HEIGHT);
+//                        }
+//                        int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
+//                        // TODO: get transactions from blockChain.info
+//                        transactions = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
+//                        transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
+//
+//                        Collections.sort(transactions, new ComparatorTx());
+//                        address.initTxs(transactions);
+//                        txSum = txSum + transactions.size();
+//                        needGetTxs = false;
+//
+//                    }
+//                    /*
+//                    Collections.sort(transactions, new ComparatorTx());
+//                    address.initTxs(transactions);
+//                    txSum = txSum + transactions.size();
+//                    needGetTxs = transactions.size() > 0;
+//                    page++;
+//                    */
+//                }
+//
+//                if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
+//                    BlockChain.getInstance().rollbackBlock(apiBlockCount);
+//                }
+//                address.setSyncComplete(true);
+//                if (address instanceof HDMAddress) {
+//                    HDMAddress hdmAddress = (HDMAddress) address;
+//                    hdmAddress.
+//                            updateSyncComplete();
+//                } else {
+//                    address.updateSyncComplete();
+//                }
+//            }
+//        }
+
+//    }
+
+    // TODO: get the latest block info of JSON format from blockChain.info
+    private static JSONObject getLatestBlockNumberFromBlockchain() throws Exception {
+        BlockChainMytransactionsApi blockChainMytransactionsApi = new BlockChainMytransactionsApi();
+        blockChainMytransactionsApi.handleHttpGet();
+        String txResultBlockChain = blockChainMytransactionsApi.getResult();
+        return new JSONObject(txResultBlockChain);
+
+    }
+
+
+    private static String getTxHexByIndex(String txIndex) throws Exception {
+        BlockChainMytransactionsApi blockChainMytransactionsApi = new BlockChainMytransactionsApi(BitherUrl.TX_DEAL_ADDRESS+txIndex);
+        blockChainMytransactionsApi.handleHttpGet();
+        String rel = blockChainMytransactionsApi.getResult();
+
+        JSONObject jsonObject = new JSONObject(rel);
+
+
+        return jsonObject.optString("rawtx");
+    }
+
+    //获取热钱包
+    private  static void getTxForAddress(final int webType) throws Exception {
         for (Address address : AddressManager.getInstance().getAllAddresses()) {
             Block storedBlock = BlockChain.getInstance().getLastBlock();
-            int storeBlockHeight = storedBlock.getBlockNo();
+            int storeBlockHeight = 0;
+            if (storedBlock != null) {
+                storeBlockHeight = storedBlock.getBlockNo();
+            }
+
             if (!address.isSyncComplete()) {
                 int apiBlockCount = 0;
                 int txSum = 0;
                 boolean needGetTxs = true;
                 int page = 1;
-                // TODO
+
                 List<Tx> transactions = new ArrayList<Tx>();
 
                 while (needGetTxs) {
@@ -674,8 +782,8 @@ public class TransactionsUtil {
                         needGetTxs = transactions.size() > 0;
                         page++;
 
-                    }else {
-                        BlockChainMytransactionsApi blockChainMytransactionsApi = new BlockChainMytransactionsApi(address.getAddress());
+                    } else {
+                        BlockChainMytransactionsApi blockChainMytransactionsApi = new BlockChainMytransactionsApi(address.getAddress(),txSum);
                         blockChainMytransactionsApi.handleHttpGet();
                         String txResult = blockChainMytransactionsApi.getResult();
                         JSONObject jsonObject = new JSONObject(txResult);
@@ -684,24 +792,20 @@ public class TransactionsUtil {
                         if (!jsonObjectBlockChain.isNull(BLOCK_CHAIN_HEIGHT)) {
                             apiBlockCount = jsonObjectBlockChain.getInt(BLOCK_CHAIN_HEIGHT);
                         }
-                        int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
+//                        int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
                         // TODO: get transactions from blockChain.info
-                        transactions = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
-                        transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
-
-                        Collections.sort(transactions, new ComparatorTx());
-                        address.initTxs(transactions);
+                        List<Tx> fromTxList  = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
+                        List<Tx> compressTxList = AddressManager.getInstance().compressTxsForApi(fromTxList, address);
+                        transactions.addAll(compressTxList);
                         txSum = txSum + transactions.size();
-                        needGetTxs = false;
+                        if (compressTxList.size()<BlockChainMytransactionsApi.length){
+                            Collections.sort(transactions, new ComparatorTx());
+                            address.initTxs(transactions);
+                            needGetTxs = false;
+                        }
+
 
                     }
-                    /*
-                    Collections.sort(transactions, new ComparatorTx());
-                    address.initTxs(transactions);
-                    txSum = txSum + transactions.size();
-                    needGetTxs = transactions.size() > 0;
-                    page++;
-                    */
                 }
 
                 if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
@@ -720,13 +824,53 @@ public class TransactionsUtil {
 
     }
 
-    // TODO: get the latest block info of JSON format from blockChain.info
-    private static JSONObject getLatestBlockNumberFromBlockchain() throws Exception {
-        BlockChainMytransactionsApi blockChainMytransactionsApi = new BlockChainMytransactionsApi();
-        blockChainMytransactionsApi.handleHttpGet();
-        String txResultBlockChain = blockChainMytransactionsApi.getResult();
-        return new JSONObject(txResultBlockChain);
+    private  static List<Tx> getTransactionsFromBlockChain(JSONObject jsonObject, int storeBlockHeight) throws Exception {
+        List<Tx> transactions = new ArrayList<Tx>();
+        List<Block> blocks = AbstractDb.blockProvider.getAllBlocks();
+        Map<Integer, Integer> blockMapList = new HashMap<Integer, Integer>();
+        int minBlockNo = blocks.get(blocks.size() - 1).getBlockNo();
+        for (Block block : blocks) {
+            blockMapList.put(block.getBlockNo(), block.getBlockTime());
+            if (minBlockNo > block.getBlockNo()) {
+                minBlockNo = block.getBlockNo();
+            }
+        }
+
+        if (!jsonObject.isNull("result")) {
+            JSONArray txsArray = jsonObject.getJSONArray("result");
+            for (int i = 0; i < txsArray.length(); i++) {
+                JSONObject txJSON = txsArray.getJSONObject(i);
+//                if (!txJSON.has("")) {
+//                    continue;
+//                }
+                int confirmations=txJSON.optInt("confirmations");
+                int height = BlockChain.getInstance().lastBlock.getBlockNo()-confirmations+1; ;// txJSON.getInt(BLOCK_CHAIN_BLOCK_HEIGHT); //todo:
+                if (height > storeBlockHeight && storeBlockHeight > 0) {
+                    continue;
+                }
+                Integer timeKey = height;
+                if (height <= minBlockNo) {
+                    timeKey = minBlockNo;
+                }
+                // TODO: get single tx hex format data
+//                int txIndex = txJSON.getInt(BLOCK_CHAIN_TX_INDEX);
+
+                String txHex = txJSON.optString("hex");//getTxHexByIndex(txIndex);
+
+                byte[] decodeTxHex = Hex.decode(txHex);
+                // byte[] txBytes = Base64.encode(decodeTxHex, Base64.DEFAULT);
+
+                Tx tx = new Tx(decodeTxHex);
+                tx.setBlockNo(height);
+
+                tx.setTxTime(txJSON.optInt("time"));
+                /*if (blockMapList.containsKey(timeKey)) {
+                    tx.setTxTime(blockMapList.get(timeKey));
+                }*/
+                transactions.add(tx);
+            }
+        }
+        return transactions;
 
     }
-
 }

@@ -23,6 +23,8 @@ import com.google.common.primitives.UnsignedLongs;
 
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
+import net.bither.bitherj.core.Coin;
+import net.bither.bitherj.core.SplitCoin;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.exception.AddressFormatException;
@@ -691,7 +693,6 @@ public class Utils {
         return data;
     }
 
-
     public static String toAddress(byte[] pubKeyHash) {
         checkArgument(pubKeyHash.length == 20, "Addresses are 160-bit hashes, " +
                 "so you must provide 20 bytes");
@@ -720,6 +721,57 @@ public class Utils {
         byte[] check = Utils.doubleDigest(addressBytes, 0, pubKeyHash.length + 1);
         System.arraycopy(check, 0, addressBytes, pubKeyHash.length + 1, 4);
         return Base58.encode(addressBytes);
+    }
+
+    public static String toAddress(byte[] pubKeyHash, Coin coin) {
+        checkArgument(pubKeyHash.length == 20, "Addresses are 160-bit hashes, " +
+                "so you must provide 20 bytes");
+
+        int version = coin.getAddressHeader();
+        checkArgument(version < 256 && version >= 0);
+
+        byte[] addressBytes = new byte[1 + pubKeyHash.length + 4];
+        addressBytes[0] = (byte) version;
+        System.arraycopy(pubKeyHash, 0, addressBytes, 1, pubKeyHash.length);
+        byte[] check = Utils.doubleDigest(addressBytes, 0, pubKeyHash.length + 1);
+        System.arraycopy(check, 0, addressBytes, pubKeyHash.length + 1, 4);
+        return Base58.encode(addressBytes);
+    }
+
+    public static String toP2SHAddress(byte[] pubKeyHash, Coin coin) {
+        checkArgument(pubKeyHash.length == 20, "Addresses are 160-bit hashes, " +
+                "so you must provide 20 bytes");
+
+        int version = coin.getP2shHeader();
+        checkArgument(version < 256 && version >= 0);
+
+        byte[] addressBytes = new byte[1 + pubKeyHash.length + 4];
+        addressBytes[0] = (byte) version;
+        System.arraycopy(pubKeyHash, 0, addressBytes, 1, pubKeyHash.length);
+        byte[] check = Utils.doubleDigest(addressBytes, 0, pubKeyHash.length + 1);
+        System.arraycopy(check, 0, addressBytes, pubKeyHash.length + 1, 4);
+        return Base58.encode(addressBytes);
+    }
+
+    public static String toSegwitAddress(byte[] pubKeyHash) {
+        assert (pubKeyHash.length == 20);
+
+        int version = BitherjSettings.p2shHeader;;
+        assert (version < 256 && version >= 0);
+
+        byte[] scriptSig = new byte[pubKeyHash.length + 2];
+        scriptSig[0] = 0x00;
+        scriptSig[1] = (byte) pubKeyHash.length;
+        System.arraycopy(pubKeyHash, 0, scriptSig, 2, pubKeyHash.length);
+        byte[] addressBytes = Utils.sha256hash160(scriptSig);
+
+        byte[] b = new byte[1 + addressBytes.length + 4];
+        b[0] = (byte) version;
+        System.arraycopy(addressBytes, 0, b, 1, addressBytes.length);
+        byte[] check = doubleDigest(b, 0, addressBytes.length + 1);
+        System.arraycopy(check, 0, b, addressBytes.length + 1, 4);
+        return Base58.encode(b);
+
     }
 
     public static int getAddressHeader(String address) throws AddressFormatException {
@@ -912,13 +964,58 @@ public class Utils {
 
     public static boolean validBicoinAddress(String str) {
         try {
-            int addressHeader = getAddressHeader(str);
-            return (addressHeader == BitherjSettings.p2shHeader
-                    || addressHeader == BitherjSettings.addressHeader);
+
+            return (BitherjSettings.validAddressPrefixPubkey(getAddressHeader(str)) ||
+            BitherjSettings.validAddressPrefixScript(getAddressHeader(str)));
+
         } catch (final AddressFormatException x) {
             x.printStackTrace();
         }
         return false;
+    }
+
+    public static boolean validBicoinGoldAddress(String str) {
+        try {
+            int addressHeader = getAddressHeader(str);
+            return (addressHeader == BitherjSettings.btgP2shHeader
+                    || addressHeader == BitherjSettings.btgAddressHeader);
+        } catch (final AddressFormatException x) {
+            x.printStackTrace();
+        }
+        return false;
+    }
+
+    public static boolean validSplitBitCoinAddress(String address,SplitCoin coin) {
+        try {
+            int addressHeader = getAddressHeader(address);
+            return (addressHeader == coin.getAddressHeader() || addressHeader == coin.getP2shHeader());
+        }catch (AddressFormatException error) {
+            error.printStackTrace();
+        }
+        return false;
+    }
+
+    public static Coin getCoinByAddressHeader(String address) {
+        if(address != null && !address.isEmpty()) {
+            try {
+                int addressHeader = getAddressHeader(address);
+                if (addressHeader == SplitCoin.BTG.getP2shHeader() || addressHeader == SplitCoin.BTG.getAddressHeader()) {
+                    return Coin.BTG;
+                } else if (addressHeader == SplitCoin.BTW.getP2shHeader() || addressHeader == SplitCoin.BTW.getAddressHeader()) {
+                    return Coin.BTW;
+                } else if (addressHeader == SplitCoin.BTF.getP2shHeader() || addressHeader == SplitCoin.BTF.getAddressHeader()) {
+                    return Coin.BTF;
+                } else if (addressHeader == SplitCoin.BTP.getP2shHeader() || addressHeader == SplitCoin.BTP.getAddressHeader()) {
+                    return Coin.BTP;
+                } else {
+                    return Coin.BTC;
+                }
+            } catch (AddressFormatException error) {
+                error.printStackTrace();
+            }
+        }
+
+        return Coin.BTC;
     }
 
     public static boolean isNubmer(Object obj) {

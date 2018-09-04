@@ -48,7 +48,6 @@ public class QRCodeUtil {
     public static final String OLD_QR_CODE_SPLIT = ":";
     public static final String HDM_QR_CODE_FLAG = "-";
     public static final String Enterprise_HDM_QR_CODE_FLAG = "?";
-    public static final String HD_QR_CODE_FLAG = "%";
     public static final String HD_MONITOR_QR_PREFIX = "BitherHD:";
 
 
@@ -127,19 +126,19 @@ public class QRCodeUtil {
 
     public static List<String> getQrCodeStringList(String str) {
         List<String> stringList = new ArrayList<String>();
-        int num = getNumOfQrCodeString(str.length());
-        int sumLength = str.length() + num * 6;
-        int pageSize = sumLength / num;
+        int strLeng = str.length();
+        int num = getNumOfQrCodeString(strLeng);
+        int pageSize = (strLeng + (num - 1)) / num;
         for (int i = 0;
              i < num;
              i++) {
             int start = i * pageSize;
             int end = (i + 1) * pageSize;
-            if (start > str.length() - 1) {
+            if (start > strLeng - 1) {
                 continue;
             }
-            if (end > str.length()) {
-                end = str.length();
+            if (end > strLeng) {
+                end = strLeng;
             }
             String splitStr = str.substring(start, end);
             String pageString = "";

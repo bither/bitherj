@@ -234,7 +234,22 @@ public abstract class Message {
 
         bitcoinSerializeToStream(stream);
     }
+    /**
+     * Serialize this message to the provided OutputStream using the bitcoin wire format.
+     *
+     * @param stream
+     * @param idx (offset)
+     * @throws IOException
+     */
+    final public void bitcoinSerialize(OutputStream stream,int idx) throws IOException {
+        // 1st check for cached bytes.
+//        if (bytes != null && length != UNKNOWN_LENGTH) {
+//            stream.write(bytes, offset + idx, length - idx);
+//            return;
+//        }
 
+        bitcoinSerializeToStream(stream);
+    }
     /**
      * Serializes this message to the provided stream. If you just want the raw bytes use bitcoinSerialize().
      */

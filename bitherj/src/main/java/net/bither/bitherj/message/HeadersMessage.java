@@ -84,11 +84,19 @@ public class HeadersMessage extends Message {
         for (int i = 0; i < numHeaders; ++i) {
             // Read 80 bytes of the header and one more byte for the transaction list, which is always a 00 because the
             // transaction list is empty.
-            byte[] blockHeader = readBytes(81);
-            if (blockHeader[80] != 0)
-                throw new ProtocolException("Block header does not end with a null byte");
-            Block newBlockHeader = new Block(blockHeader, 81);
+//            byte[] blockHeader = readBytes(81);
+            int from = cursor;
+            byte[] blockHeader = readBytes(80);
+//            if (blockHeader[80] != 0)
+//                throw new ProtocolException("Block header does not end with a null byte");
+            Block newBlockHeader = new Block(blockHeader, 80);
             blockHeaders.add(newBlockHeader);
+            byte[] Num = readBytes(1); //bignum数长度
+            byte[] bitnum = readBytes(Num[0]);//bignum数
+            int length = cursor - from;
+            newBlockHeader.calculateHash(bytes, from, length);
+
+            byte[] Num1 = readBytes(1);//0
         }
 
         if (log.isDebugEnabled()) {

@@ -19,9 +19,14 @@ package net.bither.bitherj.script;
 
 import com.google.common.collect.Lists;
 
+import net.bither.bitherj.core.Coin;
+import net.bither.bitherj.core.In;
+import net.bither.bitherj.core.Out;
+import net.bither.bitherj.core.SplitCoin;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
@@ -393,6 +398,15 @@ public class Script {
             return Utils.toAddress(getPubKeyHash());
         else if (isSentToP2SH())
             return Utils.toP2SHAddress(this.getPubKeyHash());
+        else
+            throw new ScriptException("Cannot cast this script to a pay-to-address type");
+    }
+
+    public String getToAddress(Coin coin) throws ScriptException {
+        if (isSentToAddress())
+            return Utils.toAddress(getPubKeyHash(), coin);
+        else if (isSentToP2SH())
+            return Utils.toP2SHAddress(this.getPubKeyHash(), coin);
         else
             throw new ScriptException("Cannot cast this script to a pay-to-address type");
     }
@@ -1308,8 +1322,37 @@ public class Script {
         boolean sigValid = false;
         try {
             TransactionSignature sig = TransactionSignature.decodeFromBitcoin(sigBytes, false);
-            byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
-            sigValid = ECKey.verify(hash, sig, pubKey);
+            Coin coin = txContainingThis.getCoin();
+            if (coin == Coin.BTC) {
+                byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
+                sigValid = ECKey.verify(hash, sig, pubKey);
+            } else {
+                In in = txContainingThis.getIns().get(index);
+                if (txContainingThis.isDetectBcc()) {
+                    long[] preOutValue = new long[txContainingThis.getOuts().size()];
+                    for (int idx = 0; idx < txContainingThis.getOuts().size(); idx++) {
+                        preOutValue[idx] = txContainingThis.getOuts().get(idx).getOutValue();
+                    }
+                    byte[] hash = txContainingThis.hashForSignatureWitness(index, connectedScript,
+                            BigInteger.valueOf(preOutValue[index]),
+                            TransactionSignature.SigHash.BCCFORK, false, SplitCoin.BCC);
+                    sigValid = ECKey.verify(hash, sig, pubKey);
+                }else if(coin == Coin.SBTC) {
+                    byte[] hash = txContainingThis.hashForSignatureForSBTC(index,
+                            connectedScript, coin.getSigHash(), false);
+                    sigValid = ECKey.verify(hash, sig, pubKey);
+                }else if(coin == Coin.BCD) {
+                    byte[] hash = txContainingThis.hashForSignatureForBCD(index,
+                            connectedScript, coin.getSigHash(), false);
+                    sigValid = ECKey.verify(hash, sig, pubKey);
+                } else {
+                    Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
+                    byte[] hash = txContainingThis.hashForSignatureWitness(index,
+                            connectedScript, BigInteger.valueOf(out.getOutValue()),
+                            coin.getSigHash(), false, coin.getSplitCoin());
+                    sigValid = ECKey.verify(hash, sig, pubKey);
+                }
+            }
         } catch (Exception e1) {
             // There is (at least) one exception that could be hit here (EOFException, if the sig is too short)
             // Because I can't verify there aren't more, we use a very generic Exception catch
@@ -1374,9 +1417,28 @@ public class Script {
             // more expensive than hashing, its not a big deal.
             try {
                 TransactionSignature sig = TransactionSignature.decodeFromBitcoin(sigs.getFirst(), false);
-                byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
-                if (ECKey.verify(hash, sig, pubKey))
-                    sigs.pollFirst();
+                Coin coin = txContainingThis.getCoin();
+                if (coin == Coin.BTC) {
+                    byte[] hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
+                    if (ECKey.verify(hash, sig, pubKey))
+                        sigs.pollFirst();
+                }else if(coin == Coin.SBTC) {
+                    byte[] hash = txContainingThis.hashForSignatureForSBTC(index, connectedScript, coin.getSigHash(), false);
+                    if (ECKey.verify(hash, sig, pubKey))
+                        sigs.pollFirst();
+                }else if(coin == Coin.BCD) {
+                    byte[] hash = txContainingThis.hashForSignatureForBCD(index, connectedScript, coin.getSigHash(), false);
+                    if (ECKey.verify(hash, sig, pubKey))
+                        sigs.pollFirst();
+                } else {
+                    In in = txContainingThis.getIns().get(index);
+                    Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
+                    byte[] hash = txContainingThis.hashForSignatureWitness(index,
+                            connectedScript, BigInteger.valueOf(out.getOutValue()),
+                            coin.getSigHash(), false, coin.getSplitCoin());
+                    if (ECKey.verify(hash, sig, pubKey))
+                        sigs.pollFirst();
+                }
             } catch (Exception e) {
                 // There is (at least) one exception that could be hit here (EOFException, if the sig is too short)
                 // Because I can't verify there aren't more, we use a very generic Exception catch
@@ -1413,11 +1475,11 @@ public class Script {
                                 boolean enforceP2SH) throws ScriptException {
         // Clone the transaction because executing the script involves editing it, and if we die, we'll leave
         // the tx half broken (also it's not so thread safe to work on it directly.
-        try {
-            txContainingThis = new Tx(txContainingThis.bitcoinSerialize());
-        } catch (ProtocolException e) {
-            throw new RuntimeException(e);   // Should not happen unless we were given a totally broken transaction.
-        }
+//        try {
+//            txContainingThis = new Tx(txContainingThis.bitcoinSerialize(),txContainingThis.isDetectBcc(), txContainingThis.getCoin());
+//        } catch (ProtocolException e) {
+//            throw new RuntimeException(e);   // Should not happen unless we were given a totally broken transaction.
+//        }
         if (getProgram().length > 10000 || scriptPubKey.getProgram().length > 10000)
             throw new ScriptException("Script larger than 10,000 bytes");
 
@@ -1432,8 +1494,10 @@ public class Script {
         if (stack.size() == 0)
             throw new ScriptException("Stack empty at end of script execution.");
 
-        if (!castToBool(stack.pollLast()))
-            throw new ScriptException("Script resulted in a non-true stack: " + stack);
+        if (!txContainingThis.isDetectBcc()) {
+            if (!castToBool(stack.pollLast()))
+                throw new ScriptException("Script resulted in a non-true stack: " + stack);
+        }
 
         // P2SH is pay to script hash. It means that the scriptPubKey has a special form which is a valid
         // program but it has "useless" form that if evaluated as a normal program always returns true.

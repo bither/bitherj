@@ -39,7 +39,7 @@ public class BitherUrl {
         public static final String BITHER_BC = Utils.format(FORMAT_HTTP, BITHER_BC_DOMAIN);
         public static final String BITHER_HDM = Utils.format(FORMAT_HTTPS, BITHER_HDM_DOMAIN);
         public static final String BITHER_URL = Utils.format(FORMAT_HTTP, "bither.net");
-        public static final String BLOCK_CHAIN = Utils.format(FORMAT_HTTPS,BLOCK_CHAIN_INFO);
+        public static final String BLOCK_CHAIN = Utils.format(FORMAT_HTTPS, BLOCK_CHAIN_INFO);
 
         // BlockChain.info
         public static final String BITHER_BLOCKCHAIN_DOMAIN = "blockchain.info";
@@ -51,6 +51,10 @@ public class BitherUrl {
 
 
     }
+
+    public static final String GET_BY_ADDRESS = "http://api.primecoin.org/rest/pcoin/txs/%s";
+    public static final String GET_BY_SYNCBLOCK = "http://api.primecoin.org/rest/pcoin/syncblock";
+
 
     // bither blockChain
     public static final String BITHER_BC_GET_BY_ADDRESS = BITHER_DNS.BITHER_BLOCKCHAIN + "rawaddr/%s";
@@ -92,10 +96,24 @@ public class BitherUrl {
             + "api/v1/exchange/%d/trend";
 
     //other
+    public static final String BCHAIN_INFO_ADDRESS_URL = "https://bchain.info/XPM/addr/";
     public static final String BLOCKCHAIN_INFO_ADDRESS_URL = "http://blockchain.info/address/";
-    public static final String BLOCKMETA_ADDRESS_URL = "http://www.blockmeta.com/address/";
+    public static final String BTC_COM_ADDRESS_URL = "https://btc.com/";
 
     //blockChain.info Api
-    public static final String BLOCKCHAIN_INFO_GET_LASTST_BLOCK = BITHER_DNS.BLOCK_CHAIN+"latestblock";
-    public static final String BLOCKCHAIN_INFO_GET_SPVBLOCK_API = BITHER_DNS.BLOCK_CHAIN+"block-height/%d?format=json";
+    public static final String BLOCKCHAIN_INFO_GET_LASTST_BLOCK = BITHER_DNS.BLOCK_CHAIN + "latestblock";
+    public static final String BLOCKCHAIN_INFO_GET_SPVBLOCK_API = BITHER_DNS.BLOCK_CHAIN + "block-height/%d?format=json";
+
+    //获取高度
+    public static final String BLOCKCHAIN_INFO_LASTST_BLOCK_HEIGHT = "https://insight.bitpay.com/api/blocks";
+    public static final String BLOCKCHAIN_INFO_SPVBLOCK_HASH = "https://insight.bitpay.com/api/block-index/";
+    public static final String BLOCKCHAIN_INFO_SPVBLOCK_NEW = "https://insight.bitpay.com/api/block/";
+    //波浪綫接口
+    public static final String GRAPHIC_API = "https://graphs2.coinmarketcap.com/currencies/primecoin/";
+
+    //获取某个地址的交易列表数据
+    public static final String DEAL_ADDRESS = "https://insight.bitpay.com/api/txs/?address=";
+    //根据交易tx_index获取交易原数据
+    public static final String TX_DEAL_ADDRESS = "https://insight.bitpay.com/api/rawtx/";
+
 }

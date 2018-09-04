@@ -67,6 +67,7 @@ public abstract class AbstractHD {
     protected transient byte[] hdSeed;
     protected int hdSeedId = -1;
     protected boolean isFromXRandom;
+    protected MnemonicCode mnemonicCode = MnemonicCode.instance();
 
     private static final Logger log = LoggerFactory.getLogger(AbstractHD.class);
 
@@ -116,7 +117,7 @@ public abstract class AbstractHD {
     private void initHDSeedFromMnemonicSeed(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         decryptMnemonicSeed(password);
-        hdSeed = seedFromMnemonic(mnemonicSeed);
+        hdSeed = seedFromMnemonic(mnemonicSeed, mnemonicCode);
         wipeMnemonicSeed();
         AbstractDb.addressProvider.updateEncrypttMnmonicSeed(getHdSeedId(), new EncryptedData(hdSeed,
                 password, isFromXRandom).toEncryptedString());
@@ -215,9 +216,9 @@ public abstract class AbstractHD {
         return hdSeedId;
     }
 
-    public static final byte[] seedFromMnemonic(byte[] mnemonicSeed) throws MnemonicException
+    public static final byte[] seedFromMnemonic(byte[] mnemonicSeed, MnemonicCode... mnemonicCode) throws MnemonicException
             .MnemonicLengthException {
-        MnemonicCode mnemonic = MnemonicCode.instance();
+        MnemonicCode mnemonic = mnemonicCode.length > 0 ? mnemonicCode[0] : MnemonicCode.instance();
         return mnemonic.toSeed(mnemonic.toMnemonic(mnemonicSeed), "");
     }
 

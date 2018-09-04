@@ -168,6 +168,20 @@ public class Out extends Message {
         return outAddress;
     }
 
+    public String getOutAddress(Coin coin) {
+        if (outAddress == null) {
+            try {
+                Script pubKeyScript = new Script(this.getOutScript());
+                outAddress = pubKeyScript.getToAddress(coin);
+            } catch (ScriptException e) {
+//                if (this.getOutScript() != null) {
+//                    log.warn("out script : " + Utils.bytesToHexString(this.getOutScript()));
+//                }
+            }
+        }
+        return outAddress;
+    }
+
     public void setOutAddress(String outAddress) {
         this.outAddress = outAddress;
     }

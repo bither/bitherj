@@ -34,6 +34,9 @@ public class VarInt {
 
     // Bitcoin has its own varint format, known in the C++ source as "compact size".
     public VarInt(byte[] buf, int offset) {
+        if(offset>=buf.length){
+            System.out.println("error");
+        }
         int first = 0xFF & buf[offset];
         long val;
         if (first < 253) {

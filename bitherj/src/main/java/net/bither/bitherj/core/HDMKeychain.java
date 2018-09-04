@@ -527,16 +527,15 @@ public class HDMKeychain extends AbstractHD {
         }
     }
 
-    public static boolean checkPassword(String keysString, CharSequence password) throws
+    public static boolean checkPassword(MnemonicCode mnemonicCode, String keysString, CharSequence password) throws
             MnemonicException.MnemonicLengthException {
         String[] passwordSeeds = QRCodeUtil.splitOfPasswordSeed(keysString);
         String address = Base58.hexToBase58WithAddress(passwordSeeds[0]);
         String encreyptString = Utils.joinString(new String[]{passwordSeeds[1], passwordSeeds[2],
                 passwordSeeds[3]}, QRCodeUtil.QR_CODE_SPLIT);
         byte[] seed = new EncryptedData(encreyptString).decrypt(password);
-        MnemonicCode mnemonic = MnemonicCode.instance();
 
-        byte[] s = mnemonic.toSeed(mnemonic.toMnemonic(seed), "");
+        byte[] s = mnemonicCode.toSeed(mnemonicCode.toMnemonic(seed), "");
 
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(s);
 
