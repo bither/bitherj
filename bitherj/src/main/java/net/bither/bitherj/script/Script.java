@@ -19,11 +19,13 @@ package net.bither.bitherj.script;
 
 import com.google.common.collect.Lists;
 
+import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
+import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
 import net.bither.bitherj.utils.Utils;
 
@@ -50,6 +52,7 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static net.bither.bitherj.script.ScriptOpCodes.*;
+import static net.bither.bitherj.utils.Utils.doubleDigest;
 
 // TODO: Make this class a superclass with derived classes giving accessor methods for the various common templates.
 
@@ -254,6 +257,13 @@ public class Script {
         return isPayToScriptHash();
     }
 
+    public boolean isBTInP2SHAddress() {
+        byte[] program = getProgram();
+        return (program[0] & 0xff) == program.length - 1 &&
+                (program[1] & 0xff) == 0x00 &&
+                (program[2] & 0xff) == program.length - 3;
+    }
+
     public boolean isSendFromMultiSig() {
         boolean result = this.chunks.get(0).opcode == OP_0;
         for (int i = 1; i < this.chunks.size(); i++) {
@@ -369,7 +379,11 @@ public class Script {
     }
 
     public String getFromAddress() throws ScriptException {
-        if (this.chunks.size() == 2
+        if (isBTInP2SHAddress()) {
+            byte[] scriptSig = new byte[program.length - 1];
+            System.arraycopy(program, 1, scriptSig, 0, scriptSig.length);
+            return toSegwitAddressFromScriptSig(scriptSig);
+        } else if (this.chunks.size() == 2
                 && this.chunks.get(0).data != null && this.chunks.get(0).data.length > 2
                 && this.chunks.get(1).data != null && this.chunks.get(1).data.length > 2) {
             return Utils.toAddress(Utils.sha256hash160(this.chunks.get(1).data));
@@ -383,6 +397,21 @@ public class Script {
             }
         }
         return null;
+    }
+
+    String toSegwitAddressFromScriptSig(byte[] scriptSig) {
+        if (scriptSig == null || scriptSig.length == 0) {
+            return null;
+        }
+        byte[] addressBytes = Utils.sha256hash160(scriptSig);
+
+        byte[] b = new byte[1 + addressBytes.length + 4];
+        int version = BitherjSettings.p2shHeader;;
+        b[0] = (byte) version;
+        System.arraycopy(addressBytes, 0, b, 1, addressBytes.length);
+        byte[] check = doubleDigest(b, 0, addressBytes.length + 1);
+        System.arraycopy(check, 0, b, addressBytes.length + 1, 4);
+        return Base58.encode(b);
     }
 
     /**
@@ -1248,7 +1277,7 @@ public class Script {
                     case OP_HASH256:
                         if (stack.size() < 1)
                             throw new ScriptException("Attempted OP_SHA256 on an empty stack");
-                        stack.add(Utils.doubleDigest(stack.pollLast()));
+                        stack.add(doubleDigest(stack.pollLast()));
                         break;
                     case OP_CODESEPARATOR:
                         lastCodeSepLocation = chunk.getStartLocationInProgram() + 1;

@@ -514,6 +514,13 @@ public class Tx extends Message implements Comparable<Tx> {
         // First come the inputs.
         long numInputs = readVarInt();
         optimalEncodingMessageSize += VarInt.sizeOf(numInputs);
+        if (numInputs == 0) {
+            if (readVarInt() == 1) {
+                optimalEncodingMessageSize += 1;
+                numInputs = readVarInt();
+                optimalEncodingMessageSize += VarInt.sizeOf(numInputs);
+            }
+        }
         this.ins = new ArrayList<In>((int) numInputs);
         for (int i = 0;
              i < numInputs;
@@ -540,6 +547,7 @@ public class Tx extends Message implements Comparable<Tx> {
             optimalEncodingMessageSize += 8 + VarInt.sizeOf(scriptLen) + scriptLen;
             cursor += scriptLen;
         }
+        cursor = bytes.length - 4;
         this.txLockTime = readUint32();
         optimalEncodingMessageSize += 4;
         this.length = cursor - offset;
