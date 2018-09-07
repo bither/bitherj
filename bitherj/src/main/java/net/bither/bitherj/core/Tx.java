@@ -400,22 +400,25 @@ public class Tx extends Message implements Comparable<Tx> {
         if (isCoinBase()) {
             return null;
         }
-        In in = getIns().get(0);
-        String address = in.getFromAddress();
-        if (address != null) {
-            return address;
-        } else {
-            Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
-            if (preTx == null) {
+        if (getIns() != null && getIns().size() > 0) {
+            In in = getIns().get(0);
+            String address = in.getFromAddress();
+            if (address != null) {
+                return address;
+            } else {
+                Tx preTx = AbstractDb.txProvider.getTxDetailByTxHash(in.getPrevTxHash());
+                if (preTx == null) {
+                    return null;
+                }
+                for (Out out : preTx.getOuts()) {
+                    if (out.getOutSn() == in.getPrevOutSn()) {
+                        return out.getOutAddress();
+                    }
+                }
                 return null;
             }
-            for (Out out : preTx.getOuts()) {
-                if (out.getOutSn() == in.getPrevOutSn()) {
-                    return out.getOutAddress();
-                }
-            }
-            return null;
         }
+        return null;
     }
 
     public long amountSentToAddress(String address) {
@@ -517,15 +520,14 @@ public class Tx extends Message implements Comparable<Tx> {
             length = calcLength(bytes, offset);
             cursor = offset + length;
         }
-        byte[] b = new byte[length];
-        System.arraycopy(bytes, cursor, b, 0, length);
-        txHash = doubleDigest(b);
 
         cursor = offset;
 
+        int verSize = 4;
+        byte[] verB = new byte[verSize];
+        System.arraycopy(bytes, cursor, verB, 0, verSize);
         txVer = readUint32();
-        optimalEncodingMessageSize = 4;
-
+        optimalEncodingMessageSize = verSize;
         // First come the inputs.
         long numInputs = readVarInt();
         optimalEncodingMessageSize += VarInt.sizeOf(numInputs);
@@ -536,6 +538,10 @@ public class Tx extends Message implements Comparable<Tx> {
                 optimalEncodingMessageSize += VarInt.sizeOf(numInputs);
             }
         }
+        int numInputsSize = VarInt.sizeOf(numInputs);
+        byte[] numInputsB = new byte[numInputsSize];
+        System.arraycopy(bytes, cursor - numInputsSize, numInputsB, 0, numInputsSize);
+        int insBeginIndex = cursor;
         this.ins = new ArrayList<In>((int) numInputs);
         for (int i = 0;
              i < numInputs;
@@ -562,7 +568,26 @@ public class Tx extends Message implements Comparable<Tx> {
             optimalEncodingMessageSize += 8 + VarInt.sizeOf(scriptLen) + scriptLen;
             cursor += scriptLen;
         }
-        cursor = bytes.length - 4;
+        int insAndOutsSize = cursor - insBeginIndex;
+        byte[] insAndOutsB = new byte[insAndOutsSize];
+        System.arraycopy(bytes, cursor - insAndOutsSize, insAndOutsB, 0, insAndOutsSize);
+
+        int txLockTimeSize = 4;
+        cursor = bytes.length - txLockTimeSize;
+        byte[] txLockTimeB = new byte[txLockTimeSize];
+        System.arraycopy(bytes, cursor, txLockTimeB, 0, txLockTimeSize);
+        byte[] b = new byte[verSize + numInputsSize + insAndOutsSize + txLockTimeSize];
+        System.arraycopy(verB, 0, b, 0, verSize);
+        System.arraycopy(numInputsB, 0, b, verSize, numInputsSize);
+        System.arraycopy(insAndOutsB, 0, b, verSize + numInputsSize, insAndOutsSize);
+        System.arraycopy(txLockTimeB, 0, b, verSize + numInputsSize + insAndOutsSize, txLockTimeSize);
+        txHash = doubleDigest(b);
+        for (In in: ins) {
+            in.setTxHash(txHash);
+        }
+        for (Out out: outs) {
+            out.setTxHash(txHash);
+        }
         this.txLockTime = readUint32();
         optimalEncodingMessageSize += 4;
         this.length = cursor - offset;
