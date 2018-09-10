@@ -37,7 +37,7 @@ public interface IHDAccountAddressProvider {
 
     void updateIssuedIndex(int hdAccountId, AbstractHD.PathType pathType, int index);
 
-    String externalAddress(int hdAccountId,AbstractHD.PathType... pathTypes);
+    String externalAddress(int hdAccountId, AbstractHD.PathType... pathTypes);
 
 
     HashSet<String> getBelongAccountAddresses(int hdAccountId, List<String> addressList);

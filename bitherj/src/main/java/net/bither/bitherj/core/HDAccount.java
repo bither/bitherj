@@ -379,12 +379,16 @@ public class HDAccount extends Address {
         return AbstractDb.hdAccountProvider.getHDAccountEncryptSeed(hdSeedId);
     }
 
+    public String getAddress() {
+        return AbstractDb.hdAccountAddressProvider.externalAddress(this.hdSeedId);
+    }
+
     public String getAddress(AbstractHD.PathType... pathTypes) {
         return AbstractDb.hdAccountAddressProvider.externalAddress(this.hdSeedId, pathTypes);
     }
 
     public String getShortAddress() {
-        return Utils.shortenAddress(getAddress(AbstractHD.PathType.EXTERNAL_BIP49_PATH));
+        return Utils.shortenAddress(getAddress());
     }
 
     public int issuedInternalIndex(AbstractHD.PathType... pathTypes) {
@@ -771,8 +775,8 @@ public class HDAccount extends Address {
     }
 
     private String getNewChangeAddress() {
-        return addressForPath(AbstractHD.PathType.INTERNAL_BIP49_PATH,
-                issuedInternalIndex(AbstractHD.PathType.INTERNAL_BIP49_PATH) + 1)
+        return addressForPath(AbstractHD.PathType.INTERNAL_ROOT_PATH,
+                issuedInternalIndex(AbstractHD.PathType.INTERNAL_ROOT_PATH) + 1)
                 .getAddress();
     }
 
@@ -908,7 +912,7 @@ public class HDAccount extends Address {
             decryptMnemonicSeed(password);
             byte[] hdCopy = Arrays.copyOf(hdSeed, hdSeed.length);
             boolean hdSeedSafe = Utils.compareString(getFirstAddressFromDb(),
-                    getFirstAddressFromSeed(null, AbstractHD.PurposePathLevel.P2SHP2WPKH));
+                    getFirstAddressFromSeed(null, AbstractHD.PurposePathLevel.Normal));
             boolean mnemonicSeedSafe = Arrays.equals(seedFromMnemonic(mnemonicCode, mnemonicSeed), hdCopy);
             Utils.wipeBytes(hdCopy);
             wipeHDSeed();
@@ -1146,7 +1150,7 @@ public class HDAccount extends Address {
         ArrayList<HDAccountAddress> addresses = new ArrayList<HDAccountAddress>();
         try {
             DeterministicKey master = masterKey(password);
-            DeterministicKey accountKey = getAccount(master, AbstractHD.PurposePathLevel.P2SHP2WPKH);
+            DeterministicKey accountKey = getAccount(master, AbstractHD.PurposePathLevel.Normal);
             DeterministicKey pathTypeKey = getChainRootKey(accountKey, pathType);
             for (int i = (page -1) * 10;i < page * 10; i ++) {
                 DeterministicKey key = pathTypeKey.deriveSoftened(i);
