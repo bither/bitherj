@@ -180,8 +180,9 @@ public class Tx extends Message implements Comparable<Tx> {
     private byte[] blockHash;
     private int txMark;
     private int txFlag;
-    private byte[] witness;
+    private List<byte[]> witnesses = new ArrayList<byte[]>();
     private boolean isSegwitAddress = false;
+    private boolean isSigned = false;
 
 //    public int length;
 
@@ -312,8 +313,20 @@ public class Tx extends Message implements Comparable<Tx> {
         this.sawByPeerCnt = sawByPeerCnt;
     }
 
+    public void setIsSegwitAddress(boolean isSegwitAddress) {
+        this.isSegwitAddress = isSegwitAddress;
+    }
+
     public boolean isSegwitAddress() {
         return isSegwitAddress;
+    }
+
+    public void setWitnesses(List<byte[]> witnesses) {
+        this.witnesses = witnesses;
+    }
+
+    public void setIsSigned(boolean isSigned) {
+        this.isSigned = isSigned;
     }
 
     public void sawByPeer() {
@@ -1262,7 +1275,7 @@ public class Tx extends Message implements Comparable<Tx> {
                     ? 256 : length + 4);
             bitcoinSerialize(bos);
             // We also have to write a hash type (sigHashType is actually an unsigned char)
-            uint32ToByteStreamLE(0x000000ff & sigHashType, bos);
+            uint32ToByteStreamLE(sigHashType, bos);
             // Note that this is NOT reversed to ensure it will be signed correctly. If it were
             // to be printed out
             // however then we would expect that it is IS reversed.
@@ -1677,7 +1690,7 @@ public class Tx extends Message implements Comparable<Tx> {
             uint32ToByteStreamLE(ins.get(inputIndex).getInSequence(), bos);
             bos.write(hashOutputs);
             uint32ToByteStreamLE(0, bos);
-            if(splitCoin.sigHashTypeAsBtgSame()) {
+            if(splitCoin != null && splitCoin.sigHashTypeAsBtgSame()) {
                 uint32ToByteStreamLE(sigHashType,bos);
             }else {
                 uint32ToByteStreamLE(0x000000ff & sigHashType, bos);
@@ -1691,13 +1704,17 @@ public class Tx extends Message implements Comparable<Tx> {
 
     @Override
     protected void bitcoinSerializeToStream(OutputStream stream) throws IOException {
-        if(coin != Coin.BCD) {
+        if (coin != Coin.BCD) {
             uint32ToByteStreamLE(txVer, stream);
-        }else {
+        } else {
             uint32ToByteStreamLE(12, stream);
-            if(getBlockHash() != null && getBlockHash().length > 0) {
+            if (getBlockHash() != null && getBlockHash().length > 0) {
                 stream.write(getBlockHash());
             }
+        }
+        if (isSigned && isSegwitAddress) {
+            stream.write(0);
+            stream.write(1);
         }
         stream.write(new VarInt(ins.size()).encode());
         for (In in : ins)
@@ -1705,6 +1722,11 @@ public class Tx extends Message implements Comparable<Tx> {
         stream.write(new VarInt(outs.size()).encode());
         for (Out out : outs)
             out.bitcoinSerialize(stream);
+        if (isSigned && isSegwitAddress) {
+            for (byte[] witness: witnesses) {
+                stream.write(witness);
+            }
+        }
         uint32ToByteStreamLE(txLockTime, stream);
     }
 
@@ -1974,13 +1996,19 @@ public class Tx extends Message implements Comparable<Tx> {
         return result;
     }
 
-    public byte[] getUnsignedInHashes (byte[] redeemScript, In in) {
-            Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
+    public byte[] getSegwitUnsignedInHashes(byte[] redeemScript, In in) {
+        Out out = AbstractDb.txProvider.getTxPreOut(in.getPrevTxHash(), in.getPrevOutSn());
         byte[] signHash = this.hashForSignatureWitness(in.getInSn(), redeemScript, BigInteger.valueOf(out.getOutValue()),
-                    TransactionSignature
-                            .SigHash.ALL, false, null);
+                TransactionSignature.SigHash.ALL, false, null);
         return signHash;
     }
+
+    public byte[] getUnsignedInHashes(In in) {
+        byte sigHashType = (byte) TransactionSignature.calcSigHashValue(TransactionSignature.SigHash.ALL, false);
+        byte[] signHash = hashForSignature(in.getInSn(), in.getPrevOutScript(), sigHashType);
+        return signHash;
+    }
+
     public List<byte[]> getUnsignedInHashesForHDM(byte[] pubs) {
         List<byte[]> result = new ArrayList<byte[]>();
         for (In in : this.getIns()) {
@@ -2033,6 +2061,7 @@ public class Tx extends Message implements Comparable<Tx> {
         }
         this.recalculateTxHash();
     }
+
     public boolean isSigned() {
         boolean isSign = this.getIns().size() > 0;
         for (In in : this.getIns()) {

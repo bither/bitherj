@@ -221,8 +221,12 @@ public class Address implements Comparable<Address> {
         return this.pubKey;
     }
 
-    public String getAddress() {
+    public String getAddress(boolean... isSegwits) {
         return this.address;
+    }
+
+    public String getShortAddress(boolean... isSegwits) {
+        return Utils.shortenAddress(getAddress(isSegwits));
     }
 
     public boolean hasPrivKey() {
@@ -339,10 +343,6 @@ public class Address implements Comparable<Address> {
     public List<Tx> getRecentlyTxs(int confirmationCnt, int limit) {
         int blockNo = BlockChain.getInstance().lastBlock.getBlockNo() - confirmationCnt + 1;
         return AbstractDb.txProvider.getRecentlyTxsByAddress(this.address, blockNo, limit);
-    }
-
-    public String getShortAddress() {
-        return Utils.shortenAddress(getAddress());
     }
 
     public List<String> signStrHashes(List<String> unsignedInHashes, CharSequence passphrase) {

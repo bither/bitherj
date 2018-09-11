@@ -54,8 +54,8 @@ public abstract class AbstractHD {
 
 
     public enum PathType {
-        EXTERNAL_ROOT_PATH(0), INTERNAL_ROOT_PATH(1),
-        EXTERNAL_BIP49_PATH(9),INTERNAL_BIP49_PATH(10);
+        EXTERNAL_ROOT_PATH(0),  INTERNAL_ROOT_PATH(1),
+        EXTERNAL_BIP49_PATH(9), INTERNAL_BIP49_PATH(10);
         private int value;
 
         PathType(int value) {
@@ -64,6 +64,10 @@ public abstract class AbstractHD {
 
         public int getValue() {
             return this.value;
+        }
+
+        public boolean isSegwit() {
+            return this == EXTERNAL_BIP49_PATH || this == INTERNAL_BIP49_PATH;
         }
     }
 
@@ -84,14 +88,6 @@ public abstract class AbstractHD {
             default:
                 return PathType.INTERNAL_BIP49_PATH;
         }
-    }
-
-    public static PathType getExternalType(PathType... pathTypes) {
-        return pathTypes == null || pathTypes.length == 0 ? PathType.EXTERNAL_ROOT_PATH : pathTypes[0];
-    }
-
-    public static PathType getInternalType(PathType... pathTypes) {
-        return  pathTypes == null || pathTypes.length == 0 ? PathType.INTERNAL_ROOT_PATH : pathTypes[0];
     }
 
     protected transient byte[] mnemonicSeed;

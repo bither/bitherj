@@ -43,4 +43,5 @@ public interface IHDAccountProvider {
     List<Integer> getHDAccountSeeds();
 
     boolean isPubExist(byte[] externalPub, byte[] internalPub);
+
 }

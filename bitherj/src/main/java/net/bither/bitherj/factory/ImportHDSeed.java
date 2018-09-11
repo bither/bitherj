@@ -182,8 +182,7 @@ public abstract class ImportHDSeed {
             case HDSeedPhrase:
                 try {
                     byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
-                    HDAccount hdAccount = new HDAccount(mnemonicCode, mnemonicCodeSeed, password, false,
-                             AbstractHD.PurposePathLevel.P2SHP2WPKH);
+                    HDAccount hdAccount = new HDAccount(mnemonicCode, mnemonicCodeSeed, password, false);
                     return hdAccount;
                 }  catch (HDAccount.DuplicatedHDAccountException e) {
                     e.printStackTrace();

@@ -106,12 +106,10 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
     }
 
     @Override
-    public String externalAddress(int hdAccountId, AbstractHD.PathType... pathTypes) {
+    public String externalAddress(int hdAccountId, AbstractHD.PathType pathType) {
         String sql = "select address from hd_account_addresses" +
                 " where path_type=? and is_issued=? and hd_account_id=? order by address_index asc limit 1 ";
         final String[] address = {null};
-        AbstractHD.PathType pathType = pathTypes == null || pathTypes.length == 0 ? AbstractHD.PathType.EXTERNAL_ROOT_PATH
-                : pathTypes[0];
         this.execQueryOneRecord(sql, new String[]{Integer.toString(pathType.getValue())
                 , "0", Integer.toString(hdAccountId)}, new Function<ICursor, Void>() {
             @Nullable

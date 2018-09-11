@@ -78,6 +78,7 @@ public class HDAccountCold extends AbstractHD {
                 .INTERNAL_ROOT_PATH);
         DeterministicKey key = externalKey.deriveSoftened(0);
         String firstAddress = key.toAddress();
+        key.wipe();
         accountKey.wipe();
         master.wipe();
         wipeHDSeed();
@@ -87,6 +88,7 @@ public class HDAccountCold extends AbstractHD {
                 isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
                         .getPubKeyExtended());
         externalKey.wipe();
+        internalKey.wipe();
     }
 
     public HDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password) throws MnemonicException
