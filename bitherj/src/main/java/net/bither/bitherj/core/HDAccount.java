@@ -392,6 +392,32 @@ public class HDAccount extends Address {
             DeterministicKey internalBIP49Key = getChainRootKey(accountPurpose49Key, AbstractHD.PathType
                     .INTERNAL_ROOT_PATH);
             AbstractDb.hdAccountProvider.addHDAccountSegwitPub(hdSeedId, externalBIP49Key.getPubKeyExtended(), internalBIP49Key.getPubKeyExtended());
+            List<HDAccount.HDAccountAddress> externalBIP49Addresses = new ArrayList<HDAccountAddress>();
+            List<HDAccount.HDAccountAddress> internalBIP49Addresses = new ArrayList<HDAccountAddress>();
+            for (int i = 0;
+                 i < LOOK_AHEAD_SIZE;
+                 i++) {
+                byte[] subExternalBIP49Pub = externalBIP49Key.deriveSoftened(i).getPubKey();
+                HDAccount.HDAccountAddress externalBIP49Address = new HDAccount.HDAccountAddress
+                        (subExternalBIP49Pub, AbstractHD.PathType.EXTERNAL_BIP49_PATH, i, isSyncComplete(),
+                                hdSeedId);
+                externalBIP49Addresses.add(externalBIP49Address);
+
+
+                byte[] subInternalBIP49Pub = internalBIP49Key.deriveSoftened(i).getPubKey();
+                HDAccount.HDAccountAddress internalBIP49Address = new HDAccount.HDAccountAddress
+                        (subInternalBIP49Pub, AbstractHD.PathType.INTERNAL_BIP49_PATH, i, isSyncComplete(),
+                                hdSeedId);
+                internalBIP49Addresses.add(internalBIP49Address);
+            }
+            for (HDAccount.HDAccountAddress addr : externalBIP49Addresses) {
+                addr.setHdAccountId(hdSeedId);
+            }
+            for (HDAccount.HDAccountAddress addr : internalBIP49Addresses) {
+                addr.setHdAccountId(hdSeedId);
+            }
+            AbstractDb.hdAccountAddressProvider.addAddress(externalBIP49Addresses);
+            AbstractDb.hdAccountAddressProvider.addAddress(internalBIP49Addresses);
             externalBIP49Key.wipe();
             internalBIP49Key.wipe();
             accountPurpose49Key.clearPrivateKey();
