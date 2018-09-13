@@ -23,9 +23,12 @@ import net.bither.bitherj.core.DesktopHDMAddress;
 import net.bither.bitherj.core.EnterpriseHDMAddress;
 import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.HDMAddress;
+import net.bither.bitherj.core.In;
 import net.bither.bitherj.core.SplitCoin;
 import net.bither.bitherj.core.Out;
 import net.bither.bitherj.core.Tx;
+import net.bither.bitherj.crypto.hd.DeterministicKey;
+import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Utils;
@@ -177,9 +180,22 @@ public class QRCodeTxTransport implements Serializable {
         TxTransportType txTransportType = TxTransportType.ColdHD;
         List<HDAccount.HDAccountAddress> addresses = account.getSigningAddressesForInputs(tx
                 .getIns());
-        List<byte[]> hashes;
+        List<byte[]> hashes = new ArrayList<byte[]>();
         if (tx.getCoin() == Coin.BTC) {
-            hashes = tx.getUnsignedInHashes();
+            for (int i = 0; i < addresses.size(); i++) {
+                HDAccount.HDAccountAddress hdAccountAddress = addresses.get(i);
+                In in = tx.getIns().get(i);
+                if (hdAccountAddress.getPathType().isSegwit()) {
+                    DeterministicKey root = HDKeyDerivation.createMasterPubKeyFromExtendedBytes(account.getExternalPub(hdAccountAddress.getPathType()));
+                    DeterministicKey key = root.deriveSoftened(hdAccountAddress.getIndex());
+                    hashes.add(tx.getSegwitUnsignedInHashes(key.getRedeemScript(), in));
+                    if (!tx.isSegwitAddress()) {
+                        tx.setIsSegwitAddress(true);
+                    }
+                } else {
+                    hashes.add(tx.getUnsignedInHashes(in));
+                }
+            }
         } else {
             hashes = tx.getSplitCoinForkUnsignedInHashes(tx.getCoin().getSplitCoin());
         }

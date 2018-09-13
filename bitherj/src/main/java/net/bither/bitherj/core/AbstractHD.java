@@ -69,6 +69,10 @@ public abstract class AbstractHD {
         public boolean isSegwit() {
             return this == EXTERNAL_BIP49_PATH || this == INTERNAL_BIP49_PATH;
         }
+
+        public boolean isExternal() {
+            return this == EXTERNAL_ROOT_PATH || this == EXTERNAL_BIP49_PATH;
+        }
     }
 
     public static class PathTypeIndex {

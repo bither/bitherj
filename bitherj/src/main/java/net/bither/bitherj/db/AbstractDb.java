@@ -140,6 +140,13 @@ public abstract class AbstractDb {
             ", is_synced integer not null" +
             ", primary key (address));";
 
+    public static final String CREATE_HD_ACCOUNT_SEGWIT_PUB = "create table if not exists " +
+            "hd_account_segwit_pub " +
+            "(hd_account_id integer not null" +
+            ", segwit_external_pub text not null" +
+            ", segwit_internal_pub text not null" +
+            ", primary key (hd_account_id));";
+
 
     // hd Account index
     public static final String CREATE_HD_ACCOUNT_ADDRESS_INDEX = "create index " +
@@ -244,6 +251,7 @@ public abstract class AbstractDb {
         //hd account
         public static final String HD_ACCOUNT = "hd_account";
         public static final String HD_ACCOUNT_ADDRESS = "hd_account_addresses";
+        public static final String HD_ACCOUNT_SEGWIT_PUB = "hd_account_segwit_pub";
 
         //enterprise hdm
 
@@ -370,6 +378,12 @@ public abstract class AbstractDb {
         public static final String ADDRESS = "address";
         public static final String PUB = "pub";
         public static final String IS_SYNCED = "is_synced";
+    }
+
+    public interface HDAccountSegwitPubColumns {
+        public static final String HD_ACCOUNT_ID = "hd_account_id";
+        public static final String SEGWIT_EXTERNAL_PUB = "segwit_external_pub";
+        public static final String SEGWIT_INTERNAL_PUB = "segwit_internal_pub";
     }
 
     public interface VanityAddressColumns {

@@ -26,6 +26,8 @@ public interface IHDAccountProvider {
 
     int addMonitoredHDAccount(String firstAddress, boolean isXrandom, byte[] externalPub, byte[] internalPub);
 
+    void addHDAccountSegwitPub(int hdAccountId, byte[] segwitExternalPub, byte[] segwitInternalPub);
+
     boolean hasMnemonicSeed(int hdAccountId);
 
     String getHDFirstAddress(int hdSeedId);
@@ -33,6 +35,10 @@ public interface IHDAccountProvider {
     byte[] getExternalPub(int hdSeedId);
 
     byte[] getInternalPub(int hdSeedId);
+
+    byte[] getSegwitExternalPub(int hdSeedId);
+
+    byte[] getSegwitInternalPub(int hdSeedId);
 
     String getHDAccountEncryptSeed(int hdSeedId);
 
@@ -43,5 +49,7 @@ public interface IHDAccountProvider {
     List<Integer> getHDAccountSeeds();
 
     boolean isPubExist(byte[] externalPub, byte[] internalPub);
+
+    boolean isSegwitPubExist(byte[] segwitExternalPub, byte[] segwitInternalPub);
 
 }

@@ -51,6 +51,9 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import static net.bither.bitherj.utils.HDAccountUtils.getSign;
+import static net.bither.bitherj.utils.HDAccountUtils.getWitness;
+
 /**
  * Created by songchenwen on 15/6/19.
  */
@@ -131,10 +134,14 @@ public class HDAccountCold extends AbstractHD {
         ArrayList<byte[]> sigs = new ArrayList<byte[]>();
         DeterministicKey master = masterKey(password);
         DeterministicKey account = getAccount(master);
+        DeterministicKey purpose49Account = getAccount(master, AbstractHD.PurposePathLevel.P2SHP2WPKH);
         DeterministicKey external = getChainRootKey(account, PathType.EXTERNAL_ROOT_PATH);
         DeterministicKey internal = getChainRootKey(account, PathType.INTERNAL_ROOT_PATH);
+        DeterministicKey purpose49External = getChainRootKey(purpose49Account, PathType.EXTERNAL_ROOT_PATH);
+        DeterministicKey purpose49Internal = getChainRootKey(purpose49Account, PathType.INTERNAL_ROOT_PATH);
         master.wipe();
         account.wipe();
+        purpose49Account.wipe();
         Iterator<byte[]> hashIterator = hashes.iterator();
         Iterator<PathTypeIndex> pathIterator = paths.iterator();
         while (hashIterator.hasNext() && pathIterator.hasNext()) {
@@ -143,16 +150,26 @@ public class HDAccountCold extends AbstractHD {
             DeterministicKey key;
             if (path.pathType == PathType.EXTERNAL_ROOT_PATH) {
                 key = external.deriveSoftened(path.index);
-            } else {
+            } else if (path.pathType == PathType.INTERNAL_ROOT_PATH) {
                 key = internal.deriveSoftened(path.index);
+            } else if (path.pathType == PathType.EXTERNAL_BIP49_PATH) {
+                key = purpose49External.deriveSoftened(path.index);
+            } else {
+                key = purpose49Internal.deriveSoftened(path.index);
             }
-            TransactionSignature sig = new TransactionSignature(key.sign(hash),
-                    TransactionSignature.SigHash.ALL, false);
-            sigs.add(ScriptBuilder.createInputScript(sig, key).getProgram());
+            if (path.pathType.isSegwit()) {
+                sigs.add(getWitness(key.getPubKey(), getSign(key, hash)));
+            } else {
+                TransactionSignature sig = new TransactionSignature(key.sign(hash),
+                        TransactionSignature.SigHash.ALL, false);
+                sigs.add(ScriptBuilder.createInputScript(sig, key).getProgram());
+            }
             key.wipe();
         }
         external.wipe();
         internal.wipe();
+        purpose49External.wipe();
+        purpose49Internal.wipe();
         return sigs;
     }
 
@@ -278,7 +295,21 @@ public class HDAccountCold extends AbstractHD {
     public String xPubB58(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         DeterministicKey master = masterKey(password);
-        DeterministicKey purpose = master.deriveHardened(44);
+        DeterministicKey purpose = master.deriveHardened(PurposePathLevel.Normal.getValue());
+        DeterministicKey coinType = purpose.deriveHardened(0);
+        DeterministicKey account = coinType.deriveHardened(0);
+        String xpub = account.serializePubB58();
+        master.wipe();
+        purpose.wipe();
+        coinType.wipe();
+        account.wipe();
+        return xpub;
+    }
+
+    public String p2shp2wpkhXPubB58(CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        DeterministicKey master = masterKey(password);
+        DeterministicKey purpose = master.deriveHardened(PurposePathLevel.P2SHP2WPKH.getValue());
         DeterministicKey coinType = purpose.deriveHardened(0);
         DeterministicKey account = coinType.deriveHardened(0);
         String xpub = account.serializePubB58();

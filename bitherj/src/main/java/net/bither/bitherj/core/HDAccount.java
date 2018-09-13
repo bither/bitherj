@@ -47,6 +47,9 @@ import java.util.List;
 import java.util.Set;
 
 import static net.bither.bitherj.core.AbstractHD.getPurposePathLevel;
+import static net.bither.bitherj.utils.HDAccountUtils.getRedeemScript;
+import static net.bither.bitherj.utils.HDAccountUtils.getSign;
+import static net.bither.bitherj.utils.HDAccountUtils.getWitness;
 
 public class HDAccount extends Address {
     public static final String HDAccountPlaceHolder = "HDAccount";
@@ -134,24 +137,26 @@ public class HDAccount extends Address {
                 isSyncedComplete, null);
     }
 
-    public HDAccount(byte[] accountExtentedPub) throws MnemonicException.MnemonicLengthException {
-        this(accountExtentedPub, false);
+    public HDAccount(byte[] accountExtentedPub, byte[] p2shp2wpkhAccountExtentedPub) throws MnemonicException.MnemonicLengthException {
+        this(accountExtentedPub, p2shp2wpkhAccountExtentedPub, false);
     }
 
-    public HDAccount(byte[] accountExtentedPub, boolean isFromXRandom) throws MnemonicException
+    public HDAccount(byte[] accountExtentedPub, byte[] p2shp2wpkhAccountExtentedPub, boolean isFromXRandom) throws MnemonicException
             .MnemonicLengthException {
-        this(accountExtentedPub, isFromXRandom, true, null);
+        this(accountExtentedPub, p2shp2wpkhAccountExtentedPub, isFromXRandom, true, null);
     }
 
 
-    public HDAccount(byte[] accountExtentedPub, boolean isFromXRandom, boolean isSyncedComplete,
+    public HDAccount(byte[] accountExtentedPub, byte[] p2shp2wpkhAccountExtentedPub, boolean isFromXRandom, boolean isSyncedComplete,
                      HDAccount.HDAccountGenerationDelegate generationDelegate ) throws
             MnemonicException.MnemonicLengthException {
         super();
         this.isFromXRandom = isFromXRandom;
         DeterministicKey account = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                 (accountExtentedPub);
-        initHDAccount(account, null, null, null, isFromXRandom, isSyncedComplete, generationDelegate);
+        DeterministicKey accountPurpose49Key = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+                (p2shp2wpkhAccountExtentedPub);
+        initHDAccount(account, accountPurpose49Key, null, null, isFromXRandom, isSyncedComplete, generationDelegate);
     }
 
     private void initHDAccount(DeterministicKey accountKey, DeterministicKey accountPurpose49Key, EncryptedData encryptedMnemonicSeed,
@@ -174,10 +179,15 @@ public class HDAccount extends Address {
                 .INTERNAL_ROOT_PATH);
         DeterministicKey externalKey = getChainRootKey(accountKey, AbstractHD.PathType
                 .EXTERNAL_ROOT_PATH);
-        DeterministicKey internalBIP49Key = getChainRootKey(accountPurpose49Key,
-                AbstractHD.PathType.INTERNAL_ROOT_PATH);
-        DeterministicKey externalBIP49Key = getChainRootKey(accountPurpose49Key,
-                AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+        DeterministicKey internalBIP49Key = null;
+        DeterministicKey externalBIP49Key = null;
+        if (accountPurpose49Key != null) {
+            internalBIP49Key = getChainRootKey(accountPurpose49Key,
+                    AbstractHD.PathType.INTERNAL_ROOT_PATH);
+            externalBIP49Key = getChainRootKey(accountPurpose49Key,
+                    AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+        }
+
         if (checkDuplicated(externalKey.getPubKeyExtended(), internalKey.getPubKeyExtended())) {
             throw new DuplicatedHDAccountException();
         }
@@ -221,24 +231,28 @@ public class HDAccount extends Address {
                 generationDelegate.onHDAccountGenerationProgress(progress);
             }
 
-            byte[] subExternalBIP49Pub = externalBIP49Key.deriveSoftened(i).getPubKey();
-            HDAccount.HDAccountAddress externalBIP49Address = new HDAccount.HDAccountAddress
-                    (subExternalBIP49Pub, AbstractHD.PathType.EXTERNAL_BIP49_PATH, i, isSyncedComplete,
-                            hdSeedId);
-            externalBIP49Addresses.add(externalBIP49Address);
-            progress += itemProgress;
-            if (generationDelegate != null) {
-                generationDelegate.onHDAccountGenerationProgress(progress);
+            if (externalBIP49Key != null) {
+                byte[] subExternalBIP49Pub = externalBIP49Key.deriveSoftened(i).getPubKey();
+                HDAccount.HDAccountAddress externalBIP49Address = new HDAccount.HDAccountAddress
+                        (subExternalBIP49Pub, AbstractHD.PathType.EXTERNAL_BIP49_PATH, i, isSyncedComplete,
+                                hdSeedId);
+                externalBIP49Addresses.add(externalBIP49Address);
+                progress += itemProgress;
+                if (generationDelegate != null) {
+                    generationDelegate.onHDAccountGenerationProgress(progress);
+                }
             }
 
-            byte[] subInternalBIP49Pub = internalBIP49Key.deriveSoftened(i).getPubKey();
-            HDAccount.HDAccountAddress internalBIP49Address = new HDAccount.HDAccountAddress
-                    (subInternalBIP49Pub, AbstractHD.PathType.INTERNAL_BIP49_PATH, i, isSyncedComplete,
-                            hdSeedId);
-            internalBIP49Addresses.add(internalBIP49Address);
-            progress += itemProgress;
-            if (generationDelegate != null) {
-                generationDelegate.onHDAccountGenerationProgress(progress);
+            if (internalBIP49Key != null) {
+                byte[] subInternalBIP49Pub = internalBIP49Key.deriveSoftened(i).getPubKey();
+                HDAccount.HDAccountAddress internalBIP49Address = new HDAccount.HDAccountAddress
+                        (subInternalBIP49Pub, AbstractHD.PathType.INTERNAL_BIP49_PATH, i, isSyncedComplete,
+                                hdSeedId);
+                internalBIP49Addresses.add(internalBIP49Address);
+                progress += itemProgress;
+                if (generationDelegate != null) {
+                    generationDelegate.onHDAccountGenerationProgress(progress);
+                }
             }
         }
         if (encryptedMnemonicSeed == null) {
@@ -253,28 +267,37 @@ public class HDAccount extends Address {
                             .getPubKeyExtended());
             hasSeed = true;
         }
+        if (externalBIP49Key != null && externalBIP49Key != null) {
+            AbstractDb.hdAccountProvider.addHDAccountSegwitPub(hdSeedId, externalBIP49Key.getPubKeyExtended(), internalBIP49Key.getPubKeyExtended());
+        }
         for (HDAccount.HDAccountAddress addr : externalAddresses) {
             addr.setHdAccountId(hdSeedId);
         }
         for (HDAccount.HDAccountAddress addr : internalAddresses) {
             addr.setHdAccountId(hdSeedId);
         }
-
-        for (HDAccount.HDAccountAddress addr : externalBIP49Addresses) {
-            addr.setHdAccountId(hdSeedId);
-        }
-        for (HDAccount.HDAccountAddress addr : internalBIP49Addresses) {
-            addr.setHdAccountId(hdSeedId);
-        }
-
         AbstractDb.hdAccountAddressProvider.addAddress(externalAddresses);
         AbstractDb.hdAccountAddressProvider.addAddress(internalAddresses);
-        AbstractDb.hdAccountAddressProvider.addAddress(externalBIP49Addresses);
-        AbstractDb.hdAccountAddressProvider.addAddress(internalBIP49Addresses);
+        if (externalBIP49Addresses.size() > 0) {
+            for (HDAccount.HDAccountAddress addr : externalBIP49Addresses) {
+                addr.setHdAccountId(hdSeedId);
+            }
+            AbstractDb.hdAccountAddressProvider.addAddress(externalBIP49Addresses);
+        }
+        if (internalBIP49Addresses.size() > 0) {
+            for (HDAccount.HDAccountAddress addr : internalBIP49Addresses) {
+                addr.setHdAccountId(hdSeedId);
+            }
+            AbstractDb.hdAccountAddressProvider.addAddress(internalBIP49Addresses);
+        }
         internalKey.wipe();
         externalKey.wipe();
-        internalBIP49Key.wipe();
-        externalBIP49Key.wipe();
+        if (internalBIP49Key != null) {
+            internalBIP49Key.wipe();
+        }
+        if (externalBIP49Key != null) {
+            externalBIP49Key.wipe();
+        }
     }
 
     public HDAccount(int seedId) {
@@ -302,7 +325,7 @@ public class HDAccount extends Address {
     public byte[] getInternalPub(AbstractHD.PathType pathType) {
         IHDAccountProvider provider = AbstractDb.hdAccountProvider;
         if (pathType == AbstractHD.PathType.INTERNAL_BIP49_PATH) {
-            return getSegwitPub(pathType);
+            return provider.getSegwitInternalPub(hdSeedId);
         } else {
             return provider.getInternalPub(hdSeedId);
         }
@@ -311,7 +334,7 @@ public class HDAccount extends Address {
     public byte[] getExternalPub(AbstractHD.PathType pathType) {
         IHDAccountProvider provider = AbstractDb.hdAccountProvider;
         if (pathType == AbstractHD.PathType.EXTERNAL_BIP49_PATH) {
-            return getSegwitPub(pathType);
+            return provider.getSegwitExternalPub(hdSeedId);
         } else {
             return provider.getExternalPub(hdSeedId);
         }
@@ -351,25 +374,37 @@ public class HDAccount extends Address {
         }
     }
 
-    private byte[] getSegwitPub(AbstractHD.PathType pathType) {
-        DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
-        DeterministicKey accountPurpose49Key = getAccount(master, AbstractHD.PurposePathLevel.P2SHP2WPKH);
-        byte[] pub;
-        if (pathType == AbstractHD.PathType.EXTERNAL_BIP49_PATH) {
-            DeterministicKey externalBIP49Key = getChainRootKey(accountPurpose49Key, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
-            pub = externalBIP49Key.getPubKeyExtended();
-            externalBIP49Key.wipe();
-        } else {
-            DeterministicKey internalBIP49Key = getChainRootKey(accountPurpose49Key, AbstractHD.PathType.INTERNAL_ROOT_PATH);
-            pub = internalBIP49Key.getPubKeyExtended();
-            internalBIP49Key.wipe();
+    public void addSegwitPub(CharSequence password) {
+        if (AbstractDb.hdAccountProvider.getHDAccountEncryptSeed(hdSeedId) == null) {
+            return;
         }
-        accountPurpose49Key.clearPrivateKey();
-        return pub;
+        if (AbstractDb.hdAccountProvider.getSegwitExternalPub(hdSeedId) != null && AbstractDb.hdAccountProvider.getSegwitInternalPub(hdSeedId) != null) {
+            return;
+        }
+        try {
+            DeterministicKey master = masterKey(password);
+            if (master == null) {
+                return ;
+            }
+            DeterministicKey accountPurpose49Key = getAccount(master, AbstractHD.PurposePathLevel.P2SHP2WPKH);
+            DeterministicKey externalBIP49Key = getChainRootKey(accountPurpose49Key, AbstractHD.PathType
+                    .EXTERNAL_ROOT_PATH);
+            DeterministicKey internalBIP49Key = getChainRootKey(accountPurpose49Key, AbstractHD.PathType
+                    .INTERNAL_ROOT_PATH);
+            AbstractDb.hdAccountProvider.addHDAccountSegwitPub(hdSeedId, externalBIP49Key.getPubKeyExtended(), internalBIP49Key.getPubKeyExtended());
+            externalBIP49Key.wipe();
+            internalBIP49Key.wipe();
+            accountPurpose49Key.clearPrivateKey();
+        } catch (MnemonicException e) {
+            e.printStackTrace();
+        }
     }
 
     private void supplyNewInternalKey(int count, boolean isSyncedComplete, AbstractHD.PathType pathType) {
         byte[] internalPub = getInternalPub(pathType);
+        if (internalPub == null) {
+            return;
+        }
         DeterministicKey root = HDKeyDerivation.createMasterPubKeyFromExtendedBytes(internalPub);
         int firstIndex = allGeneratedInternalAddressCount(pathType);
         ArrayList<HDAccountAddress> as = new ArrayList<HDAccountAddress>();
@@ -385,6 +420,9 @@ public class HDAccount extends Address {
 
     private void supplyNewExternalKey(int count, boolean isSyncedComplete, AbstractHD.PathType pathType) {
         byte[] externalPub = getExternalPub(pathType);
+        if (externalPub == null) {
+            return;
+        }
         DeterministicKey root = HDKeyDerivation.createMasterPubKeyFromExtendedBytes(externalPub);
         int firstIndex = allGeneratedExternalAddressCount(pathType);
         ArrayList<HDAccountAddress> as = new ArrayList<HDAccountAddress>();
@@ -414,7 +452,11 @@ public class HDAccount extends Address {
     public String getAddress(boolean... isSegwits) {
         boolean isSegwit = isSegwits == null || isSegwits.length == 0 ? false : isSegwits[0];
         AbstractHD.PathType pathType = isSegwit ? AbstractHD.PathType.EXTERNAL_BIP49_PATH : AbstractHD.PathType.EXTERNAL_ROOT_PATH;
-        return AbstractDb.hdAccountAddressProvider.externalAddress(this.hdSeedId, pathType);
+        String address = AbstractDb.hdAccountAddressProvider.externalAddress(this.hdSeedId, pathType);
+        if (address == null && isSegwit) {
+            address = AbstractDb.hdAccountAddressProvider.externalAddress(this.hdSeedId, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+        }
+        return address;
     }
 
     public String getShortAddress(boolean isSegwit) {
@@ -583,17 +625,17 @@ public class HDAccount extends Address {
         return AbstractDb.hdAccountAddressProvider.getBelongAccountAddresses(this.hdSeedId, addressList);
     }
 
-    public Tx newTx(String toAddress, Long amount, CharSequence password) throws
+    public Tx newTx(String toAddress, Long amount, boolean isSegwitChangeAddress, CharSequence password) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
-        return newTx(new String[]{toAddress}, new Long[]{amount}, password);
+        return newTx(new String[]{toAddress}, new Long[]{amount}, isSegwitChangeAddress, password);
     }
 
-    public Tx newTx(String[] toAddresses, Long[] amounts, CharSequence password) throws
+    public Tx newTx(String[] toAddresses, Long[] amounts, boolean isSegwitChangeAddress, CharSequence password) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
         if (password != null && !hasPrivKey()) {
             throw new RuntimeException("Can not sign without private key");
         }
-        Tx tx = newTx(toAddresses, amounts);
+        Tx tx = newTx(toAddresses, amounts, isSegwitChangeAddress);
 
         List<HDAccountAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
         assert signingAddresses.size() == tx.getIns().size();
@@ -782,16 +824,16 @@ public class HDAccount extends Address {
         return txs;
     }
 
-    public Tx newTx(String toAddress, Long amount) throws TxBuilderException, MnemonicException
+    public Tx newTx(String toAddress, Long amount, boolean isSegwitChangeAddress) throws TxBuilderException, MnemonicException
             .MnemonicLengthException {
-        return newTx(new String[]{toAddress}, new Long[]{amount});
+        return newTx(new String[]{toAddress}, new Long[]{amount}, isSegwitChangeAddress);
     }
 
 
-    public Tx newTx(String[] toAddresses, Long[] amounts) throws TxBuilderException,
+    public Tx newTx(String[] toAddresses, Long[] amounts, boolean isSegwitChangeAddress) throws TxBuilderException,
             MnemonicException.MnemonicLengthException {
         List<Out> outs = AbstractDb.hdAccountAddressProvider.getUnspendOutByHDAccount(hdSeedId);
-        Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(), Arrays
+        Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(isSegwitChangeAddress), Arrays
                 .asList(amounts), Arrays.asList(toAddresses));
         return tx;
     }
@@ -811,22 +853,22 @@ public class HDAccount extends Address {
         return hdAccountAddressList;
     }
 
-    public void updateIssuedInternalIndex(int index) {
-        AbstractDb.hdAccountAddressProvider.updateIssuedIndex(this.hdSeedId, AbstractHD.PathType.INTERNAL_ROOT_PATH,
+    public void updateIssuedInternalIndex(int index, AbstractHD.PathType pathType) {
+        AbstractDb.hdAccountAddressProvider.updateIssuedIndex(this.hdSeedId, pathType,
                 index);
     }
 
-    public void updateIssuedExternalIndex(int index) {
-        AbstractDb.hdAccountAddressProvider.updateIssuedIndex(this.hdSeedId, AbstractHD.PathType.EXTERNAL_ROOT_PATH,
+    public void updateIssuedExternalIndex(int index, AbstractHD.PathType pathType) {
+        AbstractDb.hdAccountAddressProvider.updateIssuedIndex(this.hdSeedId, pathType,
                 index);
     }
 
-    private String getNewChangeAddress() {
-        return addressForPath(AbstractHD.PathType.INTERNAL_ROOT_PATH,
-                issuedInternalIndex(AbstractHD.PathType.INTERNAL_ROOT_PATH) + 1)
+    private String getNewChangeAddress(boolean isSegwitChangeAddress) {
+        AbstractHD.PathType pathType = isSegwitChangeAddress ? AbstractHD.PathType.INTERNAL_BIP49_PATH : AbstractHD.PathType.INTERNAL_ROOT_PATH;
+        return addressForPath(pathType,
+                issuedInternalIndex(pathType) + 1)
                 .getAddress();
     }
-
 
     public void updateSyncComplete(HDAccountAddress accountAddress) {
         AbstractDb.hdAccountAddressProvider.updateSyncdComplete(this.hdSeedId, accountAddress);
@@ -1221,45 +1263,5 @@ public class HDAccount extends Address {
             throw new RuntimeException(e);
         }
     }
-
-    private byte[] getRedeemScript(byte[] pubKey) {
-        byte[] redeem = Utils.sha256hash160(pubKey);
-        byte[] redeemLengthByte = new VarInt(redeem.length).encode();
-        byte[] prefByte = {0x00};
-        int prefLength = redeem.length + redeemLengthByte.length + prefByte.length;
-        byte[] redeemScriptLengthB = new VarInt(prefLength).encode();
-        int redeemScriptLength = prefLength + redeemScriptLengthB.length;
-        byte[] redeemScript = new byte[redeemScriptLength];
-        System.arraycopy(redeemScriptLengthB, 0, redeemScript, 0, redeemScriptLengthB.length);
-        System.arraycopy(prefByte, 0, redeemScript, redeemScriptLengthB.length, prefByte.length);
-        System.arraycopy(redeemLengthByte, 0, redeemScript, redeemScriptLengthB.length + prefByte.length, redeemLengthByte.length);
-        System.arraycopy(redeem, 0, redeemScript, redeemScriptLengthB.length + prefByte.length + redeemLengthByte.length, redeem.length);
-        return redeemScript;
-    }
-
-    private byte[] getSign(DeterministicKey key, byte[] unsignedHash) {
-        TransactionSignature sign = new TransactionSignature(key.sign(unsignedHash), TransactionSignature.SigHash.ALL, false);
-        return sign.encodeToBitcoin();
-    }
-
-    private byte[] getWitness(byte[] pubKey, byte[] sign) {
-        byte[] prefix = {0x02};
-        byte[] signScript = getBtScript(sign);
-        byte[] pubKeyScript = getBtScript(pubKey);
-        byte[] witness = new byte[prefix.length + signScript.length + pubKeyScript.length];
-        System.arraycopy(prefix, 0, witness, 0, prefix.length);
-        System.arraycopy(signScript, 0, witness, prefix.length, signScript.length);
-        System.arraycopy(pubKeyScript, 0, witness, prefix.length + signScript.length, pubKeyScript.length);
-        return witness;
-    }
-
-    private byte[] getBtScript(byte[] add) {
-        byte[] length = new VarInt(add.length).encode();
-        byte[] script = new byte[length.length + add.length];
-        System.arraycopy(length, 0, script, 0, length.length);
-        System.arraycopy(add, 0, script, length.length, add.length);
-        return script;
-    }
-
 
 }

@@ -1523,7 +1523,7 @@ public class Script {
         if (stack.size() == 0)
             throw new ScriptException("Stack empty at end of script execution.");
 
-        if (!txContainingThis.isDetectBcc()) {
+        if (!txContainingThis.isDetectBcc() && !txContainingThis.isSegwitAddress()) {
             if (!castToBool(stack.pollLast()))
                 throw new ScriptException("Script resulted in a non-true stack: " + stack);
         }

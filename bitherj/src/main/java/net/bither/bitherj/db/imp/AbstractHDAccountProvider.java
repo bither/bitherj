@@ -153,6 +153,18 @@ public abstract class AbstractHDAccountProvider extends AbstractProvider impleme
 
     protected abstract int insertMonitorHDAccountToDb(IDb db, String firstAddress, boolean isXrandom, byte[] externalPub, byte[] internalPub);
 
+    public void addHDAccountSegwitPub(int hdAccountId, byte[] segwitExternalPub, byte[] segwitInternalPub) {
+        if (this.isSegwitPubExist(segwitExternalPub, segwitInternalPub)) {
+            return;
+        }
+        IDb writeDb = this.getWriteDb();
+        writeDb.beginTransaction();
+        insertHDAccountSegwitPubToDb(writeDb, hdAccountId, segwitExternalPub, segwitInternalPub);
+        writeDb.endTransaction();
+    }
+
+    protected abstract void insertHDAccountSegwitPubToDb(IDb db, int hdAccountId, byte[] segwitExternalPub, byte[] segwitInternalPub);
+
 //    @Override
 //    public boolean hasHDAccountCold() {
 //        boolean result = false;
@@ -281,6 +293,49 @@ public abstract class AbstractHDAccountProvider extends AbstractProvider impleme
 //        return pub;
     }
 
+    public byte[] getSegwitExternalPub(int hdSeedId) {
+        final byte[][] pub = {null};
+        String sql = "select segwit_external_pub from hd_account_segwit_pub where hd_account_id=?";
+        this.execQueryOneRecord(sql, new String[]{Integer.toString(hdSeedId)}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                int idColumn = c.getColumnIndex(AbstractDb.HDAccountSegwitPubColumns.SEGWIT_EXTERNAL_PUB);
+                if (idColumn != -1) {
+                    String pubStr = c.getString(idColumn);
+                    try {
+                        pub[0] = Base58.decode(pubStr);
+                    } catch (AddressFormatException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return null;
+            }
+        });
+        return pub[0];
+    }
+
+    public byte[] getSegwitInternalPub(int hdSeedId) {
+        final byte[][] pub = {null};
+        String sql = "select segwit_internal_pub from hd_account_segwit_pub where hd_account_id=? ";
+        this.execQueryOneRecord(sql, new String[]{Integer.toString(hdSeedId)}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                int idColumn = c.getColumnIndex(AbstractDb.HDAccountSegwitPubColumns.SEGWIT_INTERNAL_PUB);
+                if (idColumn != -1) {
+                    String pubStr = c.getString(idColumn);
+                    try {
+                        pub[0] = Base58.decode(pubStr);
+                    } catch (AddressFormatException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return null;
+            }
+        });
+        return pub[0];
+    }
 
     @Override
     public String getHDAccountEncryptSeed(int hdSeedId) {
@@ -422,5 +477,19 @@ public abstract class AbstractHDAccountProvider extends AbstractProvider impleme
 //        }
 //        c.close();
 //        return isExist;
+    }
+
+    public boolean isSegwitPubExist(byte[] segwitExternalPub, byte[] segwitInternalPub) {
+        String sql = "select count(0) cnt from hd_account_segwit_pub where segwit_external_pub=? or segwit_internal_pub=?";
+        final boolean[] isExist = {false};
+        this.execQueryOneRecord(sql, new String[]{Base58.encode(segwitExternalPub), Base58.encode(segwitInternalPub)}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                isExist[0] = c.getInt(0) > 0;
+                return null;
+            }
+        });
+        return isExist[0];
     }
 }
