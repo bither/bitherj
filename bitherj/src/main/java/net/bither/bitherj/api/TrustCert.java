@@ -44,7 +44,7 @@ public class TrustCert {
     }
 
     public KeyStore getKeyStore() throws KeyStoreException, CertificateException,
-            NoSuchAlgorithmException, IOException {
+            NoSuchAlgorithmException, IOException, OutOfMemoryError {
         KeyStore localTrustStore = KeyStore.getInstance(type);
         try {
             localTrustStore.load(input, password);
