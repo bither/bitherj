@@ -111,17 +111,19 @@ public abstract class PeerSocketHandler extends AbstractTimeoutHandler implement
      * soon as it opens
      */
     public void close() {
-        lock.lock();
         try {
+            lock.lock();
             if (writeTarget == null) {
                 closePending = true;
                 return;
             }
+            writeTarget.closeConnection();
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             lock.unlock();
         }
-        writeTarget.closeConnection();
-    }
+   }
 
     @Override
     protected void timeoutOccurred() {

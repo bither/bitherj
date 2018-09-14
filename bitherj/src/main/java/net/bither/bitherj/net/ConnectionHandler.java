@@ -193,16 +193,18 @@ class ConnectionHandler implements MessageWriteTarget {
 
     private void connectionClosed() {
         boolean callClosed = false;
-        lock.lock();
         try {
+            lock.lock();
             callClosed = !closeCalled;
             closeCalled = true;
+            if (callClosed) {
+                checkState(connectedHandlers == null || connectedHandlers.remove(this));
+                parser.connectionClosed();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             lock.unlock();
-        }
-        if (callClosed) {
-            checkState(connectedHandlers == null || connectedHandlers.remove(this));
-            parser.connectionClosed();
         }
     }
 
