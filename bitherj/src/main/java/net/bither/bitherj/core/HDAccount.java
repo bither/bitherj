@@ -905,13 +905,19 @@ public class HDAccount extends Address {
                 allGeneratedExternalAddressCount(AbstractHD.PathType.EXTERNAL_BIP49_PATH) * 2 +
                 AbstractDb.hdAccountAddressProvider.getUnspendOutCountByHDAccountWithPath(getHdSeedId(), AbstractHD.PathType.INTERNAL_ROOT_PATH) +
                 AbstractDb.hdAccountAddressProvider .getUnconfirmedSpentOutCountByHDAccountWithPath(getHdSeedId(), AbstractHD.PathType.INTERNAL_ROOT_PATH) +
-                AbstractDb.hdAccountAddressProvider.getUnspendOutCountByHDAccountWithPath(getHdSeedId(), AbstractHD.PathType.EXTERNAL_ROOT_PATH) +
-                AbstractDb.hdAccountAddressProvider .getUnconfirmedSpentOutCountByHDAccountWithPath(getHdSeedId(), AbstractHD.PathType.EXTERNAL_BIP49_PATH);
+                AbstractDb.hdAccountAddressProvider.getUnspendOutCountByHDAccountWithPath(getHdSeedId(), AbstractHD.PathType.INTERNAL_BIP49_PATH) +
+                AbstractDb.hdAccountAddressProvider .getUnconfirmedSpentOutCountByHDAccountWithPath(getHdSeedId(), AbstractHD.PathType.INTERNAL_BIP49_PATH);
     }
 
     public void addElementsForBloomFilter(BloomFilter filter) {
         List<byte[]> pubs = AbstractDb.hdAccountAddressProvider.getPubs(this.hdSeedId, AbstractHD
                 .PathType.EXTERNAL_ROOT_PATH);
+        for (byte[] pub : pubs) {
+            filter.insert(pub);
+            filter.insert(Utils.sha256hash160(pub));
+        }
+        pubs = AbstractDb.hdAccountAddressProvider.getPubs(this.hdSeedId, AbstractHD
+                .PathType.EXTERNAL_BIP49_PATH);
         for (byte[] pub : pubs) {
             filter.insert(pub);
             filter.insert(Utils.sha256hash160(pub));
@@ -923,6 +929,16 @@ public class HDAccount extends Address {
         }
         outs = AbstractDb.hdAccountAddressProvider.getUnconfirmedSpentOutByHDAccountWithPath
                 (getHdSeedId(), AbstractHD.PathType.INTERNAL_ROOT_PATH);
+        for (Out out : outs) {
+            filter.insert(out.getOutpointData());
+        }
+        outs = AbstractDb.hdAccountAddressProvider.getUnspendOutByHDAccountWithPath
+                (getHdSeedId(), AbstractHD.PathType.INTERNAL_BIP49_PATH);
+        for (Out out : outs) {
+            filter.insert(out.getOutpointData());
+        }
+        outs = AbstractDb.hdAccountAddressProvider.getUnconfirmedSpentOutByHDAccountWithPath
+                (getHdSeedId(), AbstractHD.PathType.INTERNAL_BIP49_PATH);
         for (Out out : outs) {
             filter.insert(out.getOutpointData());
         }
@@ -1275,7 +1291,7 @@ public class HDAccount extends Address {
             for (int i = (page -1) * 10;i < page * 10; i ++) {
                 DeterministicKey key = pathTypeKey.deriveSoftened(i);
                 HDAccountAddress hdAccountAddress = new HDAccountAddress
-                        (key.toSegwitAddress(),key.getPubKeyExtended(),pathType,i,false,true,hdSeedId);
+                        (key.toAddress(),key.getPubKeyExtended(),pathType,i,false,true,hdSeedId);
 
                 addresses.add(hdAccountAddress);
             }
