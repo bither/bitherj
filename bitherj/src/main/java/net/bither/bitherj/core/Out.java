@@ -159,12 +159,17 @@ public class Out extends Message {
     public String getOutAddress() {
         if (outAddress == null) {
             try {
-                Script pubKeyScript = new Script(this.getOutScript());
-                outAddress = pubKeyScript.getToAddress();
+                if (getOutScript() != null && getOutScript().length > 0) {
+                    Script pubKeyScript = new Script(getOutScript());
+                    outAddress = pubKeyScript.getToAddress();
+                }
             } catch (ScriptException e) {
+                e.printStackTrace();
 //                if (this.getOutScript() != null) {
 //                    log.warn("out script : " + Utils.bytesToHexString(this.getOutScript()));
 //                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         return outAddress;
