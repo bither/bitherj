@@ -841,6 +841,9 @@ public class Utils {
     public static void writeFile(byte[] data, File tar) throws IOException {
         FileOutputStream outputStream = null;
         try {
+//            if (!tar.exists()) {
+//                tar.createNewFile();
+//            }
             outputStream = new FileOutputStream(tar);
             outputStream.write(data);
             outputStream.flush();

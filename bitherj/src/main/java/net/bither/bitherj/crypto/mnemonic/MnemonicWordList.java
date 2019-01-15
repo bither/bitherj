@@ -16,6 +16,9 @@ public enum MnemonicWordList {
     private static final String EN_HD_QR_CODE_FLAG = "%";
     private static final String ZH_CN_HD_QR_CODE_FLAG = "%1%";
     private static final String ZH_TW_HD_QR_CODE_FLAG = "%2%";
+    private static final String BITPIE_EN_HD_QR_CODE_FLAG = "@";
+    private static final String BITPIE_ZH_CN_HD_QR_CODE_FLAG = "@1@";
+    private static final String BITPIE_ZH_TW_HD_QR_CODE_FLAG = "@2@";
 
     public String getHdQrCodeFlag() {
         switch (this) {
@@ -27,6 +30,18 @@ public enum MnemonicWordList {
                 return ZH_TW_HD_QR_CODE_FLAG;
         }
         return EN_HD_QR_CODE_FLAG;
+    }
+
+    public String getBitpieQrCodeFlag() {
+        switch (this) {
+            case English:
+                return BITPIE_EN_HD_QR_CODE_FLAG;
+            case ZhCN:
+                return BITPIE_ZH_CN_HD_QR_CODE_FLAG;
+            case ZhTw:
+                return BITPIE_ZH_TW_HD_QR_CODE_FLAG;
+        }
+        return BITPIE_EN_HD_QR_CODE_FLAG;
     }
 
     public String getMnemonicWordListValue() {

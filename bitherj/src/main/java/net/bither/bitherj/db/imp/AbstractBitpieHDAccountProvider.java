@@ -48,7 +48,7 @@ public abstract class AbstractBitpieHDAccountProvider extends AbstractHDAccountP
 
     @Override
     public String getHDFirstAddress(int hdSeedId) {
-        String sql = "select bitpie_hd_address from bitpie_hd_account where bitpie_hd_account_id=?";
+        String sql = "select hd_address from bitpie_hd_account where bitpie_hd_account_id=?";
         final String[] address = {null};
         this.execQueryOneRecord(sql, new String[]{Integer.toString(hdSeedId)}, new Function<ICursor, Void>() {
             @Nullable

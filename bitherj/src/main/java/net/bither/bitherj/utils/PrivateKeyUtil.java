@@ -19,6 +19,7 @@ package net.bither.bitherj.utils;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
+import net.bither.bitherj.core.BitpieHDAccountCold;
 import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.HDAccountCold;
 import net.bither.bitherj.core.HDMKeychain;
@@ -440,6 +441,16 @@ public class PrivateKeyUtil {
                         .getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
             } catch (AddressFormatException e) {
                 e.printStackTrace();
+            }
+        }
+        BitpieHDAccountCold bitpieHDAccountCold = AddressManager.getInstance().getBitpieHDAccountCold();
+        if (bitpieHDAccountCold != null) {
+            try {
+                String address = bitpieHDAccountCold.getFirstAddressFromDb();
+                backupString += MnemonicCode.instance().getMnemonicWordList().getBitpieQrCodeFlag() + Base58.bas58ToHexWithAddress
+                        (address) + QRCodeUtil.QR_CODE_SPLIT + bitpieHDAccountCold.getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
+            } catch (AddressFormatException e) {
+
             }
         }
         return backupString;
