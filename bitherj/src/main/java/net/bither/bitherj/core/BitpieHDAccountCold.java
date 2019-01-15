@@ -1,21 +1,3 @@
-/*
- *
- *  * Copyright 2014 http://Bither.net
- *  *
- *  * Licensed under the Apache License, Version 2.0 (the "License");
- *  * you may not use this file except in compliance with the License.
- *  * You may obtain a copy of the License at
- *  *
- *  *    http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
- *
- */
-
 package net.bither.bitherj.core;
 
 import com.google.common.base.Function;
@@ -30,14 +12,12 @@ import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.db.IHDAccountProvider;
 import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -51,14 +31,13 @@ import javax.annotation.Nullable;
 import static net.bither.bitherj.utils.HDAccountUtils.getSign;
 import static net.bither.bitherj.utils.HDAccountUtils.getWitness;
 
-/**
- * Created by songchenwen on 15/6/19.
- */
-public class HDAccountCold extends AbstractHD {
+public class BitpieHDAccountCold extends AbstractHD {
 
-    private static final Logger log = LoggerFactory.getLogger(HDAccountCold.class);
+    public static final String BitpieHDAccountPlaceHolder = "BitpieHDAccount";
 
-    public HDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password, boolean isFromXRandom)
+    private IHDAccountProvider bitpieHDAccountProvicer = AbstractDb.bitpieHdAccountProvider;
+
+    public BitpieHDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password, boolean isFromXRandom)
             throws MnemonicException.MnemonicLengthException {
         this.mnemonicCode = mnemonicCode;
         this.mnemonicSeed = mnemonicSeed;
@@ -83,7 +62,7 @@ public class HDAccountCold extends AbstractHD {
         master.wipe();
         wipeHDSeed();
         wipeMnemonicSeed();
-        hdSeedId = AbstractDb.hdAccountProvider.addHDAccount(encryptedMnemonicSeed
+        hdSeedId = bitpieHDAccountProvicer.addHDAccount(encryptedMnemonicSeed
                         .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
                 isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
                         .getPubKeyExtended());
@@ -91,25 +70,25 @@ public class HDAccountCold extends AbstractHD {
         internalKey.wipe();
     }
 
-    public HDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password) throws MnemonicException
+    public BitpieHDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         this(mnemonicCode, mnemonicSeed, password, false);
     }
 
-    public HDAccountCold(MnemonicCode mnemonicCode, SecureRandom random, CharSequence password) throws MnemonicException
+    public BitpieHDAccountCold(MnemonicCode mnemonicCode, SecureRandom random, CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         this(mnemonicCode, randomByteFromSecureRandom(random, 16), password, random.getClass().getCanonicalName
                 ().indexOf("XRandom") >= 0);
     }
 
-    public HDAccountCold(MnemonicCode mnemonicCode, EncryptedData encryptedMnemonicSeed, CharSequence password) throws
+    public BitpieHDAccountCold(MnemonicCode mnemonicCode, EncryptedData encryptedMnemonicSeed, CharSequence password) throws
             MnemonicException.MnemonicLengthException {
         this(mnemonicCode, encryptedMnemonicSeed.decrypt(password), password, encryptedMnemonicSeed.isXRandom());
     }
 
-    public HDAccountCold(int hdSeedId) {
+    public BitpieHDAccountCold(int hdSeedId) {
         this.hdSeedId = hdSeedId;
-        this.isFromXRandom = AbstractDb.hdAccountProvider.hdAccountIsXRandom(hdSeedId);
+        this.isFromXRandom = bitpieHDAccountProvicer.hdAccountIsXRandom(hdSeedId);
     }
 
     public List<byte[]> signHashHexes(final Collection<String> hashes, Collection<PathTypeIndex>
@@ -171,7 +150,7 @@ public class HDAccountCold extends AbstractHD {
     }
 
     public String getFirstAddressFromDb() {
-        return AbstractDb.hdAccountProvider.getHDFirstAddress(hdSeedId);
+        return bitpieHDAccountProvicer.getHDFirstAddress(hdSeedId);
     }
 
     public boolean checkWithPassword(CharSequence password) {
@@ -194,12 +173,12 @@ public class HDAccountCold extends AbstractHD {
 
     @Override
     protected String getEncryptedHDSeed() {
-        return AbstractDb.hdAccountProvider.getHDAccountEncryptSeed(hdSeedId);
+        return bitpieHDAccountProvicer.getHDAccountEncryptSeed(hdSeedId);
     }
 
     @Override
     protected String getEncryptedMnemonicSeed() {
-        return AbstractDb.hdAccountProvider.getHDAccountEncryptMnemonicSeed(hdSeedId);
+        return bitpieHDAccountProvicer.getHDAccountEncryptMnemonicSeed(hdSeedId);
     }
 
     public String getFullEncryptPrivKey() {
@@ -240,17 +219,17 @@ public class HDAccountCold extends AbstractHD {
 
 
     public byte[] getInternalPub() {
-        return AbstractDb.hdAccountProvider.getInternalPub(hdSeedId);
+        return bitpieHDAccountProvicer.getInternalPub(hdSeedId);
     }
 
     public byte[] getExternalPub() {
-        return AbstractDb.hdAccountProvider.getExternalPub(hdSeedId);
+        return bitpieHDAccountProvicer.getExternalPub(hdSeedId);
     }
 
     public HDAccount.HDAccountAddress addressForPath(AbstractHD.PathType type, int index) {
         DeterministicKey root = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                 (type == AbstractHD.PathType.EXTERNAL_ROOT_PATH ? getExternalPub() : getInternalPub());
-      return new HDAccount.HDAccountAddress(root.deriveSoftened(index).getPubKey(), type, index, true, hdSeedId);
+        return new HDAccount.HDAccountAddress(root.deriveSoftened(index).getPubKey(), type, index, true, hdSeedId);
     }
 
     public DeterministicKey getExternalKey(int index, CharSequence password) {

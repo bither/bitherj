@@ -129,6 +129,16 @@ public abstract class AbstractDb {
             ", internal_pub text not null" +
             ", is_xrandom integer not null);";
 
+    //bitpie hd account
+    public static final String CREATE_BITPIE_HD_ACCOUNT = "create table if not exists bitpie_hd_account " +
+            "( bitpie_hd_account_id integer not null primary key autoincrement" +
+            ", encrypt_seed text" +
+            ", encrypt_mnemonic_seed text" +
+            ", hd_address text not null" +
+            ", external_pub text not null" +
+            ", internal_pub text not null" +
+            ", is_xrandom integer not null);";
+
     public static final String CREATE_HD_ACCOUNT_ADDRESSES = "create table if not exists " +
             "hd_account_addresses " +
             "(hd_account_id integer not null" +
@@ -196,6 +206,7 @@ public abstract class AbstractDb {
     public static IAddressProvider addressProvider;
     public static IHDAccountAddressProvider hdAccountAddressProvider;
     public static IHDAccountProvider hdAccountProvider;
+    public static IHDAccountProvider bitpieHdAccountProvider;
     public static IEnterpriseHDMProvider enterpriseHDMProvider;
     public static IDesktopAddressProvider desktopAddressProvider;
     public static IDesktopTxProvider desktopTxProvider;
@@ -210,6 +221,7 @@ public abstract class AbstractDb {
         enterpriseHDMProvider = initEnterpriseHDMProvider();
         desktopAddressProvider = initEnDesktopAddressProvider();
         desktopTxProvider = initDesktopTxProvider();
+        bitpieHdAccountProvider = initBitpieHDAccountProvider();
     }
 
     public abstract IBlockProvider initBlockProvider();
@@ -229,6 +241,8 @@ public abstract class AbstractDb {
     public abstract IDesktopAddressProvider initEnDesktopAddressProvider();
 
     public abstract IDesktopTxProvider initDesktopTxProvider();
+
+    public abstract IHDAccountProvider initBitpieHDAccountProvider();
 
     public interface Tables {
 
@@ -252,6 +266,8 @@ public abstract class AbstractDb {
         public static final String HD_ACCOUNT = "hd_account";
         public static final String HD_ACCOUNT_ADDRESS = "hd_account_addresses";
         public static final String HD_ACCOUNT_SEGWIT_PUB = "hd_account_segwit_pub";
+
+        public static final String BITPIE_HD_ACCOUNT = "bitpie_hd_account";
 
         //enterprise hdm
 

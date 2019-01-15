@@ -747,6 +747,34 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         }
     }
 
+    public BitpieHDAccountCold getBitpieHDAccountCold() {
+        synchronized (lock) {
+            if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
+                List<Integer> seeds = AbstractDb.bitpieHdAccountProvider.getHDAccountSeeds();
+                for (int seedId : seeds) {
+                    if (AbstractDb.bitpieHdAccountProvider.hasMnemonicSeed(seedId)) {
+                        return new BitpieHDAccountCold(seedId);
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    public boolean hasBitpieHDAccountCold() {
+        synchronized (lock) {
+            if (AbstractApp.bitherjSetting.getAppMode() == BitherjSettings.AppMode.COLD) {
+                List<Integer> seeds = AbstractDb.bitpieHdAccountProvider.getHDAccountSeeds();
+                for (int seedId : seeds) {
+                    if (AbstractDb.bitpieHdAccountProvider.hasMnemonicSeed(seedId)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
 //    @Override
     public void hdmAddressAdded(HDMAddress address) {
         addressHashSet.add(address.getAddress());
