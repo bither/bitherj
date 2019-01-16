@@ -92,10 +92,23 @@ public enum MnemonicWordList {
     }
 
     static public int getHdQrCodeFlagLength(String string, MnemonicWordList wordList) {
-        String hdQrCodeFlag = wordList.getHdQrCodeFlag();
+        String hdQrCodeFlag;
+        if (isHDQrCode(string)) {
+            hdQrCodeFlag = wordList.getHdQrCodeFlag();
+        } else {
+            hdQrCodeFlag = wordList.getBitpieQrCodeFlag();
+        }
         if (string.length() < hdQrCodeFlag.length()) { return 0; }
         String prefixStr = string.substring(0, hdQrCodeFlag.length());
         return hdQrCodeFlag.equals(prefixStr) ? hdQrCodeFlag.length() : 0;
+    }
+
+    static public boolean isBitpieQrCode(String string) {
+        return string.startsWith("@");
+    }
+
+    static public boolean isHDQrCode(String string) {
+        return string.startsWith("%");
     }
 }
 

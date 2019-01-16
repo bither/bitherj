@@ -187,7 +187,7 @@ public class BitpieHDAccountCold extends AbstractHD {
     }
 
     public String getQRCodeFullEncryptPrivKey() {
-        return MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag() + getFullEncryptPrivKey();
+        return MnemonicCode.instance().getMnemonicWordList().getBitpieQrCodeFlag() + getFullEncryptPrivKey();
     }
 
     private static byte[] randomByteFromSecureRandom(SecureRandom random, int length) {
