@@ -60,6 +60,9 @@ public class HttpSetting {
     public static final int HDSeedIsNotExist = 2001;
     public static final int ServiceSignatureFailed = 2002;
 
+    public static final int TIMEOUT_REREQUEST_DELAY = 5 * 1000;
+    public static final int TIMEOUT_REREQUEST_CNT = 3;
+
 }
 
 

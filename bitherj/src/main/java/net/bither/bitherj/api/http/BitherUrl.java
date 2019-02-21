@@ -74,6 +74,9 @@ public class BitherUrl {
     public static final String BITHER_Q_GETBLOCK_COUNT_URL = BITHER_DNS.BITHER_BC + "api/v2/block/count";
     public static final String BITHER_GET_ONE_SPVBLOCK_API = BITHER_DNS.BITHER_BC + "api/v2/block/spv/one";
     public static final String BITHER_Q_MYTRANSACTIONS = BITHER_DNS.BITHER_BC + "api/v2/address/%s/transaction";
+    public static final String BITHER_Q_ADDRESSES = BITHER_DNS.BITHER_BC + "api/v3/address/%s";
+    public static final String BITHER_Q_ADDRESS_UNSPENT = BITHER_DNS.BITHER_BC + "api/v3/address/%s/unspent";
+    public static final String BITHER_Q_ADDRESS_UNSPENT_TXS = BITHER_DNS.BITHER_BC + "api/v3/tx/%s";
 
     // hdm api
     public static final String BITHER_HDM_PASSWORD = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/password";

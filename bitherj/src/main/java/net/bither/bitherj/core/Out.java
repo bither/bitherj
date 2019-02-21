@@ -27,6 +27,7 @@ import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +66,13 @@ public class Out extends Message {
 
     public Out() {
 
+    }
+
+    public Out(Tx tx, JSONObject jsonObject) {
+        outValue = jsonObject.getLong("value");
+        outScript = Utils.hexStringToByteArray(jsonObject.getString("script_hex"));
+        this.tx = tx;
+        this.txHash = tx.getTxHash();
     }
 
     public Out(Tx tx, byte[] msg, int offset) {
