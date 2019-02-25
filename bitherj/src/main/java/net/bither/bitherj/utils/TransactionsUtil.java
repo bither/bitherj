@@ -284,38 +284,21 @@ public class TransactionsUtil {
     }
 
 
-    public static void getMyTxFromBither(boolean isNeedReset) throws Exception {
+    public static void getMyTxFromBither() throws Exception {
         if (AbstractApp.bitherjSetting.getAppMode() != BitherjSettings.AppMode.HOT) {
             return;
         }
-        // TODO: web type
-        int flag = BitherjSettings.ApiConfig.BITHER_NET.value();
-        if (!isNeedReset) {
-            getTxForAddress(flag);
-        } else {
-            getUnspentTxForAddress();
-        }
+
+        getUnspentTxForAddress();
         if (AddressManager.getInstance().getHDAccountHot() != null) {
-            if (!isNeedReset) {
-                getTxForHDAccount(AddressManager.getInstance().getHDAccountHot().getHdSeedId(), flag);
-            } else {
-                getHDAccountUnspentAddress(AddressManager.getInstance().getHDAccountHot().getHdSeedId(), EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<HDAccount.HDAccountAddress>(), true);
-            }
+            getHDAccountUnspentAddress(AddressManager.getInstance().getHDAccountHot().getHdSeedId(), EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<HDAccount.HDAccountAddress>(), true);
         }
         if(AddressManager.getInstance().hasHDAccountMonitored()) {
-            if (!isNeedReset) {
-                getTxForHDAccountMoitored(AddressManager.getInstance().getHDAccountMonitored().getHdSeedId(), flag);
-            } else {
-                getHDAccountUnspentAddress(AddressManager.getInstance().getHDAccountMonitored().getHdSeedId(), EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<HDAccount.HDAccountAddress>(), false);
-            }
+            getHDAccountUnspentAddress(AddressManager.getInstance().getHDAccountMonitored().getHdSeedId(), EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<HDAccount.HDAccountAddress>(), false);
         }
         if (AddressManager.getInstance().hasDesktopHDMKeychain()) {
             DesktopHDMKeychain desktopHDMKeychain = AddressManager.getInstance().getDesktopHDMKeychains().get(0);
-            if (!isNeedReset) {
-                getTxForDesktopHDM(desktopHDMKeychain, flag);
-            } else {
-                getDesktopHDMUnspentAddress(desktopHDMKeychain,  EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<DesktopHDMAddress>());
-            }
+            getDesktopHDMUnspentAddress(desktopHDMKeychain,  EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<DesktopHDMAddress>());
         }
     }
 
