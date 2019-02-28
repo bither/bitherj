@@ -116,9 +116,7 @@ public class BlockUtil {
         }
         Block block = null;
         try {
-            DownloadSpvApi downloadSpvApi = new DownloadSpvApi();
-            downloadSpvApi.handleHttpGet();
-            block = downloadSpvApi.getResult();
+            block = DownloadSpvApi.getOneSpvBlock();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1109,7 +1109,9 @@ public class TransactionsUtil {
             if (!unspentJson.isNull(TX_HASH) && !Utils.isEmpty(unspentJson.getString(TX_HASH)) && !unspentJson.isNull(VALUE) && unspentJson.getLong(VALUE) > 0) {
                 String txHash = unspentJson.getString(TX_HASH);
                 if (txHashs.length() > 0) {
-                    txHashs = txHashs + "," + txHash;
+                    if (!txHashs.contains(txHash)) {
+                        txHashs = txHashs + "," + txHash;
+                    }
                 } else {
                     txHashs = txHash;
                 }
