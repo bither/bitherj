@@ -23,11 +23,6 @@ import net.bither.bitherj.core.Block;
 import net.bither.bitherj.utils.BlockUtil;
 import net.bither.bitherj.utils.Utils;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.conn.HttpHostConnectException;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import static net.bither.bitherj.api.http.HttpSetting.TIMEOUT_REREQUEST_CNT;
@@ -53,7 +48,7 @@ public class DownloadSpvApi extends HttpGetResponse<Block> {
             return block;
         } catch (Exception ex) {
             ex.printStackTrace();
-            if (ex instanceof ConnectTimeoutException || ex instanceof HttpHostConnectException) {
+            if (BitherBCUrl.isChangeDns(ex)) {
                 String nextBcDns = BitherBCUrl.getNextBcDns(firstBcDns);
                 if (!Utils.isEmpty(nextBcDns)) {
                     return getOneSpvBlock(firstBcDns, requestCount);

@@ -5,8 +5,6 @@ import net.bither.bitherj.api.http.BitherUrl;
 import net.bither.bitherj.api.http.HttpGetResponse;
 import net.bither.bitherj.utils.Utils;
 
-import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.conn.HttpHostConnectException;
 import org.json.JSONObject;
 
 import static net.bither.bitherj.api.http.HttpSetting.TIMEOUT_REREQUEST_CNT;
@@ -32,7 +30,7 @@ public class BitherQueryAddressApi extends HttpGetResponse<String> {
             return jsonObject;
         } catch (Exception ex) {
             ex.printStackTrace();
-            if (ex instanceof ConnectTimeoutException || ex instanceof HttpHostConnectException) {
+            if (BitherBCUrl.isChangeDns(ex)) {
                 String nextBcDns = BitherBCUrl.getNextBcDns(firstBcDns);
                 if (!Utils.isEmpty(nextBcDns)) {
                     return queryAddress(addressesStr, firstBcDns, requestCount);

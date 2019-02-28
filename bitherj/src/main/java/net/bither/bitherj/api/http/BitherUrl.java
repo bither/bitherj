@@ -27,9 +27,9 @@ public class BitherUrl {
         public static final String BITHER_BITCOIN_DOMAIN = "b.getcai.com";
         public static final String BITHER_USER_DOMAIN = "bu.getcai.com";
         public static final String BITHER_STATS_DOMAIN = "bs.getcai.com";
-        public static final String BITHER_BC_DOMAIN = "bc.bither.net";
-        public static final String BITHER_BC2_DOMAIN = "bc2.bither.net";
-        public static final String BITHER_BC3_DOMAIN = "bc3.bither.net";
+        public static final String BITHER_BC_DOMAIN = "bc1.bithernet.com";
+        public static final String BITHER_BC2_DOMAIN = "bc2.bithernet.com";
+        public static final String BITHER_BC3_DOMAIN = "bc3.bithernet.com";
         public static final String BITHER_HDM_DOMAIN = "hdm.bither.net";
         public static final String BLOCK_CHAIN_INFO = "blockChain.info";
 
