@@ -139,7 +139,7 @@ public class Tx extends Message implements Comparable<Tx> {
 
     public Tx(JSONObject txJsonObject) {
         this.blockNo = txJsonObject.getInt("block_height");
-        this.txHash = Utils.hexStringToByteArray(txJsonObject.getString("hash"));
+        this.txHash = Utils.reverseBytes(Utils.hexStringToByteArray(txJsonObject.getString("hash")));
         this.txTime = txJsonObject.getInt("created_at");
         this.txVer = txJsonObject.getInt("version");
         this.txLockTime = txJsonObject.getLong("lock_time");

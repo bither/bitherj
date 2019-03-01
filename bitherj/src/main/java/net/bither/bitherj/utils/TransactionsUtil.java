@@ -338,11 +338,7 @@ public class TransactionsUtil {
                 while (needGetTxs) {
                     // TODO: get data from bither.net else from blockchain.info
                     if (webType == 0) {
-                        BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
-                                hdAccountAddress.getAddress(), page);
-                        bitherMytransactionsApi.handleHttpGet();
-                        String txResult = bitherMytransactionsApi.getResult();
-                        JSONObject jsonObject = new JSONObject(txResult);
+                        JSONObject jsonObject = BitherMytransactionsApi.queryTransactions(hdAccountAddress.getAddress(), page);
 
                         if (!jsonObject.isNull(BLOCK_COUNT)) {
                             apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
@@ -467,11 +463,7 @@ public class TransactionsUtil {
                 while (needGetTxs) {
                     // TODO: get data from bither.net else from blockchain.info
                     if (webType == 0) {
-                        BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
-                                hdAccountAddress.getAddress(), page);
-                        bitherMytransactionsApi.handleHttpGet();
-                        String txResult = bitherMytransactionsApi.getResult();
-                        JSONObject jsonObject = new JSONObject(txResult);
+                        JSONObject jsonObject = BitherMytransactionsApi.queryTransactions(hdAccountAddress.getAddress(), page);
 
                         if (!jsonObject.isNull(BLOCK_COUNT)) {
                             apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
@@ -586,11 +578,7 @@ public class TransactionsUtil {
                 while (needGetTxs) {
                     // TODO: get data from bither.net else from blockchain.info
                     if (webType == 0) {
-                        BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
-                                desktopHDMAddress.getAddress(), page);
-                        bitherMytransactionsApi.handleHttpGet();
-                        String txResult = bitherMytransactionsApi.getResult();
-                        JSONObject jsonObject = new JSONObject(txResult);
+                        JSONObject jsonObject = BitherMytransactionsApi.queryTransactions(desktopHDMAddress.getAddress(), page);
 
                         if (!jsonObject.isNull(BLOCK_COUNT)) {
                             apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
@@ -691,11 +679,7 @@ public class TransactionsUtil {
 
                     // TODO: get data from bither.net else from blockchain.info
                     if (webType == 0) {
-                        BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
-                                address.getAddress(), page);
-                        bitherMytransactionsApi.handleHttpGet();
-                        String txResult = bitherMytransactionsApi.getResult();
-                        JSONObject jsonObject = new JSONObject(txResult);
+                        JSONObject jsonObject = BitherMytransactionsApi.queryTransactions(address.getAddress(), page);
 
                         if (!jsonObject.isNull(BLOCK_COUNT)) {
                             apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
