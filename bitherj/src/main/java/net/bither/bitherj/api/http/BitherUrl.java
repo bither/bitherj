@@ -27,7 +27,9 @@ public class BitherUrl {
         public static final String BITHER_BITCOIN_DOMAIN = "b.getcai.com";
         public static final String BITHER_USER_DOMAIN = "bu.getcai.com";
         public static final String BITHER_STATS_DOMAIN = "bs.getcai.com";
-        public static final String BITHER_BC_DOMAIN = "bc.bither.net";
+        public static final String BITHER_BC_DOMAIN = "bc1.bithernet.com";
+        public static final String BITHER_BC2_DOMAIN = "bc2.bithernet.com";
+        public static final String BITHER_BC3_DOMAIN = "bc3.bithernet.com";
         public static final String BITHER_HDM_DOMAIN = "hdm.bither.net";
         public static final String BLOCK_CHAIN_INFO = "blockChain.info";
 
@@ -37,6 +39,8 @@ public class BitherUrl {
         public static final String BITHER_STATS = Utils.format(FORMAT_HTTP, BITHER_STATS_DOMAIN);
 
         public static final String BITHER_BC = Utils.format(FORMAT_HTTP, BITHER_BC_DOMAIN);
+        public static final String BITHER_BC2 = Utils.format(FORMAT_HTTP, BITHER_BC2_DOMAIN);
+        public static final String BITHER_BC3 = Utils.format(FORMAT_HTTP, BITHER_BC3_DOMAIN);
         public static final String BITHER_HDM = Utils.format(FORMAT_HTTPS, BITHER_HDM_DOMAIN);
         public static final String BITHER_URL = Utils.format(FORMAT_HTTP, "bither.net");
         public static final String BLOCK_CHAIN = Utils.format(FORMAT_HTTPS,BLOCK_CHAIN_INFO);
@@ -48,7 +52,6 @@ public class BitherUrl {
         // chain.btc.com
         public static final String BITHER_CHAINBTC_DOMAIN = "chain.btc.com";
         public static final String BITHER_CHAINBTC_URL = Utils.format(FORMAT_HTTPS, BITHER_DNS.BITHER_CHAINBTC_DOMAIN);
-
 
     }
 
@@ -74,6 +77,9 @@ public class BitherUrl {
     public static final String BITHER_Q_GETBLOCK_COUNT_URL = BITHER_DNS.BITHER_BC + "api/v2/block/count";
     public static final String BITHER_GET_ONE_SPVBLOCK_API = BITHER_DNS.BITHER_BC + "api/v2/block/spv/one";
     public static final String BITHER_Q_MYTRANSACTIONS = BITHER_DNS.BITHER_BC + "api/v2/address/%s/transaction";
+    public static final String BITHER_Q_ADDRESSES = "%sapi/v3/address/%s";
+    public static final String BITHER_Q_ADDRESS_UNSPENT = "%sapi/v3/address/%s/unspent";
+    public static final String BITHER_Q_ADDRESS_UNSPENT_TXS = "%sapi/v3/tx/%s";
 
     // hdm api
     public static final String BITHER_HDM_PASSWORD = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/password";

@@ -45,7 +45,14 @@ public abstract class AbstractHD {
             return this.value;
         }
 
-
+        public PathType nextPathType() {
+            switch (this) {
+                case EXTERNAL_ROOT_PATH:
+                    return INTERNAL_ROOT_PATH;
+                default:
+                    return null;
+            }
+        }
     }
 
     public static PathType getTernalRootType(int value) {

@@ -23,6 +23,7 @@ import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,6 +152,15 @@ public class In extends Message {
         prevOutSn = out.getOutSn();
         prevOutScript = out.getOutScript();
         this.inSequence = NO_SEQUENCE;
+    }
+
+    public In(Tx tx, JSONObject inJsonObject) {
+        this.prevTxHash = Utils.reverseBytes(Utils.hexStringToByteArray(inJsonObject.getString("prev_tx_hash")));
+        this.prevOutSn = inJsonObject.getInt("prev_position");
+        this.inSignature = Utils.hexStringToByteArray(inJsonObject.getString("script_hex"));
+        this.inSequence = inJsonObject.getLong("sequence");
+        this.tx = tx;
+        this.txHash = tx.getTxHash();
     }
 
     public In(@Nullable Tx parentTransaction, byte[] scriptBytes,

@@ -33,6 +33,8 @@ import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -127,6 +129,31 @@ public class Tx extends Message implements Comparable<Tx> {
         this.txVer = TX_VERSION;
         this.txLockTime = TX_LOCKTIME;
         this.txTime = (int) (new Date().getTime() / 1000);
+    }
+
+    public Tx(JSONObject txJsonObject) {
+        this.blockNo = txJsonObject.getInt("block_height");
+        this.txHash = Utils.reverseBytes(Utils.hexStringToByteArray(txJsonObject.getString("hash")));
+        this.txTime = txJsonObject.getInt("created_at");
+        this.txVer = txJsonObject.getInt("version");
+        this.txLockTime = txJsonObject.getLong("lock_time");
+        JSONArray inJsonArray = txJsonObject.getJSONArray("inputs");
+        this.ins = new ArrayList<In>();
+        for (int i = 0; i < inJsonArray.length(); i++) {
+            JSONObject inJsonObject = inJsonArray.getJSONObject(i);
+            In in = new In(this, inJsonObject);
+            in.setInSn(i);
+            this.ins.add(in);
+        }
+
+        JSONArray outJsonArray = txJsonObject.getJSONArray("outputs");
+        this.outs = new ArrayList<Out>();
+        for (int i = 0; i < outJsonArray.length(); i++) {
+            JSONObject outJsonObject = outJsonArray.getJSONObject(i);
+            Out out = new Out(this, outJsonObject);
+            out.setOutSn(i);
+            this.outs.add(out);
+        }
     }
 
     public Tx(Tx tx) {

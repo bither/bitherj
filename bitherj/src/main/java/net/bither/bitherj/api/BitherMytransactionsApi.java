@@ -16,31 +16,66 @@
 
 package net.bither.bitherj.api;
 
+import net.bither.bitherj.api.http.BitherBCUrl;
 import net.bither.bitherj.api.http.BitherUrl;
 import net.bither.bitherj.api.http.HttpGetResponse;
 import net.bither.bitherj.utils.Utils;
+import org.json.JSONObject;
+
+import static net.bither.bitherj.api.http.HttpSetting.TIMEOUT_REREQUEST_CNT;
+import static net.bither.bitherj.api.http.HttpSetting.TIMEOUT_REREQUEST_DELAY;
 
 
 public class BitherMytransactionsApi extends HttpGetResponse<String> {
     public static final int bitherWebType = 0;
     public static final int blockChainWebType = 1;
 
-    public BitherMytransactionsApi(String address) {
-        this(address, 1);
+    public static JSONObject queryTransactions(String address, int page) throws Exception {
+        return queryTransactions(address, page, BitherBCUrl.getInstance().getDns(),1);
     }
 
-    public BitherMytransactionsApi(String address, int page) {
-        String url = Utils.format(BitherUrl.BITHER_Q_MYTRANSACTIONS,
-                address);
-        if (page > 1) {
-            url = url + "/" + page;
+    private BitherMytransactionsApi(String address, int page) {
+        String url = Utils.format(BitherUrl.BITHER_Q_MYTRANSACTIONS, BitherBCUrl.getInstance().getDns(), address);
+        if (page > 0) {
+            url = url + "/p/" + page;
         }
         setUrl(url);
+    }
+
+    private static JSONObject queryTransactions(String address, int page, String firstBcDns, int requestCount) throws Exception {
+        try {
+            BitherMytransactionsApi bitherMytransactionsApi = new BitherMytransactionsApi(
+                    address, page);
+            bitherMytransactionsApi.handleHttpGet();
+            String txResult = bitherMytransactionsApi.getResult();
+            JSONObject jsonObject = new JSONObject(txResult);
+            return jsonObject;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            if (BitherBCUrl.isChangeDns(ex)) {
+                String nextBcDns = BitherBCUrl.getNextBcDns(firstBcDns);
+                if (!Utils.isEmpty(nextBcDns)) {
+                    return queryTransactions(address, page, firstBcDns, requestCount);
+                }
+                throw ex;
+            } else {
+                if (requestCount > TIMEOUT_REREQUEST_CNT) {
+                    throw ex;
+                }
+                try {
+                    Thread.sleep(TIMEOUT_REREQUEST_DELAY * requestCount);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return queryTransactions(address, page, firstBcDns, requestCount + 1);
+            }
+        }
     }
 
     @Override
     public void setResult(String response) throws Exception {
         this.result = response;
     }
+
 
 }
