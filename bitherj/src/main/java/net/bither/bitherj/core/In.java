@@ -176,7 +176,7 @@ public class In extends Message {
     }
 
     public In(Tx tx, JSONObject inJsonObject) {
-        this.prevTxHash = Utils.hexStringToByteArray(inJsonObject.getString("prev_tx_hash"));
+        this.prevTxHash = Utils.reverseBytes(Utils.hexStringToByteArray(inJsonObject.getString("prev_tx_hash")));
         this.prevOutSn = inJsonObject.getInt("prev_position");
         this.inSignature = Utils.hexStringToByteArray(inJsonObject.getString("script_hex"));
         this.inSequence = inJsonObject.getLong("sequence");

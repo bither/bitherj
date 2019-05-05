@@ -33,18 +33,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.asn1.dvcs.Data;
 import org.spongycastle.util.encoders.Hex;
 
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import static net.bither.bitherj.core.AbstractHD.PathType.EXTERNAL_ROOT_PATH;
 
@@ -787,7 +783,21 @@ public class TransactionsUtil {
             return;
         }
         JSONObject jsonObject = BitherQueryAddressApi.queryAddress(addressesStr);
-        if (jsonObject == null || jsonObject.isNull(ERR_NO) || jsonObject.getInt(ERR_NO) != 0 || jsonObject.isNull(DATA) || jsonObject.getString(DATA).equals("null")) {
+        boolean isNoTxAddress = jsonObject == null || jsonObject.isNull(ERR_NO) || jsonObject.getInt(ERR_NO) != 0 || jsonObject.isNull(DATA);
+        if (!isNoTxAddress) {
+            try {
+                isNoTxAddress = isNoTxAddress || jsonObject.getString(DATA).equals("null");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        if (isNoTxAddress) {
+            if (queryHdAccountAddressList.size() > 0) {
+                for (HDAccount.HDAccountAddress hdAccountAddress: queryHdAccountAddressList) {
+                    updateHdAccountAddress(hdAccountAddress, false, isHDAccountHot);
+                }
+            }
+
             if (lastTxIndex + MaxNoTxAddress > endIndex) {
                 getHDAccountUnspentAddress(hdSeedId, pathType, endIndex, MaxNoTxAddress + lastTxIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot);
             } else {
@@ -798,6 +808,7 @@ public class TransactionsUtil {
                 }
                 AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, endIndex - 1);
             }
+            return;
         }
 
         JSONArray addrJsonArray = new JSONArray();
@@ -807,11 +818,14 @@ public class TransactionsUtil {
             addrJsonArray.put(jsonObject.getJSONObject(DATA));
         }
         for (int i = 0; i < addrJsonArray.length(); i++) {
-            if (addrJsonArray.getString(i).equals("null")) {
+            JSONObject addrJsonObject;
+            try {
+                addrJsonObject = addrJsonArray.getJSONObject(i);
+            } catch (Exception ex) {
+                ex.printStackTrace();
                 continue;
             }
-            JSONObject addrJsonObject = addrJsonArray.getJSONObject(i);
-            if (addrJsonObject.isNull("address")) {
+            if (addrJsonObject == null || addrJsonObject.isNull("address")) {
                 continue;
             }
             String address = addrJsonObject.getString("address");
@@ -894,7 +908,21 @@ public class TransactionsUtil {
         }
 
         JSONObject jsonObject = BitherQueryAddressApi.queryAddress(addressesStr);
-        if (jsonObject == null || jsonObject.isNull(ERR_NO) || jsonObject.getInt(ERR_NO) != 0 || jsonObject.isNull(DATA) || jsonObject.getString(DATA).equals("null")) {
+        boolean isNoTxAddress = jsonObject == null || jsonObject.isNull(ERR_NO) || jsonObject.getInt(ERR_NO) != 0 || jsonObject.isNull(DATA);
+        if (!isNoTxAddress) {
+            try {
+                isNoTxAddress = isNoTxAddress || jsonObject.getString(DATA).equals("null");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        if (isNoTxAddress) {
+            if (queryDesktopHDMAddressList.size() > 0) {
+                for (DesktopHDMAddress desktopHDMAddress: queryDesktopHDMAddressList) {
+                    updateDesktopHDM(desktopHDMKeychain, desktopHDMAddress, false);
+                }
+            }
             if (lastTxIndex + MaxNoTxAddress > endIndex) {
                 getDesktopHDMUnspentAddress(desktopHDMKeychain, pathType, endIndex, MaxNoTxAddress + lastTxIndex, lastTxIndex, unusedAddressCnt, unspentAddresses);
             } else {
@@ -904,6 +932,7 @@ public class TransactionsUtil {
                     getUnspentTxForDesktopHDM(desktopHDMKeychain, unspentAddresses);
                 }
             }
+            return;
         }
 
         JSONArray addrJsonArray = new JSONArray();
@@ -913,11 +942,14 @@ public class TransactionsUtil {
             addrJsonArray.put(jsonObject.getJSONObject(DATA));
         }
         for (int i = 0; i < addrJsonArray.length(); i++) {
-            if (addrJsonArray.getString(i).equals("null")) {
+            JSONObject addrJsonObject;
+            try {
+                addrJsonObject = addrJsonArray.getJSONObject(i);
+            } catch (Exception ex) {
+                ex.printStackTrace();
                 continue;
             }
-            JSONObject addrJsonObject = addrJsonArray.getJSONObject(i);
-            if (addrJsonObject.isNull("address")) {
+            if (addrJsonObject == null || addrJsonObject.isNull("address")) {
                 continue;
             }
             String address = addrJsonObject.getString("address");
