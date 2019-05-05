@@ -792,22 +792,7 @@ public class TransactionsUtil {
             }
         }
         if (isNoTxAddress) {
-            if (queryHdAccountAddressList.size() > 0) {
-                for (HDAccount.HDAccountAddress hdAccountAddress: queryHdAccountAddressList) {
-                    updateHdAccountAddress(hdAccountAddress, false, isHDAccountHot);
-                }
-            }
-
-            if (lastTxIndex + MaxNoTxAddress > endIndex) {
-                getHDAccountUnspentAddress(hdSeedId, pathType, endIndex, MaxNoTxAddress + lastTxIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot);
-            } else {
-                if (pathType.nextPathType() != null) {
-                    getHDAccountUnspentAddress(hdSeedId, pathType.nextPathType(), 0, MaxNoTxAddress, -1, 0, unspentAddresses, isHDAccountHot);
-                } else {
-                    getUnspentTxForHDAccount(unspentAddresses, isHDAccountHot);
-                }
-                AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, endIndex - 1);
-            }
+            nextHDAccountUnspentAddress(queryHdAccountAddressList, hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot);
             return;
         }
 
@@ -831,12 +816,13 @@ public class TransactionsUtil {
             String address = addrJsonObject.getString("address");
             for (HDAccount.HDAccountAddress hdAccountAddress: queryHdAccountAddressList) {
                 if (hdAccountAddress.getAddress().equals(address)) {
+                    boolean hasTx = addrJsonObject.getInt("tx_count") > 0;
                     if (addrJsonObject.getLong("balance") > 0) {
                         unspentAddresses.add(hdAccountAddress);
                     } else {
-                        updateHdAccountAddress(hdAccountAddress, true, isHDAccountHot);
+                        updateHdAccountAddress(hdAccountAddress, hasTx, isHDAccountHot);
                     }
-                    if (addrJsonObject.getInt("tx_count") > 0) {
+                    if (hasTx) {
                         lastTxIndex = hdAccountAddress.getIndex();
                     }
                     queryHdAccountAddressList.remove(hdAccountAddress);
@@ -844,7 +830,10 @@ public class TransactionsUtil {
                 }
             }
         }
+        nextHDAccountUnspentAddress(queryHdAccountAddressList, hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot);
+    }
 
+    private static void nextHDAccountUnspentAddress(ArrayList<HDAccount.HDAccountAddress> queryHdAccountAddressList, final int hdSeedId, final AbstractHD.PathType pathType, final int endIndex, int lastTxIndex, int unusedAddressCnt, ArrayList<HDAccount.HDAccountAddress> unspentAddresses, boolean isHDAccountHot) throws Exception {
         if (queryHdAccountAddressList.size() > 0) {
             for (HDAccount.HDAccountAddress hdAccountAddress: queryHdAccountAddressList) {
                 updateHdAccountAddress(hdAccountAddress, false, isHDAccountHot);
@@ -894,16 +883,7 @@ public class TransactionsUtil {
             }
         }
         if (addressesStr.equals("")) {
-            if (lastTxIndex + MaxNoTxAddress > endIndex) {
-                getDesktopHDMUnspentAddress(desktopHDMKeychain, pathType, endIndex, MaxNoTxAddress + lastTxIndex, lastTxIndex, unusedAddressCnt, unspentAddresses);
-            } else {
-                AbstractDb.desktopTxProvider.updateSyncdForIndex(pathType, endIndex - 1);
-                if (pathType.nextPathType() != null) {
-                    getDesktopHDMUnspentAddress(desktopHDMKeychain, pathType.nextPathType(), 0, MaxNoTxAddress, -1, 0, unspentAddresses);
-                } else {
-                    getUnspentTxForDesktopHDM(desktopHDMKeychain, unspentAddresses);
-                }
-            }
+            getDesktopHDMUnspentAddress(desktopHDMKeychain, pathType, endIndex, MaxNoTxAddress + lastTxIndex, lastTxIndex, unusedAddressCnt, unspentAddresses);
             return;
         }
 
@@ -918,20 +898,7 @@ public class TransactionsUtil {
         }
 
         if (isNoTxAddress) {
-            if (queryDesktopHDMAddressList.size() > 0) {
-                for (DesktopHDMAddress desktopHDMAddress: queryDesktopHDMAddressList) {
-                    updateDesktopHDM(desktopHDMKeychain, desktopHDMAddress, false);
-                }
-            }
-            if (lastTxIndex + MaxNoTxAddress > endIndex) {
-                getDesktopHDMUnspentAddress(desktopHDMKeychain, pathType, endIndex, MaxNoTxAddress + lastTxIndex, lastTxIndex, unusedAddressCnt, unspentAddresses);
-            } else {
-                if (pathType.nextPathType() != null) {
-                    getDesktopHDMUnspentAddress(desktopHDMKeychain, pathType.nextPathType(), 0, MaxNoTxAddress, -1, 0, unspentAddresses);
-                } else {
-                    getUnspentTxForDesktopHDM(desktopHDMKeychain, unspentAddresses);
-                }
-            }
+            nextDesktopHDMUnspentAddress(queryDesktopHDMAddressList, desktopHDMKeychain, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses);
             return;
         }
 
@@ -955,10 +922,11 @@ public class TransactionsUtil {
             String address = addrJsonObject.getString("address");
             for (DesktopHDMAddress desktopHDMAddress: queryDesktopHDMAddressList) {
                 if (desktopHDMAddress.getAddress().equals(address)) {
+                    boolean hasTx = addrJsonObject.getInt("tx_count") > 0;
                     if (addrJsonObject.getLong("balance") > 0) {
                         unspentAddresses.add(desktopHDMAddress);
                     } else {
-                        updateDesktopHDM(desktopHDMKeychain, desktopHDMAddress, true);
+                        updateDesktopHDM(desktopHDMKeychain, desktopHDMAddress, hasTx);
                     }
                     if (addrJsonObject.getInt("tx_count") > 0) {
                         lastTxIndex = desktopHDMAddress.getIndex();
@@ -968,6 +936,10 @@ public class TransactionsUtil {
                 }
             }
         }
+        nextDesktopHDMUnspentAddress(queryDesktopHDMAddressList, desktopHDMKeychain, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses);
+    }
+
+    private static void nextDesktopHDMUnspentAddress(ArrayList<DesktopHDMAddress> queryDesktopHDMAddressList, DesktopHDMKeychain desktopHDMKeychain, AbstractHD.PathType pathType, int endIndex, int lastTxIndex, int unusedAddressCnt, ArrayList<DesktopHDMAddress> unspentAddresses) throws Exception {
         if (queryDesktopHDMAddressList.size() > 0) {
             for (DesktopHDMAddress desktopHDMAddress: queryDesktopHDMAddressList) {
                 updateDesktopHDM(desktopHDMKeychain, desktopHDMAddress, false);
