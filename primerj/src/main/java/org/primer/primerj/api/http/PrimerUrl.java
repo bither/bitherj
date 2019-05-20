@@ -26,7 +26,7 @@ public class PrimerUrl {
         private static final String FORMAT_HTTPS = "https://%s/";
         public static final String BITHER_BITCOIN_DOMAIN = "b.getcai.com";
         public static final String BITHER_USER_DOMAIN = "bu.getcai.com";
-        public static final String BITHER_STATS_DOMAIN = "bs.getcai.com";
+        public static final String BITHER_STATS_DOMAIN = "5ce24a34e3ced20014d3578e.mockapi.io";
         public static final String BITHER_BC_DOMAIN = "bc.bither.net";
         public static final String BITHER_HDM_DOMAIN = "hdm.bither.net";
         public static final String BLOCK_CHAIN_INFO = "blockChain.info";
@@ -53,7 +53,7 @@ public class PrimerUrl {
     }
 
     public static final String GET_BY_ADDRESS = "http://api.primecoin.org/rest/pcoin/txs/%s";
-    public static final String GET_BY_SYNCBLOCK = "http://api.primecoin.org/rest/pcoin/syncblock";
+    public static final String GET_BY_SYNCBLOCK = "http://5ce2225be3ced20014d35603.mockapi.io/rest/pcoin/syncblock";
 
 
     // bither blockChain
@@ -87,7 +87,7 @@ public class PrimerUrl {
 
     //bither stats
     public static final String BITHER_EXCHANGE_TICKER = PRIMER_DNS.BITHER_STATS
-            + "api/v1/exchange/ticker";
+            + "exchange/ticker";
     public static final String BITHER_KLINE_URL = PRIMER_DNS.BITHER_STATS
             + "api/v1/exchange/%d/kline/%d";
     public static final String BITHER_DEPTH_URL = PRIMER_DNS.BITHER_STATS

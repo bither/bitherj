@@ -168,6 +168,8 @@ public class BlockUtil {
                 BlockChainGetLatestBlockNew blockChainGetLatestBlockApi = new BlockChainGetLatestBlockNew();
                 blockChainGetLatestBlockApi.handleHttpGet();
                 block = blockChainGetLatestBlockApi.getResult();
+                log.info("Block: " + block + " ");
+                log.info("Block: interval is " + String.valueOf(PrimerjSettings.INTERVAL));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -179,7 +181,6 @@ public class BlockUtil {
             AbstractApp.bitherjSetting.setDownloadSpvFinish(true);
             AbstractApp.notificationService.sendBroadcastGetSpvBlockComplete(true);
         } else {
-            log.debug("spv", "service is not vaild");
             AbstractApp.notificationService.sendBroadcastGetSpvBlockComplete(false);
             return null;
         }

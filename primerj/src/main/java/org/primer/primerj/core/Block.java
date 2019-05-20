@@ -133,7 +133,7 @@ public class Block extends Message {
 
     public String toString() {
 //new Date(this.blockTime)+
-        return " No=" + getBlockNo() + ",Ver=" + this.blockVer + "，prev=" + reverse((this.blockPrev)) + "|" + Hex.toHexString(this.blockPrev) + " root="
+        return " No=" + getBlockNo() + ",Ver=" + this.blockVer + ",prev=" + reverse((this.blockPrev)) + "|" + Hex.toHexString(this.blockPrev) + " root="
                 + reverse(this.blockRoot) + " Time=" + this.blockTime + " Bits=" + this.blockBits + " Hash=" + (reverse(this.blockHash));
     }
 

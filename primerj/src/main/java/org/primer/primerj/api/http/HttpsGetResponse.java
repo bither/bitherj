@@ -1,12 +1,19 @@
 package org.primer.primerj.api.http;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+
 public abstract class HttpsGetResponse<T> extends BaseHttpsResponse<T> {
 
     public void handleHttpGet() throws Exception {
+         final Logger log = LoggerFactory
+                .getLogger(BaseHttpResponse.class);
+
         trustCerts();
         URL url;
         HttpURLConnection con = null;
@@ -25,6 +32,7 @@ public abstract class HttpsGetResponse<T> extends BaseHttpsResponse<T> {
                 out.append(new String(b, 0, n));
             }
             setResult(out.toString());
+            log.info("Received https output: " + out.toString());
         } catch (IOException e) {
             if (con.getResponseCode() != 200) {
                 String str = getStringFromIn(con.getErrorStream());

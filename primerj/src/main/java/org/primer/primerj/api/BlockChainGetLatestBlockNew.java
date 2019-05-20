@@ -8,6 +8,8 @@ import org.primer.primerj.utils.Utils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BlockChainGetLatestBlockNew extends HttpsGetResponse<Block> {
     public BlockChainGetLatestBlockNew(){
