@@ -76,9 +76,10 @@ public class PrimerjSettings {
 
     public static final int dumpedPrivateKeyHeader = 151;
 //    public static final int dumpedPrivateKeyHeader = 128;
-    public static final int TARGET_TIMESPAN = 14 * 24 * 60 * 60;  // 2 weeks per difficulty cycle, on average.
-    public static final int TARGET_SPACING = 10 * 60;  // 10 minutes per block.
-    public static final int INTERVAL = TARGET_TIMESPAN / TARGET_SPACING;
+    public static final int TARGET_TIMESPAN = 14 * 24 * 60 * 60;  // legacy bitcoin: 2 weeks per difficulty cycle, on average.
+    public static final int TARGET_SPACING = 1 * 60;  // primecoin block spacing
+    public static final int BLOCK_DIFFICULTY_INTERVAL = 2016; // legacy bitcoin
+    public static final int INTERVAL = BLOCK_DIFFICULTY_INTERVAL / 4;// ~8 hours
 
     public static final long TX_UNCONFIRMED = Long.MAX_VALUE;
 
@@ -109,8 +110,6 @@ public class PrimerjSettings {
 
     //    public static final byte[] GENESIS_BLOCK_HASH = Utils.reverseBytes(Hex.decode("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
     public static final byte[] GENESIS_BLOCK_HASH = Utils.reverseBytes(Hex.decode("963d17ba4dc753138078a2f56afb3af9674e2546822badff26837db9a0152106"));
-
-    public static final int BLOCK_DIFFICULTY_INTERVAL = 2016;
 
     public static final int BITCOIN_REFERENCE_BLOCK_HEIGHT = 250000;
     public static final int MaxPeerConnections = 6;
