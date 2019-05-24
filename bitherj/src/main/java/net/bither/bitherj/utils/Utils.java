@@ -945,7 +945,7 @@ public class Utils {
     }
 
     public static long getFeeBase() {
-        return AbstractApp.bitherjSetting.getTransactionFeeMode().getMinFeeSatoshi();
+        return AbstractApp.bitherjSetting.getTransactionFeeMode().getFeeRateSatoshiPerKB();
     }
 
     public static boolean validPassword(CharSequence password) {

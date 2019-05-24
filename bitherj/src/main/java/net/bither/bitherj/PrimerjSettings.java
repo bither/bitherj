@@ -139,8 +139,8 @@ public class PrimerjSettings {
     public static final boolean ensureMinRequiredFee = true;
 
     public enum TransactionFeeMode {
-        Normal(1000000), High(2000000), Higher(5000000), TenX(10000000), TwentyX(20000000);
-
+        // Transaction fee rate per kB
+        Normal(100000000), High(200000000), Higher(500000000);
 
         private int satoshi;
 
@@ -148,7 +148,7 @@ public class PrimerjSettings {
             this.satoshi = satoshi;
         }
 
-        public int getMinFeeSatoshi() {
+        public int getFeeRateSatoshiPerKB() {
             return satoshi;
         }
     }
