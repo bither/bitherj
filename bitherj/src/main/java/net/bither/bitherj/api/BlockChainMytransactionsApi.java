@@ -18,12 +18,7 @@ public class BlockChainMytransactionsApi extends HttpsGetResponse<String> {
     }
     public BlockChainMytransactionsApi(String address,int offset) {
         String url = Utils.format(PrimerUrl.GET_BY_ADDRESS, address);
-        StringBuilder stringBuilder=new StringBuilder(url);
-        stringBuilder.append("?offset=");
-        stringBuilder.append(offset);
-        stringBuilder.append("&length=");
-        stringBuilder.append(length);
-        setUrl(stringBuilder.toString());
+        setUrl(url);
     }
 
     public BlockChainMytransactionsApi(String address) {

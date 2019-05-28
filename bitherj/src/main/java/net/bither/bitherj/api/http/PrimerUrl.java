@@ -52,7 +52,7 @@ public class PrimerUrl {
 
     }
 
-    public static final String GET_BY_ADDRESS = "http://api.primecoin.org/rest/pcoin/txs/%s";
+    public static final String GET_BY_ADDRESS = "https://explorer.primecoin.net/api/rpc/searchrawtransactions/%s";
     public static final String GET_BY_SYNCBLOCK = "http://5ce2225be3ced20014d35603.mockapi.io/rest/pcoin/syncblock";
 
 
