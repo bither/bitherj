@@ -96,7 +96,7 @@ public class PrimerUrl {
             + "api/v1/exchange/%d/trend";
 
     //other
-    public static final String BCHAIN_INFO_ADDRESS_URL = "https://bchain.info/XPM/addr/";
+    public static final String BCHAIN_INFO_ADDRESS_URL = "https://explorer.primecoin.net/address/";
     public static final String BLOCKCHAIN_INFO_ADDRESS_URL = "http://blockchain.info/address/";
     public static final String BTC_COM_ADDRESS_URL = "https://btc.com/";
 
