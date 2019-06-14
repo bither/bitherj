@@ -131,7 +131,7 @@ public class Tx extends Message implements Comparable<Tx> {
         this.txTime = (int) (new Date().getTime() / 1000);
     }
 
-    public Tx(JSONObject txJsonObject) {
+    public Tx(JSONObject txJsonObject, String unspentOutAddress) {
         this.blockNo = txJsonObject.getInt("block_height");
         this.txHash = Utils.reverseBytes(Utils.hexStringToByteArray(txJsonObject.getString("hash")));
         this.txTime = txJsonObject.getInt("created_at");
@@ -150,7 +150,7 @@ public class Tx extends Message implements Comparable<Tx> {
         this.outs = new ArrayList<Out>();
         for (int i = 0; i < outJsonArray.length(); i++) {
             JSONObject outJsonObject = outJsonArray.getJSONObject(i);
-            Out out = new Out(this, outJsonObject);
+            Out out = new Out(this, outJsonObject, unspentOutAddress);
             out.setOutSn(i);
             this.outs.add(out);
         }

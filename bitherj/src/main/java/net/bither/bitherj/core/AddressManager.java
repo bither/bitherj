@@ -20,6 +20,7 @@ package net.bither.bitherj.core;
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.db.AbstractDb;
+import net.bither.bitherj.db.ITxProvider;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
@@ -491,6 +492,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         for (Tx tx : txList) {
             txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
         }
+        List<Tx> tTxs = new ArrayList<Tx>();
+        ITxProvider txProvider = AbstractDb.txProvider;
         for (Tx tx : txList) {
             if (!isSendFromMe(tx, txHashList, address) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
@@ -501,9 +504,21 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 }
                 tx.setOuts(outList);
             }
+            Tx existTx = txProvider.getTxDetailByTxHash(tx.getTxHash());
+            if (existTx == null) {
+                tTxs.add(tx);
+                continue;
+            }
+            for (int i = 0; i < tx.getOuts().size(); i++) {
+                Out out = tx.getOuts().get(i);
+                if (out.getOutStatus() == Out.OutStatus.reloadSpent) {
+                    out.setOutStatus(existTx.getOuts().get(i).getOutStatus());
+                    tx.getOuts().set(i, out);
+                }
+            }
+            tTxs.add(tx);
         }
-
-        return txList;
+        return tTxs;
     }
 
     public List<Tx> compressTxsForHDAccount(List<Tx> txList) {
@@ -511,6 +526,8 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
         for (Tx tx : txList) {
             txHashList.put(new Sha256Hash(tx.getTxHash()), tx);
         }
+        List<Tx> tTxs = new ArrayList<Tx>();
+        ITxProvider txProvider = AbstractDb.txProvider;
         for (Tx tx : txList) {
             if (!isSendFromHDAccount(tx, txHashList) && tx.getOuts().size() > BitherjSettings.COMPRESS_OUT_NUM) {
                 List<Out> outList = new ArrayList<Out>();
@@ -523,9 +540,21 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate {
                 }
                 tx.setOuts(outList);
             }
+            Tx existTx = txProvider.getTxDetailByTxHash(tx.getTxHash());
+            if (existTx == null) {
+                tTxs.add(tx);
+                continue;
+            }
+            for (int i = 0; i < tx.getOuts().size(); i++) {
+                Out out = tx.getOuts().get(i);
+                if (out.getOutStatus() == Out.OutStatus.reloadSpent) {
+                    out.setOutStatus(existTx.getOuts().get(i).getOutStatus());
+                    tx.getOuts().set(i, out);
+                }
+            }
+            tTxs.add(tx);
         }
-
-        return txList;
+        return tTxs;
     }
 
     private boolean isSendFromMe(Tx tx, Map<Sha256Hash, Tx> txHashList, Address address) {

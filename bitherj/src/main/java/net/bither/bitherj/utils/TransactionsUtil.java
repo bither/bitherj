@@ -182,7 +182,7 @@ public class TransactionsUtil {
 
     }
 
-    private static List<Tx> getUnspentTxsFromBither(JSONArray jsonArray, int storeBlockHeight) throws JSONException {
+    private static List<Tx> getUnspentTxsFromBither(String address, JSONArray jsonArray, int storeBlockHeight) throws JSONException {
         List<Tx> transactions = new ArrayList<Tx>();
         List<Block> blocks = AbstractDb.blockProvider.getAllBlocks();
         Map<Integer, Integer> blockMapList = new HashMap<Integer, Integer>();
@@ -202,7 +202,7 @@ public class TransactionsUtil {
             if (height > storeBlockHeight && storeBlockHeight > 0) {
                 continue;
             }
-            Tx tx = new Tx(jsonObject);
+            Tx tx = new Tx(jsonObject, address);
             transactions.add(tx);
         }
         return transactions;
@@ -552,16 +552,8 @@ public class TransactionsUtil {
         }
 
         if (isNoTxAddress) {
-            if (lastTxIndex + MaxNoTxAddress > endIndex) {
-                getHDAccountUnspentAddress(pathType, endIndex, MaxNoTxAddress + lastTxIndex, lastTxIndex, unusedAddressCnt, unspentAddresses);
-            } else {
-                AbstractDb.hdAccountProvider.updateSyncdForIndex(pathType, endIndex - 1);
-                if (pathType.nextPathType() != null) {
-                    getHDAccountUnspentAddress(pathType.nextPathType(), 0, MaxNoTxAddress, -1, 0, unspentAddresses);
-                } else {
-                    getUnspentTxForHDAccount(unspentAddresses);
-                }
-            }
+            nextHDAccountUnspentAddress(queryHdAccountAddressList, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses);
+            return;
         }
 
         JSONArray addrJsonArray = new JSONArray();
@@ -584,12 +576,13 @@ public class TransactionsUtil {
             String address = addrJsonObject.getString("address");
             for (HDAccount.HDAccountAddress hdAccountAddress: queryHdAccountAddressList) {
                 if (hdAccountAddress.getAddress().equals(address)) {
+                    boolean hasTx = addrJsonObject.getInt("tx_count") > 0;
                     if (addrJsonObject.getLong("balance") > 0) {
                         unspentAddresses.add(hdAccountAddress);
                     } else {
-                        updateHdAccountAddress(hdAccountAddress, true);
+                        updateHdAccountAddress(hdAccountAddress, hasTx);
                     }
-                    if (addrJsonObject.getInt("tx_count") > 0) {
+                    if (hasTx) {
                         lastTxIndex = hdAccountAddress.getIndex();
                     }
                     queryHdAccountAddressList.remove(hdAccountAddress);
@@ -597,7 +590,10 @@ public class TransactionsUtil {
                 }
             }
         }
+        nextHDAccountUnspentAddress(queryHdAccountAddressList, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses);
+    }
 
+    private static void nextHDAccountUnspentAddress(ArrayList<HDAccount.HDAccountAddress> queryHdAccountAddressList, final AbstractHD.PathType pathType, final int endIndex, int lastTxIndex, int unusedAddressCnt, ArrayList<HDAccount.HDAccountAddress> unspentAddresses) throws Exception {
         if (queryHdAccountAddressList.size() > 0) {
             for (HDAccount.HDAccountAddress hdAccountAddress: queryHdAccountAddressList) {
                 updateHdAccountAddress(hdAccountAddress, false);
@@ -627,7 +623,7 @@ public class TransactionsUtil {
                 List<Tx> transactions;
                 while (needGetTxs) {
                     JSONObject unspentsJsonObject = BitherQueryAddressUnspentApi.queryAddressUnspent(address.getAddress(), page);
-                    transactions = getUnspentTransactions(unspentsJsonObject, storeBlockHeight);
+                    transactions = getUnspentTransactions(address.getAddress(), unspentsJsonObject, storeBlockHeight);
                     if (transactions.size() > 0) {
                         Tx tx = transactions.get(transactions.size() - 1);
                         if (tx.getBlockNo() > apiBlockCount) {
@@ -666,7 +662,7 @@ public class TransactionsUtil {
             List<Tx> transactions;
             while (needGetTxs) {
                 JSONObject unspentsJsonObject = BitherQueryAddressUnspentApi.queryAddressUnspent(hdAccountAddress.getAddress(), page);
-                transactions = getUnspentTransactions(unspentsJsonObject, storeBlockHeight);
+                transactions = getUnspentTransactions(hdAccountAddress.getAddress(), unspentsJsonObject, storeBlockHeight);
                 if (transactions.size() > 0) {
                     Tx tx = transactions.get(transactions.size() - 1);
                     if (tx.getBlockNo() > apiBlockCount) {
@@ -702,13 +698,12 @@ public class TransactionsUtil {
         }
     }
 
-    private static List<Tx> getUnspentTransactions(JSONObject unspentsJsonObject, int storeBlockHeight) throws Exception {
+    private static List<Tx> getUnspentTransactions(String address, JSONObject unspentsJsonObject, int storeBlockHeight) throws Exception {
         List<Tx> transactions = new ArrayList<Tx>();
         if (unspentsJsonObject == null ||
                 unspentsJsonObject.isNull(ERR_NO) ||
                 unspentsJsonObject.getInt(ERR_NO) != 0 ||
-                unspentsJsonObject.isNull(DATA) ||
-                unspentsJsonObject.getJSONObject(DATA).isNull("list")) {
+                unspentsJsonObject.isNull(DATA)) {
             return transactions;
         }
         JSONArray unspentJsonArray;
@@ -718,7 +713,6 @@ public class TransactionsUtil {
             ex.printStackTrace();
             return transactions;
         }
-
         if (unspentJsonArray == null || unspentJsonArray.length() == 0) {
             return transactions;
         }
@@ -750,7 +744,7 @@ public class TransactionsUtil {
         } else {
             jsonArray.put(txsJsonObject.getJSONObject(DATA));
         }
-        transactions = TransactionsUtil.getUnspentTxsFromBither(jsonArray, storeBlockHeight);
+        transactions = TransactionsUtil.getUnspentTxsFromBither(address, jsonArray, storeBlockHeight);
         return transactions;
     }
 
