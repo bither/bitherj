@@ -137,7 +137,7 @@ public class Tx extends Message implements Comparable<Tx> {
         this.txTime = (int) (new Date().getTime() / 1000);
     }
 
-    public Tx(JSONObject txJsonObject) {
+    public Tx(JSONObject txJsonObject, String unspentOutAddress) {
         this.blockNo = txJsonObject.getInt("block_height");
         this.txHash = Utils.reverseBytes(Utils.hexStringToByteArray(txJsonObject.getString("hash")));
         this.txTime = txJsonObject.getInt("created_at");
@@ -156,7 +156,7 @@ public class Tx extends Message implements Comparable<Tx> {
         this.outs = new ArrayList<Out>();
         for (int i = 0; i < outJsonArray.length(); i++) {
             JSONObject outJsonObject = outJsonArray.getJSONObject(i);
-            Out out = new Out(this, outJsonObject);
+            Out out = new Out(this, outJsonObject, unspentOutAddress);
             out.setOutSn(i);
             this.outs.add(out);
         }
@@ -1924,25 +1924,41 @@ public class Tx extends Message implements Comparable<Tx> {
             return deltaAmountFrom((HDAccount) address);
         }
         long receive = 0;
+        boolean isReload = false;
         for (Out out : this.outs) {
             if (Utils.compareString(address.getAddress(), out.getOutAddress())) {
                 receive += out.getOutValue();
             }
+            if (out.getOutStatus().isReload()) {
+                isReload = true;
+            }
         }
-        long sent = AbstractDb.txProvider.sentFromAddress(getTxHash(), address.getAddress());
-        return receive - sent;
+        if (isReload) {
+            return receive;
+        } else {
+            long sent = AbstractDb.txProvider.sentFromAddress(getTxHash(), address.getAddress());
+            return receive - sent;
+        }
     }
 
     public long deltaAmountFrom(HDAccount account) {
         long receive = 0;
+        boolean isReload = false;
         HashSet<String> hashSet = account.getBelongAccountAddresses(getOutAddressList());
         for (Out out : this.outs) {
             if (hashSet.contains(out.getOutAddress())) {
                 receive += out.getOutValue();
             }
+            if (out.getOutStatus().isReload()) {
+                isReload = true;
+            }
         }
-        long sent = AbstractDb.hdAccountAddressProvider.sentFromAccount(account.getHdSeedId(), getTxHash());
-        return receive - sent;
+        if (isReload) {
+            return receive;
+        } else {
+            long sent = AbstractDb.hdAccountAddressProvider.sentFromAccount(account.getHdSeedId(), getTxHash());
+            return receive - sent;
+        }
     }
 
     public List<String> getOutAddressList() {

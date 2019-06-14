@@ -303,8 +303,8 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
     public List<Out> getUnspendOutByHDAccount(int hdAccountId) {
         final List<Out> outItems = new ArrayList<Out>();
         String unspendOutSql = "select a.* from outs a,txs b where a.tx_hash=b.tx_hash " +
-                " and a.out_status=? and a.hd_account_id=?";
-        this.execQueryLoop(unspendOutSql, new String[]{Integer.toString(Out.OutStatus.unspent.getValue()), Integer.toString(hdAccountId)}, new Function<ICursor, Void>() {
+                " and (a.out_status=? or a.out_status=?) and a.hd_account_id=?";
+        this.execQueryLoop(unspendOutSql, new String[]{Integer.toString(Out.OutStatus.unspent.getValue()), Integer.toString(Out.OutStatus.reloadUnSpent.getValue()), Integer.toString(hdAccountId)}, new Function<ICursor, Void>() {
             @Nullable
             @Override
             public Void apply(@Nullable ICursor c) {
@@ -367,8 +367,8 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
         final long[] sum = {0};
         String unspendOutSql = "select ifnull(sum(a.out_value),0) sum from outs a,txs b where a" +
                 ".tx_hash=b.tx_hash " +
-                "  and a.out_status=? and a.hd_account_id=? and b.block_no is not null";
-        this.execQueryOneRecord(unspendOutSql, new String[]{Integer.toString(Out.OutStatus.unspent.getValue()), Integer.toString
+                "  and (a.out_status=? or a.out_status=?) and a.hd_account_id=? and b.block_no is not null";
+        this.execQueryOneRecord(unspendOutSql, new String[]{Integer.toString(Out.OutStatus.unspent.getValue()), Integer.toString(Out.OutStatus.reloadUnSpent.getValue()), Integer.toString
                 (hdAccountId)}, new Function<ICursor, Void>() {
             @Nullable
             @Override
@@ -727,11 +727,11 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
             pathType) {
         final int[] result = {0};
         String sql = "select count(tx_hash) cnt from outs where out_address in " +
-                "(select address from hd_account_addresses where path_type =? and out_status=?) " +
+                "(select address from hd_account_addresses where path_type =? and (out_status=? or out_status=?)) " +
                 "and hd_account_id=?";
         this.execQueryOneRecord(sql, new String[]{Integer.toString(pathType.getValue())
                 , Integer.toString(Out.OutStatus.unspent.getValue())
-                , Integer.toString(hdAccountId)
+                , Integer.toString(Out.OutStatus.reloadUnSpent.getValue()), Integer.toString(hdAccountId)
         }, new Function<ICursor, Void>() {
             @Nullable
             @Override
@@ -751,11 +751,12 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
             pathType) {
         String sql = "select * from outs where out_address in " +
                 "(select address from hd_account_addresses where path_type =? and " +
-                "out_status=?) " +
+                "(out_status=? or out_status=?)) " +
                 "and hd_account_id=?";
         final List<Out> outList = new ArrayList<Out>();
         this.execQueryLoop(sql, new String[]{Integer.toString(pathType.getValue())
                 , Integer.toString(Out.OutStatus.unspent.getValue())
+                , Integer.toString(Out.OutStatus.reloadUnSpent.getValue())
                 , Integer.toString(hdAccountId)
         }, new Function<ICursor, Void>() {
             @Nullable
@@ -775,9 +776,10 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
         String sql = "select count(0) cnt from outs o, ins i, txs t, hd_account_addresses a " +
                 "  where o.tx_hash=i.prev_tx_hash and o.out_sn=i.prev_out_sn and t.tx_hash=i.tx_hash " +
                 "    and o.out_address=a.address and a.path_type=?" +
-                "    and o.out_status=? and t.block_no is null and a.hd_account_id=?";
+                "    and (o.out_status=? or o.out_status=?) and t.block_no is null and a.hd_account_id=?";
         this.execQueryOneRecord(sql, new String[]{Integer.toString(pathType.getValue())
                 , Integer.toString(Out.OutStatus.spent.getValue())
+                , Integer.toString(Out.OutStatus.reloadSpent.getValue())
                 , Integer.toString(hdAccountId)
         }, new Function<ICursor, Void>() {
             @Nullable
@@ -799,10 +801,11 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
         String sql = "select o.* from outs o, ins i, txs t, hd_account_addresses a " +
                 "  where o.tx_hash=i.prev_tx_hash and o.out_sn=i.prev_out_sn and t.tx_hash=i.tx_hash " +
                 "    and o.out_address=a.address and a.path_type=?" +
-                "    and o.out_status=? and t.block_no is null and a.hd_account_id=?";
+                "    and (o.out_status=? or o.out_status=?) and t.block_no is null and a.hd_account_id=?";
         final List<Out> outList = new ArrayList<Out>();
         this.execQueryLoop(sql, new String[]{Integer.toString(pathType.getValue())
                 , Integer.toString(Out.OutStatus.spent.getValue())
+                , Integer.toString(Out.OutStatus.reloadSpent.getValue())
                 , Integer.toString(hdAccountId)
         }, new Function<ICursor, Void>() {
             @Nullable
@@ -890,16 +893,17 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
     public List<Out> getUnspentOutputByBlockNo(long blockNo, int hdSeedId) {
         final List<Out> outItems = new ArrayList<Out>();
         String sqlPreUnspentOut = "select a.* from outs a,txs b where a.tx_hash=b.tx_hash and " +
-                "a.hd_account_id=? and a.out_status=? and b.block_no is not null and " +
+                "a.hd_account_id=? and (a.out_status=? or a.out_status=?) and b.block_no is not null and " +
                 "b.block_no<?";
         String sqlPostSpentOuts = "select a.* from outs a, txs out_b, ins i, txs b " +
                 "where a.tx_hash=out_b.tx_hash and a.out_sn=i.prev_out_sn and " +
                 "a.tx_hash=i.prev_tx_hash and a.hd_account_id=? and b.tx_hash=i.tx_hash and " +
-                "a.out_status=? and out_b.block_no is not null and " +
+                "(a.out_status=? or a.out_status=?) and out_b.block_no is not null and " +
                 "out_b.block_no<? and (b.block_no>=? or b.block_no is null)";
 
-        this.execQueryLoop(sqlPreUnspentOut, new String[] {Integer.toString(hdSeedId),Integer.toString(0),
-                Long.toString(blockNo)}, new Function<ICursor, Void>() {
+        this.execQueryLoop(sqlPreUnspentOut, new String[] {Integer.toString(hdSeedId),Integer.toString(Out.OutStatus.unspent.getValue())
+                , Integer.toString(hdSeedId),Integer.toString(Out.OutStatus.reloadUnSpent.getValue())
+                , Long.toString(blockNo)}, new Function<ICursor, Void>() {
             @Nullable
             @Override
             public Void apply(@Nullable ICursor c) {
@@ -908,8 +912,9 @@ public abstract class AbstractHDAccountAddressProvider extends AbstractProvider 
             }
         });
 
-        this.execQueryLoop(sqlPostSpentOuts, new String[] {Integer.toString(hdSeedId),Integer.toString(1),
-                Long.toString(blockNo),Long.toString(blockNo)}, new Function<ICursor, Void>() {
+        this.execQueryLoop(sqlPostSpentOuts, new String[] {Integer.toString(hdSeedId),Integer.toString(Out.OutStatus.spent.getValue())
+                , Integer.toString(hdSeedId),Integer.toString(Out.OutStatus.reloadSpent.getValue())
+                , Long.toString(blockNo),Long.toString(blockNo)}, new Function<ICursor, Void>() {
             @Nullable
             @Override
             public Void apply(@Nullable ICursor c) {

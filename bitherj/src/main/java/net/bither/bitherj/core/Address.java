@@ -104,12 +104,31 @@ public class Address implements Comparable<Address> {
     public List<Tx> getTxs() {
         List<Tx> txs = AbstractDb.txProvider.getTxAndDetailByAddress(this.address);
         Collections.sort(txs);
-        return txs;
+        return handleTxs(txs);
     }
 
     public List<Tx> getTxs(int page) {
         List<Tx> txs = AbstractDb.txProvider.getTxAndDetailByAddress(this.address, page);
-        return txs;
+        return handleTxs(txs);
+    }
+
+    private List<Tx> handleTxs(List<Tx> txs) {
+        List<Tx> tTxs = new ArrayList<Tx>();
+        for (Tx tx: txs) {
+            boolean isAdd = false;
+            for (Out out: tx.getOuts()) {
+                if (out.getOutAddress() == null) {
+                    continue;
+                }
+                if (out.getOutStatus() != Out.OutStatus.reloadSpent && out.getOutAddress().equals(address)) {
+                    isAdd = true;
+                }
+            }
+            if (isAdd) {
+                tTxs.add(tx);
+            }
+        }
+        return tTxs;
     }
 
     public boolean isTrashed() {

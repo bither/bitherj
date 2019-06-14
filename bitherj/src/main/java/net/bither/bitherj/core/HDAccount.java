@@ -555,12 +555,33 @@ public class HDAccount extends Address {
     }
 
     public List<Tx> getTxs(int page) {
-        return AbstractDb.hdAccountAddressProvider.getTxAndDetailByHDAccount(this.hdSeedId, page);
+        return handleTxs(AbstractDb.hdAccountAddressProvider.getTxAndDetailByHDAccount(this.hdSeedId, page));
     }
 
     @Override
     public List<Tx> getTxs() {
-        return AbstractDb.hdAccountAddressProvider.getTxAndDetailByHDAccount(this.hdSeedId);
+        return handleTxs(AbstractDb.hdAccountAddressProvider.getTxAndDetailByHDAccount(this.hdSeedId));
+    }
+
+    private List<Tx> handleTxs(List<Tx> txs) {
+        List<Tx> tTxs = new ArrayList<Tx>();
+        for (Tx tx: txs) {
+            boolean isAdd = false;
+            for (Out out: tx.getOuts()) {
+                if (out.getOutAddress() == null) {
+                    continue;
+                }
+                List<String> addresses = new ArrayList<String>();
+                addresses.add(out.getOutAddress());
+                if (out.getOutStatus() != Out.OutStatus.reloadSpent && isSendFromMe(addresses)) {
+                    isAdd = true;
+                }
+            }
+            if (isAdd) {
+                tTxs.add(tx);
+            }
+        }
+        return tTxs;
     }
 
     public int txCount() {
