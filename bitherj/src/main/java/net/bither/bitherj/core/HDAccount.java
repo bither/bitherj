@@ -575,6 +575,10 @@ public class HDAccount extends Address {
                 addresses.add(out.getOutAddress());
                 if (out.getOutStatus() != Out.OutStatus.reloadSpent && isSendFromMe(addresses)) {
                     isAdd = true;
+                    break;
+                } else if (!out.getOutStatus().isReload()) {
+                    isAdd = true;
+                    break;
                 }
             }
             if (isAdd) {

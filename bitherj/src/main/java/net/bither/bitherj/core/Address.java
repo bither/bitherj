@@ -122,6 +122,10 @@ public class Address implements Comparable<Address> {
                 }
                 if (out.getOutStatus() != Out.OutStatus.reloadSpent && out.getOutAddress().equals(address)) {
                     isAdd = true;
+                    break;
+                } else if (!out.getOutStatus().isReload()) {
+                    isAdd = true;
+                    break;
                 }
             }
             if (isAdd) {
