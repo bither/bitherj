@@ -240,7 +240,6 @@ public class TransactionsUtil {
             } else {
                 return Integer.valueOf(lhs.getTxTime()).compareTo(Integer.valueOf(rhs.getTxTime()));
             }
-
         }
 
     }

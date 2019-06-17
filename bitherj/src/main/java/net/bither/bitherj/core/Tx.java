@@ -1402,25 +1402,41 @@ public class Tx extends Message implements Comparable<Tx> {
             return deltaAmountFrom((HDAccount) address);
         }
         long receive = 0;
+        boolean isReload = false;
         for (Out out : this.outs) {
             if (Utils.compareString(address.getAddress(), out.getOutAddress())) {
                 receive += out.getOutValue();
             }
+            if (out.getOutStatus().isReload()) {
+                isReload = true;
+            }
         }
-        long sent = AbstractDb.txProvider.sentFromAddress(getTxHash(), address.getAddress());
-        return receive - sent;
+        if (isReload) {
+            return receive;
+        } else {
+            long sent = AbstractDb.txProvider.sentFromAddress(getTxHash(), address.getAddress());
+            return receive - sent;
+        }
     }
 
     public long deltaAmountFrom(HDAccount account) {
         long receive = 0;
+        boolean isReload = false;
         HashSet<String> hashSet = account.getBelongAccountAddresses(getOutAddressList());
         for (Out out : this.outs) {
             if (hashSet.contains(out.getOutAddress())) {
                 receive += out.getOutValue();
             }
+            if (out.getOutStatus().isReload()) {
+                isReload = true;
+            }
         }
-        long sent = AbstractDb.hdAccountProvider.sentFromAccount(account.getHdSeedId(), getTxHash());
-        return receive - sent;
+        if (isReload) {
+            return receive;
+        } else {
+            long sent = AbstractDb.hdAccountProvider.sentFromAccount(account.getHdSeedId(), getTxHash());
+            return receive - sent;
+        }
     }
 
     public List<String> getOutAddressList() {
