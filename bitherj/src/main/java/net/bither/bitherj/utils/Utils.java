@@ -948,6 +948,18 @@ public class Utils {
         return AbstractApp.bitherjSetting.getTransactionFeeMode().getFeeRateSatoshiPerKB();
     }
 
+    public static long getFeePrecision() {
+        return AbstractApp.bitherjSetting.getTransactionFeePrecision().getPrecision();
+    }
+
+    public static long ceilingFee(long fee) {
+        long residual = fee % getFeePrecision();
+        if(residual!=0) {
+            fee += getFeePrecision() - residual;
+        }
+        return fee;
+    }
+
     public static boolean validPassword(CharSequence password) {
         String pattern = "[0-9a-zA-Z`~!@#$%^&*()_\\-+=|{}':;',\\[\\].\\\\\"<>/?]+";
         Pattern p = Pattern.compile(pattern);

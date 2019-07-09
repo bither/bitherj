@@ -598,6 +598,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
 
             if (lastCalculatedSize >= 0) {
                 fees = lastCalculatedSize * (Utils.getFeeBase() / 1000);
+                fees = Utils.ceilingFee(fees);
             }
 
             valueNeeded = value + fees;
@@ -777,6 +778,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
 
             if (lastCalculatedSize >= 0) {
                 fees = lastCalculatedSize * (Utils.getFeeBase() / 1000);
+                fees = Utils.ceilingFee(fees);
             }
 
             valueNeeded = value + fees;

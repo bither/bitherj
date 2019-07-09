@@ -43,6 +43,8 @@ public abstract class ISetting {
 
     public abstract PrimerjSettings.TransactionFeeMode getTransactionFeeMode();
 
+    public abstract PrimerjSettings.TransactionFeePrecision getTransactionFeePrecision();
+
     public abstract PrimerjSettings.ApiConfig getApiConfig();
 
     public abstract File getPrivateDir(String dirName);

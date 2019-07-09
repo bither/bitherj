@@ -153,6 +153,20 @@ public class PrimerjSettings {
         }
     }
 
+    public enum TransactionFeePrecision {
+        P0(100000000), P1(10000000), P2(1000000), P3(100000);
+
+        private int precision;
+
+        TransactionFeePrecision(int precision) {
+            this.precision = precision;
+        }
+
+        public int getPrecision() {
+            return precision;
+        }
+    }
+
     public enum MarketType {
         COINMARKETCAP ;
     }

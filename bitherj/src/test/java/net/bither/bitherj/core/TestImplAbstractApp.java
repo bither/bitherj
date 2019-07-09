@@ -67,6 +67,11 @@ public class TestImplAbstractApp extends AbstractApp {
             }
 
             @Override
+            public PrimerjSettings.TransactionFeePrecision getTransactionFeePrecision() {
+                return PrimerjSettings.TransactionFeePrecision.P2;
+            }
+
+            @Override
             public PrimerjSettings.ApiConfig getApiConfig() {
                 return PrimerjSettings.ApiConfig.BITHER_NET;
             }
