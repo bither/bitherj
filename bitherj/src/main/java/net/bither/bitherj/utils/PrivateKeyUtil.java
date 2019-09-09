@@ -289,7 +289,7 @@ public class PrivateKeyUtil {
         return hdAccountCold;
     }
 
-    public static BitpieHDAccountCold getBitpieHDAccountCould(MnemonicCode mnemonicCode, String str, CharSequence password) {
+    public static BitpieHDAccountCold getBitpieHDAccountCold(MnemonicCode mnemonicCode, String str, CharSequence password) {
         BitpieHDAccountCold bitpieHDAccountCold = null;
         String [] strs = QRCodeUtil.splitOfPasswordSeed(str);
         if (strs.length % 3 != 0) {

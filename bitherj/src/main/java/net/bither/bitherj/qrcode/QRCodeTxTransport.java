@@ -44,7 +44,7 @@ public class QRCodeTxTransport implements Serializable {
 
     public enum TxTransportType {
         NormalPrivateKey(1), ServiceHDM(2),//no use in new version
-        ColdHDM(3), DesktopHDM(4), ColdHD(5);
+        ColdHDM(3), DesktopHDM(4), ColdHD(5), BitpieCold(6);
 
         private int type;
 
