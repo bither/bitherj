@@ -250,6 +250,24 @@ public class BitpieHDAccountCold extends AbstractHD {
         }
     }
 
+    public DeterministicKey getSegwitExternalKey(int index, CharSequence password) {
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey externalChainRoot = getChainRootKey(accountKey, AbstractHD.PathType
+                    .EXTERNAL_BIP49_PATH);
+            DeterministicKey key = externalChainRoot.deriveSoftened(index);
+            master.wipe();
+            accountKey.wipe();
+            externalChainRoot.wipe();
+            return key;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public DeterministicKey getInternalKey(int index, CharSequence password) {
         try {
             DeterministicKey master = masterKey(password);
