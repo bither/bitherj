@@ -154,7 +154,7 @@ public class HDAccount extends Address {
         this.isFromXRandom = isFromXRandom;
         DeterministicKey account = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                 (accountExtentedPub);
-        DeterministicKey accountPurpose49Key = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
+        DeterministicKey accountPurpose49Key = p2shp2wpkhAccountExtentedPub == null ? null : HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                 (p2shp2wpkhAccountExtentedPub);
         initHDAccount(account, accountPurpose49Key, null, null, isFromXRandom, isSyncedComplete, generationDelegate);
     }
