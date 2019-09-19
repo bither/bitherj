@@ -11,7 +11,7 @@ import org.json.JSONObject;
 
 public class BlockChainGetLatestBlockNew extends HttpsGetResponse<Block> {
     public BlockChainGetLatestBlockNew(){
-        setUrl(PrimerUrl.GET_BY_SYNCBLOCK);
+        setUrl(PrimerUrl.getBySyncBlock());
     }
 
     @Override

@@ -11,18 +11,18 @@ import net.bither.bitherj.utils.Utils;
  */
 public class BlockChainMytransactionsApi extends HttpsGetResponse<String> {
 
-    public static final int length=100;
+    public static final int length=1000;
     @Override
     public void setResult(String response) throws Exception {
         this.result = response;
     }
     public BlockChainMytransactionsApi(String address,int offset) {
-        String url = Utils.format(PrimerUrl.GET_BY_ADDRESS, address);
+        String url = Utils.format(PrimerUrl.getByAddress(), address);
         setUrl(url);
     }
 
     public BlockChainMytransactionsApi(String address) {
-        String url = Utils.format(PrimerUrl.GET_BY_ADDRESS, address);
+        String url = Utils.format(PrimerUrl.getByAddress(), address);
         setUrl(url);
     }
 

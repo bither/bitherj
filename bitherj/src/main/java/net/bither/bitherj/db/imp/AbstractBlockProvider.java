@@ -282,6 +282,11 @@ public abstract class AbstractBlockProvider extends AbstractProvider implements 
         }
     }
 
+    public void cleanAllBlock() {
+        String sql = "delete from blocks where block_no>?";
+        this.execUpdate(sql, new String[]{Integer.toString(0)});
+    }
+
     private Block applyCursor(ICursor c) {
         byte[] blockHash = null;
         long version = 1;

@@ -97,7 +97,7 @@ public class PrimecoinSerializer {
      */
     public void serialize(String name, byte[] message, OutputStream out) throws IOException {
         byte[] header = new byte[4 + COMMAND_LEN + 4 + 4 /* checksum */];
-        Utils.uint32ToByteArrayBE(PrimerjSettings.packetMagic, header, 0);
+        Utils.uint32ToByteArrayBE(PrimerjSettings.getPacketMagic(), header, 0);
 
         // The header array is initialized to zero by Java so we don't have to worry about
         // NULL terminating the string here.
@@ -246,7 +246,7 @@ public class PrimecoinSerializer {
             byte b = in.get();
             // We're looking for a run of bytes that is the same as the packet magic but we want to ignore partial
             // magics that aren't complete. So we keep track of where we're up to with magicCursor.
-            byte expectedByte = (byte) (0xFF & PrimerjSettings.packetMagic >>> (magicCursor * 8));
+            byte expectedByte = (byte) (0xFF & PrimerjSettings.getPacketMagic() >>> (magicCursor * 8));
             if (b == expectedByte) {
                 magicCursor--;
                 if (magicCursor < 0) {

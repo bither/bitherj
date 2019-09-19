@@ -158,7 +158,7 @@ public enum SplitCoin {
     public int getAddressHeader() {
         switch (this) {
             case BCC:
-                return PrimerjSettings.addressHeader;
+                return PrimerjSettings.getAddressHeader();
             case BTG:
                 return PrimerjSettings.btgAddressHeader;
             case BTW:
@@ -168,7 +168,7 @@ public enum SplitCoin {
             case BTP:
                 return PrimerjSettings.btpAddressHeader;
         }
-        return PrimerjSettings.addressHeader;
+        return PrimerjSettings.getAddressHeader();
     }
 
     public String getIsGatKey() {

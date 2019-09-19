@@ -53,5 +53,7 @@ public interface IBlockProvider {
 
     void cleanOldBlock();
 
+    void cleanAllBlock();
+
 
 }

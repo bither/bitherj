@@ -133,9 +133,9 @@ public class Peer extends PeerSocketHandler {
 
 
     public Peer(InetAddress address) {
-        super(new InetSocketAddress(address, PrimerjSettings.port));
+        super(new InetSocketAddress(address, PrimerjSettings.getPort()));
         this.peerAddress = address;
-        peerPort = PrimerjSettings.port;
+        peerPort = PrimerjSettings.getPort();
         state = State.Disconnected;
         peerServices = 1;
         currentTxHashes = new HashSet<Sha256Hash>();
@@ -172,7 +172,7 @@ public class Peer extends PeerSocketHandler {
             bloomFilterSent = false;
             try {
                 NioClientManager.instance().openConnection(new InetSocketAddress(getPeerAddress(),
-                        PrimerjSettings.port), this);
+                        PrimerjSettings.getPort()), this);
             } catch (Exception ex) {
                 exceptionCaught(ex);
             }

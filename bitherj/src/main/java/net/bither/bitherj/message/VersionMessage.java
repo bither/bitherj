@@ -121,9 +121,9 @@ public class VersionMessage extends Message {
             // .getLocalHost() because some
             // mobile phones have broken localhost DNS entries, also, this is faster.
             final byte[] localhost = {127, 0, 0, 1};
-            myAddr = new PeerAddress(InetAddress.getByAddress(localhost), PrimerjSettings.port, 0);
+            myAddr = new PeerAddress(InetAddress.getByAddress(localhost), PrimerjSettings.getPort(), 0);
             theirAddr = new PeerAddress(InetAddress.getByAddress(localhost),
-                    PrimerjSettings.port, 0);
+                    PrimerjSettings.getPort(), 0);
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);  // Cannot happen (illegal IP length).
         }

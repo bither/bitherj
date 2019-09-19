@@ -702,7 +702,7 @@ public class Utils {
         checkArgument(pubKeyHash.length == 20, "Addresses are 160-bit hashes, " +
                 "so you must provide 20 bytes");
 
-        int version = PrimerjSettings.addressHeader;
+        int version = PrimerjSettings.getAddressHeader();
         checkArgument(version < 256 && version >= 0);
 
         byte[] addressBytes = new byte[1 + pubKeyHash.length + 4];
@@ -950,6 +950,10 @@ public class Utils {
 
     public static long getFeePrecision() {
         return AbstractApp.bitherjSetting.getTransactionFeePrecision().getPrecision();
+    }
+
+    public static boolean isTestNet() {
+        return AbstractApp.bitherjSetting.isTestNet();
     }
 
     public static long ceilingFee(long fee) {

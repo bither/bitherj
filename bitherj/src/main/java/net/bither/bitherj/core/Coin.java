@@ -97,7 +97,7 @@ public enum Coin {
             case BTW:
                 return PrimerjSettings.btwAddressHeader;
             default:
-                return PrimerjSettings.addressHeader;
+                return PrimerjSettings.getAddressHeader();
         }
     }
 

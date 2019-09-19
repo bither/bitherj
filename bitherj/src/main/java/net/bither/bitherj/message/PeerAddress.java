@@ -102,7 +102,7 @@ public class PeerAddress extends ChildMessage {
 
     public static PeerAddress localhost() {
         try {
-            return new PeerAddress(InetAddress.getLocalHost(), PrimerjSettings.port);
+            return new PeerAddress(InetAddress.getLocalHost(), PrimerjSettings.getPort());
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);  // Broken system.
         }
