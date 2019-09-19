@@ -2,6 +2,7 @@ package net.bither.bitherj.core;
 
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.crypto.TransactionSignature;
+import net.bither.bitherj.utils.UnitUtil;
 import net.bither.bitherj.utils.Utils;
 
 /**
@@ -9,7 +10,7 @@ import net.bither.bitherj.utils.Utils;
  */
 
 public enum Coin {
-    BTC, BCC, BTG,SBTC,BTW, BCD, BTF, BTP, BTN;
+    BTC, BCC, BTG, SBTC, BTW, BCD, BTF, BTP, BTN;
 
     public SplitCoin getSplitCoin() {
         switch (this) {
@@ -105,4 +106,39 @@ public enum Coin {
         }
         return getSplitCoin().getSplitNormalFee();
     }
+
+    public String getName() {
+        switch (this) {
+            case BCC:
+                return "BCH";
+            case BTG:
+                return "BTG";
+            case SBTC:
+                return "SBTC";
+            case BTW:
+                return "BTW";
+            case BCD:
+                return "BCD";
+            case BTF:
+                return "BTF";
+            case BTP:
+                return "BTP";
+            case BTN:
+                return "BTN";
+        }
+        return "BTC";
+    }
+
+    public int getUnitDecimal() {
+        switch (this) {
+            case BTW:
+                return 4;
+            case BCD:
+            case BTP:
+                return 7;
+            default:
+                return 8;
+        }
+    }
+
 }

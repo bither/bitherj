@@ -46,6 +46,7 @@ public abstract class MnemonicCode {
     private MnemonicWordList mnemonicWordList = MnemonicWordList.English;
 
     private ArrayList<String> wordList;
+    private ArrayList<String> bitpieColdWordList;
 
     private static String BIP39_ENGLISH_SHA256 =
             "ad90bf3beb7b0eb7e5acd74727dc0da96e0a280a258354e7293fb7e211ac03db";
@@ -62,6 +63,7 @@ public abstract class MnemonicCode {
 
     public static void setInstance(MnemonicCode i) {
         instance = i;
+        i.bitpieColdWordList = i.getWordList(MnemonicWordList.English);
     }
 
     public static MnemonicCode instance() {
@@ -283,7 +285,13 @@ public abstract class MnemonicCode {
     /**
      * Convert entropy data to mnemonic word list.
      */
+
     public List<String> toMnemonic(byte[] entropy) throws MnemonicException
+            .MnemonicLengthException {
+        return toMnemonic(entropy, false);
+    }
+
+    public List<String> toMnemonic(byte[] entropy, boolean isBitpieCold) throws MnemonicException
             .MnemonicLengthException {
         if (entropy.length % 4 > 0) {
             throw new MnemonicException.MnemonicLengthException("Entropy length not multiple of "
@@ -303,7 +311,7 @@ public abstract class MnemonicCode {
         boolean[] entropyBits = bytesToBits(entropy);
         int checksumLengthBits = entropyBits.length / 32;
 
-        // We append these bits to the end of the initial entropy. 
+        // We append these bits to the end of the initial entropy.
         boolean[] concatBits = new boolean[entropyBits.length + checksumLengthBits];
         System.arraycopy(entropyBits, 0, concatBits, 0, entropyBits.length);
         System.arraycopy(hashBits, 0, concatBits, entropyBits.length, checksumLengthBits);
@@ -327,7 +335,11 @@ public abstract class MnemonicCode {
                     index |= 0x1;
                 }
             }
-            words.add(this.wordList.get(index));
+            if (isBitpieCold) {
+                words.add(this.bitpieColdWordList.get(index));
+            } else {
+                words.add(this.wordList.get(index));
+            }
         }
 
         return words;

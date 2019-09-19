@@ -18,12 +18,14 @@
 
 package net.bither.bitherj.utils;
 
+import java.math.BigInteger;
+
 /**
  * Created by songchenwen on 14-11-12.
  */
 public class UnitUtil {
     public static enum BitcoinUnit {
-        BTC(100000000), bits(100),BTW(10000), BCD(10000000);
+        BTC(100000000), bits(100), BTW(10000), BCD(10000000);
 
         public long satoshis;
 
@@ -44,6 +46,22 @@ public class UnitUtil {
         if (unit.satoshis > Math.pow(10, 2)) {
             strSatoshis = strSatoshis.replaceFirst("[0]{1," + Integer.toString((int) Math.floor
                     (Math.log10(unit.satoshis) - 2)) + "}$", "");
+        }
+        return sign + strCoins + (strSatoshis.length() > 0 ? "." : "") + strSatoshis;
+    }
+
+    public static String formatValue(final BigInteger value, int unitDecimal) {
+        String sign = value.signum() == -1  ? "-" : "";
+        BigInteger absValue = value.abs();
+        BigInteger coins = absValue.divide(BigInteger.valueOf(10).pow(unitDecimal));
+        BigInteger satoshis = absValue.mod(BigInteger.valueOf(10).pow(unitDecimal));
+        String strCoins = coins.toString();
+        String strSatoshis = "";
+        strSatoshis = satoshis.add(BigInteger.valueOf(10).pow(unitDecimal)).toString();
+        strSatoshis = strSatoshis.substring(1, strSatoshis.length());
+        if (BigInteger.valueOf(10).pow(unitDecimal).subtract(BigInteger.valueOf((long) Math.pow(10, 2))).signum() > 0 ) {
+            strSatoshis = strSatoshis.replaceFirst("[0]{1," + Integer.toString((int) Math.floor
+                    (unitDecimal - 2)) + "}$", "");
         }
         return sign + strCoins + (strSatoshis.length() > 0 ? "." : "") + strSatoshis;
     }

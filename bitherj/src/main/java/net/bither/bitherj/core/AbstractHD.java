@@ -78,8 +78,15 @@ public abstract class AbstractHD {
     public static class PathTypeIndex {
         public PathType pathType;
         public int index;
+        public String coinCode;
     }
 
+    public static class BitpieColdCoinDetail {
+        public String coinCode;
+        public String displayCode;
+        public int pathNumber;
+        public int unitDecimal;
+    }
 
     public static PathType getTernalRootType(int value) {
         switch (value) {
@@ -113,8 +120,12 @@ public abstract class AbstractHD {
     }
 
     protected DeterministicKey getAccount(DeterministicKey master, PurposePathLevel... purposePathLevels) {
+        return getAccount(master, 0, purposePathLevels);
+    }
+
+    protected DeterministicKey getAccount(DeterministicKey master, int pathNumber, PurposePathLevel... purposePathLevels) {
         DeterministicKey purpose = master.deriveHardened(getPurposePathLevel(purposePathLevels).getValue());
-        DeterministicKey coinType = purpose.deriveHardened(0);
+        DeterministicKey coinType = purpose.deriveHardened(pathNumber);
         DeterministicKey account = coinType.deriveHardened(0);
         purpose.wipe();
         coinType.wipe();
@@ -165,8 +176,13 @@ public abstract class AbstractHD {
 
     public List<String> getSeedWords(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
+        return getSeedWords(password, false);
+    }
+
+    public List<String> getSeedWords(CharSequence password, boolean isBitpieCold) throws MnemonicException
+            .MnemonicLengthException {
         decryptMnemonicSeed(password);
-        List<String> words = MnemonicCode.instance().toMnemonic(mnemonicSeed);
+        List<String> words = MnemonicCode.instance().toMnemonic(mnemonicSeed, isBitpieCold);
         wipeMnemonicSeed();
         return words;
     }

@@ -91,19 +91,89 @@ public class BitpieHDAccountCold extends AbstractHD {
         this.isFromXRandom = bitpieHDAccountProvicer.hdAccountIsXRandom(hdSeedId);
     }
 
-    public List<byte[]> signHashHexes(final Collection<String> hashes, Collection<PathTypeIndex>
-            paths, CharSequence password) throws MnemonicException
+    public List<byte[]> signHashHexes(final Collection<String> hashes,
+                                      Collection<PathTypeIndex> paths,
+                                      BitpieColdCoinDetail coinDetail,
+                                      BitpieColdCoinDetail feeCoinDetail,
+                                      CharSequence password) throws MnemonicException
             .MnemonicLengthException {
-        return signHashes(Collections2.transform(hashes, new Function<String, byte[]>() {
-            @Nullable
-            @Override
-            public byte[] apply(String input) {
-                return Utils.hexStringToByteArray(input);
-            }
-        }), paths, password);
+        if (coinDetail.coinCode.toUpperCase().equals(Coin.BTC.getName()) && feeCoinDetail == null) {
+            return signBtcHashes(Collections2.transform(hashes, new Function<String, byte[]>() {
+                @Nullable
+                public byte[] apply(String input) {
+                    return Utils.hexStringToByteArray(input);
+                }
+            }), paths, password);
+        } else {
+            return signHashes(Collections2.transform(hashes, new Function<String, byte[]>() {
+                @Nullable
+                public byte[] apply(String input) {
+                    return Utils.hexStringToByteArray(input);
+                }
+            }), paths, coinDetail, feeCoinDetail, password);
+        }
     }
 
-    public List<byte[]> signHashes(Collection<byte[]> hashes, Collection<PathTypeIndex> paths,
+    public List<byte[]> signHashes(Collection<byte[]> hashes,
+                                      Collection<PathTypeIndex> paths,
+                                      BitpieColdCoinDetail coinDetail,
+                                      BitpieColdCoinDetail feeCoinDetail,
+                                      CharSequence password) throws MnemonicException
+            .MnemonicLengthException {
+        assert hashes.size() == paths.size();
+        ArrayList<byte[]> sigs = new ArrayList<byte[]>();
+        DeterministicKey master = masterKey(password);
+        DeterministicKey account = getAccount(master, coinDetail.pathNumber);
+        DeterministicKey external = getChainRootKey(account, PathType.EXTERNAL_ROOT_PATH);
+        DeterministicKey internal = getChainRootKey(account, PathType.INTERNAL_ROOT_PATH);
+        DeterministicKey feeAccount = null;
+        DeterministicKey feeExternal = null;
+        DeterministicKey feeInternal = null;
+        if (feeCoinDetail != null) {
+            feeAccount = getAccount(master, feeCoinDetail.pathNumber);
+            feeExternal = getChainRootKey(feeAccount, PathType.EXTERNAL_ROOT_PATH);
+            feeInternal = getChainRootKey(feeAccount, PathType.INTERNAL_ROOT_PATH);
+        }
+        master.wipe();
+        account.wipe();
+        if (feeAccount != null) {
+            feeAccount.wipe();
+        }
+        Iterator<byte[]> hashIterator = hashes.iterator();
+        Iterator<PathTypeIndex> pathIterator = paths.iterator();
+        while (hashIterator.hasNext() && pathIterator.hasNext()) {
+            byte[] hash = hashIterator.next();
+            PathTypeIndex path = pathIterator.next();
+            DeterministicKey key;
+            if (feeCoinDetail != null && path.coinCode.toUpperCase().equals(feeCoinDetail.coinCode.toUpperCase())) {
+                if (path.pathType == PathType.EXTERNAL_ROOT_PATH) {
+                    key = feeExternal.deriveSoftened(path.index);
+                } else {
+                    key = feeInternal.deriveSoftened(path.index);
+                }
+            } else {
+                if (path.pathType == PathType.EXTERNAL_ROOT_PATH) {
+                    key = external.deriveSoftened(path.index);
+                } else {
+                    key = internal.deriveSoftened(path.index);
+                }
+            }
+            sigs.add(key.sign(hash).encodeToDER());
+            key.wipe();
+        }
+        external.wipe();
+        internal.wipe();
+        if (feeExternal != null) {
+            feeExternal.wipe();
+        }
+        if (feeInternal != null) {
+            feeInternal.wipe();
+        }
+        return sigs;
+    }
+
+    public List<byte[]> signBtcHashes(Collection<byte[]> hashes,
+                                   Collection<PathTypeIndex> paths,
                                    CharSequence password) throws MnemonicException
             .MnemonicLengthException {
         assert hashes.size() == paths.size();
@@ -134,11 +204,9 @@ public class BitpieHDAccountCold extends AbstractHD {
                 key = purpose49Internal.deriveSoftened(path.index);
             }
             if (path.pathType.isSegwit()) {
-                sigs.add(getWitness(key.getPubKey(), getSign(key, hash)));
+                sigs.add(getWitness(key.getPubKey(), key.sign(hash).encodeToDER()));
             } else {
-                TransactionSignature sig = new TransactionSignature(key.sign(hash),
-                        TransactionSignature.SigHash.ALL, false);
-                sigs.add(ScriptBuilder.createInputScript(sig, key).getProgram());
+                sigs.add(key.sign(hash).encodeToDER());
             }
             key.wipe();
         }
@@ -233,9 +301,13 @@ public class BitpieHDAccountCold extends AbstractHD {
     }
 
     public DeterministicKey getExternalKey(int index, CharSequence password) {
+        return getExternalKey(index, 0, password);
+    }
+
+    public DeterministicKey getExternalKey(int index, int pathNumber, CharSequence password) {
         try {
             DeterministicKey master = masterKey(password);
-            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey accountKey = getAccount(master, pathNumber);
             DeterministicKey externalChainRoot = getChainRootKey(accountKey, AbstractHD.PathType
                     .EXTERNAL_ROOT_PATH);
             DeterministicKey key = externalChainRoot.deriveSoftened(index);
@@ -288,9 +360,14 @@ public class BitpieHDAccountCold extends AbstractHD {
 
     public String xPubB58(CharSequence password) throws MnemonicException
             .MnemonicLengthException {
+        return xPubB58(password, 0);
+    }
+
+    public String xPubB58(CharSequence password, int coinPathNumber) throws MnemonicException
+            .MnemonicLengthException {
         DeterministicKey master = masterKey(password);
         DeterministicKey purpose = master.deriveHardened(PurposePathLevel.Normal.getValue());
-        DeterministicKey coinType = purpose.deriveHardened(0);
+        DeterministicKey coinType = purpose.deriveHardened(coinPathNumber);
         DeterministicKey account = coinType.deriveHardened(0);
         String xpub = account.serializePubB58();
         master.wipe();
@@ -314,7 +391,7 @@ public class BitpieHDAccountCold extends AbstractHD {
         return xpub;
     }
 
-    public List<HDAccount.HDAccountAddress> getHdColdAddresses(int page, AbstractHD.PathType pathType,CharSequence password){
+    public List<HDAccount.HDAccountAddress> getHdColdAddresses(int page, AbstractHD.PathType pathType, CharSequence password){
         ArrayList<HDAccount.HDAccountAddress> addresses = new ArrayList<HDAccount.HDAccountAddress>();
         try {
             DeterministicKey master = masterKey(password);

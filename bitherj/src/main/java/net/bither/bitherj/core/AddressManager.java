@@ -118,7 +118,6 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
     private void initAddress() {
         List<Address> addressList = AbstractDb.addressProvider.getAddresses();
         for (Address address : addressList) {
-
             if (address.hasPrivKey()) {
                 if (address.isTrashed()) {
                     this.trashAddresses.add(address);
