@@ -82,9 +82,8 @@ public abstract class AbstractHD {
     }
 
     public static class BitpieColdCoinDetail {
-        public String coinCode;
+        public BitpieColdCoin bitpieColdCoin;
         public String displayCode;
-        public int pathNumber;
         public int unitDecimal;
     }
 

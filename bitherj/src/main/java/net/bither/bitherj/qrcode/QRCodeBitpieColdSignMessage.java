@@ -1,9 +1,11 @@
 package net.bither.bitherj.qrcode;
 
 import net.bither.bitherj.core.AddressManager;
+import net.bither.bitherj.core.BitpieColdCoin;
 import net.bither.bitherj.core.BitpieHDAccountCold;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
+import net.bither.bitherj.exception.BitpieColdNoSupportCoinException;
 import net.bither.bitherj.utils.Utils;
 
 import java.io.Serializable;
@@ -42,16 +44,15 @@ public class QRCodeBitpieColdSignMessage implements Serializable {
     }
 
     public static final String SIGN_MESSAGE_VERSION = "S";
-    private String coinCode;
+    private BitpieColdCoin bitpieColdCoin;
     private String coinDisplayCode;
-    private int    coinPathNumber;
     private String btcFirstAddress;
     private String unsignedMsg;
     private SignMessageType signMessageType;
     private boolean isOnlyGetXpub;
 
-    public String getCoinCode() {
-        return coinCode;
+    public BitpieColdCoin getBitpieColdCoin() {
+        return bitpieColdCoin;
     }
 
     public String getCoinDisplayCode() {
@@ -70,57 +71,48 @@ public class QRCodeBitpieColdSignMessage implements Serializable {
         return isOnlyGetXpub;
     }
 
-    public static QRCodeBitpieColdSignMessage formatQRCode(String str) {
-        try {
-            if (Utils.isEmpty(str) || !str.startsWith(SIGN_MESSAGE_VERSION)) {
-                return null;
-            }
-            SignMessageType signMessageType;
-            String[] strArray = str.split(HD_MONITOR_QR_SPLIT);
-            String str1 = strArray[0];
-            if (hasVersion(str1)) {
-                String versionStr = str1.replace(SIGN_MESSAGE_VERSION, "");
-                int version = Integer.valueOf(versionStr);
-                signMessageType = getSignMessageType(version);
-                str = str.substring(strArray[0].length() + 1);
-                strArray = str.split(HD_MONITOR_QR_SPLIT);
-            } else {
-                return null;
-            }
-            if (signMessageType == null) {
-                return null;
-            }
-            QRCodeBitpieColdSignMessage qrCodeBitpieColdSignMessage = new QRCodeBitpieColdSignMessage();
-            qrCodeBitpieColdSignMessage.signMessageType = signMessageType;
-            qrCodeBitpieColdSignMessage.btcFirstAddress = strArray[0];
-            switch (signMessageType) {
-                case LoginSign:
-                    qrCodeBitpieColdSignMessage.unsignedMsg = strArray[1];
-                    break;
-                case ChangeCoinGetXpub:
-                case ChangeCoinSign:
-                    qrCodeBitpieColdSignMessage.coinCode = strArray[1];
-                    qrCodeBitpieColdSignMessage.coinDisplayCode = strArray[2];
-                    String coinPathNumberStr = strArray[3];
-                    try {
-                        int coinPathNumber = Integer.valueOf(coinPathNumberStr);
-                        qrCodeBitpieColdSignMessage.coinPathNumber = coinPathNumber;
-                    } catch (NumberFormatException ex) {
-                        ex.printStackTrace();
-                        return null;
-                    }
-                    if (signMessageType == SignMessageType.ChangeCoinSign) {
-                        qrCodeBitpieColdSignMessage.unsignedMsg = strArray[4];
-                    } else {
-                        qrCodeBitpieColdSignMessage.isOnlyGetXpub = strArray[4].equals("1") ? true : false;
-                    }
-                    break;
-            }
-            return qrCodeBitpieColdSignMessage;
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static QRCodeBitpieColdSignMessage formatQRCode(String str) throws Exception {
+        if (Utils.isEmpty(str) || !str.startsWith(SIGN_MESSAGE_VERSION)) {
             return null;
         }
+        SignMessageType signMessageType;
+        String[] strArray = str.split(HD_MONITOR_QR_SPLIT);
+        String str1 = strArray[0];
+        if (hasVersion(str1)) {
+            String versionStr = str1.replace(SIGN_MESSAGE_VERSION, "");
+            int version = Integer.valueOf(versionStr);
+            signMessageType = getSignMessageType(version);
+            str = str.substring(strArray[0].length() + 1);
+            strArray = str.split(HD_MONITOR_QR_SPLIT);
+        } else {
+            return null;
+        }
+        if (signMessageType == null) {
+            return null;
+        }
+        QRCodeBitpieColdSignMessage qrCodeBitpieColdSignMessage = new QRCodeBitpieColdSignMessage();
+        qrCodeBitpieColdSignMessage.signMessageType = signMessageType;
+        qrCodeBitpieColdSignMessage.btcFirstAddress = strArray[0];
+        switch (signMessageType) {
+            case LoginSign:
+                qrCodeBitpieColdSignMessage.unsignedMsg = strArray[1];
+                break;
+            case ChangeCoinGetXpub:
+            case ChangeCoinSign:
+                BitpieColdCoin bitpieColdCoin = BitpieColdCoin.fromValue(strArray[1]);
+                if (bitpieColdCoin == null) {
+                    throw new BitpieColdNoSupportCoinException();
+                }
+                qrCodeBitpieColdSignMessage.bitpieColdCoin = bitpieColdCoin;
+                qrCodeBitpieColdSignMessage.coinDisplayCode = strArray[2];
+                if (signMessageType == SignMessageType.ChangeCoinSign) {
+                    qrCodeBitpieColdSignMessage.unsignedMsg = strArray[3];
+                } else {
+                    qrCodeBitpieColdSignMessage.isOnlyGetXpub = strArray[3].equals("1") ? true : false;
+                }
+                break;
+        }
+        return qrCodeBitpieColdSignMessage;
     }
 
     public String getBitherQrCodeStr(SecureCharSequence password) {
@@ -137,9 +129,9 @@ public class QRCodeBitpieColdSignMessage implements Serializable {
                 break;
             case ChangeCoinGetXpub:
                 try {
-                    String changeCoinXpub = DeterministicKey.deserializeB58(bitpieHDAccountCold.xPubB58(password, coinPathNumber)).serializePubB58();
+                    String changeCoinXpub = DeterministicKey.deserializeB58(bitpieHDAccountCold.xPubB58(password, bitpieColdCoin.getPathNumber())).serializePubB58();
                     password.wipe();
-                    preQrCodeStrs = new String[]{versionStr, btcFirstAddress, coinCode, changeCoinXpub};
+                    preQrCodeStrs = new String[]{versionStr, btcFirstAddress, bitpieColdCoin.code, changeCoinXpub};
                 } catch (Exception e) {
                     e.printStackTrace();
                     password.wipe();
@@ -149,16 +141,16 @@ public class QRCodeBitpieColdSignMessage implements Serializable {
             case ChangeCoinSign:
                 String changeCoinXpub;
                 try {
-                    changeCoinXpub = DeterministicKey.deserializeB58(bitpieHDAccountCold.xPubB58(password, coinPathNumber)).serializePubB58();
+                    changeCoinXpub = DeterministicKey.deserializeB58(bitpieHDAccountCold.xPubB58(password, bitpieColdCoin.getPathNumber())).serializePubB58();
                 } catch (Exception e) {
                     e.printStackTrace();
                     password.wipe();
                     return null;
                 }
                 DeterministicKey normalKey = bitpieHDAccountCold.getExternalKey(0, password);
-                DeterministicKey changeKey = bitpieHDAccountCold.getExternalKey(0, coinPathNumber, password);
+                DeterministicKey changeKey = bitpieHDAccountCold.getExternalKey(0, bitpieColdCoin.getPathNumber(), password);
                 password.wipe();
-                preQrCodeStrs = new String[]{versionStr, btcFirstAddress, coinCode, changeCoinXpub, normalKey.signMessage(unsignedMsg), changeKey.signMessage(unsignedMsg)};
+                preQrCodeStrs = new String[]{versionStr, btcFirstAddress, bitpieColdCoin.code, changeCoinXpub, normalKey.signMessage(unsignedMsg), changeKey.signMessage(unsignedMsg)};
                 break;
             default:
                 password.wipe();

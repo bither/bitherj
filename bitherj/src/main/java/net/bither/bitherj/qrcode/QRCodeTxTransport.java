@@ -18,6 +18,7 @@ package net.bither.bitherj.qrcode;
 
 import net.bither.bitherj.core.AbstractHD;
 import net.bither.bitherj.core.AddressManager;
+import net.bither.bitherj.core.BitpieColdCoin;
 import net.bither.bitherj.core.Coin;
 import net.bither.bitherj.core.DesktopHDMAddress;
 import net.bither.bitherj.core.EnterpriseHDMAddress;
@@ -30,6 +31,7 @@ import net.bither.bitherj.core.Tx;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.exception.AddressFormatException;
+import net.bither.bitherj.exception.BitpieColdNoSupportCoinException;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Utils;
 
@@ -191,14 +193,6 @@ public class QRCodeTxTransport implements Serializable {
     }
 
     public AbstractHD.BitpieColdCoinDetail getCoinDetail() {
-        if (coinDetail == null) {
-            coinDetail = new AbstractHD.BitpieColdCoinDetail();
-            Coin coin = Utils.getCoinByAddressHeader(getToAddress());
-            String coinCode = coin.getName();
-            coinDetail.coinCode = coinCode;
-            coinDetail.displayCode = coinCode;
-            coinDetail.unitDecimal = coin.getUnitDecimal();
-        }
         return coinDetail;
     }
 
@@ -519,92 +513,37 @@ public class QRCodeTxTransport implements Serializable {
 
     }
 
-    public static QRCodeTxTransport formatQRCodeTransport(String str) {
-        try {
-            QRCodeTxTransport qrCodeTxTransport;
-            TxTransportType txTransportType = null;
-            int hdmIndex = QRCodeTxTransport.NO_HDM_INDEX;
-            String[] strArray = QRCodeUtil.splitString(str);
-            String str1 = strArray[0];
-            if (hasVersion(str1)) {
-                String versionStr = str1.replace(TX_TRANSPORT_VERSION, "");
-                int version = Integer.valueOf(versionStr);
-                txTransportType = getTxTransportType(version);
-                str = str.substring(strArray[0].length() + 1);
-                strArray = QRCodeUtil.splitString(str);
-            }
-            if (txTransportType != null && txTransportType.isBitpieCold()) {
-                return formatBitpieColdQRCodeTransport(str, txTransportType);
-            }
-            boolean isHDM = !isAddressHex(strArray[0]);
-            if (isHDM) {
-                hdmIndex = Integer.parseInt(strArray[0], 16);
-                str = str.substring(strArray[0].length() + 1);
-                strArray = QRCodeUtil.splitString(str);
-            }
-            boolean hasChangeAddress = isAddressHex(strArray[1]);
-            if (hasChangeAddress) {
-                qrCodeTxTransport = changeFormatQRCodeTransport(str);
-            } else {
-                qrCodeTxTransport = noChangeFormatQRCodeTransport(str);
-            }
-            qrCodeTxTransport.setHdmIndex(hdmIndex);
-            qrCodeTxTransport.setTxTransportType(txTransportType);
-            if (txTransportType == TxTransportType.ColdHD) {
-                List<String> strs = qrCodeTxTransport.getHashList();
-                ArrayList<String> hashes = new ArrayList<String>();
-                ArrayList<AbstractHD.PathTypeIndex> paths = new ArrayList<AbstractHD
-                        .PathTypeIndex>();
-                for (String s : strs) {
-                    String[] hs = s.split(QRCodeUtil.QR_CODE_SECONDARY_SPLIT_ESCAPE);
-                    AbstractHD.PathTypeIndex path = new AbstractHD.PathTypeIndex();
-                    path.pathType = AbstractHD.getTernalRootType(Integer.valueOf(hs[0]));
-                    path.index = Integer.valueOf(hs[1]);
-                    paths.add(path);
-                    hashes.add(hs[2]);
-                }
-                qrCodeTxTransport.setHashList(hashes);
-                qrCodeTxTransport.setPathTypeIndexes(paths);
-            }
-            return qrCodeTxTransport;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+    public static QRCodeTxTransport formatQRCodeTransport(String str) throws Exception {
+        QRCodeTxTransport qrCodeTxTransport;
+        TxTransportType txTransportType = null;
+        int hdmIndex = QRCodeTxTransport.NO_HDM_INDEX;
+        String[] strArray = QRCodeUtil.splitString(str);
+        String str1 = strArray[0];
+        if (hasVersion(str1)) {
+            String versionStr = str1.replace(TX_TRANSPORT_VERSION, "");
+            int version = Integer.valueOf(versionStr);
+            txTransportType = getTxTransportType(version);
+            str = str.substring(strArray[0].length() + 1);
+            strArray = QRCodeUtil.splitString(str);
         }
-    }
-
-    private static QRCodeTxTransport formatBitpieColdQRCodeTransport(String str, TxTransportType txTransportType) {
-        try {
-            String[] strArray = QRCodeUtil.splitString(str);
-            AbstractHD.BitpieColdCoinDetail coinDetail = formatQRCodeCoinDetail(strArray[0]);
-            if (coinDetail == null) {
-                return null;
-            }
+        if (txTransportType != null && txTransportType.isBitpieCold()) {
+            return formatBitpieColdQRCodeTransport(str, txTransportType);
+        }
+        boolean isHDM = !isAddressHex(strArray[0]);
+        if (isHDM) {
+            hdmIndex = Integer.parseInt(strArray[0], 16);
             str = str.substring(strArray[0].length() + 1);
             strArray = QRCodeUtil.splitString(str);
-            AbstractHD.BitpieColdCoinDetail feeCoinDetail = null;
-            if (txTransportType == TxTransportType.BitpieColdExistParent) {
-                feeCoinDetail = formatQRCodeCoinDetail(strArray[0]);
-                if (feeCoinDetail == null) {
-                    return null;
-                }
-                str = str.substring(strArray[0].length() + 1);
-                strArray = QRCodeUtil.splitString(str);
-            }
-            boolean isUseOwnFee = strArray[0].equals("0") ? false : true;
-            str = str.substring(strArray[0].length() + 1);
-            strArray = QRCodeUtil.splitString(str);
-            boolean isFeeTx = strArray[0].equals("1") ? true : false;
-            str = str.substring(strArray[0].length() + 1);
-            QRCodeTxTransport qrCodeTxTransport = noChangeFormatQRCodeTransport(str);
-            if (qrCodeTxTransport == null) {
-                return null;
-            }
-            qrCodeTxTransport.coinDetail = coinDetail;
-            qrCodeTxTransport.feeCoinDetail = feeCoinDetail;
-            qrCodeTxTransport.isUseOwnFee = isUseOwnFee;
-            qrCodeTxTransport.isFeeTx = isFeeTx;
-            qrCodeTxTransport.setTxTransportType(txTransportType);
+        }
+        boolean hasChangeAddress = isAddressHex(strArray[1]);
+        if (hasChangeAddress) {
+            qrCodeTxTransport = changeFormatQRCodeTransport(str);
+        } else {
+            qrCodeTxTransport = noChangeFormatQRCodeTransport(str);
+        }
+        qrCodeTxTransport.setHdmIndex(hdmIndex);
+        qrCodeTxTransport.setTxTransportType(txTransportType);
+        if (txTransportType == TxTransportType.ColdHD) {
             List<String> strs = qrCodeTxTransport.getHashList();
             ArrayList<String> hashes = new ArrayList<String>();
             ArrayList<AbstractHD.PathTypeIndex> paths = new ArrayList<AbstractHD
@@ -616,34 +555,77 @@ public class QRCodeTxTransport implements Serializable {
                 path.index = Integer.valueOf(hs[1]);
                 paths.add(path);
                 hashes.add(hs[2]);
-                if (txTransportType == TxTransportType.BitpieCold) {
-                    path.coinCode = coinDetail.coinCode;
-                } else {
-                    path.coinCode = hs[3];
-                }
             }
             qrCodeTxTransport.setHashList(hashes);
             qrCodeTxTransport.setPathTypeIndexes(paths);
-            return qrCodeTxTransport;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
         }
+        return qrCodeTxTransport;
     }
 
-    private static AbstractHD.BitpieColdCoinDetail formatQRCodeCoinDetail(String str) {
-        try {
-            String[] hs = str.split(QRCodeUtil.QR_CODE_SECONDARY_SPLIT_ESCAPE);
-            AbstractHD.BitpieColdCoinDetail coinDetail = new AbstractHD.BitpieColdCoinDetail();
-            coinDetail.coinCode = hs[0];
-            coinDetail.pathNumber = Integer.valueOf(hs[1]);
-            coinDetail.unitDecimal = Integer.valueOf(hs[2]);
-            coinDetail.displayCode = hs[3];
-            return coinDetail;
-        } catch (Exception e) {
-            e.printStackTrace();
+    private static QRCodeTxTransport formatBitpieColdQRCodeTransport(String str, TxTransportType txTransportType) throws Exception {
+        String[] strArray = QRCodeUtil.splitString(str);
+        AbstractHD.BitpieColdCoinDetail coinDetail = formatQRCodeCoinDetail(strArray[0]);
+        if (coinDetail == null) {
             return null;
         }
+        str = str.substring(strArray[0].length() + 1);
+        strArray = QRCodeUtil.splitString(str);
+        AbstractHD.BitpieColdCoinDetail feeCoinDetail = null;
+        if (txTransportType == TxTransportType.BitpieColdExistParent) {
+            feeCoinDetail = formatQRCodeCoinDetail(strArray[0]);
+            if (feeCoinDetail == null) {
+                return null;
+            }
+            str = str.substring(strArray[0].length() + 1);
+            strArray = QRCodeUtil.splitString(str);
+        }
+        boolean isUseOwnFee = strArray[0].equals("0") ? false : true;
+        str = str.substring(strArray[0].length() + 1);
+        strArray = QRCodeUtil.splitString(str);
+        boolean isFeeTx = strArray[0].equals("1") ? true : false;
+        str = str.substring(strArray[0].length() + 1);
+        QRCodeTxTransport qrCodeTxTransport = noChangeFormatQRCodeTransport(str);
+        if (qrCodeTxTransport == null) {
+            return null;
+        }
+        qrCodeTxTransport.coinDetail = coinDetail;
+        qrCodeTxTransport.feeCoinDetail = feeCoinDetail;
+        qrCodeTxTransport.isUseOwnFee = isUseOwnFee;
+        qrCodeTxTransport.isFeeTx = isFeeTx;
+        qrCodeTxTransport.setTxTransportType(txTransportType);
+        List<String> strs = qrCodeTxTransport.getHashList();
+        ArrayList<String> hashes = new ArrayList<String>();
+        ArrayList<AbstractHD.PathTypeIndex> paths = new ArrayList<AbstractHD
+                .PathTypeIndex>();
+        for (String s : strs) {
+            String[] hs = s.split(QRCodeUtil.QR_CODE_SECONDARY_SPLIT_ESCAPE);
+            AbstractHD.PathTypeIndex path = new AbstractHD.PathTypeIndex();
+            path.pathType = AbstractHD.getTernalRootType(Integer.valueOf(hs[0]));
+            path.index = Integer.valueOf(hs[1]);
+            paths.add(path);
+            hashes.add(hs[2]);
+            if (txTransportType == TxTransportType.BitpieCold) {
+                path.coinCode = coinDetail.bitpieColdCoin.code;
+            } else {
+                path.coinCode = hs[3];
+            }
+        }
+        qrCodeTxTransport.setHashList(hashes);
+        qrCodeTxTransport.setPathTypeIndexes(paths);
+        return qrCodeTxTransport;
+    }
+
+    private static AbstractHD.BitpieColdCoinDetail formatQRCodeCoinDetail(String str) throws Exception {
+        String[] hs = str.split(QRCodeUtil.QR_CODE_SECONDARY_SPLIT_ESCAPE);
+        BitpieColdCoin bitpieColdCoin = BitpieColdCoin.fromValue(hs[0]);
+        if (bitpieColdCoin == null) {
+            throw new BitpieColdNoSupportCoinException();
+        }
+        AbstractHD.BitpieColdCoinDetail coinDetail = new AbstractHD.BitpieColdCoinDetail();
+        coinDetail.bitpieColdCoin = bitpieColdCoin;
+        coinDetail.unitDecimal = Integer.valueOf(hs[1]);
+        coinDetail.displayCode = hs[2];
+        return coinDetail;
     }
 
     private static QRCodeTxTransport changeFormatQRCodeTransport(String str) {

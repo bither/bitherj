@@ -97,7 +97,7 @@ public class BitpieHDAccountCold extends AbstractHD {
                                       BitpieColdCoinDetail feeCoinDetail,
                                       CharSequence password) throws MnemonicException
             .MnemonicLengthException {
-        if (coinDetail.coinCode.toUpperCase().equals(Coin.BTC.getName()) && feeCoinDetail == null) {
+        if (coinDetail.bitpieColdCoin == BitpieColdCoin.BTC && feeCoinDetail == null) {
             return signBtcHashes(Collections2.transform(hashes, new Function<String, byte[]>() {
                 @Nullable
                 public byte[] apply(String input) {
@@ -123,14 +123,14 @@ public class BitpieHDAccountCold extends AbstractHD {
         assert hashes.size() == paths.size();
         ArrayList<byte[]> sigs = new ArrayList<byte[]>();
         DeterministicKey master = masterKey(password);
-        DeterministicKey account = getAccount(master, coinDetail.pathNumber);
+        DeterministicKey account = getAccount(master, coinDetail.bitpieColdCoin.getPathNumber());
         DeterministicKey external = getChainRootKey(account, PathType.EXTERNAL_ROOT_PATH);
         DeterministicKey internal = getChainRootKey(account, PathType.INTERNAL_ROOT_PATH);
         DeterministicKey feeAccount = null;
         DeterministicKey feeExternal = null;
         DeterministicKey feeInternal = null;
         if (feeCoinDetail != null) {
-            feeAccount = getAccount(master, feeCoinDetail.pathNumber);
+            feeAccount = getAccount(master, feeCoinDetail.bitpieColdCoin.getPathNumber());
             feeExternal = getChainRootKey(feeAccount, PathType.EXTERNAL_ROOT_PATH);
             feeInternal = getChainRootKey(feeAccount, PathType.INTERNAL_ROOT_PATH);
         }
@@ -145,7 +145,7 @@ public class BitpieHDAccountCold extends AbstractHD {
             byte[] hash = hashIterator.next();
             PathTypeIndex path = pathIterator.next();
             DeterministicKey key;
-            if (feeCoinDetail != null && path.coinCode.toUpperCase().equals(feeCoinDetail.coinCode.toUpperCase())) {
+            if (feeCoinDetail != null && path.coinCode.toUpperCase().equals(feeCoinDetail.bitpieColdCoin.code.toUpperCase())) {
                 if (path.pathType == PathType.EXTERNAL_ROOT_PATH) {
                     key = feeExternal.deriveSoftened(path.index);
                 } else {
