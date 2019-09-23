@@ -27,6 +27,7 @@ import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +66,18 @@ public class Out extends Message {
 
     public Out() {
 
+    }
+
+    public Out(Tx tx, JSONObject jsonObject, String unspentOutAddress) {
+        outValue = jsonObject.getLong("value");
+        outScript = Utils.hexStringToByteArray(jsonObject.getString("script_hex"));
+        this.tx = tx;
+        this.txHash = tx.getTxHash();
+        if (getOutAddress() != null && !getOutAddress().equals(unspentOutAddress)) {
+            outStatus = OutStatus.reloadSpent;
+        } else {
+            outStatus = OutStatus.reloadUnSpent;
+        }
     }
 
     public Out(Tx tx, byte[] msg, int offset) {
@@ -225,7 +238,7 @@ public class Out extends Message {
     }
 
     public enum OutStatus {
-        unspent(0), spent(1);
+        unspent(0), spent(1), reloadUnSpent(2), reloadSpent(3);
         private int mValue;
 
         OutStatus(int value) {
@@ -236,11 +249,25 @@ public class Out extends Message {
             return this.mValue;
         }
 
+        public boolean isReload() {
+            switch (this) {
+                case reloadSpent:
+                case reloadUnSpent:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
     }
 
     public static OutStatus getOutStatus(int status) {
         if (status == 1) {
             return OutStatus.spent;
+        } else if (status == 2) {
+            return OutStatus.reloadUnSpent;
+        } else if (status ==3) {
+            return OutStatus.reloadSpent;
         } else {
             return OutStatus.unspent;
         }

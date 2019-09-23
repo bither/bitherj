@@ -555,12 +555,37 @@ public class HDAccount extends Address {
     }
 
     public List<Tx> getTxs(int page) {
-        return AbstractDb.hdAccountAddressProvider.getTxAndDetailByHDAccount(this.hdSeedId, page);
+        return handleTxs(AbstractDb.hdAccountAddressProvider.getTxAndDetailByHDAccount(this.hdSeedId, page));
     }
 
     @Override
     public List<Tx> getTxs() {
-        return AbstractDb.hdAccountAddressProvider.getTxAndDetailByHDAccount(this.hdSeedId);
+        return handleTxs(AbstractDb.hdAccountAddressProvider.getTxAndDetailByHDAccount(this.hdSeedId));
+    }
+
+    private List<Tx> handleTxs(List<Tx> txs) {
+        List<Tx> tTxs = new ArrayList<Tx>();
+        for (Tx tx: txs) {
+            boolean isAdd = false;
+            for (Out out: tx.getOuts()) {
+                if (out.getOutAddress() == null) {
+                    continue;
+                }
+                List<String> addresses = new ArrayList<String>();
+                addresses.add(out.getOutAddress());
+                if (out.getOutStatus() != Out.OutStatus.reloadSpent && isSendFromMe(addresses)) {
+                    isAdd = true;
+                    break;
+                } else if (!out.getOutStatus().isReload()) {
+                    isAdd = true;
+                    break;
+                }
+            }
+            if (isAdd) {
+                tTxs.add(tx);
+            }
+        }
+        return tTxs;
     }
 
     public int txCount() {
@@ -1282,28 +1307,16 @@ public class HDAccount extends Address {
 
     }
 
-    public List<HDAccountAddress> getHdHotAddresses(int page, AbstractHD.PathType pathType,CharSequence password){
+    public List<HDAccountAddress> getHdHotAddresses(int page, AbstractHD.PathType pathType){
         ArrayList<HDAccountAddress> addresses = new ArrayList<HDAccountAddress>();
-        try {
-            DeterministicKey master = masterKey(password);
-            DeterministicKey accountKey = getAccount(master, AbstractHD.PurposePathLevel.Normal);
-            DeterministicKey pathTypeKey = getChainRootKey(accountKey, pathType);
-            for (int i = (page -1) * 10;i < page * 10; i ++) {
-                DeterministicKey key = pathTypeKey.deriveSoftened(i);
-                HDAccountAddress hdAccountAddress = new HDAccountAddress
-                        (key.toAddress(),key.getPubKeyExtended(),pathType,i,false,true,hdSeedId);
-
+        HDAccountAddress hdAccountAddress;
+        for (int i = (page -1) * 10; i < page * 10; i ++) {
+            hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId, pathType, i);
+            if (hdAccountAddress != null) {
                 addresses.add(hdAccountAddress);
             }
-            master.wipe();
-            accountKey.wipe();
-            pathTypeKey.wipe();
-            return addresses;
-        } catch (KeyCrypterException e) {
-            throw new PasswordException(e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
+        return addresses;
     }
 
 }

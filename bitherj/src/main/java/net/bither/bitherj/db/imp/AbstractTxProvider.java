@@ -265,7 +265,7 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
     public void add(Tx txItem) {
         IDb db = this.getWriteDb();
         db.beginTransaction();
-        addTxToDb(db, txItem);
+        addTxToDb(db, txItem, false);
         db.endTransaction();
     }
 
@@ -274,20 +274,20 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
             IDb db = this.getWriteDb();
             db.beginTransaction();
             for (Tx txItem : txItems) {
-                addTxToDb(db, txItem);
+                addTxToDb(db, txItem, true);
             }
             db.endTransaction();
         }
     }
 
-    private void addTxToDb(IDb db, Tx txItem) {
-        this.insertTx(db, txItem);
+    private void addTxToDb(IDb db, Tx txItem, boolean isReload) {
+        this.insertTx(db, txItem, isReload);
         List<AddressTx> addressesTxsRels = new ArrayList<AddressTx>();
-        List<AddressTx> temp = insertIn(db, txItem);
+        List<AddressTx> temp = insertIn(db, txItem, isReload);
         if (temp != null && temp.size() > 0) {
             addressesTxsRels.addAll(temp);
         }
-        temp = insertOut(db, txItem);
+        temp = insertOut(db, txItem, isReload);
         if (temp != null && temp.size() > 0) {
             addressesTxsRels.addAll(temp);
         }
@@ -551,10 +551,10 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
     public List<Tx> getUnspendTxWithAddress(String address) {
         String unspendOutSql = "select a.*,b.tx_ver,b.tx_locktime,b.tx_time,b.block_no,b.source,ifnull(b.block_no,0)*a.out_value coin_depth " +
                 "from outs a,txs b where a.tx_hash=b.tx_hash" +
-                " and a.out_address=? and a.out_status=?";
+                " and a.out_address=? and (a.out_status=? or a.out_status=?)";
         final List<Tx> txItemList = new ArrayList<Tx>();
 
-        this.execQueryLoop(unspendOutSql, new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())}, new Function<ICursor, Void>() {
+        this.execQueryLoop(unspendOutSql, new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue()), Integer.toString(Out.OutStatus.reloadUnSpent.getValue())}, new Function<ICursor, Void>() {
             @Nullable
             @Override
             public Void apply(@Nullable ICursor c) {
@@ -621,8 +621,8 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
     public long getConfirmedBalanceWithAddress(String address) {
         final long[] sum = {0};
         String unspendOutSql = "select ifnull(sum(a.out_value),0) sum from outs a,txs b where a.tx_hash=b.tx_hash " +
-                " and a.out_address=? and a.out_status=? and b.block_no is not null";
-        this.execQueryOneRecord(unspendOutSql, new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue())}, new Function<ICursor, Void>() {
+                " and a.out_address=? and (a.out_status=? or a.out_status=?) and b.block_no is not null";
+        this.execQueryOneRecord(unspendOutSql, new String[]{address, Integer.toString(Out.OutStatus.unspent.getValue()), Integer.toString(Out.OutStatus.reloadUnSpent.getValue())}, new Function<ICursor, Void>() {
             @Nullable
             @Override
             public Void apply(@Nullable ICursor c) {
@@ -695,15 +695,15 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
     public List<Out> getUnspentOutputByBlockNo(long blockNo,String address) {
         final List<Out> outItems = new ArrayList<Out>();
         String sqlPreUnspentOut = "select a.* from outs a,txs b where a.tx_hash=b.tx_hash and " +
-                "a.out_address=? and a.out_status=? and b.block_no is not null and " +
+                "a.out_address=? and (a.out_status=? or a.out_status=?) and b.block_no is not null and " +
                 "b.block_no<?";
         String sqlPostSpentOuts = "select a.* from outs a, txs out_b, ins i, txs b " +
                 "where a.tx_hash=out_b.tx_hash and a.out_sn=i.prev_out_sn and " +
                 "a.tx_hash=i.prev_tx_hash and a.out_address=? and b.tx_hash=i.tx_hash and " +
-                "a.out_status=? and out_b.block_no is not null and " +
+                "(a.out_status=? or a.out_status=?) and out_b.block_no is not null and " +
                 "out_b.block_no<? and (b.block_no>=? or b.block_no is null)";
 
-        this.execQueryLoop(sqlPreUnspentOut, new String[] {address,Integer.toString(0),
+        this.execQueryLoop(sqlPreUnspentOut, new String[] {address, Integer.toString(Out.OutStatus.unspent.getValue()), Integer.toString(Out.OutStatus.reloadUnSpent.getValue()),
                 Long.toString(blockNo)}, new Function<ICursor, Void>() {
             @Nullable
             @Override
@@ -713,7 +713,7 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
             }
         });
 
-        this.execQueryLoop(sqlPostSpentOuts, new String[] {address,Integer.toString(1),
+        this.execQueryLoop(sqlPostSpentOuts, new String[] {address,Integer.toString(Out.OutStatus.spent.getValue()), Integer.toString(Out.OutStatus.reloadSpent.getValue()),
                 Long.toString(blockNo),Long.toString(blockNo)}, new Function<ICursor, Void>() {
             @Nullable
             @Override
@@ -1074,7 +1074,7 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
         });
     }
 
-    public void insertTx(IDb db, Tx txItem) {
+    public void insertTx(IDb db, Tx txItem, boolean isReload) {
         final int[] cnt = {0};
         String existSql = "select count(0) cnt from txs where tx_hash=?";
         this.execQueryOneRecord(db, existSql, new String[]{Base58.encode(txItem.getTxHash())}, new Function<ICursor, Void>() {
@@ -1098,7 +1098,7 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
     protected abstract void insertTxToDb(IDb db, Tx tx);
 
 
-    public List<AddressTx> insertIn(IDb db, final Tx txItem) {
+    public List<AddressTx> insertIn(IDb db, final Tx txItem, boolean isReload) {
         final List<AddressTx> addressTxes = new ArrayList<AddressTx>();
         String existSql = "select count(0) cnt from ins where tx_hash=? and in_sn=?";
         String outAddressSql = "select out_address from outs where tx_hash=? and out_sn=?";
@@ -1136,16 +1136,17 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
                     return null;
                 }
             });
-
-            this.execUpdate(db, updateOutStatusSql, new String[]{Integer.toString(Out.OutStatus.spent.getValue()), Base58
-                    .encode(inItem.getPrevTxHash()), Integer.toString(inItem.getPrevOutSn())});
+            if (!isReload) {
+                this.execUpdate(db, updateOutStatusSql, new String[]{Integer.toString(Out.OutStatus.spent.getValue()), Base58
+                        .encode(inItem.getPrevTxHash()), Integer.toString(inItem.getPrevOutSn())});
+            }
         }
         return addressTxes;
     }
 
     protected abstract void insertInToDb(IDb db, In in);
 
-    public List<AddressTx> insertOut(IDb db, Tx txItem) {
+    public List<AddressTx> insertOut(IDb db, Tx txItem, boolean isReload) {
         String existSql = "select count(0) cnt from outs where tx_hash=? and out_sn=?";
         String updateHDAccountIdSql = "update outs set hd_account_id=? where tx_hash=? and out_sn=?";
         String queryHDAddressSql = "select hd_account_id,path_type,address_index from hd_account_addresses where address=?";
@@ -1174,6 +1175,10 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
                     this.execUpdate(db, updateHDAccountIdSql, new String[]{
                             Integer.toString(outItem.getHDAccountId()), Base58.encode(txItem.getTxHash())
                             , Integer.toString(outItem.getOutSn())});
+                }
+                if (outItem.getOutStatus() == Out.OutStatus.reloadUnSpent) {
+                    this.execUpdate(db, updateOutStatusSql, new String[]{Integer.toString(outItem.getOutStatus().getValue())
+                            , Base58.encode(txItem.getTxHash()), Integer.toString(outItem.getOutSn())});
                 }
             }
             if (outItem.getHDAccountId() > -1) {
@@ -1215,7 +1220,7 @@ public abstract class AbstractTxProvider extends AbstractProvider implements ITx
                     return null;
                 }
             });
-            if (isSpentByExistTx[0]) {
+            if (isSpentByExistTx[0] && !isReload) {
                 this.execUpdate(db, updateOutStatusSql, new String[]{Integer.toString(Out.OutStatus.spent.getValue())
                         , Base58.encode(txItem.getTxHash()), Integer.toString(outItem.getOutSn())});
             }

@@ -73,6 +73,20 @@ public abstract class AbstractHD {
         public boolean isExternal() {
             return this == EXTERNAL_ROOT_PATH || this == EXTERNAL_BIP49_PATH;
         }
+
+        public PathType nextPathType() {
+            switch (this) {
+                case EXTERNAL_ROOT_PATH:
+                    return INTERNAL_ROOT_PATH;
+                case INTERNAL_ROOT_PATH:
+                    return EXTERNAL_BIP49_PATH;
+                case EXTERNAL_BIP49_PATH:
+                    return INTERNAL_BIP49_PATH;
+                case INTERNAL_BIP49_PATH:
+                    return null;
+            }
+            return null;
+        }
     }
 
     public static class PathTypeIndex {

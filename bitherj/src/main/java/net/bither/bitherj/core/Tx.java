@@ -35,6 +35,9 @@ import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -134,6 +137,32 @@ public class Tx extends Message implements Comparable<Tx> {
         this.txTime = (int) (new Date().getTime() / 1000);
     }
 
+    public Tx(JSONObject txJsonObject, String unspentOutAddress) {
+        this.blockNo = txJsonObject.getInt("block_height");
+        this.txHash = Utils.reverseBytes(Utils.hexStringToByteArray(txJsonObject.getString("hash")));
+        this.txTime = txJsonObject.getInt("created_at");
+        this.txVer = txJsonObject.getInt("version");
+        this.txLockTime = txJsonObject.getLong("lock_time");
+        JSONArray inJsonArray = txJsonObject.getJSONArray("inputs");
+        this.ins = new ArrayList<In>();
+        for (int i = 0; i < inJsonArray.length(); i++) {
+            JSONObject inJsonObject = inJsonArray.getJSONObject(i);
+            In in = new In(this, inJsonObject);
+            in.setInSn(i);
+            this.ins.add(in);
+        }
+
+        JSONArray outJsonArray = txJsonObject.getJSONArray("outputs");
+        this.outs = new ArrayList<Out>();
+        for (int i = 0; i < outJsonArray.length(); i++) {
+            JSONObject outJsonObject = outJsonArray.getJSONObject(i);
+            Out out = new Out(this, outJsonObject, unspentOutAddress);
+            out.setOutSn(i);
+            this.outs.add(out);
+        }
+        this.blockHash = Utils.hexStringToByteArray(txJsonObject.getString("block_hash"));
+    }
+
     public Tx(Tx tx) {
         this(tx.bitcoinSerialize());
     }
@@ -187,7 +216,6 @@ public class Tx extends Message implements Comparable<Tx> {
 //    public int length;
 
     private transient int optimalEncodingMessageSize;
-
 
     public Coin getCoin() {
         return coin;
@@ -1896,25 +1924,41 @@ public class Tx extends Message implements Comparable<Tx> {
             return deltaAmountFrom((HDAccount) address);
         }
         long receive = 0;
+        boolean isReload = false;
         for (Out out : this.outs) {
             if (Utils.compareString(address.getAddress(), out.getOutAddress())) {
                 receive += out.getOutValue();
             }
+            if (out.getOutStatus().isReload()) {
+                isReload = true;
+            }
         }
-        long sent = AbstractDb.txProvider.sentFromAddress(getTxHash(), address.getAddress());
-        return receive - sent;
+        if (isReload) {
+            return receive;
+        } else {
+            long sent = AbstractDb.txProvider.sentFromAddress(getTxHash(), address.getAddress());
+            return receive - sent;
+        }
     }
 
     public long deltaAmountFrom(HDAccount account) {
         long receive = 0;
+        boolean isReload = false;
         HashSet<String> hashSet = account.getBelongAccountAddresses(getOutAddressList());
         for (Out out : this.outs) {
             if (hashSet.contains(out.getOutAddress())) {
                 receive += out.getOutValue();
             }
+            if (out.getOutStatus().isReload()) {
+                isReload = true;
+            }
         }
-        long sent = AbstractDb.hdAccountAddressProvider.sentFromAccount(account.getHdSeedId(), getTxHash());
-        return receive - sent;
+        if (isReload) {
+            return receive;
+        } else {
+            long sent = AbstractDb.hdAccountAddressProvider.sentFromAccount(account.getHdSeedId(), getTxHash());
+            return receive - sent;
+        }
     }
 
     public List<String> getOutAddressList() {
