@@ -317,15 +317,27 @@ public class HDAccountCold extends AbstractHD {
         return xpub;
     }
 
-    public List<HDAccount.HDAccountAddress> getHdColdAddresses(int page, AbstractHD.PathType pathType) {
+    public List<HDAccount.HDAccountAddress> getHdColdAddresses(int page, AbstractHD.PathType pathType, CharSequence password){
         ArrayList<HDAccount.HDAccountAddress> addresses = new ArrayList<HDAccount.HDAccountAddress>();
-        HDAccount.HDAccountAddress hdAccountAddress;
-        for (int i = (page - 1) * 10; i < page * 10; i++) {
-            hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId, pathType, i);
-            if (hdAccountAddress != null) {
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master);
+            DeterministicKey pathTypeKey = getChainRootKey(accountKey, pathType);
+            for (int i = (page -1) * 10;i < page * 10; i ++) {
+                DeterministicKey key = pathTypeKey.deriveSoftened(i);
+                HDAccount.HDAccountAddress hdAccountAddress = new HDAccount.HDAccountAddress
+                        (key.toAddress(),key.getPubKeyExtended(),pathType,i,false,true,hdSeedId);
                 addresses.add(hdAccountAddress);
             }
+            master.wipe();
+            accountKey.wipe();
+            pathTypeKey.wipe();
+            return addresses;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return addresses;
     }
+
 }
