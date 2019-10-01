@@ -795,8 +795,6 @@ public class TransactionsUtil {
                         transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
                         transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
 
-                        Collections.sort(transactions, new ComparatorTx());
-                        address.initTxs(transactions);
                         txSum = txSum + transactions.size();
                         needGetTxs = transactions.size() > 0;
                         page++;
@@ -815,17 +813,14 @@ public class TransactionsUtil {
                         // TODO: get transactions from blockChain.info
                         List<Tx> fromTxList  = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
                         List<Tx> compressTxList = AddressManager.getInstance().compressTxsForApi(fromTxList, address);
+                        int transactionCount = TransactionsUtil.getTransactionsCountFromBlockChain(jsonObject);
+                        txSum = txSum + transactionCount;
+                        if(0==transactionCount) needGetTxs = false;
                         transactions.addAll(compressTxList);
-                        txSum = txSum + transactions.size();
-                        if (compressTxList.size()<BlockChainMytransactionsApi.length){
-                            Collections.sort(transactions, new ComparatorTx());
-                            address.initTxs(transactions);
-                            needGetTxs = false;
-                        }
-
-
                     }
                 }
+                Collections.sort(transactions, new ComparatorTx());
+                address.initTxs(transactions);
 
                 if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
                     BlockChain.getInstance().rollbackBlock(apiBlockCount);
@@ -841,6 +836,10 @@ public class TransactionsUtil {
             }
         }
 
+    }
+
+    private static int getTransactionsCountFromBlockChain(JSONObject jsonObject) {
+        return jsonObject.getJSONArray("result").length();
     }
 
     private  static List<Tx> getTransactionsFromBlockChain(JSONObject jsonObject, int storeBlockHeight) throws Exception {

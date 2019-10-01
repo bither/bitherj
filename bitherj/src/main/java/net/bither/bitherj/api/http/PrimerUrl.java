@@ -52,9 +52,9 @@ public class PrimerUrl {
 
     }
 
-    public static final String GET_BY_ADDRESS = "https://explorer.primecoin.net/api/searchrawtransactions/%s";
+    public static final String GET_BY_ADDRESS = "https://explorer.primecoin.net/api/searchrawtransactions/%s/%d";
     public static final String GET_BY_SYNCBLOCK = "https://explorer.primecoin.net/api/syncblock/";
-    public static final String GET_BY_ADDRESS_TESTNET = "https://testexplorer.primecoin.net/api/searchrawtransactions/%s";
+    public static final String GET_BY_ADDRESS_TESTNET = "https://testexplorer.primecoin.net/api/searchrawtransactions/%s/%d";
     public static final String GET_BY_SYNCBLOCK_TESTNET = "https://testexplorer.primecoin.net/api/syncblock/";
     public static String getByAddress(){
         if(Utils.isTestNet()) return GET_BY_ADDRESS_TESTNET;
