@@ -1094,9 +1094,9 @@ public class PeerManager {
                 syncStartHeight && lastBlockHeight <= downloadingPeer.getVersionLastBlockHeight()) {
             double progress = (double) (lastBlockHeight - syncStartHeight) / (double) (downloadingPeer.getVersionLastBlockHeight() -
                     syncStartHeight);
-            AbstractApp.notificationService.sendBroadcastProgressState(progress);
+            AbstractApp.notificationService.sendBroadcastProgressState(progress, downloadingPeer.getVersionLastBlockHeight() - lastBlockHeight);
         } else {
-            AbstractApp.notificationService.sendBroadcastProgressState(-1);
+            AbstractApp.notificationService.sendBroadcastProgressState(-1, -1);
         }
     }
 

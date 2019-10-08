@@ -296,6 +296,7 @@ public class TransactionsUtil {
             DesktopHDMKeychain desktopHDMKeychain = AddressManager.getInstance().getDesktopHDMKeychains().get(0);
             getDesktopHDMUnspentAddress(desktopHDMKeychain,  EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<DesktopHDMAddress>());
         }
+        AbstractApp.notificationService.sendBroadcastAddressTxLoading(null);
     }
 
     private static void getTxForHDAccountMoitored(int hdSeedId, final int webType) throws Exception {
@@ -752,6 +753,7 @@ public class TransactionsUtil {
         for (int i = beginIndex; i < endIndex; i++) {
             HDAccount.HDAccountAddress hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId,
                     pathType, i);
+            AbstractApp.notificationService.sendBroadcastAddressTxLoading(hdAccountAddress.getAddress());
             if (hdAccountAddress == null) {
                 unusedAddressCnt += 1;
                 if (unusedAddressCnt > HDAccount.MaxUnusedNewAddressCount) {
@@ -857,6 +859,7 @@ public class TransactionsUtil {
         ArrayList<DesktopHDMAddress> queryDesktopHDMAddressList = new ArrayList<DesktopHDMAddress>();
         for (int i = beginIndex; i < endIndex; i++) {
             DesktopHDMAddress desktopHDMAddress = AbstractDb.desktopTxProvider.addressForPath(desktopHDMKeychain, pathType, i);
+            AbstractApp.notificationService.sendBroadcastAddressTxLoading(desktopHDMAddress.getAddress());
             if (desktopHDMAddress == null) {
                 unusedAddressCnt += 1;
                 if (unusedAddressCnt > HDAccount.MaxUnusedNewAddressCount) {
@@ -959,6 +962,7 @@ public class TransactionsUtil {
 
     private static void getUnspentTxForAddress() throws Exception {
         for (Address address : AddressManager.getInstance().getAllAddresses()) {
+            AbstractApp.notificationService.sendBroadcastAddressTxLoading(address.getAddress());
             Block storedBlock = BlockChain.getInstance().getLastBlock();
             int storeBlockHeight = storedBlock.getBlockNo();
             if (!address.isSyncComplete()) {
@@ -993,6 +997,7 @@ public class TransactionsUtil {
     private static void getUnspentTxForHDAccount(ArrayList<HDAccount.HDAccountAddress> unspentAddresses, boolean isHDAccountHot) throws Exception {
         for (int i = 0; i < unspentAddresses.size(); i++) {
             HDAccount.HDAccountAddress hdAccountAddress = unspentAddresses.get(i);
+            AbstractApp.notificationService.sendBroadcastAddressTxLoading(hdAccountAddress.getAddress());
             Block storedBlock = BlockChain.getInstance().getLastBlock();
             int storeBlockHeight = storedBlock.getBlockNo();
             int apiBlockCount = 0;
@@ -1024,6 +1029,7 @@ public class TransactionsUtil {
     private static void getUnspentTxForDesktopHDM(DesktopHDMKeychain desktopHDMKeychain, ArrayList<DesktopHDMAddress> unspentAddresses) throws Exception {
         for (int i = 0; i < unspentAddresses.size(); i++) {
             DesktopHDMAddress desktopHDMAddress = unspentAddresses.get(i);
+            AbstractApp.notificationService.sendBroadcastAddressTxLoading(desktopHDMAddress.getAddress());
             Block storedBlock = BlockChain.getInstance().getLastBlock();
             int storeBlockHeight = storedBlock.getBlockNo();
             int apiBlockCount = 0;
