@@ -753,7 +753,6 @@ public class TransactionsUtil {
         for (int i = beginIndex; i < endIndex; i++) {
             HDAccount.HDAccountAddress hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId,
                     pathType, i);
-            AbstractApp.notificationService.sendBroadcastAddressTxLoading(hdAccountAddress.getAddress());
             if (hdAccountAddress == null) {
                 unusedAddressCnt += 1;
                 if (unusedAddressCnt > HDAccount.MaxUnusedNewAddressCount) {
@@ -768,6 +767,7 @@ public class TransactionsUtil {
                 log.warn("hd address is null path {} ,index {}", pathType, i);
                 continue;
             }
+            AbstractApp.notificationService.sendBroadcastAddressTxLoading(hdAccountAddress.getAddress());
             if (hdAccountAddress.isSyncedComplete()) {
                 log.info("hd address is synced path {} ,index {}, {}", pathType,
                         i, hdAccountAddress.getAddress());
@@ -859,7 +859,6 @@ public class TransactionsUtil {
         ArrayList<DesktopHDMAddress> queryDesktopHDMAddressList = new ArrayList<DesktopHDMAddress>();
         for (int i = beginIndex; i < endIndex; i++) {
             DesktopHDMAddress desktopHDMAddress = AbstractDb.desktopTxProvider.addressForPath(desktopHDMKeychain, pathType, i);
-            AbstractApp.notificationService.sendBroadcastAddressTxLoading(desktopHDMAddress.getAddress());
             if (desktopHDMAddress == null) {
                 unusedAddressCnt += 1;
                 if (unusedAddressCnt > HDAccount.MaxUnusedNewAddressCount) {
@@ -873,6 +872,7 @@ public class TransactionsUtil {
                 log.warn("hd address is null path {} ,index {}", pathType, i);
                 continue;
             }
+            AbstractApp.notificationService.sendBroadcastAddressTxLoading(desktopHDMAddress.getAddress());
             if (desktopHDMAddress.isSyncComplete()) {
                 log.info("hd address is synced path {} ,index {}, {}", pathType,
                         i, desktopHDMAddress.getAddress());
