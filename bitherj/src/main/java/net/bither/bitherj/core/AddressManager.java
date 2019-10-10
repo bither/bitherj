@@ -70,6 +70,14 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
         return uniqueInstance;
     }
 
+    public boolean noAddress() {
+        return getPrivKeyAddresses() == null ||
+                getPrivKeyAddresses().size() == 0 ||
+                hasHDAccountHot() ||
+                hasHDAccountMonitored() ||
+                hasHDMKeychain();
+    }
+
     private void initAliasAndVanityLen() {
         Map<String, String> addressAlias = AbstractDb.addressProvider.getAliases();
         Map<String, Integer> vanityAddresses = AbstractDb.addressProvider.getVanitylens();
