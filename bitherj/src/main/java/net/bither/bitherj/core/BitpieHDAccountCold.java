@@ -6,7 +6,6 @@ import com.google.common.collect.Collections2;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.KeyCrypterException;
-import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
@@ -15,7 +14,6 @@ import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.db.IHDAccountProvider;
 import net.bither.bitherj.exception.PasswordException;
 import net.bither.bitherj.qrcode.QRCodeUtil;
-import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
 
@@ -255,7 +253,7 @@ public class BitpieHDAccountCold extends AbstractHD {
     }
 
     public String getQRCodeFullEncryptPrivKey() {
-        return MnemonicCode.instance().getMnemonicWordList().getBitpieQrCodeFlag() + getFullEncryptPrivKey();
+        return MnemonicCode.instance().getMnemonicWordList().getBitpieColdQrCodeFlag() + getFullEncryptPrivKey();
     }
 
     private static byte[] randomByteFromSecureRandom(SecureRandom random, int length) {

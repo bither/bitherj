@@ -89,7 +89,14 @@ public class QRCodeUtil {
         } else {
             return str.split(QR_CODE_SPLIT);
         }
+    }
 
+    public static String getQrCodeSplit(String str) {
+        if (str.indexOf(OLD_QR_CODE_SPLIT) >= 0) {
+            return OLD_QR_CODE_SPLIT;
+        } else {
+            return QR_CODE_SPLIT;
+        }
     }
 
     public static String getNewVersionEncryptPrivKey(String encryptPrivKey) {

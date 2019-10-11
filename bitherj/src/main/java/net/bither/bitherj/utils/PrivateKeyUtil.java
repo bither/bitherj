@@ -55,6 +55,7 @@ public class PrivateKeyUtil {
 
     public static String BACKUP_KEY_SPLIT_MUTILKEY_STRING = "\n";
 
+    static String cloneContent;
 
     public static String getEncryptedString(ECKey ecKey) {
         String salt = "1";
@@ -254,11 +255,13 @@ public class PrivateKeyUtil {
                             + QRCodeUtil.QR_CODE_SPLIT + strs[i + 2];
                     hdmKeychain = new HDMKeychain(new EncryptedData(encryptedString)
                             , password, null);
+                    str = str.replace(getCloneReplaceString(str, strs, i), "");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
+        cloneContent = str;
         return hdmKeychain;
     }
 
@@ -281,11 +284,13 @@ public class PrivateKeyUtil {
                     String encryptedString = strs[i].substring(hdQrCodeFlagLength) + QRCodeUtil.QR_CODE_SPLIT + strs[i + 1]
                             + QRCodeUtil.QR_CODE_SPLIT + strs[i + 2];
                     hdAccountCold = new HDAccountCold(mnemonicCode, new EncryptedData(encryptedString), password);
+                    str = str.replace(getCloneReplaceString(str, strs, i), "");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
+        cloneContent = str;
         return hdAccountCold;
     }
 
@@ -299,7 +304,7 @@ public class PrivateKeyUtil {
         for (int i = 0;
              i < strs.length;
              i += 3) {
-            if (!MnemonicWordList.isBitpieQrCode(strs[i])) {
+            if (!MnemonicWordList.isBitpieColdQrCode(strs[i])) {
                 continue;
             }
             int hdQrCodeFlagLength = MnemonicWordList.getHdQrCodeFlagLength(strs[i], mnemonicCode.getMnemonicWordList());
@@ -308,11 +313,13 @@ public class PrivateKeyUtil {
                     String encryptedString = strs[i].substring(hdQrCodeFlagLength) + QRCodeUtil.QR_CODE_SPLIT + strs[i + 1]
                             + QRCodeUtil.QR_CODE_SPLIT + strs[i + 2];
                     bitpieHDAccountCold = new BitpieHDAccountCold(mnemonicCode, new EncryptedData(encryptedString), password);
+                    str = str.replace(getCloneReplaceString(str, strs, i), "");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
+        cloneContent = str;
         return bitpieHDAccountCold;
     }
 
@@ -332,10 +339,12 @@ public class PrivateKeyUtil {
             if (strs[i].indexOf(MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag()) == 0){
                 continue;
             }
+            if (strs[i].indexOf(MnemonicCode.instance().getMnemonicWordList().getBitpieColdQrCodeFlag()) == 0) {
+                continue;
+            }
             String encryptedString = strs[i] + QRCodeUtil.QR_CODE_SPLIT + strs[i + 1]
                     + QRCodeUtil.QR_CODE_SPLIT + strs[i + 2];
             ECKey key = getECKeyFromSingleString(encryptedString, password);
-
             if (key == null) {
                 return null;
             } else {
@@ -343,9 +352,24 @@ public class PrivateKeyUtil {
                         false, key.isFromXRandom());
                 key.clearPrivateKey();
                 list.add(address);
+                str = str.replace(getCloneReplaceString(str, strs, i), "");
             }
         }
+        cloneContent = str;
         return list;
+    }
+
+    private static String getCloneReplaceString(String str, String[] strs, int i) {
+        String replaceString = strs[i] + QRCodeUtil.getQrCodeSplit(str) + strs[i + 1]
+                + QRCodeUtil.getQrCodeSplit(str) + strs[i + 2];
+        if (str.length() > replaceString.length()) {
+            replaceString = replaceString + QRCodeUtil.getQrCodeSplit(str);
+        }
+        return replaceString;
+    }
+
+    public static String getCloneContent() {
+        return cloneContent;
     }
 
     /**
@@ -485,7 +509,7 @@ public class PrivateKeyUtil {
         if (bitpieHDAccountCold != null) {
             try {
                 String address = bitpieHDAccountCold.getFirstAddressFromDb();
-                backupString += MnemonicCode.instance().getMnemonicWordList().getBitpieQrCodeFlag() + Base58.bas58ToHexWithAddress
+                backupString += MnemonicCode.instance().getMnemonicWordList().getBitpieColdQrCodeFlag() + Base58.bas58ToHexWithAddress
                         (address) + QRCodeUtil.QR_CODE_SPLIT + bitpieHDAccountCold.getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
             } catch (AddressFormatException e) {
 

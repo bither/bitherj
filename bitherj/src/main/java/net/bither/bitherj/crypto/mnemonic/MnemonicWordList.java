@@ -32,15 +32,7 @@ public enum MnemonicWordList {
         return EN_HD_QR_CODE_FLAG;
     }
 
-    public String getBitpieQrCodeFlag() {
-        switch (this) {
-            case English:
-                return BITPIE_EN_HD_QR_CODE_FLAG;
-            case ZhCN:
-                return BITPIE_ZH_CN_HD_QR_CODE_FLAG;
-            case ZhTw:
-                return BITPIE_ZH_TW_HD_QR_CODE_FLAG;
-        }
+    public String getBitpieColdQrCodeFlag() {
         return BITPIE_EN_HD_QR_CODE_FLAG;
     }
 
@@ -96,14 +88,14 @@ public enum MnemonicWordList {
         if (isHDQrCode(string)) {
             hdQrCodeFlag = wordList.getHdQrCodeFlag();
         } else {
-            hdQrCodeFlag = wordList.getBitpieQrCodeFlag();
+            hdQrCodeFlag = wordList.getBitpieColdQrCodeFlag();
         }
         if (string.length() < hdQrCodeFlag.length()) { return 0; }
         String prefixStr = string.substring(0, hdQrCodeFlag.length());
         return hdQrCodeFlag.equals(prefixStr) ? hdQrCodeFlag.length() : 0;
     }
 
-    static public boolean isBitpieQrCode(String string) {
+    static public boolean isBitpieColdQrCode(String string) {
         return string.startsWith("@");
     }
 
