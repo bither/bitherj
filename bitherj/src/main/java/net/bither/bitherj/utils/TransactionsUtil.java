@@ -764,75 +764,85 @@ public class TransactionsUtil {
     //获取热钱包
     private  static void getTxForAddress(final int webType) throws Exception {
         for (Address address : AddressManager.getInstance().getAllAddresses()) {
-            Block storedBlock = BlockChain.getInstance().getLastBlock();
-            int storeBlockHeight = 0;
-            if (storedBlock != null) {
-                storeBlockHeight = storedBlock.getBlockNo();
-            }
+            try {
+                Block storedBlock = BlockChain.getInstance().getLastBlock();
+                int storeBlockHeight = 0;
+                if (storedBlock != null) {
+                    storeBlockHeight = storedBlock.getBlockNo();
+                }
 
-            if (!address.isSyncComplete()) {
-                int apiBlockCount = 0;
-                int txSum = 0;
-                boolean needGetTxs = true;
-                int page = 1;
+                if (!address.isSyncComplete() && !address.isSyncing()) {
+                    address.setSyncing(true);
+                    int apiBlockCount = 0;
+                    int txSum = address.getSyncedTxsCount();
+                    boolean needGetTxs = true;
+                    int page = 1;
 
-                List<Tx> transactions = new ArrayList<Tx>();
+                    List<Tx> transactions = new ArrayList<Tx>();
 
-                while (needGetTxs) {
+                    while (needGetTxs) {
 
-                    // TODO: get data from bither.net else from blockchain.info
-                    if (webType == 0) {
-                        PrimerMytransactionsApi primerMytransactionsApi = new PrimerMytransactionsApi(
-                                address.getAddress(), page);
-                        primerMytransactionsApi.handleHttpGet();
-                        String txResult = primerMytransactionsApi.getResult();
-                        JSONObject jsonObject = new JSONObject(txResult);
+                        // TODO: get data from bither.net else from blockchain.info
+                        if (webType == 0) {
+                            PrimerMytransactionsApi primerMytransactionsApi = new PrimerMytransactionsApi(
+                                    address.getAddress(), page);
+                            primerMytransactionsApi.handleHttpGet();
+                            String txResult = primerMytransactionsApi.getResult();
+                            JSONObject jsonObject = new JSONObject(txResult);
 
-                        if (!jsonObject.isNull(BLOCK_COUNT)) {
-                            apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
-                        }
-                        int txCnt = jsonObject.getInt(TX_CNT);
-                        transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
-                        transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
+                            if (!jsonObject.isNull(BLOCK_COUNT)) {
+                                apiBlockCount = jsonObject.getInt(BLOCK_COUNT);
+                            }
+                            int txCnt = jsonObject.getInt(TX_CNT);
+                            transactions = TransactionsUtil.getTransactionsFromBither(jsonObject, storeBlockHeight);
+                            transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
 
-                        txSum = txSum + transactions.size();
-                        needGetTxs = transactions.size() > 0;
-                        page++;
+                            txSum = txSum + transactions.size();
+                            needGetTxs = transactions.size() > 0;
+                            page++;
 
-                    } else {
-                        BlockChainMytransactionsApi blockChainMytransactionsApi = new BlockChainMytransactionsApi(address.getAddress(),txSum);
-                        blockChainMytransactionsApi.handleHttpGet();
-                        String txResult = blockChainMytransactionsApi.getResult();
-                        JSONObject jsonObject = new JSONObject(txResult);
-                        // TODO: get the latest block number from blockChain.info
-                        JSONObject jsonObjectBlockChain = getLatestBlockNumberFromBlockchain();
-                        if (!jsonObjectBlockChain.isNull(BLOCK_CHAIN_HEIGHT)) {
-                            apiBlockCount = jsonObjectBlockChain.getInt(BLOCK_CHAIN_HEIGHT);
-                        }
+                        } else {
+                            BlockChainMytransactionsApi blockChainMytransactionsApi = new BlockChainMytransactionsApi(address.getAddress(), txSum);
+                            blockChainMytransactionsApi.handleHttpGet();
+                            String txResult = blockChainMytransactionsApi.getResult();
+                            JSONObject jsonObject = new JSONObject(txResult);
+                            // TODO: get the latest block number from blockChain.info
+                            JSONObject jsonObjectBlockChain = getLatestBlockNumberFromBlockchain();
+                            if (!jsonObjectBlockChain.isNull(BLOCK_CHAIN_HEIGHT)) {
+                                apiBlockCount = jsonObjectBlockChain.getInt(BLOCK_CHAIN_HEIGHT);
+                            }
 //                        int txCnt = jsonObject.getInt(BLOCK_CHAIN_CNT);
-                        // TODO: get transactions from blockChain.info
-                        List<Tx> fromTxList  = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
-                        List<Tx> compressTxList = AddressManager.getInstance().compressTxsForApi(fromTxList, address);
-                        int transactionCount = TransactionsUtil.getTransactionsCountFromBlockChain(jsonObject);
-                        txSum = txSum + transactionCount;
-                        if(0==transactionCount) needGetTxs = false;
-                        transactions.addAll(compressTxList);
+                            // TODO: get transactions from blockChain.info
+                            List<Tx> fromTxList = TransactionsUtil.getTransactionsFromBlockChain(jsonObject, storeBlockHeight);
+                            List<Tx> compressTxList = AddressManager.getInstance().compressTxsForApi(fromTxList, address);
+                            int transactionCount = TransactionsUtil.getTransactionsCountFromBlockChain(jsonObject);
+                            txSum = txSum + transactionCount;
+                            if (0 == transactionCount) needGetTxs = false;
+                            transactions.addAll(compressTxList);
+                            address.initTxs(compressTxList);
+                            address.setSyncedTxsCount(txSum);
+                            address.updateSyncedTxsCount();
+                        }
+                    }
+                    Collections.sort(transactions, new ComparatorTx());
+                    address.initTxs(transactions);
+
+                    if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
+                        BlockChain.getInstance().rollbackBlock(apiBlockCount);
+                    }
+                    address.setSyncComplete(true);
+                    if (address instanceof HDMAddress) {
+                        HDMAddress hdmAddress = (HDMAddress) address;
+                        hdmAddress.
+                                updateSyncComplete();
+                    } else {
+                        address.updateSyncComplete();
                     }
                 }
-                Collections.sort(transactions, new ComparatorTx());
-                address.initTxs(transactions);
-
-                if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
-                    BlockChain.getInstance().rollbackBlock(apiBlockCount);
-                }
-                address.setSyncComplete(true);
-                if (address instanceof HDMAddress) {
-                    HDMAddress hdmAddress = (HDMAddress) address;
-                    hdmAddress.
-                            updateSyncComplete();
-                } else {
-                    address.updateSyncComplete();
-                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                address.setSyncing(false);
             }
         }
 

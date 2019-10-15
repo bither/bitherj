@@ -83,6 +83,8 @@ public interface IAddressProvider {
 
     void updateSyncComplete(Address address);
 
+    void updateSyncedTxsCount(Address address);
+
     // alias
     Map<String, String> getAliases();
 

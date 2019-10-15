@@ -58,6 +58,8 @@ public class Address implements Comparable<Address> {
     protected String address;
 
     protected boolean syncComplete = false;
+    protected boolean syncing = false;
+    protected int syncedTxsCount = 0;
     private long mSortTime;
     private long balance = 0;
     private boolean isFromXRandom;
@@ -73,11 +75,16 @@ public class Address implements Comparable<Address> {
     public Address(String address, byte[] pubKey, String encryptString, boolean isSyncComplete
             , boolean isFromXRandom) {
         this(address, pubKey, AddressManager.getInstance().getSortTime(!Utils.isEmpty
-                (encryptString)), isSyncComplete, isFromXRandom, false, encryptString);
+                (encryptString)), isSyncComplete, 0, isFromXRandom, false, encryptString);
 
     }
 
     public Address(String address, byte[] pubKey, long sortTime, boolean isSyncComplete,
+                   boolean isFromXRandom, boolean isTrashed, String encryptPrivKey) {
+        this(address, pubKey, sortTime, isSyncComplete, 0, isFromXRandom, isTrashed, encryptPrivKey);
+    }
+
+    public Address(String address, byte[] pubKey, long sortTime, boolean isSyncComplete, int syncedCount,
                    boolean isFromXRandom, boolean isTrashed, String encryptPrivKey) {
         this.encryptPrivKey = encryptPrivKey;
         this.address = address;
@@ -87,8 +94,9 @@ public class Address implements Comparable<Address> {
         this.isFromXRandom = isFromXRandom;
         this.isTrashed = isTrashed;
         this.updateBalance();
+        this.syncedTxsCount = syncedCount;
+        this.syncing = false;
     }
-
 
     public int txCount() {
         return AbstractDb.txProvider.txCount(this.address);
@@ -236,8 +244,24 @@ public class Address implements Comparable<Address> {
         return this.syncComplete;
     }
 
+    public boolean isSyncing() {
+        return this.syncing;
+    }
+
+    public int getSyncedTxsCount() {
+        return this.syncedTxsCount;
+    }
+
     public void setSyncComplete(boolean isSyncComplete) {
         this.syncComplete = isSyncComplete;
+    }
+
+    public void setSyncing(boolean isSyncing) {
+        this.syncing = isSyncing;
+    }
+
+    public void setSyncedTxsCount(int count) {
+        this.syncedTxsCount = count;
     }
 
     public boolean isFromXRandom() {
@@ -247,6 +271,10 @@ public class Address implements Comparable<Address> {
 
     public void updateSyncComplete() {
         AbstractDb.addressProvider.updateSyncComplete(Address.this);
+    }
+
+    public void updateSyncedTxsCount() {
+        AbstractDb.addressProvider.updateSyncedTxsCount(Address.this);
     }
 
     @Override

@@ -74,6 +74,7 @@ public abstract class AbstractDb {
             ", is_xrandom integer not null" +
             ", is_trash integer not null" +
             ", is_synced integer not null" +
+            ", synced_count integer" +
             ", sort_time integer not null);";
     public static final String CREATE_HD_SEEDS_SQL = "create table if not exists hd_seeds " +
             "(hd_seed_id integer not null primary key autoincrement" +
@@ -319,6 +320,7 @@ public abstract class AbstractDb {
         public static final String IS_XRANDOM = "is_xrandom";
         public static final String IS_TRASH = "is_trash";
         public static final String IS_SYNCED = "is_synced";
+        public static final String SYNCED_COUNT = "synced_count";
         public static final String SORT_TIME = "sort_time";
     }
 

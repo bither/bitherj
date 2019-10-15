@@ -700,7 +700,7 @@ public abstract class AbstractAddressProvider extends AbstractProvider implement
     //normal
     @Override
     public List<Address> getAddresses() {
-        String sql = "select address,encrypt_private_key,pub_key,is_xrandom,is_trash,is_synced,sort_time " +
+        String sql = "select address,encrypt_private_key,pub_key,is_xrandom,is_trash,is_synced,synced_count,sort_time " +
                 "from addresses  order by sort_time desc";
         final List<Address> addressList = new ArrayList<Address>();
         this.execQueryLoop(sql, null, new Function<ICursor, Void>() {
@@ -778,6 +778,12 @@ public abstract class AbstractAddressProvider extends AbstractProvider implement
     public void updateSyncComplete(Address address) {
         String sql = "update addresses set is_synced=? where address=?";
         this.execUpdate(sql, new String[]{address.isSyncComplete() ? "1" : "0", address.getAddress()});
+    }
+
+    @Override
+    public void updateSyncedTxsCount(Address address) {
+        String sql = "update addresses set synced_count=? where address=?";
+        this.execUpdate(sql, new String[]{address.getSyncedTxsCount() + "", address.getAddress()});
     }
 
     @Override
@@ -960,6 +966,11 @@ public abstract class AbstractAddressProvider extends AbstractProvider implement
         if (idColumn != -1) {
             isSynced = c.getInt(idColumn) == 1;
         }
+        int syncedCount = 0;
+        idColumn = c.getColumnIndex(AbstractDb.AddressesColumns.SYNCED_COUNT);
+        if (idColumn != -1) {
+            syncedCount = c.getInt(idColumn);
+        }
         idColumn = c.getColumnIndex(AbstractDb.AddressesColumns.IS_TRASH);
         if (idColumn != -1) {
             isTrash = c.getInt(idColumn) == 1;
@@ -968,7 +979,7 @@ public abstract class AbstractAddressProvider extends AbstractProvider implement
         if (idColumn != -1) {
             sortTime = c.getLong(idColumn);
         }
-        address = new Address(addressStr, pubKey, sortTime, isSynced, isXRandom, isTrash, encryptPrivateKey);
+        address = new Address(addressStr, pubKey, sortTime, isSynced, syncedCount, isXRandom, isTrash, encryptPrivateKey);
 
         return address;
     }
