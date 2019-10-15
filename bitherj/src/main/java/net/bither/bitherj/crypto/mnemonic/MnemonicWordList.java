@@ -32,7 +32,7 @@ public enum MnemonicWordList {
         return EN_HD_QR_CODE_FLAG;
     }
 
-    public String getBitpieColdQrCodeFlag() {
+    public static String getBitpieColdQrCodeFlag() {
         return BITPIE_EN_HD_QR_CODE_FLAG;
     }
 
@@ -87,8 +87,10 @@ public enum MnemonicWordList {
         String hdQrCodeFlag;
         if (isHDQrCode(string)) {
             hdQrCodeFlag = wordList.getHdQrCodeFlag();
-        } else {
+        } else if (wordList == MnemonicWordList.English) {
             hdQrCodeFlag = wordList.getBitpieColdQrCodeFlag();
+        } else {
+            return 0;
         }
         if (string.length() < hdQrCodeFlag.length()) { return 0; }
         String prefixStr = string.substring(0, hdQrCodeFlag.length());

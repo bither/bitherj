@@ -1307,16 +1307,28 @@ public class HDAccount extends Address {
 
     }
 
-    public List<HDAccountAddress> getHdHotAddresses(int page, AbstractHD.PathType pathType){
+    public List<HDAccountAddress> getHdHotAddresses(int page, AbstractHD.PathType pathType, CharSequence password) {
         ArrayList<HDAccountAddress> addresses = new ArrayList<HDAccountAddress>();
-        HDAccountAddress hdAccountAddress;
-        for (int i = (page -1) * 10; i < page * 10; i ++) {
-            hdAccountAddress = AbstractDb.hdAccountAddressProvider.addressForPath(hdSeedId, pathType, i);
-            if (hdAccountAddress != null) {
-                addresses.add(hdAccountAddress);
+        try {
+            DeterministicKey master = masterKey(password);
+            DeterministicKey accountKey = getAccount(master, AbstractHD.PurposePathLevel.Normal);
+            DeterministicKey pathTypeKey = getChainRootKey(accountKey, pathType);
+            for (int i = (page - 1) * 10; i < page * 10; i++) {
+                DeterministicKey key = pathTypeKey.deriveSoftened(i);
+                HDAccountAddress hdAccountAddress = new HDAccountAddress(key.toAddress(), key.getPubKeyExtended(), pathType, i, false, true, hdSeedId);
+                if (hdAccountAddress != null) {
+                    addresses.add(hdAccountAddress);
+                }
             }
+            master.wipe();
+            accountKey.wipe();
+            pathTypeKey.wipe();
+            return addresses;
+        } catch (KeyCrypterException e) {
+            throw new PasswordException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return addresses;
     }
 
 }

@@ -87,6 +87,9 @@ public abstract class MnemonicCode {
         ArrayList<String> wordList = getWordList(mnemonicWordList);
         if (wordList != null) {
             this.wordList = wordList;
+            if (mnemonicWordList == MnemonicWordList.English) {
+                this.bitpieColdWordList = wordList;
+            }
             this.mnemonicWordList = mnemonicWordList;
         }
     }
