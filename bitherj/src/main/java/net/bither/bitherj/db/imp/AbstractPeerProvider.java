@@ -100,28 +100,10 @@ public abstract class AbstractPeerProvider extends AbstractProvider implements I
         this.execUpdate(sql, new String[] {Long.toString(Utils.parseLongFromAddress(address))});
     }
 
-    public void conncetFail(InetAddress address) {
+    public void connectFail(InetAddress address) {
         long addressLong = Utils.parseLongFromAddress(address);
-        String sql = "select count(0) cnt from peers where peer_address=? and peer_connected_cnt=0";
-        final int[] cnt = {0};
-        this.execQueryOneRecord(sql, new String[]{Long.toString(addressLong)}, new Function<ICursor, Void>() {
-            @Nullable
-            @Override
-            public Void apply(@Nullable ICursor c) {
-                int idColumn = c.getColumnIndex("cnt");
-                if (idColumn != -1) {
-                    cnt[0] = c.getInt(idColumn);
-                }
-                return null;
-            }
-        });
-        if (cnt[0] == 0) {
-            sql = "update peers set peer_connected_cnt=peer_connected_cnt+1 where peer_address=?";
-            this.execUpdate(sql, new String[] {Long.toString(addressLong)});
-        } else {
-            sql = "update peers set peer_connected_cnt=2 where peer_address=?";
-            this.execUpdate(sql, new String[]{Long.toString(addressLong)});
-        }
+        String sql = "update peers set peer_connected_cnt=peer_connected_cnt+1 where peer_address=?";
+        this.execUpdate(sql, new String[] {Long.toString(addressLong)});
     }
 
     public void connectSucceed(InetAddress address) {

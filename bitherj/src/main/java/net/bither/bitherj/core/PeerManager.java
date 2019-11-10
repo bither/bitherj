@@ -261,7 +261,7 @@ public class PeerManager {
         HashSet<Peer> peers = new HashSet<Peer>();
         Peer[] ps = DnsDiscovery.instance().getPeers(5, TimeUnit.SECONDS);
         Collections.addAll(peers, ps);
-        AbstractDb.peerProvider.addPeers(new ArrayList<Peer>(peers));
+        addRelayedPeers(new ArrayList<Peer>(peers));
         return peers;
     }
 
