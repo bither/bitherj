@@ -58,6 +58,8 @@ public class Address implements Comparable<Address> {
     protected String address;
 
     protected boolean syncComplete = false;
+    private static final int MAX_SYNC_FAILURE_COUNT = 3;
+    protected int syncCount = 0;
     protected boolean syncing = false;
     protected int syncedTxsCount = 0;
     private long mSortTime;
@@ -532,5 +534,12 @@ public class Address implements Comparable<Address> {
         return vanityLen != VANITY_LEN_NO_EXSITS;
     }
 
+    public void syncFail() {
+        syncCount = syncCount + 1;
+    }
+
+    public boolean isSyncRetryExceeded() {
+        return (syncCount > MAX_SYNC_FAILURE_COUNT);
+    }
 
 }
