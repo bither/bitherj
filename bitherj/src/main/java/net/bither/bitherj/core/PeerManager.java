@@ -289,6 +289,10 @@ public class PeerManager {
                         result.add(peer);
                     }
                 }
+                if(result.isEmpty()){
+                    abandonPeers.clear();
+                    result.addAll(peers);
+                }
                 AbstractDb.peerProvider.addPeers(result);
                 AbstractDb.peerProvider.cleanPeers();
             }
@@ -464,8 +468,6 @@ public class PeerManager {
                 }
                 int previousConnectedCount = connectedPeers.size();
                 connectedPeers.remove(peer);
-                log.info("Peer disconnected {} , remaining {} peers , reason: " + reason, peer
-                        .getPeerAddress().getHostAddress(), connectedPeers.size());
                 if (previousConnectedCount > 0 && connectedPeers.size() == 0) {
                     connected.set(false);
                     sendConnectedChangeBroadcast();
