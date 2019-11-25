@@ -96,7 +96,7 @@ public class PrimerjSettings {
     public static final int TARGET_TIMESPAN = 14 * 24 * 60 * 60;  // legacy bitcoin: 2 weeks per difficulty cycle, on average.
     public static final int TARGET_SPACING = 1 * 60;  // primecoin block spacing
     public static final int BLOCK_DIFFICULTY_INTERVAL = 2016; // legacy bitcoin
-    public static final int INTERVAL = BLOCK_DIFFICULTY_INTERVAL / 4;// ~8 hours
+    public static final int INTERVAL = BLOCK_DIFFICULTY_INTERVAL;
 
     public static final long TX_UNCONFIRMED = Long.MAX_VALUE;
 
