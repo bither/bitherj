@@ -74,7 +74,8 @@ public class PrimerjSettings {
     public static final int btfAddressHeader = 36;
     public static final int btpAddressHeader = 56;
 
-    public static final int p2shHeader = 5;
+    public static final int p2shHeader = 83;
+    public static final int testNetP2shHeader = 196;
     //    public static final int btgP2shHeader = 23;
     public static final int btgP2shHeader = 233;
     public static final int btwP2shHeader = 31;
@@ -84,6 +85,11 @@ public class PrimerjSettings {
     public static int getAddressHeader() {
         if(Utils.isTestNet()) return testNetAddressHeader;
         else return addressHeader;
+    }
+
+    public static int getP2shHeader() {
+        if(Utils.isTestNet()) return testNetP2shHeader;
+        else return p2shHeader;
     }
 
     public static long getPacketMagic() {
@@ -210,7 +216,7 @@ public class PrimerjSettings {
     }
 
     public static boolean validAddressPrefixScript(int script) {
-        if (script == p2shHeader || script == btgP2shHeader || script == btwP2shHeader ||
+        if (script == getP2shHeader() || script == btgP2shHeader || script == btwP2shHeader ||
                 script == btfP2shHeader || script == btpP2shHeader) {
             return true;
         }

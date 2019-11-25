@@ -717,7 +717,7 @@ public class Utils {
         checkArgument(pubKeyHash.length == 20, "Addresses are 160-bit hashes, " +
                 "so you must provide 20 bytes");
 
-        int version = PrimerjSettings.p2shHeader;
+        int version = PrimerjSettings.getP2shHeader();
         checkArgument(version < 256 && version >= 0);
 
         byte[] addressBytes = new byte[1 + pubKeyHash.length + 4];
@@ -761,7 +761,7 @@ public class Utils {
     public static String toSegwitAddress(byte[] pubKeyHash) {
         assert (pubKeyHash.length == 20);
 
-        int version = PrimerjSettings.p2shHeader;;
+        int version = PrimerjSettings.getP2shHeader();
         assert (version < 256 && version >= 0);
 
         byte[] scriptSig = new byte[pubKeyHash.length + 2];

@@ -82,7 +82,7 @@ public enum Coin {
             case BTW:
                 return PrimerjSettings.btwP2shHeader;
             default:
-                return PrimerjSettings.p2shHeader;
+                return PrimerjSettings.getP2shHeader();
         }
     }
 

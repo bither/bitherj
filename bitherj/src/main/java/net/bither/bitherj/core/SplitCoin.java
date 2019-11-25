@@ -142,7 +142,7 @@ public enum SplitCoin {
     public int getP2shHeader() {
         switch (this) {
             case BCC:
-                return PrimerjSettings.p2shHeader;
+                return PrimerjSettings.getP2shHeader();
             case BTG:
                 return PrimerjSettings.btgP2shHeader;
             case BTW:
@@ -152,7 +152,7 @@ public enum SplitCoin {
             case BTP:
                 return PrimerjSettings.btpP2shHeader;
         }
-        return PrimerjSettings.p2shHeader;
+        return PrimerjSettings.getP2shHeader();
     }
 
     public int getAddressHeader() {
