@@ -20,6 +20,8 @@ import com.google.common.collect.Lists;
 import com.google.common.primitives.UnsignedBytes;
 
 import net.bither.bitherj.BitherjSettings;
+import net.bither.bitherj.bech32.Bech32;
+import net.bither.bitherj.bech32.SegwitAddressUtil;
 import net.bither.bitherj.crypto.ECKey;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.exception.AddressFormatException;
@@ -106,14 +108,15 @@ public class ScriptBuilder {
      */
     public static Script createOutputScript(String to) {
         try {
-            if (BitherjSettings.validAddressPrefixScript(Utils.getAddressHeader(to))) {
+            int addressHeader = Utils.getAddressHeader(to);
+            if (BitherjSettings.validAddressPrefixScript(addressHeader)) {
                 // OP_HASH160 <scriptHash> OP_EQUAL
                 return new ScriptBuilder()
                         .op(OP_HASH160)
                         .data(Utils.getAddressHash(to))
                         .op(OP_EQUAL)
                         .build();
-            } else if (BitherjSettings.validAddressPrefixPubkey(Utils.getAddressHeader(to))){
+            } else if (BitherjSettings.validAddressPrefixPubkey(addressHeader)){
                 // OP_DUP OP_HASH160 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
                 return new ScriptBuilder()
                         .op(OP_DUP)
@@ -122,10 +125,21 @@ public class ScriptBuilder {
                         .op(OP_EQUALVERIFY)
                         .op(OP_CHECKSIG)
                         .build();
-            } else {
-                return null;
             }
         } catch (AddressFormatException ex) {
+            ex.printStackTrace();
+        }
+        try {
+            Bech32.Bech32Data bech32Data = Bech32.decode(to);
+            if (bech32Data != null && bech32Data.getData() != null) {
+                return new ScriptBuilder()
+                        .smallNum(SegwitAddressUtil.getWitnessVersion(bech32Data.getData()))
+                        .data(SegwitAddressUtil.getWitnessProgram(bech32Data.getData()))
+                        .build();
+            }
+            return null;
+        } catch (AddressFormatException ex) {
+            ex.printStackTrace();
             return null;
         }
     }
