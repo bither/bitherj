@@ -969,11 +969,22 @@ public class Utils {
 
     public static boolean validBicoinAddress(String str) {
         try {
-            if (str.startsWith(BitcoinNewAddressPrefix) && Bech32.decode(str) != null) {
+            if (str.toLowerCase().startsWith(BitcoinNewAddressPrefix) && Bech32.decode(str) != null) {
                 return true;
             }
             return (BitherjSettings.validAddressPrefixPubkey(getAddressHeader(str)) || BitherjSettings.validAddressPrefixScript(getAddressHeader(str)));
-        } catch (final AddressFormatException x) {
+        } catch (final Exception x) {
+            x.printStackTrace();
+        }
+        return false;
+    }
+
+    public static boolean validBech32Address(String str) {
+        try {
+            if (str.toLowerCase().startsWith(BitcoinNewAddressPrefix) && Bech32.decode(str) != null) {
+                return true;
+            }
+        } catch (net.bither.bitherj.bech32.AddressFormatException x) {
             x.printStackTrace();
         }
         return false;
