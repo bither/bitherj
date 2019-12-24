@@ -768,8 +768,7 @@ public class PeerManager {
                                         .getLastBlock().getTxHashes().size());
                         AbstractApp.notificationService.sendLastBlockChange();
                     } else {
-                        abandonPeer(fromPeer);
-                        log.info("Peer {} relay {}/{} block. drop this peer",
+                        log.info("Peer {} relay {}/{} block. Possible orphan block encountered, NOT dropping peer",
                                 fromPeer.getPeerAddress().getHostAddress(), relayedCnt,
                                 blocks.size());
                     }
