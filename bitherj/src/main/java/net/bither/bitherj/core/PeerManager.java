@@ -156,12 +156,11 @@ public class PeerManager {
     }
 
     public void stop() {
+        sendConnectedChangeBroadcast();
         if (running.getAndSet(false)) {
             log.info("peer manager stop");
             if (connected.getAndSet(false)) {
-                AbstractApp.notificationService.removeBroadcastPeerState();
                 bloomFilter = null;
-                sendConnectedChangeBroadcast();
                 executor.getQueue().clear();
                 executor.submit(new Runnable() {
                     @Override
@@ -261,6 +260,9 @@ public class PeerManager {
         HashSet<Peer> peers = new HashSet<Peer>();
         Peer[] ps = DnsDiscovery.instance().getPeers(5, TimeUnit.SECONDS);
         Collections.addAll(peers, ps);
+        if(peers.size() == 0) {
+            sendConnectedChangeBroadcast();
+        }
         addRelayedPeers(new ArrayList<Peer>(peers));
         return peers;
     }
@@ -292,6 +294,7 @@ public class PeerManager {
                 if(result.isEmpty()){
                     abandonPeers.clear();
                     result.addAll(peers);
+                    sendPeerCountChangeNotification();
                 }
                 AbstractDb.peerProvider.addPeers(result);
                 AbstractDb.peerProvider.cleanPeers();
@@ -1108,10 +1111,10 @@ public class PeerManager {
                 syncStartHeight && lastBlockHeight <= downloadingPeer.getVersionLastBlockHeight()) {
             double progress = (double) (lastBlockHeight - syncStartHeight) / (double) (downloadingPeer.getVersionLastBlockHeight() -
                     syncStartHeight);
-            AbstractApp.notificationService.sendBroadcastProgressState(progress);
+            AbstractApp.notificationService.sendBroadcastProgressState(progress, downloadingPeer.getVersionLastBlockHeight() - lastBlockHeight);
 
         } else {
-            AbstractApp.notificationService.sendBroadcastProgressState(-1);
+            AbstractApp.notificationService.sendBroadcastProgressState(-1, -1);
         }
     }
 

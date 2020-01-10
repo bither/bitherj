@@ -40,7 +40,11 @@ public interface NotificationService {
 
     void sendConnectedChangeBroadcast(String connectedChangeBroadcast, boolean isConnected);
 
-    void sendBroadcastProgressState(double value);
+    void sendBroadcastProgressState(double value, long unsyncBlockNumber);
 
     void removeProgressState();
+
+    void sendBroadcastAddressTxLoading(String address);
+
+    void removeAddressTxLoading();
 }

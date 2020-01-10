@@ -282,7 +282,7 @@ public class TransactionsUtil {
             getTxForDesktopHDM(desktopHDMKeychain, flag);
 
         }
-
+        AbstractApp.notificationService.sendBroadcastAddressTxLoading(null);
     }
     private static void getTxForHDAccountMoitored(int hdSeedId, final int webType) throws Exception {
         for (AbstractHD.PathType pathType : AbstractHD.PathType.values()) {
@@ -773,6 +773,7 @@ public class TransactionsUtil {
 
                 if (!address.isSyncComplete() && !address.isSyncing()) {
                     address.setSyncing(true);
+                    AbstractApp.notificationService.sendBroadcastAddressTxLoading(address.getAddress());
                     int apiBlockCount = 0;
                     int txSum = address.getSyncedTxsCount();
                     boolean needGetTxs = true;
@@ -844,6 +845,7 @@ public class TransactionsUtil {
                 e.printStackTrace();
             } finally {
                 address.setSyncing(false);
+                AbstractApp.notificationService.sendBroadcastAddressTxLoading(null);
             }
         }
 
