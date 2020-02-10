@@ -38,7 +38,7 @@ public class PrimerjSettings {
     public static final int COMPRESS_OUT_NUM = 5;
     public static final int TX_PAGE_SIZE = 100;
 
-    public static final String DONATE_ADDRESS = "1BitherUnNvB2NsfxMnbS35kS3DTPr7PW5";
+    public static final String DONATE_ADDRESS = "ANTqRE6wpE2psbJvvMLJLixfCFms1zp61y";
 
     /**
      * The alert signing key originally owned by Satoshi, and now passed on to Gavin along with a few others.
