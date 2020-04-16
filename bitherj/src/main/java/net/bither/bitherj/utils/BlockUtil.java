@@ -21,6 +21,8 @@ import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.api.BlockChainDownloadSpvApi;
 import net.bither.bitherj.api.BlockChainGetLatestBlockApi;
+import net.bither.bitherj.api.BtcComDownloadSpvApi;
+import net.bither.bitherj.api.BtcComGetLatestBlockApi;
 import net.bither.bitherj.api.DownloadSpvApi;
 import net.bither.bitherj.core.Block;
 import net.bither.bitherj.core.BlockChain;
@@ -43,9 +45,24 @@ public class BlockUtil {
     private static final String BLOCK_NO = "block_no";
     private static final String HEIGHT = "height";
 
-    public  static Block getLatestBlockHeight(JSONObject jsonObject)
+    public static Block getLatestBlockHeight(JSONObject jsonObject)
             throws Exception {
-        int latestHeight = jsonObject.getInt("height");
+        int latestHeight = jsonObject.getInt(HEIGHT);
+        int height = 0;
+        if (latestHeight % 2016 !=0){
+            height = latestHeight - (latestHeight%2016);
+        }else {
+            height = latestHeight;
+        }
+        BtcComDownloadSpvApi btcComDownloadSpvApi = new BtcComDownloadSpvApi(height);
+        btcComDownloadSpvApi.handleHttpGet();
+        Block block = btcComDownloadSpvApi.getResult();
+        return block;
+    }
+
+    public static Block getLatestBlockHeightFromBlockChain(JSONObject jsonObject)
+            throws Exception {
+        int latestHeight = jsonObject.getInt(HEIGHT);
         int height = 0;
         if (latestHeight % 2016 !=0){
             height = latestHeight - (latestHeight%2016);
@@ -54,17 +71,32 @@ public class BlockUtil {
         }
         BlockChainDownloadSpvApi blockChainDownloadSpvApi = new BlockChainDownloadSpvApi(height);
         blockChainDownloadSpvApi.handleHttpGet();
-        Block block = null;
-        block = blockChainDownloadSpvApi.getResult();
+        Block block = blockChainDownloadSpvApi.getResult();
         return block;
     }
+
+
     public static Block formatStoreBlockFromBlockChainInfo(JSONObject jsonObject)
-        throws JSONException{
+            throws JSONException {
         long ver = jsonObject.getLong(VER);
         int height = jsonObject.getInt(HEIGHT);
         String prevBlock = jsonObject.getString(PREV_BLOCK);
         String mrklRoot = jsonObject.getString(MRKL_ROOT);
         int time = jsonObject.getInt(TIME);
+        long difficultyTarget = jsonObject.getLong(BITS);
+        long nonce = jsonObject.getLong(NONCE);
+
+        return BlockUtil.getStoredBlock(ver, prevBlock, mrklRoot, time,
+                difficultyTarget, nonce, height);
+    }
+
+    public static Block formatStoreBlockFromBtcCom(JSONObject jsonObject)
+            throws JSONException{
+        long ver = jsonObject.getLong("version");
+        int height = jsonObject.getInt(HEIGHT);
+        String prevBlock = jsonObject.getString("prev_block_hash");
+        String mrklRoot = jsonObject.getString(MRKL_ROOT);
+        int time = jsonObject.getInt("timestamp");
         long difficultyTarget = jsonObject.getLong(BITS);
         long nonce = jsonObject.getLong(NONCE);
 
@@ -122,8 +154,16 @@ public class BlockUtil {
         }
         try {
             if (block == null) {
-                BlockChainGetLatestBlockApi blockChainGetLatestBlockApi = new
-                        BlockChainGetLatestBlockApi();
+                BtcComGetLatestBlockApi btcComGetLatestBlockApi = new BtcComGetLatestBlockApi();
+                btcComGetLatestBlockApi.handleHttpGet();
+                block = btcComGetLatestBlockApi.getResult();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            if (block == null) {
+                BlockChainGetLatestBlockApi blockChainGetLatestBlockApi = new BlockChainGetLatestBlockApi();
                 blockChainGetLatestBlockApi.handleHttpGet();
                 block = blockChainGetLatestBlockApi.getResult();
             }

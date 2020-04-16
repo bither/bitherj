@@ -12,7 +12,6 @@ public abstract class HttpsGetResponse<T> extends BaseHttpsResponse<T> {
         URL url;
         HttpsURLConnection con = null;
         try {
-
             url = new URL(getUrl());
             con = (HttpsURLConnection) url.openConnection();
             con.setRequestMethod("GET");

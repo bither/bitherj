@@ -32,6 +32,7 @@ public class BitherUrl {
         public static final String BITHER_BC3_DOMAIN = "bc3.bithernet.com";
         public static final String BITHER_HDM_DOMAIN = "hdm.bither.net";
         public static final String BLOCK_CHAIN_INFO = "blockChain.info";
+        public static final String BTC_COM = "chain.api.btc.com";
 
 
         public static final String BITHER_BITCOIN = Utils.format(FORMAT_HTTP, BITHER_BITCOIN_DOMAIN);
@@ -43,7 +44,8 @@ public class BitherUrl {
         public static final String BITHER_BC3 = Utils.format(FORMAT_HTTP, BITHER_BC3_DOMAIN);
         public static final String BITHER_HDM = Utils.format(FORMAT_HTTPS, BITHER_HDM_DOMAIN);
         public static final String BITHER_URL = Utils.format(FORMAT_HTTP, "bither.net");
-        public static final String BLOCK_CHAIN = Utils.format(FORMAT_HTTPS,BLOCK_CHAIN_INFO);
+        public static final String BLOCK_CHAIN = Utils.format(FORMAT_HTTPS, BLOCK_CHAIN_INFO);
+        public static final String BTC_COM_URL = Utils.format(FORMAT_HTTPS, BTC_COM);
 
         // BlockChain.info
         public static final String BITHER_BLOCKCHAIN_DOMAIN = "blockchain.info";
@@ -105,4 +107,9 @@ public class BitherUrl {
     //blockChain.info Api
     public static final String BLOCKCHAIN_INFO_GET_LASTST_BLOCK = BITHER_DNS.BLOCK_CHAIN+"latestblock";
     public static final String BLOCKCHAIN_INFO_GET_SPVBLOCK_API = BITHER_DNS.BLOCK_CHAIN+"block-height/%d?format=json";
+
+    // btc.com Api
+    public static final String BTC_COM_GET_LASTST_BLOCK = BITHER_DNS.BTC_COM_URL + "v3/block/latest";
+    public static final String BTC_COM_GET_SPVBLOCK_API = BITHER_DNS.BTC_COM_URL + "v3/block/%d";
+
 }
