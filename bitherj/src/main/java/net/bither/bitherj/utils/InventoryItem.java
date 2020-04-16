@@ -26,10 +26,26 @@ public class InventoryItem {
     public static final int MESSAGE_LENGTH = 36;
 
     public enum Type {
-        Error,
-        Transaction,
-        Block,
-        FilteredBlock
+        Error(0x0),
+        Transaction(0x1),
+        Block(0x2),
+        FilteredBlock(0x3),
+        WitnessTransaction(0x40000001),
+        WitnessBlock(0x40000002),
+        WitnessFilteredBlock(0x40000003);
+
+        public final int code;
+
+        Type(int code) {
+            this.code = code;
+        }
+
+        public static Type ofCode(int code) {
+            for (Type type : values())
+                if (type.code == code)
+                    return type;
+            return null;
+        }
     }
 
     public final Type type;

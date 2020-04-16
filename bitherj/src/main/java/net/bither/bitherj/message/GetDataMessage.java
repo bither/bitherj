@@ -50,12 +50,12 @@ public class GetDataMessage extends ListMessage {
         super();
     }
 
-    public void addTransaction(byte[] hash) {
-        addItem(new InventoryItem(InventoryItem.Type.Transaction, hash));
+    public void addTransaction(byte[] hash, boolean includeWitness) {
+        addItem(new InventoryItem(includeWitness ? InventoryItem.Type.WitnessTransaction : InventoryItem.Type.Transaction, hash));
     }
 
-    public void addBlock(byte[] hash) {
-        addItem(new InventoryItem(InventoryItem.Type.Block, hash));
+    public void addBlock(byte[] hash, boolean includeWitness) {
+        addItem(new InventoryItem(includeWitness ? InventoryItem.Type.WitnessBlock : InventoryItem.Type.Block, hash));
     }
 
     public void addFilteredBlock(byte[] hash) {

@@ -55,6 +55,8 @@ public abstract class Message {
 
     protected transient byte[] checksum;
 
+    protected boolean isSegwitTx = false;
+
     // This will be saved by subclasses that implement Serializable.
 //    public NetworkParameters params;
 
@@ -332,6 +334,18 @@ public abstract class Message {
         }
     }
 
+    protected long readVarIntNoChangeCursor() throws ProtocolException {
+        return readVarIntNoChangeCursor(0);
+    }
+
+    protected long readVarIntNoChangeCursor(int offset) throws ProtocolException {
+        try {
+            VarInt varint = new VarInt(bytes, cursor + offset);
+            return varint.value;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new ProtocolException(e);
+        }
+    }
 
     protected byte[] readBytes(int length) throws ProtocolException {
         try {

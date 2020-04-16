@@ -147,6 +147,7 @@ class ConnectionHandler implements MessageWriteTarget {
 
     @Override
     public void writeBytes(byte[] message) throws IOException {
+        boolean andUnlock = true;
         lock.lock();
         try {
             // Network buffers are not unlimited (and are often smaller than some messages we may
@@ -168,16 +169,21 @@ class ConnectionHandler implements MessageWriteTarget {
             setWriteOps();
         } catch (IOException e) {
             lock.unlock();
+            andUnlock = false;
             log.error("Error writing message to connection, closing connection. IOException");
             closeConnection();
             throw e;
         } catch (CancelledKeyException e) {
             lock.unlock();
+            andUnlock = false;
             log.error("Error writing message to connection, closing connection. CancelledKeyException");
             closeConnection();
             throw new IOException(e);
+        } finally {
+            if (andUnlock) {
+                lock.unlock();
+            }
         }
-        lock.unlock();
     }
 
     @Override
@@ -197,14 +203,14 @@ class ConnectionHandler implements MessageWriteTarget {
             lock.lock();
             callClosed = !closeCalled;
             closeCalled = true;
-            if (callClosed) {
-                checkState(connectedHandlers == null || connectedHandlers.remove(this));
-                parser.connectionClosed();
-            }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             lock.unlock();
+        }
+        if (callClosed) {
+            checkState(connectedHandlers == null || connectedHandlers.remove(this));
+            parser.connectionClosed();
         }
     }
 

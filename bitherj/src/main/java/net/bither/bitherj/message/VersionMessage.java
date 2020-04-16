@@ -50,6 +50,10 @@ public class VersionMessage extends Message {
      * A services flag that denotes whether the peer has a copy of the block chain or not.
      */
     public static final int NODE_NETWORK = 1;
+    /**
+     * Indicates that a node can be asked for blocks and transactions including witness data.
+     */
+    public static final int NODE_WITNESS = 1 << 3;
 
     /**
      * The version number of the protocol spoken.
@@ -342,4 +346,10 @@ public class VersionMessage extends Message {
     public boolean isBloomFilteringSupported() {
         return clientVersion >= FilteredBlockMessage.MIN_PROTOCOL_VERSION;
     }
+
+    /** Returns true if a peer can be asked for blocks and transactions including witness data. */
+    public boolean isWitnessSupported() {
+        return (localServices & NODE_WITNESS) == NODE_WITNESS;
+    }
+
 }

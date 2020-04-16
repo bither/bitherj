@@ -203,8 +203,9 @@ public class BitcoinSerializer {
             message = new GetHeadersMessage(payloadBytes);
         } else if (command.equals("tx")) {
             Tx tx = new Tx(payloadBytes, 0, length);
-            if (hash != null)
+            if (hash != null && !tx.isSegwitTx()) {
                 tx.setTxHash(hash);
+            }
             message = tx;
         } else if (command.equals("addr")) {
             message = new AddressMessage(payloadBytes, length);
@@ -230,8 +231,9 @@ public class BitcoinSerializer {
             log.warn("No support for deserializing message with name {}", command);
             return new UnknownMessage(command, payloadBytes);
         }
-        if (checksum != null)
+        if (checksum != null) {
             message.setChecksum(checksum);
+        }
         return message;
     }
 

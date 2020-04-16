@@ -945,7 +945,12 @@ public class HDAccount extends Address {
                 .PathType.EXTERNAL_BIP49_PATH);
         for (byte[] pub : pubs) {
             filter.insert(pub);
-            filter.insert(Utils.sha256hash160(pub));
+            try {
+                String segwitAddress = Utils.toSegwitAddress(Utils.sha256hash160(pub));
+                filter.insert((Utils.getAddressHash(segwitAddress)));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
         List<Out> outs = AbstractDb.hdAccountAddressProvider.getUnspendOutByHDAccountWithPath
                 (getHdSeedId(), AbstractHD.PathType.INTERNAL_ROOT_PATH);

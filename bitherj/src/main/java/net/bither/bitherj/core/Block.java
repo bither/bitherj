@@ -671,8 +671,6 @@ public class Block extends Message {
     public int getOptimalEncodingMessageSize() {
         if (optimalEncodingMessageSize != 0)
             return optimalEncodingMessageSize;
-        if (optimalEncodingMessageSize != 0)
-            return optimalEncodingMessageSize;
         optimalEncodingMessageSize = getMessageSize();
         return optimalEncodingMessageSize;
     }
