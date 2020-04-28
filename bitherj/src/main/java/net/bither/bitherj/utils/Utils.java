@@ -914,9 +914,6 @@ public class Utils {
 
     public static boolean validBicoinAddress(String str) {
         try {
-            if (str.startsWith(BitcoinNewAddressPrefix) && Bech32.decode(str) != null) {
-                return true;
-            }
             int addressHeader = getAddressHeader(str);
             return (addressHeader == BitherjSettings.p2shHeader || addressHeader == BitherjSettings.addressHeader);
         } catch (final AddressFormatException x) {
