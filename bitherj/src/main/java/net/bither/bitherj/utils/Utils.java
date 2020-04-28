@@ -23,6 +23,7 @@ import com.google.common.primitives.UnsignedLongs;
 
 import net.bither.bitherj.AbstractApp;
 import net.bither.bitherj.BitherjSettings;
+import net.bither.bitherj.bech32.Bech32;
 import net.bither.bitherj.crypto.DumpedPrivateKey;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.exception.AddressFormatException;
@@ -73,6 +74,7 @@ public class Utils {
 
     public static final BigInteger NEGATIVE_ONE = BigInteger.valueOf(-1);
     private static final MessageDigest digest;
+    public static final String BitcoinNewAddressPrefix = "bc1";
 
     static {
         try {
@@ -912,10 +914,23 @@ public class Utils {
 
     public static boolean validBicoinAddress(String str) {
         try {
+            if (str.startsWith(BitcoinNewAddressPrefix) && Bech32.decode(str) != null) {
+                return true;
+            }
             int addressHeader = getAddressHeader(str);
-            return (addressHeader == BitherjSettings.p2shHeader
-                    || addressHeader == BitherjSettings.addressHeader);
+            return (addressHeader == BitherjSettings.p2shHeader || addressHeader == BitherjSettings.addressHeader);
         } catch (final AddressFormatException x) {
+            x.printStackTrace();
+        }
+        return false;
+    }
+
+    public static boolean validBech32Address(String str) {
+        try {
+            if (str.toLowerCase().startsWith(BitcoinNewAddressPrefix) && Bech32.decode(str) != null) {
+                return true;
+            }
+        } catch (net.bither.bitherj.bech32.AddressFormatException x) {
             x.printStackTrace();
         }
         return false;

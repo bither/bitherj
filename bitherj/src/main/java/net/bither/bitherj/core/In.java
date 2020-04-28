@@ -20,9 +20,11 @@ import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.message.Message;
 import net.bither.bitherj.script.Script;
+import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.Utils;
 import net.bither.bitherj.utils.VarInt;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,7 +159,25 @@ public class In extends Message {
     public In(Tx tx, JSONObject inJsonObject) {
         this.prevTxHash = Utils.reverseBytes(Utils.hexStringToByteArray(inJsonObject.getString("prev_tx_hash")));
         this.prevOutSn = inJsonObject.getInt("prev_position");
-        this.inSignature = Utils.hexStringToByteArray(inJsonObject.getString("script_hex"));
+        if (inJsonObject.getString("prev_type").toUpperCase().equals("P2WPKH_V0")) {
+            JSONArray jsonArray = inJsonObject.getJSONArray("witness");
+            if (jsonArray != null && jsonArray.length() > 0) {
+                if (jsonArray.get(jsonArray.length() - 1) instanceof String) {
+                    byte[] pubkeyHash = Utils.sha256hash160(Utils.hexStringToByteArray(jsonArray.get(jsonArray.length() - 1).toString()));
+                    try {
+                        inSignature = new ScriptBuilder()
+                                .smallNum(0)
+                                .data(pubkeyHash)
+                                .build().getProgram();
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        }
+        if (inSignature == null || inSignature.length == 0) {
+            this.inSignature = Utils.hexStringToByteArray(inJsonObject.getString("script_hex"));
+        }
         this.inSequence = inJsonObject.getLong("sequence");
         this.tx = tx;
         this.txHash = tx.getTxHash();

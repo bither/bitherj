@@ -26,6 +26,7 @@ import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.exception.ProtocolException;
 import net.bither.bitherj.exception.ScriptException;
 import net.bither.bitherj.utils.Base58;
+import net.bither.bitherj.bech32.SegwitAddressUtil;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
 import net.bither.bitherj.utils.Utils;
 
@@ -51,6 +52,7 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static net.bither.bitherj.bech32.SegwitAddressUtil.SegwitAddressHrp;
 import static net.bither.bitherj.script.ScriptOpCodes.*;
 import static net.bither.bitherj.utils.Utils.doubleDigest;
 
@@ -77,6 +79,7 @@ public class Script {
     // Unfortunately, scripts are not ever re-serialized or canonicalized when used in signature hashing. Thus we
     // must preserve the exact bytes that we read off the wire, along with the parsed form.
     protected byte[] program;
+    protected byte version;
 
     // Creation time of the associated keys in seconds since the epoch.
     private long creationTimeSeconds;
@@ -182,6 +185,11 @@ public class Script {
     private void parse(byte[] program) throws ScriptException {
         chunks = new ArrayList<ScriptChunk>(5);   // Common size.
         ByteArrayInputStream bis = new ByteArrayInputStream(program);
+
+        if (isP2WPKHScriptHash() || isP2WSHScriptHash()) {
+            version = program[0];
+        }
+
         int initialSize = bis.available();
         while (bis.available() > 0) {
             int startLocationInProgram = initialSize - bis.available();
@@ -259,7 +267,8 @@ public class Script {
 
     public boolean isBTInP2SHAddress() {
         byte[] program = getProgram();
-        return (program[0] & 0xff) == program.length - 1 &&
+        return program.length > 3 &&
+                (program[0] & 0xff) == program.length - 1 &&
                 (program[1] & 0xff) == 0x00 &&
                 (program[2] & 0xff) == program.length - 3;
     }
@@ -300,7 +309,7 @@ public class Script {
     public byte[] getPubKeyHash() throws ScriptException {
         if (isSentToAddress())
             return chunks.get(2).data;
-        else if (isPayToScriptHash())
+        else if (isPayToScriptHash() || isP2WSHScriptHash() || isP2WPKHScriptHash())
             return chunks.get(1).data;
         else
             throw new ScriptException("Script not in the standard scriptPubKey form");
@@ -379,7 +388,13 @@ public class Script {
     }
 
     public String getFromAddress() throws ScriptException {
-        if (isBTInP2SHAddress()) {
+        if (isP2WPKHScriptHash() || isP2WSHScriptHash()) {
+            try {
+                return SegwitAddressUtil.getInstance().encode(SegwitAddressHrp.getBytes(), version, getPubKeyHash());
+            } catch (Exception ex) {
+                throw new ScriptException("Cannot cast this script to a pay-to-address type");
+            }
+        } else if (isBTInP2SHAddress()) {
             byte[] scriptSig = new byte[program.length - 1];
             System.arraycopy(program, 1, scriptSig, 0, scriptSig.length);
             return toSegwitAddressFromScriptSig(scriptSig);
@@ -422,6 +437,13 @@ public class Script {
             return Utils.toAddress(getPubKeyHash());
         else if (isSentToP2SH())
             return Utils.toP2SHAddress(this.getPubKeyHash());
+        else if (isP2WPKHScriptHash() || isP2WSHScriptHash()) {
+            try {
+                return SegwitAddressUtil.getInstance().encode(SegwitAddressHrp.getBytes(), version, getPubKeyHash());
+            } catch (Exception ex) {
+                throw new ScriptException("Cannot cast this script to a pay-to-address type");
+            }
+        }
         else
             throw new ScriptException("Cannot cast this script to a pay-to-address type");
     }
@@ -708,6 +730,16 @@ public class Script {
                 (program[0] & 0xff) == OP_HASH160 &&
                 (program[1] & 0xff) == 0x14 &&
                 (program[22] & 0xff) == OP_EQUAL;
+    }
+
+    public boolean isP2WSHScriptHash() {
+        byte[] program = getProgram();
+        return program.length == 34;
+    }
+
+    public boolean isP2WPKHScriptHash() {
+        byte[] program = getProgram();
+        return program.length == 22;
     }
 
     /**
