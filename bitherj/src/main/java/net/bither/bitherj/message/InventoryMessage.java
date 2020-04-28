@@ -60,18 +60,18 @@ public class InventoryMessage extends ListMessage {
         addItem(new InventoryItem(InventoryItem.Type.Block, block.getBlockHash()));
     }
 
-    public void addTransaction(Tx tx) {
-        addItem(new InventoryItem(InventoryItem.Type.Transaction, tx.getTxHash()));
+    public void addTransaction(Tx tx, boolean includeWitness) {
+        addItem(new InventoryItem(includeWitness ? InventoryItem.Type.WitnessTransaction : InventoryItem.Type.Transaction, tx.getTxHash()));
     }
 
     /**
      * Creates a new inv message for the given transactions.
      */
-    public static InventoryMessage with(Tx... txns) {
+    public static InventoryMessage with(boolean includeWitness, Tx... txns) {
         checkArgument(txns.length > 0);
         InventoryMessage result = new InventoryMessage();
         for (Tx tx : txns)
-            result.addTransaction(tx);
+            result.addTransaction(tx, includeWitness);
         return result;
     }
 }

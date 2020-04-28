@@ -516,8 +516,10 @@ public class Tx extends Message implements Comparable<Tx> {
         // First come the inputs.
         long numInputs = readVarInt();
         optimalEncodingMessageSize += VarInt.sizeOf(numInputs);
+        boolean isWitness = false;
         if (numInputs == 0) {
             if (readVarInt() == 1) {
+                isWitness = true;
                 optimalEncodingMessageSize += 1;
                 numInputs = readVarInt();
                 optimalEncodingMessageSize += VarInt.sizeOf(numInputs);
@@ -557,6 +559,8 @@ public class Tx extends Message implements Comparable<Tx> {
         byte[] insAndOutsB = new byte[insAndOutsSize];
         System.arraycopy(bytes, cursor - insAndOutsSize, insAndOutsB, 0, insAndOutsSize);
 
+        int witnessIndex = cursor;
+
         int txLockTimeSize = 4;
         cursor = bytes.length - txLockTimeSize;
         byte[] txLockTimeB = new byte[txLockTimeSize];
@@ -567,8 +571,46 @@ public class Tx extends Message implements Comparable<Tx> {
         System.arraycopy(insAndOutsB, 0, b, verSize + numInputsSize, insAndOutsSize);
         System.arraycopy(txLockTimeB, 0, b, verSize + numInputsSize + insAndOutsSize, txLockTimeSize);
         txHash = doubleDigest(b);
+
+        if (isWitness) {
+            cursor = witnessIndex;
+        }
+
         for (In in: ins) {
             in.setTxHash(txHash);
+            if (isWitness) {
+                long pref = readVarIntNoChangeCursor();
+                if (pref == 0) {
+                    readVarInt();
+                    optimalEncodingMessageSize += 1;
+                    continue;
+                }
+                if (pref == 2) {
+                    readVarInt();
+                    optimalEncodingMessageSize += 1;
+                    int signatureLen = (int) readVarInt();
+                    readBytes(signatureLen);
+                    optimalEncodingMessageSize += VarInt.sizeOf(signatureLen) + signatureLen;
+                    int pubkeyLen = (int) readVarInt();
+                    byte[] pubkeyB = readBytes(pubkeyLen);
+                    optimalEncodingMessageSize += VarInt.sizeOf(pubkeyLen) + pubkeyLen;
+                    if (in.getInSignature() == null || in.getInSignature().length == 0) {
+                        byte[] pubkeyHash = Utils.sha256hash160(pubkeyB);
+                        try {
+                            byte[] inSignature = new ScriptBuilder()
+                                    .smallNum(0)
+                                    .data(pubkeyHash)
+                                    .build().getProgram();
+                            in.setInSignature(inSignature);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                    if (!isSegwitTx) {
+                        isSegwitTx = true;
+                    }
+                }
+            }
         }
         for (Out out: outs) {
             out.setTxHash(txHash);
@@ -578,10 +620,11 @@ public class Tx extends Message implements Comparable<Tx> {
         this.length = cursor - offset;
     }
 
+    public boolean isSegwitTx() {
+        return isSegwitTx;
+    }
+
     public int getOptimalEncodingMessageSize() {
-        if (optimalEncodingMessageSize != 0) {
-            return optimalEncodingMessageSize;
-        }
         if (optimalEncodingMessageSize != 0) {
             return optimalEncodingMessageSize;
         }

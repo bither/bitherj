@@ -188,7 +188,6 @@ public class Peer extends PeerSocketHandler {
         if (m == null) {
             return;
         }
-
         if (currentFilteredBlock != null && !(m instanceof Tx)) {
             currentFilteredBlock = null;
             currentTxHashes.clear();
@@ -366,9 +365,9 @@ public class Peer extends PeerSocketHandler {
     }
 
     private void processInv(InventoryMessage inv) {
-        ArrayList<InventoryItem> items = new ArrayList<InventoryItem>(inv.getItems());
+        List<InventoryItem> items = inv.getItems();
 
-        if (items.size() == 0) {
+        if (items == null || items.size() == 0) {
             return;
         } else if (items.size() > MAX_GETDATA_HASHES) {
             log.info(this.getPeerAddress().getHostAddress() + " dropping inv message, " +
@@ -396,6 +395,7 @@ public class Peer extends PeerSocketHandler {
                     break;
                 case Block:
                 case FilteredBlock:
+                case WitnessFilteredBlock:
 //                    if(PeerManager.instance().getDownloadingPeer() == null || getDownloadData()) {
                     Sha256Hash bigBlock = new Sha256Hash(hash);
                     if (!blockHashSha256Hashs.contains(bigBlock)) {
@@ -553,6 +553,7 @@ public class Peer extends PeerSocketHandler {
             // byte array can't be compared
             // BigInteger can't be cast back to byte array
             // so we use Sha256Hash class here as key
+
             boolean removed = currentTxHashes.remove(new Sha256Hash(tx.getTxHash()));
             log.info("peer[{}:{}] receive tx {} filtering block: {}, remaining tx {}, remove {}",
                     this.peerAddress.getHostAddress(), this.peerPort,
@@ -775,7 +776,7 @@ public class Peer extends PeerSocketHandler {
             close();
             return;
         }
-        if(!version.canRelayTx()){
+        if (!version.canRelayTx()) {
             log.info("Peer " + getPeerAddress().getHostAddress() + " can not relay tx, give up.");
             close();
             return;
@@ -892,7 +893,7 @@ public class Peer extends PeerSocketHandler {
         if (tx == null) {
             return;
         }
-        m.addTransaction(tx);
+        m.addTransaction(tx, versionMessage.isWitnessSupported());
         log.info("Peer {} send inv with tx {}", getPeerAddress().getHostAddress(),
                 Utils.hashToString(txHash.getBytes()));
         sendMessage(m);
@@ -964,7 +965,7 @@ public class Peer extends PeerSocketHandler {
         }
         if (txHashes != null) {
             for (Sha256Hash hash : txHashes) {
-                m.addTransaction(hash.getBytes());
+                m.addTransaction(hash.getBytes(), versionMessage.isWitnessSupported());
             }
         }
         int blochHashCount = 0;
