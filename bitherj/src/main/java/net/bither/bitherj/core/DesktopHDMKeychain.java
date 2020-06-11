@@ -369,7 +369,7 @@ public class DesktopHDMKeychain extends AbstractHD {
         List<Out> outs = AbstractDb.desktopTxProvider.getUnspendOutByHDAccount(hdSeedId);
 
         Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(), Arrays
-                .asList(amounts), Arrays.asList(toAddresses));
+                .asList(amounts), Arrays.asList(toAddresses), null);
         List<DesktopHDMAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
         assert signingAddresses.size() == tx.getIns().size();
 

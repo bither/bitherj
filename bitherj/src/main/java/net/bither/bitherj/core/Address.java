@@ -312,37 +312,28 @@ public class Address implements Comparable<Address> {
         }
     }
 
-
-    public Tx buildTx(List<Long> amounts, List<String> addresses) throws TxBuilderException {
-        return buildTx(getAddress(), amounts, addresses);
+    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses, Long dynamicFeeBase) throws TxBuilderException {
+        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, Coin.BTC, dynamicFeeBase);
     }
 
-    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
-        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, Coin.BTC);
+    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses, Coin coin, Long dynamicFeeBase) throws TxBuilderException {
+        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, coin, dynamicFeeBase);
     }
 
-    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses, Coin coin) throws TxBuilderException {
-        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, coin);
-    }
-
-    public Tx buildTx(long amount, String address) throws TxBuilderException {
-        return buildTx(amount, address, getAddress());
-    }
-
-    public Tx buildTx(long amount, String address, String changeAddress) throws TxBuilderException {
+    public Tx buildTx(long amount, String address, String changeAddress, Long dynamicFeeBase) throws TxBuilderException {
         List<Long> amounts = new ArrayList<Long>();
         amounts.add(amount);
         List<String> addresses = new ArrayList<String>();
         addresses.add(address);
-        return buildTx(changeAddress, amounts, addresses);
+        return buildTx(changeAddress, amounts, addresses, dynamicFeeBase);
     }
 
-    public Tx buildTx(long amount, String address, String changeAddress, Coin coin) throws TxBuilderException {
+    public Tx buildTx(long amount, String address, String changeAddress, Coin coin, Long dynamicFeeBase) throws TxBuilderException {
         List<Long> amounts = new ArrayList<Long>();
         amounts.add(amount);
         List<String> addresses = new ArrayList<String>();
         addresses.add(address);
-        return buildTx(changeAddress, amounts, addresses, coin);
+        return buildTx(changeAddress, amounts, addresses, coin, dynamicFeeBase);
     }
 
     public List<Tx> buildSplitCoinTx(long amount, String address, String changeAddress, SplitCoin splitCoin) throws TxBuilderException {

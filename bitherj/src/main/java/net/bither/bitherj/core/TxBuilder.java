@@ -45,7 +45,7 @@ public class TxBuilder {
         return uniqueInstance;
     }
 
-    public Tx buildTxFromAllAddress(List<Out> unspendOuts, String changeAddress, List<Long> amounts, List<String> addresses) throws TxBuilderException {
+    public Tx buildTxFromAllAddress(List<Out> unspendOuts, String changeAddress, List<Long> amounts, List<String> addresses, Long dynamicFeeBase) throws TxBuilderException {
 
         long value = 0;
         for (long amount : amounts) {
@@ -57,7 +57,7 @@ public class TxBuilder {
         }
 
         Tx emptyWalletTx = emptyWallet.buildTx(changeAddress, unspendOuts, prepareTx(amounts,
-                addresses));
+                addresses), dynamicFeeBase);
         if (emptyWalletTx != null && TxBuilder.estimationTxSize(emptyWalletTx.getIns().size(),
                 emptyWalletTx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
             return emptyWalletTx;
@@ -74,7 +74,7 @@ public class TxBuilder {
         boolean mayMaxTxSize = false;
         List<Tx> txs = new ArrayList<Tx>();
         for (TxBuilderProtocol builder : this.txBuilders) {
-            Tx tx = builder.buildTx(changeAddress, unspendOuts, prepareTx(amounts, addresses));
+            Tx tx = builder.buildTx(changeAddress, unspendOuts, prepareTx(amounts, addresses), dynamicFeeBase);
             // note: need all unspent out is pay-to-pubkey-hash
             if (tx != null && TxBuilder.estimationTxSize(tx.getIns().size(), tx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
                 txs.add(tx);
@@ -117,7 +117,7 @@ public class TxBuilder {
             int toIndex = fromIndex + Math.min(count, unspendOuts.size() - fromIndex);
             List<Out> outs = unspendOuts.subList(fromIndex, toIndex);
             List<Long> amounts = Arrays.asList(TxBuilder.getAmount(outs));
-            Tx emptyWalletTx = emptyWallet.buildTx(changeAddress, outs, prepareTx(amounts, addresses),splitCoin.getCoin());
+            Tx emptyWalletTx = emptyWallet.buildTx(changeAddress, outs, prepareTx(amounts, addresses), null, splitCoin.getCoin());
             if (emptyWalletTx != null && TxBuilder.estimationTxSize(emptyWalletTx.getIns().size(), emptyWalletTx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
                 emptyWalletTx.setCoin(splitCoin.getCoin());
                 emptyWalletTxs.add(emptyWalletTx);
@@ -131,7 +131,7 @@ public class TxBuilder {
         return emptyWalletTxs;
     }
 
-    public Tx buildTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses, Coin coin) throws TxBuilderException {
+    public Tx buildTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses, Coin coin, Long dynamicFeeBase) throws TxBuilderException {
         Script scriptPubKey = null;
         if (address.isHDM()) {
             scriptPubKey = new Script(address.getPubKey());
@@ -153,7 +153,7 @@ public class TxBuilder {
             unspendOuts = getUnspendOuts(unspendTxs);
         } else {
             unspendOuts = AbstractDb.txProvider.getUnspentOutputByBlockNo(coin.getForkBlockHeight(), address.getAddress());
-            unspendTxs = AbstractDb.txProvider.getUnspendTxWithAddress(address.getAddress(),unspendOuts);
+            unspendTxs = AbstractDb.txProvider.getUnspendTxWithAddress(address.getAddress(), unspendOuts);
         }
         List<Out> canSpendOuts = getCanSpendOuts(unspendTxs);
         List<Out> canNotSpendOuts = getCanNotSpendOuts(unspendTxs);
@@ -166,7 +166,7 @@ public class TxBuilder {
             throw new TxBuilderException.TxBuilderWaitConfirmException(TxBuilder.getAmount(canNotSpendOuts));
         }
 
-        Tx emptyWalletTx = emptyWallet.buildTx(address, changeAddress, unspendTxs, prepareTx(amounts, addresses));
+        Tx emptyWalletTx = emptyWallet.buildTx(address, changeAddress, unspendTxs, prepareTx(amounts, addresses), dynamicFeeBase);
         if (emptyWalletTx != null && TxBuilder.estimationTxSize(emptyWalletTx.getIns().size(), scriptPubKey, emptyWalletTx.getOuts(), address.isCompressed()) <= BitherjSettings.MAX_TX_SIZE) {
             return emptyWalletTx;
         } else if (emptyWalletTx != null) {
@@ -182,7 +182,7 @@ public class TxBuilder {
         boolean mayMaxTxSize = false;
         List<Tx> txs = new ArrayList<Tx>();
         for (TxBuilderProtocol builder : this.txBuilders) {
-            Tx tx = builder.buildTx(address, changeAddress, unspendTxs, prepareTx(amounts, addresses));
+            Tx tx = builder.buildTx(address, changeAddress, unspendTxs, prepareTx(amounts, addresses), dynamicFeeBase);
             if (tx != null && TxBuilder.estimationTxSize(tx.getIns().size(), scriptPubKey, tx.getOuts(), address.isCompressed()) <= BitherjSettings.MAX_TX_SIZE) {
                 txs.add(tx);
             } else if (tx != null) {
@@ -214,8 +214,8 @@ public class TxBuilder {
         for (long amount : amounts) {
             value += amount;
         }
-        List<Out> unspendOuts = AbstractDb.txProvider.getUnspentOutputByBlockNo(splitCoin.getForkBlockHeight(),address.getAddress());
-        List<Tx> unspendTxs =  AbstractDb.txProvider.getUnspendTxWithAddress(address.getAddress(),unspendOuts);
+        List<Out> unspendOuts = AbstractDb.txProvider.getUnspentOutputByBlockNo(splitCoin.getForkBlockHeight(), address.getAddress());
+        List<Tx> unspendTxs = AbstractDb.txProvider.getUnspendTxWithAddress(address.getAddress(), unspendOuts);
         List<Out> canSpendOuts = getCanSpendOuts(unspendTxs);
         List<Out> canNotSpendOuts = getCanNotSpendOuts(unspendTxs);
         if (value > getAmount(unspendOuts)) {
@@ -266,7 +266,7 @@ public class TxBuilder {
             List<Tx> txs = unspendTxs.subList(fromIndex, toIndex);
             List<Out> outs = TxBuilder.getUnspendOuts(txs);
             List<Long> amounts = Arrays.asList(TxBuilder.getAmount(outs));
-            Tx emptyWalletTx = emptyWallet.buildTx(address, changeAddress, txs, prepareTx(amounts, addresses),coin);
+            Tx emptyWalletTx = emptyWallet.buildTx(address, changeAddress, txs, prepareTx(amounts, addresses), null, coin);
             if (emptyWalletTx != null && TxBuilder.estimationTxSize(emptyWalletTx.getIns().size(), scriptPubKey, emptyWalletTx.getOuts(), address.isCompressed()) <= BitherjSettings.MAX_TX_SIZE) {
                 emptyWalletTx.setCoin(coin);
                 emptyWalletTxs.add(emptyWalletTx);
@@ -365,7 +365,7 @@ public class TxBuilder {
         List<Out> result = new ArrayList<Out>();
         for (Tx tx : txs) {
 //            if (tx.getBlockNo() != Tx.TX_UNCONFIRMED || tx.getSource() == Tx.SourceType.self.getValue()) {
-                result.add(tx.getOuts().get(0));
+            result.add(tx.getOuts().get(0));
 //            }
         }
         return result;
@@ -383,13 +383,15 @@ public class TxBuilder {
 }
 
 interface TxBuilderProtocol {
-    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx,Coin...coin);
-    public Tx buildBCCTx(Address address, String changeAddress, List<Out> unspendOuts, Tx tx,Coin...coin);
-    public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx,Coin...coin);
+    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx, Long dynamicFeeBase, Coin... coin);
+
+    public Tx buildBCCTx(Address address, String changeAddress, List<Out> unspendOuts, Tx tx, Coin... coin);
+
+    public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx, Long dynamicFeeBase, Coin... coin);
 }
 
 class TxBuilderEmptyWallet implements TxBuilderProtocol {
-    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx,Coin...coin) {
+    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx, Long dynamicFeeBase, Coin... coin) {
         Script scriptPubKey = null;
         if (address.isHDM()) {
             scriptPubKey = new Script(address.getPubKey());
@@ -412,10 +414,18 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 
         long fees = 0;
         if (needMinFee) {
-            if(coin != null && coin.length > 0) {
-                fees = coin[0].getSplitNormalFee();
-            }else {
-                fees = Utils.getFeeBase();
+            if (coin != null && coin.length > 0) {
+                if (coin[0] == Coin.BTC && dynamicFeeBase != null) {
+                    fees = dynamicFeeBase;
+                } else {
+                    fees = coin[0].getSplitNormalFee();
+                }
+            } else {
+                if (dynamicFeeBase != null) {
+                    fees = dynamicFeeBase;
+                } else {
+                    fees = Utils.getFeeBase();
+                }
             }
         } else {
             // no fee logic
@@ -448,7 +458,7 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
         return tx;
     }
 
-    public Tx buildBCCTx(Address address, String changeAddress, List<Out> unspendOuts, Tx tx,Coin...coin) {
+    public Tx buildBCCTx(Address address, String changeAddress, List<Out> unspendOuts, Tx tx, Coin... coin) {
         Script scriptPubKey = null;
         if (address.isHDM()) {
             scriptPubKey = new Script(address.getPubKey());
@@ -470,9 +480,9 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 
         long fees = 0;
         if (needMinFee) {
-            if(coin != null && coin.length > 0) {
+            if (coin != null && coin.length > 0) {
                 fees = coin[0].getSplitNormalFee();
-            }else {
+            } else {
                 fees = Utils.getFeeBase();
             }
         } else {
@@ -505,8 +515,7 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
         return tx;
     }
 
-    @Override
-    public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx,Coin...coin) {
+    public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx, Long dynamicFeeBase, Coin... coin) {
         List<Out> outs = unspendOuts;
 
         long value = 0;
@@ -521,10 +530,18 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 
         long fees = 0;
         if (needMinFee) {
-            if(coin != null && coin.length > 0) {
-                fees = coin[0].getSplitNormalFee();
-            }else {
-                fees = Utils.getFeeBase();
+            if (coin != null && coin.length > 0) {
+                if (coin[0] == Coin.BTC && dynamicFeeBase != null) {
+                    fees = dynamicFeeBase;
+                } else {
+                    fees = coin[0].getSplitNormalFee();
+                }
+            } else {
+                if (dynamicFeeBase != null) {
+                    fees = dynamicFeeBase;
+                } else {
+                    fees = Utils.getFeeBase();
+                }
             }
         } else {
             // no fee logic
@@ -558,7 +575,7 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 }
 
 class TxBuilderDefault implements TxBuilderProtocol {
-    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx,Coin...coin) {
+    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx, Long dynamicFeeBase, Coin... coin) {
         boolean isCompressed = address.isCompressed();
         Script scriptPubKey = null;
         if (address.isHDM()) {
@@ -616,15 +633,16 @@ class TxBuilderDefault implements TxBuilderProtocol {
 
         List<Out> bestCoinSelection = null;
         Out bestChangeOutput = null;
+        long feeBase = dynamicFeeBase != null ? dynamicFeeBase : Utils.getFeeBase();
         while (true) {
             long fees = 0;
 
             if (lastCalculatedSize >= 1000) {
                 // If the size is exactly 1000 bytes then we'll over-pay, but this should be rare.
-                fees += (lastCalculatedSize / 1000 + 1) * Utils.getFeeBase();
+                fees += (lastCalculatedSize / 1000 + 1) * feeBase;
             }
-            if (needAtLeastReferenceFee && fees < Utils.getFeeBase())
-                fees = Utils.getFeeBase();
+            if (needAtLeastReferenceFee && fees < feeBase)
+                fees = feeBase;
 
             valueNeeded = value + fees;
 
@@ -641,7 +659,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
             // no fee logic
             if (!needAtLeastReferenceFee) {
                 long total = TxBuilder.getAmount(selectedOuts);
-                if (total - value < Utils.CENT && total - value >= Utils.getFeeBase()) {
+                if (total - value < Utils.CENT && total - value >= feeBase) {
                     needAtLeastReferenceFee = true;
                     continue;
                 }
@@ -662,12 +680,12 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 change += additionalValueSelected;
 
             if (BitherjSettings.ensureMinRequiredFee && change != 0 && change < Utils.CENT
-                    && fees < Utils.getFeeBase()) {
+                    && fees < feeBase) {
                 // This solution may fit into category 2, but it may also be category 3, we'll check that later
                 eitherCategory2Or3 = true;
                 additionalValueForNextCategory = Utils.CENT;
                 // If the change is smaller than the fee we want to add, this will be negative
-                change -= Utils.getFeeBase() - fees;
+                change -= feeBase - fees;
             }
 
             int size = 0;
@@ -680,7 +698,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 if (BitherjSettings.ensureMinRequiredFee && Tx.MIN_NONDUST_OUTPUT >= change) {
                     // This solution definitely fits in category 3
                     isCategory3 = true;
-                    additionalValueForNextCategory = Utils.getFeeBase() + Tx.MIN_NONDUST_OUTPUT + 1;
+                    additionalValueForNextCategory = feeBase + Tx.MIN_NONDUST_OUTPUT + 1;
                 } else {
                     size += 34;
                     // This solution is either category 1 or 2
@@ -691,11 +709,11 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 if (eitherCategory2Or3) {
                     // This solution definitely fits in category 3 (we threw away change because it was smaller than MIN_TX_FEE)
                     isCategory3 = true;
-                    additionalValueForNextCategory = Utils.getFeeBase() + 1;
+                    additionalValueForNextCategory = feeBase + 1;
                 }
             }
             size += TxBuilder.estimationTxSize(selectedOuts.size(), scriptPubKey, tx.getOuts(), isCompressed);
-            if (size / 1000 > lastCalculatedSize / 1000 && Utils.getFeeBase() > 0) {
+            if (size / 1000 > lastCalculatedSize / 1000 && feeBase > 0) {
                 lastCalculatedSize = size;
                 // We need more fees anyway, just try again with the same additional value
                 additionalValueForNextCategory = additionalValueSelected;
@@ -790,12 +808,11 @@ class TxBuilderDefault implements TxBuilderProtocol {
         return tx;
     }
 
-    public Tx buildBCCTx(Address address, String changeAddress, List<Out> unspendOuts, Tx tx,Coin...coin) {
+    public Tx buildBCCTx(Address address, String changeAddress, List<Out> unspendOuts, Tx tx, Coin... coin) {
         return null;
     }
 
-    @Override
-    public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx,Coin...coin) {
+    public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx, Long dynamicFeeBase, Coin... coin) {
         List<Out> outs = unspendOuts;
 
         long additionalValueForNextCategory = 0;
@@ -816,15 +833,16 @@ class TxBuilderDefault implements TxBuilderProtocol {
 
         List<Out> bestCoinSelection = null;
         Out bestChangeOutput = null;
+        long feeBase = dynamicFeeBase != null ? dynamicFeeBase : Utils.getFeeBase();
         while (true) {
             long fees = 0;
 
             if (lastCalculatedSize >= 1000) {
                 // If the size is exactly 1000 bytes then we'll over-pay, but this should be rare.
-                fees += (lastCalculatedSize / 1000 + 1) * Utils.getFeeBase();
+                fees += (lastCalculatedSize / 1000 + 1) * feeBase;
             }
-            if (needAtLeastReferenceFee && fees < Utils.getFeeBase())
-                fees = Utils.getFeeBase();
+            if (needAtLeastReferenceFee && fees < feeBase)
+                fees = feeBase;
 
             valueNeeded = value + fees;
 
@@ -841,7 +859,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
             // no fee logic
             if (!needAtLeastReferenceFee) {
                 long total = TxBuilder.getAmount(selectedOuts);
-                if (total - value < Utils.CENT && total - value >= Utils.getFeeBase()) {
+                if (total - value < Utils.CENT && total - value >= feeBase) {
                     needAtLeastReferenceFee = true;
                     continue;
                 }
@@ -862,12 +880,12 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 change += additionalValueSelected;
 
             if (BitherjSettings.ensureMinRequiredFee && change != 0 && change < Utils.CENT
-                    && fees < Utils.getFeeBase()) {
+                    && fees < feeBase) {
                 // This solution may fit into category 2, but it may also be category 3, we'll check that later
                 eitherCategory2Or3 = true;
                 additionalValueForNextCategory = Utils.CENT;
                 // If the change is smaller than the fee we want to add, this will be negative
-                change -= Utils.getFeeBase() - fees;
+                change -= feeBase - fees;
             }
 
             int size = 0;
@@ -880,7 +898,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 if (BitherjSettings.ensureMinRequiredFee && Tx.MIN_NONDUST_OUTPUT >= change) {
                     // This solution definitely fits in category 3
                     isCategory3 = true;
-                    additionalValueForNextCategory = Utils.getFeeBase() + Tx.MIN_NONDUST_OUTPUT + 1;
+                    additionalValueForNextCategory = feeBase + Tx.MIN_NONDUST_OUTPUT + 1;
                 } else {
                     size += 34;
                     // This solution is either category 1 or 2
@@ -891,11 +909,11 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 if (eitherCategory2Or3) {
                     // This solution definitely fits in category 3 (we threw away change because it was smaller than MIN_TX_FEE)
                     isCategory3 = true;
-                    additionalValueForNextCategory = Utils.getFeeBase() + 1;
+                    additionalValueForNextCategory = feeBase + 1;
                 }
             }
             size += TxBuilder.estimationTxSize(selectedOuts.size(), tx.getOuts().size());
-            if (size / 1000 > lastCalculatedSize / 1000 && Utils.getFeeBase() > 0) {
+            if (size / 1000 > lastCalculatedSize / 1000 && feeBase > 0) {
                 lastCalculatedSize = size;
                 // We need more fees anyway, just try again with the same additional value
                 additionalValueForNextCategory = additionalValueSelected;

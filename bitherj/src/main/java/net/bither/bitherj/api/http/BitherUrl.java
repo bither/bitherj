@@ -34,7 +34,6 @@ public class BitherUrl {
         public static final String BLOCK_CHAIN_INFO = "blockChain.info";
         public static final String BTC_COM = "chain.api.btc.com";
 
-
         public static final String BITHER_BITCOIN = Utils.format(FORMAT_HTTP, BITHER_BITCOIN_DOMAIN);
         public static final String BITHER_USER = Utils.format(FORMAT_HTTP, BITHER_USER_DOMAIN);
         public static final String BITHER_STATS = Utils.format(FORMAT_HTTP, BITHER_STATS_DOMAIN);
@@ -80,6 +79,7 @@ public class BitherUrl {
     public static final String BITHER_Q_GETBLOCK_COUNT_URL = "%sapi/v2/block/count";
     public static final String BITHER_GET_ONE_SPVBLOCK_API = "%sapi/v2/block/spv/one";
     public static final String BITHER_Q_MYTRANSACTIONS = "%sapi/v2/address/%s/transaction";
+    public static final String BITHER_Q_STATS_DYNAMIC_FEE = "%sapi/v2/stats/dynamic/fee";
     public static final String BITHER_Q_ADDRESSES = "%sapi/v3/address/%s";
     public static final String BITHER_Q_ADDRESS_UNSPENT = "%sapi/v3/address/%s/unspent";
     public static final String BITHER_Q_ADDRESS_UNSPENT_TXS = "%sapi/v3/tx/%s";

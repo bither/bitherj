@@ -676,17 +676,17 @@ public class HDAccount extends Address {
         return AbstractDb.hdAccountAddressProvider.getBelongAccountAddresses(this.hdSeedId, addressList);
     }
 
-    public Tx newTx(String toAddress, Long amount, boolean isSegwitChangeAddress, CharSequence password) throws
+    public Tx newTx(String toAddress, Long amount, boolean isSegwitChangeAddress, CharSequence password, Long dynamicFeeBase) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
-        return newTx(new String[]{toAddress}, new Long[]{amount}, isSegwitChangeAddress, password);
+        return newTx(new String[]{toAddress}, new Long[]{amount}, isSegwitChangeAddress, password, dynamicFeeBase);
     }
 
-    public Tx newTx(String[] toAddresses, Long[] amounts, boolean isSegwitChangeAddress, CharSequence password) throws
+    public Tx newTx(String[] toAddresses, Long[] amounts, boolean isSegwitChangeAddress, CharSequence password, Long dynamicFeeBase) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
         if (password != null && !hasPrivKey()) {
             throw new RuntimeException("Can not sign without private key");
         }
-        Tx tx = newTx(toAddresses, amounts, isSegwitChangeAddress);
+        Tx tx = newTx(toAddresses, amounts, isSegwitChangeAddress, dynamicFeeBase);
 
         List<HDAccountAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
         assert signingAddresses.size() == tx.getIns().size();
@@ -875,17 +875,17 @@ public class HDAccount extends Address {
         return txs;
     }
 
-    public Tx newTx(String toAddress, Long amount, boolean isSegwitChangeAddress) throws TxBuilderException, MnemonicException
+    public Tx newTx(String toAddress, Long amount, boolean isSegwitChangeAddress, Long dynamicFeeBase) throws TxBuilderException, MnemonicException
             .MnemonicLengthException {
-        return newTx(new String[]{toAddress}, new Long[]{amount}, isSegwitChangeAddress);
+        return newTx(new String[]{toAddress}, new Long[]{amount}, isSegwitChangeAddress, dynamicFeeBase);
     }
 
 
-    public Tx newTx(String[] toAddresses, Long[] amounts, boolean isSegwitChangeAddress) throws TxBuilderException,
+    public Tx newTx(String[] toAddresses, Long[] amounts, boolean isSegwitChangeAddress, Long dynamicFeeBase) throws TxBuilderException,
             MnemonicException.MnemonicLengthException {
         List<Out> outs = AbstractDb.hdAccountAddressProvider.getUnspendOutByHDAccount(hdSeedId);
         Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(isSegwitChangeAddress), Arrays
-                .asList(amounts), Arrays.asList(toAddresses));
+                .asList(amounts), Arrays.asList(toAddresses), dynamicFeeBase);
         return tx;
     }
 
