@@ -54,7 +54,7 @@ public class BitherMytransactionsApi extends HttpGetResponse<String> {
             if (BitherBCUrl.isChangeDns(ex)) {
                 String nextBcDns = BitherBCUrl.getNextBcDns(firstBcDns);
                 if (!Utils.isEmpty(nextBcDns)) {
-                    return queryTransactions(address, page, firstBcDns, requestCount);
+                    return queryTransactions(address, page, firstBcDns, 1);
                 }
                 throw ex;
             } else {
@@ -62,7 +62,7 @@ public class BitherMytransactionsApi extends HttpGetResponse<String> {
                     throw ex;
                 }
                 try {
-                    Thread.sleep(TIMEOUT_REREQUEST_DELAY * requestCount);
+                    Thread.sleep(TIMEOUT_REREQUEST_DELAY);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

@@ -205,6 +205,19 @@ public class In extends Message {
         this.txHash = tx.getTxHash();
     }
 
+    public In(JSONObject blockchairJsonObject, Tx tx) {
+        this.prevTxHash = Utils.reverseBytes(Utils.hexStringToByteArray(blockchairJsonObject.getString("transaction_hash")));
+        this.prevOutSn = blockchairJsonObject.getInt("index");
+        if (blockchairJsonObject.getString("type").equals("witness_v0_keyhash")) {
+            inSignature = Utils.hexStringToByteArray(blockchairJsonObject.getString("script_hex"));
+        } else {
+            inSignature = Utils.hexStringToByteArray(blockchairJsonObject.getString("spending_signature_hex"));
+        }
+        this.inSequence = blockchairJsonObject.getLong("spending_sequence");
+        this.tx = tx;
+        this.txHash = tx.getTxHash();
+    }
+
     protected void parse() throws ProtocolException {
         int curs = cursor;
         int scriptLen = (int) readVarInt(36);

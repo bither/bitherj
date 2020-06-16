@@ -1,27 +1,21 @@
 package net.bither.bitherj.api;
 
-import net.bither.bitherj.api.http.BitherBCUrl;
 import net.bither.bitherj.api.http.BitherUrl;
 import net.bither.bitherj.api.http.HttpGetResponse;
 import net.bither.bitherj.utils.Utils;
 
 import org.json.JSONObject;
 
-import static net.bither.bitherj.api.http.HttpSetting.TIMEOUT_REREQUEST_CNT;
-import static net.bither.bitherj.api.http.HttpSetting.TIMEOUT_REREQUEST_DELAY;
+import static net.bither.bitherj.api.http.BitherUrl.BITHER_DNS.BITHER_BC;
 
 public class BitherStatsDynamicFeeApi extends HttpGetResponse<String> {
 
-    public static Long queryStatsDynamicFee() throws Exception {
-        return queryStatsDynamicFee(BitherBCUrl.getInstance().getDns(),1);
-    }
-
     private BitherStatsDynamicFeeApi() {
-        String url = Utils.format(BitherUrl.BITHER_Q_STATS_DYNAMIC_FEE, BitherBCUrl.getInstance().getDns());
+        String url = Utils.format(BitherUrl.BITHER_Q_STATS_DYNAMIC_FEE, BITHER_BC);
         setUrl(url);
     }
 
-    private static Long queryStatsDynamicFee(String firstBcDns, int requestCount) throws Exception {
+    public static Long queryStatsDynamicFee() throws Exception {
         try {
             BitherStatsDynamicFeeApi bitherStatsDynamicFeeApi = new BitherStatsDynamicFeeApi();
             bitherStatsDynamicFeeApi.handleHttpGet();
@@ -34,23 +28,7 @@ public class BitherStatsDynamicFeeApi extends HttpGetResponse<String> {
             return null;
         } catch (Exception ex) {
             ex.printStackTrace();
-            if (BitherBCUrl.isChangeDns(ex)) {
-                String nextBcDns = BitherBCUrl.getNextBcDns(firstBcDns);
-                if (!Utils.isEmpty(nextBcDns)) {
-                    return queryStatsDynamicFee(firstBcDns, requestCount);
-                }
-                throw ex;
-            } else {
-                if (requestCount > TIMEOUT_REREQUEST_CNT) {
-                    throw ex;
-                }
-                try {
-                    Thread.sleep(TIMEOUT_REREQUEST_DELAY * requestCount);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                return queryStatsDynamicFee(firstBcDns, requestCount + 1);
-            }
+            throw ex;
         }
     }
 

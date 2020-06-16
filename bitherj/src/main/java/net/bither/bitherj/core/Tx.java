@@ -28,6 +28,7 @@ import net.bither.bitherj.message.Message;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.script.ScriptOpCodes;
+import net.bither.bitherj.utils.DateTimeUtils;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.UnsafeByteArrayOutputStream;
@@ -158,6 +159,31 @@ public class Tx extends Message implements Comparable<Tx> {
             this.outs.add(out);
         }
         this.blockHash = Utils.hexStringToByteArray(txJsonObject.getString("block_hash"));
+    }
+
+    public Tx(JSONObject blockchairTxJsonObject, JSONObject transactionJson) {
+        this.blockNo = transactionJson.getInt("block_id");
+        this.txHash = Utils.reverseBytes(Utils.hexStringToByteArray(transactionJson.getString("hash")));
+        this.txTime = DateTimeUtils.getBlockchairDateTimestamp(transactionJson.getString("time"));
+        this.txVer = transactionJson.getInt("version");
+        this.txLockTime = transactionJson.getLong("lock_time");
+        JSONArray inJsonArray = blockchairTxJsonObject.getJSONArray("inputs");
+        this.ins = new ArrayList<In>();
+        for (int i = 0; i < inJsonArray.length(); i++) {
+            JSONObject inJsonObject = inJsonArray.getJSONObject(i);
+            In in = new In(inJsonObject, this);
+            in.setInSn(i);
+            this.ins.add(in);
+        }
+
+        JSONArray outJsonArray = blockchairTxJsonObject.getJSONArray("outputs");
+        this.outs = new ArrayList<Out>();
+        for (int i = 0; i < outJsonArray.length(); i++) {
+            JSONObject outJsonObject = outJsonArray.getJSONObject(i);
+            Out out = new Out(this, outJsonObject);
+            out.setOutSn(i);
+            this.outs.add(out);
+        }
     }
 
     public Tx(Tx tx) {

@@ -51,7 +51,7 @@ public class DownloadSpvApi extends HttpGetResponse<Block> {
             if (BitherBCUrl.isChangeDns(ex)) {
                 String nextBcDns = BitherBCUrl.getNextBcDns(firstBcDns);
                 if (!Utils.isEmpty(nextBcDns)) {
-                    return getOneSpvBlock(firstBcDns, requestCount);
+                    return getOneSpvBlock(firstBcDns, 1);
                 }
                 throw ex;
             } else {
@@ -59,7 +59,7 @@ public class DownloadSpvApi extends HttpGetResponse<Block> {
                     throw ex;
                 }
                 try {
-                    Thread.sleep(TIMEOUT_REREQUEST_DELAY * requestCount);
+                    Thread.sleep(TIMEOUT_REREQUEST_DELAY);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

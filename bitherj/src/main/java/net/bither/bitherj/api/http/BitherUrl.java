@@ -34,6 +34,7 @@ public class BitherUrl {
         public static final String BLOCK_CHAIN_INFO = "blockChain.info";
         public static final String BTC_COM = "chain.api.btc.com";
 
+
         public static final String BITHER_BITCOIN = Utils.format(FORMAT_HTTP, BITHER_BITCOIN_DOMAIN);
         public static final String BITHER_USER = Utils.format(FORMAT_HTTP, BITHER_USER_DOMAIN);
         public static final String BITHER_STATS = Utils.format(FORMAT_HTTP, BITHER_STATS_DOMAIN);
@@ -54,6 +55,8 @@ public class BitherUrl {
         public static final String BITHER_CHAINBTC_DOMAIN = "chain.btc.com";
         public static final String BITHER_CHAINBTC_URL = Utils.format(FORMAT_HTTPS, BITHER_DNS.BITHER_CHAINBTC_DOMAIN);
 
+        // blockchair.com
+        public static final String BLOCKCHAIR_COM_URL = "https://api.blockchair.com/bitcoin/dashboards/";
 
     }
 
@@ -61,12 +64,14 @@ public class BitherUrl {
     public static final String BITHER_BC_GET_BY_ADDRESS = BITHER_DNS.BITHER_BLOCKCHAIN + "rawaddr/%s";
     public static final String BITHER_BC_LATEST_BLOCK = BITHER_DNS.BITHER_BLOCKCHAIN + "latestblock";
     public static final String BITHER_BC_TX_INDEX = BITHER_DNS.BITHER_BLOCKCHAIN + "rawtx/%d?format=hex";
+    public static final String BLOCKCHAIN_INFO_Q_ADDRESSES = BITHER_DNS.BITHER_BLOCKCHAIN + "multiaddr?active=%s";
+    public static final String BLOCKCHAIN_INFO_Q_ADDRESS_UNSPENT = BITHER_DNS.BITHER_BLOCKCHAIN + "unspent?active=%s";
+    public static final String BLOCKCHAIN_INFO_Q_ADDRESS_UNSPENT_TXS = BITHER_DNS.BITHER_BLOCKCHAIN + "rawtx/%s";
 
     // bither chainBtc
     public static final String BITHER_CHAINBTC_GET_BY_ADDRESS = BITHER_DNS.BITHER_CHAINBTC_URL + "api/v1/address/%s";
     public static final String BITHER_CHAINBTC_LATEST_BLOCK = BITHER_DNS.BITHER_CHAINBTC_URL + "api/v1/latestblock";
     public static final String BITHER_CHAINBTC_TX_INDEX = BITHER_DNS.BITHER_CHAINBTC_URL + "rawtx/";
-
 
     // bither user
     public static final String BITHER_GET_COOKIE_URL = BITHER_DNS.BITHER_USER + "api/v1/cookie";
@@ -83,6 +88,16 @@ public class BitherUrl {
     public static final String BITHER_Q_ADDRESSES = "%sapi/v3/address/%s";
     public static final String BITHER_Q_ADDRESS_UNSPENT = "%sapi/v3/address/%s/unspent";
     public static final String BITHER_Q_ADDRESS_UNSPENT_TXS = "%sapi/v3/tx/%s";
+
+    // btc com
+    public static final String BTC_COM_Q_ADDRESSES = "%sv3/address/%s";
+    public static final String BTC_COM_Q_ADDRESS_UNSPENT = "%sv3/address/%s/unspent";
+    public static final String BTC_COM_Q_ADDRESS_UNSPENT_TXS = "%sv3/tx/%s";
+
+    // blockchair.com
+    public static final String BLOCKCHAIR_COM_Q_ADDRESSES_UNSPENT = BITHER_DNS.BLOCKCHAIR_COM_URL + "addresses/%s?limit=100";
+    public static final String BLOCKCHAIR_COM_ADDRESS_UNSPENT_TXS = BITHER_DNS.BLOCKCHAIR_COM_URL + "transactions/%s";
+    public static final String BLOCKCHAIR_COM_Q_ADDRESS_UNSPENT_TXS_BLOCK_HASHS = BITHER_DNS.BLOCKCHAIR_COM_URL + "blocks/%s";
 
     // hdm api
     public static final String BITHER_HDM_PASSWORD = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/password";
@@ -103,6 +118,7 @@ public class BitherUrl {
     //other
     public static final String BLOCKCHAIN_INFO_ADDRESS_URL = "http://blockchain.info/address/";
     public static final String BTC_COM_ADDRESS_URL = "https://btc.com/";
+    public static final String BLOCKCHAIR_ADDRESS_URL = "https://blockchair.com/bitcoin/address/";
 
     //blockChain.info Api
     public static final String BLOCKCHAIN_INFO_GET_LASTST_BLOCK = BITHER_DNS.BLOCK_CHAIN+"latestblock";

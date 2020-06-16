@@ -23,6 +23,8 @@ import net.bither.bitherj.api.BitherQueryAddressApi;
 import net.bither.bitherj.api.BitherQueryAddressUnspentApi;
 import net.bither.bitherj.api.BitherUnspentTxsApi;
 import net.bither.bitherj.api.BlockChainMytransactionsApi;
+import net.bither.bitherj.api.BlockchairQueryAddressUnspentApi;
+import net.bither.bitherj.api.BlockchairUnspentTxsApi;
 import net.bither.bitherj.core.*;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.ScriptException;
@@ -42,6 +44,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static net.bither.bitherj.api.BlockchairQueryAddressUnspentApi.HAS_TX_ADDRESSES;
+import static net.bither.bitherj.api.BlockchairQueryAddressUnspentApi.HAS_UTXO_ADDRESSES;
+import static net.bither.bitherj.api.BlockchairQueryAddressUnspentApi.LAST_TX_ADDRESS;
+import static net.bither.bitherj.api.BlockchairQueryAddressUnspentApi.UTXO;
 import static net.bither.bitherj.core.AbstractHD.PathType.EXTERNAL_ROOT_PATH;
 
 
@@ -195,6 +201,36 @@ public class TransactionsUtil {
             transactions.add(tx);
         }
         return transactions;
+    }
+
+    private static List<Tx> getUnspentTxsFromBlockchair(ArrayList<JSONObject> jsonArray, int storeBlockHeight, ArrayList<String> utxoAddresses) throws JSONException {
+        List<Tx> transactions = new ArrayList<Tx>();
+        List<Block> blocks = AbstractDb.blockProvider.getAllBlocks();
+        Map<Integer, Integer> blockMapList = new HashMap<Integer, Integer>();
+        int minBlockNo = blocks.get(blocks.size() - 1).getBlockNo();
+        for (Block block : blocks) {
+            blockMapList.put(block.getBlockNo(), block.getBlockTime());
+            if (minBlockNo > block.getBlockNo()) {
+                minBlockNo = block.getBlockNo();
+            }
+        }
+        for (int i = 0; i < jsonArray.size(); i++) {
+            JSONObject jsonObject = jsonArray.get(i);
+            if (jsonObject == null) {
+                continue;
+            }
+            JSONObject transactionJson = jsonObject.getJSONObject("transaction");
+            if (transactionJson == null) {
+                continue;
+            }
+            int height = transactionJson.isNull("block_id") ? -1 : transactionJson.getInt("block_id");
+            if (height > storeBlockHeight && storeBlockHeight > 0) {
+                continue;
+            }
+            Tx tx = new Tx(jsonObject, transactionJson);
+            transactions.add(tx);
+        }
+        return transactions;
 
     }
 
@@ -287,10 +323,10 @@ public class TransactionsUtil {
 
         getUnspentTxForAddress();
         if (AddressManager.getInstance().getHDAccountHot() != null) {
-            getHDAccountUnspentAddress(AddressManager.getInstance().getHDAccountHot().getHdSeedId(), EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<HDAccount.HDAccountAddress>(), true);
+            getHDAccountUnspentAddress(AddressManager.getInstance().getHDAccountHot().getHdSeedId(), EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<HDAccount.HDAccountAddress>(), true, new ArrayList<JSONObject>());
         }
         if(AddressManager.getInstance().hasHDAccountMonitored()) {
-            getHDAccountUnspentAddress(AddressManager.getInstance().getHDAccountMonitored().getHdSeedId(), EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<HDAccount.HDAccountAddress>(), false);
+            getHDAccountUnspentAddress(AddressManager.getInstance().getHDAccountMonitored().getHdSeedId(), EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<HDAccount.HDAccountAddress>(), false, new ArrayList<JSONObject>());
         }
         if (AddressManager.getInstance().hasDesktopHDMKeychain()) {
             DesktopHDMKeychain desktopHDMKeychain = AddressManager.getInstance().getDesktopHDMKeychains().get(0);
@@ -747,7 +783,7 @@ public class TransactionsUtil {
 
     /// unspent tx
 
-    private static void getHDAccountUnspentAddress(final int hdSeedId, final AbstractHD.PathType pathType, final int beginIndex, final int endIndex, int lastTxIndex, int unusedAddressCnt, ArrayList<HDAccount.HDAccountAddress> unspentAddresses, boolean isHDAccountHot) throws Exception {
+    private static void getHDAccountUnspentAddress(final int hdSeedId, final AbstractHD.PathType pathType, final int beginIndex, final int endIndex, int lastTxIndex, int unusedAddressCnt, ArrayList<HDAccount.HDAccountAddress> unspentAddresses, boolean isHDAccountHot, ArrayList<JSONObject> blockchairUtxos) throws Exception {
         String addressesStr = "";
         ArrayList<HDAccount.HDAccountAddress> queryHdAccountAddressList = new ArrayList<HDAccount.HDAccountAddress>();
         for (int i = beginIndex; i < endIndex; i++) {
@@ -757,9 +793,9 @@ public class TransactionsUtil {
                 unusedAddressCnt += 1;
                 if (unusedAddressCnt > HDAccount.MaxUnusedNewAddressCount) {
                     if (pathType.nextPathType() != null) {
-                        getHDAccountUnspentAddress(hdSeedId, pathType.nextPathType(), 0, MaxNoTxAddress, -1, 0, unspentAddresses, isHDAccountHot);
+                        getHDAccountUnspentAddress(hdSeedId, pathType.nextPathType(), 0, MaxNoTxAddress, -1, 0, unspentAddresses, isHDAccountHot, blockchairUtxos);
                     } else {
-                        getUnspentTxForHDAccount(unspentAddresses, isHDAccountHot);
+                        getUnspentTxForHDAccount(unspentAddresses, isHDAccountHot, blockchairUtxos);
                     }
                     AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, endIndex - 1);
                     return;
@@ -781,61 +817,98 @@ public class TransactionsUtil {
             }
         }
         if (addressesStr.equals("")) {
-            getHDAccountUnspentAddress(hdSeedId, pathType, endIndex, MaxNoTxAddress + endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot);
+            getHDAccountUnspentAddress(hdSeedId, pathType, endIndex, MaxNoTxAddress + endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot, blockchairUtxos);
             return;
         }
-        JSONObject jsonObject = BitherQueryAddressApi.queryAddress(addressesStr);
-        boolean isNoTxAddress = jsonObject == null || jsonObject.isNull(ERR_NO) || jsonObject.getInt(ERR_NO) != 0 || jsonObject.isNull(DATA);
-        if (!isNoTxAddress) {
-            try {
-                isNoTxAddress = isNoTxAddress || jsonObject.getString(DATA).equals("null");
-            } catch (Exception ex) {
-                ex.printStackTrace();
+        try {
+            JSONObject jsonObject = BlockchairQueryAddressUnspentApi.queryAddressUnspent(addressesStr);
+            if (jsonObject == null) {
+                nextHDAccountUnspentAddress(queryHdAccountAddressList, hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot, blockchairUtxos);
             }
-        }
-        if (isNoTxAddress) {
-            nextHDAccountUnspentAddress(queryHdAccountAddressList, hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot);
-            return;
-        }
-
-        JSONArray addrJsonArray = new JSONArray();
-        if (addressesStr.contains(",")) {
-            addrJsonArray = jsonObject.getJSONArray(DATA);
-        } else {
-            addrJsonArray.put(jsonObject.getJSONObject(DATA));
-        }
-        for (int i = 0; i < addrJsonArray.length(); i++) {
-            JSONObject addrJsonObject;
-            try {
-                addrJsonObject = addrJsonArray.getJSONObject(i);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                continue;
-            }
-            if (addrJsonObject == null || addrJsonObject.isNull("address")) {
-                continue;
-            }
-            String address = addrJsonObject.getString("address");
-            for (HDAccount.HDAccountAddress hdAccountAddress: queryHdAccountAddressList) {
-                if (hdAccountAddress.getAddress().equals(address)) {
-                    boolean hasTx = addrJsonObject.getInt("tx_count") > 0;
-                    if (addrJsonObject.getLong("balance") > 0) {
-                        unspentAddresses.add(hdAccountAddress);
-                    } else {
-                        updateHdAccountAddress(hdAccountAddress, hasTx, isHDAccountHot);
+            String lastTxAddress = jsonObject.getString(LAST_TX_ADDRESS);
+            if (jsonObject.has(UTXO)) {
+                JSONArray utxoJsonArr = jsonObject.getJSONArray(UTXO);
+                if (utxoJsonArr != null && utxoJsonArr.length() > 0) {
+                    for (int i = 0; i < utxoJsonArr.length(); i++) {
+                        JSONObject utxoJson = utxoJsonArr.getJSONObject(i);
+                        if (utxoJson == null) {
+                            continue;
+                        }
+                        blockchairUtxos.add(utxoJsonArr.getJSONObject(i));
                     }
-                    if (hasTx) {
-                        lastTxIndex = hdAccountAddress.getIndex();
-                    }
-                    queryHdAccountAddressList.remove(hdAccountAddress);
-                    break;
                 }
             }
+
+            String hasTxAddressStr = jsonObject.getString(HAS_TX_ADDRESSES);
+            String hasUtxoAddressStr = jsonObject.getString(HAS_UTXO_ADDRESSES);
+            for (int i = queryHdAccountAddressList.size() - 1; i >= 0; i--) {
+                HDAccount.HDAccountAddress hdAccountAddress = queryHdAccountAddressList.get(i);
+                if (lastTxAddress.equals(hdAccountAddress.getAddress())) {
+                    lastTxIndex = hdAccountAddress.getIndex();
+                }
+                if (hasUtxoAddressStr.contains(hdAccountAddress.getAddress())) {
+                    unspentAddresses.add(hdAccountAddress);
+                } else {
+                    updateHdAccountAddress(hdAccountAddress, hasTxAddressStr.contains(hdAccountAddress.getAddress()), isHDAccountHot);
+                }
+                queryHdAccountAddressList.remove(i);
+            }
+            nextHDAccountUnspentAddress(queryHdAccountAddressList, hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot, blockchairUtxos);
+        } catch (Exception blockchairEx) {
+            blockchairEx.printStackTrace();
+            JSONObject jsonObject = BitherQueryAddressApi.queryAddress(addressesStr);
+            boolean isNoTxAddress = jsonObject == null || jsonObject.isNull(ERR_NO) || jsonObject.getInt(ERR_NO) != 0 || jsonObject.isNull(DATA);
+            if (!isNoTxAddress) {
+                try {
+                    isNoTxAddress = isNoTxAddress || jsonObject.getString(DATA).equals("null");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            if (isNoTxAddress) {
+                nextHDAccountUnspentAddress(queryHdAccountAddressList, hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot, blockchairUtxos);
+                return;
+            }
+
+            JSONArray addrJsonArray = new JSONArray();
+            if (addressesStr.contains(",")) {
+                addrJsonArray = jsonObject.getJSONArray(DATA);
+            } else {
+                addrJsonArray.put(jsonObject.getJSONObject(DATA));
+            }
+            for (int i = 0; i < addrJsonArray.length(); i++) {
+                JSONObject addrJsonObject;
+                try {
+                    addrJsonObject = addrJsonArray.getJSONObject(i);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    continue;
+                }
+                if (addrJsonObject == null || addrJsonObject.isNull("address")) {
+                    continue;
+                }
+                String address = addrJsonObject.getString("address");
+                for (HDAccount.HDAccountAddress hdAccountAddress: queryHdAccountAddressList) {
+                    if (hdAccountAddress.getAddress().equals(address)) {
+                        boolean hasTx = addrJsonObject.getInt("tx_count") > 0;
+                        if (addrJsonObject.getLong("balance") > 0) {
+                            unspentAddresses.add(hdAccountAddress);
+                        } else {
+                            updateHdAccountAddress(hdAccountAddress, hasTx, isHDAccountHot);
+                        }
+                        if (hasTx) {
+                            lastTxIndex = hdAccountAddress.getIndex();
+                        }
+                        queryHdAccountAddressList.remove(hdAccountAddress);
+                        break;
+                    }
+                }
+            }
+            nextHDAccountUnspentAddress(queryHdAccountAddressList, hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot, blockchairUtxos);
         }
-        nextHDAccountUnspentAddress(queryHdAccountAddressList, hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot);
     }
 
-    private static void nextHDAccountUnspentAddress(ArrayList<HDAccount.HDAccountAddress> queryHdAccountAddressList, final int hdSeedId, final AbstractHD.PathType pathType, final int endIndex, int lastTxIndex, int unusedAddressCnt, ArrayList<HDAccount.HDAccountAddress> unspentAddresses, boolean isHDAccountHot) throws Exception {
+    private static void nextHDAccountUnspentAddress(ArrayList<HDAccount.HDAccountAddress> queryHdAccountAddressList, final int hdSeedId, final AbstractHD.PathType pathType, final int endIndex, int lastTxIndex, int unusedAddressCnt, ArrayList<HDAccount.HDAccountAddress> unspentAddresses, boolean isHDAccountHot, ArrayList<JSONObject> blockchairUtxos) throws Exception {
         if (queryHdAccountAddressList.size() > 0) {
             for (HDAccount.HDAccountAddress hdAccountAddress: queryHdAccountAddressList) {
                 updateHdAccountAddress(hdAccountAddress, false, isHDAccountHot);
@@ -843,12 +916,12 @@ public class TransactionsUtil {
         }
 
         if (lastTxIndex + MaxNoTxAddress > endIndex) {
-            getHDAccountUnspentAddress(hdSeedId, pathType, endIndex, MaxNoTxAddress + lastTxIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot);
+            getHDAccountUnspentAddress(hdSeedId, pathType, endIndex, MaxNoTxAddress + lastTxIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot, blockchairUtxos);
         } else {
             if (pathType.nextPathType() != null) {
-                getHDAccountUnspentAddress(hdSeedId, pathType.nextPathType(), 0, MaxNoTxAddress, -1, 0, unspentAddresses, isHDAccountHot);
+                getHDAccountUnspentAddress(hdSeedId, pathType.nextPathType(), 0, MaxNoTxAddress, -1, 0, unspentAddresses, isHDAccountHot, blockchairUtxos);
             } else {
-                getUnspentTxForHDAccount(unspentAddresses, isHDAccountHot);
+                getUnspentTxForHDAccount(unspentAddresses, isHDAccountHot, blockchairUtxos);
             }
             AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, endIndex - 1);
         }
@@ -966,44 +1039,109 @@ public class TransactionsUtil {
             Block storedBlock = BlockChain.getInstance().getLastBlock();
             int storeBlockHeight = storedBlock.getBlockNo();
             if (!address.isSyncComplete()) {
-                int apiBlockCount = 0;
                 boolean needGetTxs = true;
-                int page = 1;
                 List<Tx> transactions;
-                while (needGetTxs) {
-                    JSONObject unspentsJsonObject = BitherQueryAddressUnspentApi.queryAddressUnspent(address.getAddress(), page);
-                    transactions = getUnspentTransactions(address.getAddress(), unspentsJsonObject, storeBlockHeight);
-                    transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
-                    Collections.sort(transactions, new ComparatorTx());
-                    address.initTxs(transactions);
-                    needGetTxs = getNeedGetTxs(unspentsJsonObject, page, transactions);
-                    page++;
-                }
+                try {
+                    int page = 0;
+                    JSONObject jsonObject = BlockchairQueryAddressUnspentApi.queryAddressUnspent(address.getAddress());
+                    if (jsonObject.has(UTXO)) {
+                        JSONArray utxoJsonArr = jsonObject.getJSONArray(UTXO);
+                        ArrayList<JSONObject> blockchairUtxos = new ArrayList<JSONObject>();
+                        if (utxoJsonArr != null && utxoJsonArr.length() > 0) {
+                            for (int i = 0; i < utxoJsonArr.length(); i++) {
+                                JSONObject utxoJson = utxoJsonArr.getJSONObject(i);
+                                if (utxoJson == null) {
+                                    continue;
+                                }
+                                blockchairUtxos.add(utxoJsonArr.getJSONObject(i));
+                            }
+                        }
 
-                if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
-                    BlockChain.getInstance().rollbackBlock(apiBlockCount);
-                }
-                address.setSyncComplete(true);
-                if (address instanceof HDMAddress) {
-                    HDMAddress hdmAddress = (HDMAddress) address;
-                    hdmAddress.updateSyncComplete();
-                } else {
-                    address.updateSyncComplete();
+                        if (blockchairUtxos.size() > 0) {
+                            ArrayList<String> utxoAddresses = new ArrayList<String>();
+                            while (needGetTxs) {
+                                int beginIndex = page * 10;
+                                int endIndex = blockchairUtxos.size() - beginIndex > 10 ? beginIndex + 10 : blockchairUtxos.size();
+                                transactions = getBlockchairUnspentTransactions(blockchairUtxos, beginIndex, endIndex, storeBlockHeight, utxoAddresses);
+                                transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
+                                Collections.sort(transactions, new ComparatorTx());
+                                address.initTxs(transactions);
+                                needGetTxs = blockchairUtxos.size() - beginIndex > 10;
+                                page++;
+                            }
+                        }
+                    }
+                    address.setSyncComplete(true);
+                    if (address instanceof HDMAddress) {
+                        HDMAddress hdmAddress = (HDMAddress) address;
+                        hdmAddress.updateSyncComplete();
+                    } else {
+                        address.updateSyncComplete();
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    int page = 1;
+                    while (needGetTxs) {
+                        JSONObject unspentsJsonObject = BitherQueryAddressUnspentApi.queryAddressUnspent(address.getAddress(), page);
+                        transactions = getUnspentTransactions(address.getAddress(), unspentsJsonObject, storeBlockHeight);
+                        transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
+                        Collections.sort(transactions, new ComparatorTx());
+                        address.initTxs(transactions);
+                        needGetTxs = getNeedGetTxs(unspentsJsonObject, page, transactions);
+                        page++;
+                    }
+                    address.setSyncComplete(true);
+                    if (address instanceof HDMAddress) {
+                        HDMAddress hdmAddress = (HDMAddress) address;
+                        hdmAddress.updateSyncComplete();
+                    } else {
+                        address.updateSyncComplete();
+                    }
                 }
             }
         }
     }
 
-    private static void getUnspentTxForHDAccount(ArrayList<HDAccount.HDAccountAddress> unspentAddresses, boolean isHDAccountHot) throws Exception {
+    private static void getUnspentTxForHDAccount(ArrayList<HDAccount.HDAccountAddress> unspentAddresses, boolean isHDAccountHot, ArrayList<JSONObject> blockchairUtxos) throws Exception {
+        List<Tx> transactions;
+        if (blockchairUtxos.size() > 0) {
+            Block storedBlock = BlockChain.getInstance().getLastBlock();
+            int storeBlockHeight = storedBlock.getBlockNo();
+            boolean needGetTxs = true;
+            int page = 0;
+            ArrayList<String> utxoAddresses = new ArrayList<String>();
+            while (needGetTxs) {
+                int beginIndex = page * 10;
+                int endIndex = blockchairUtxos.size() - beginIndex > 10 ? beginIndex + 10 : blockchairUtxos.size();
+                transactions = getBlockchairUnspentTransactions(blockchairUtxos, beginIndex, endIndex, storeBlockHeight, utxoAddresses);
+                transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
+                Collections.sort(transactions, new ComparatorTx());
+                if (isHDAccountHot) {
+                    AddressManager.getInstance().getHDAccountHot().initTxs(transactions);
+                } else {
+                    AddressManager.getInstance().getHDAccountMonitored().initTxs(transactions);
+                }
+                needGetTxs = blockchairUtxos.size() - beginIndex > 10;
+                page++;
+            }
+            for (int i = unspentAddresses.size() - 1; i >= 0; i--) {
+                HDAccount.HDAccountAddress hdAccountAddress = unspentAddresses.get(i);
+                if (utxoAddresses.contains(hdAccountAddress.getAddress())) {
+                    updateHdAccountAddress(hdAccountAddress, true, isHDAccountHot);
+                    unspentAddresses.remove(hdAccountAddress);
+                }
+            }
+        }
+        if (unspentAddresses.size() == 0) {
+            return;
+        }
         for (int i = 0; i < unspentAddresses.size(); i++) {
             HDAccount.HDAccountAddress hdAccountAddress = unspentAddresses.get(i);
             AbstractApp.notificationService.sendBroadcastAddressTxLoading(hdAccountAddress.getAddress());
             Block storedBlock = BlockChain.getInstance().getLastBlock();
             int storeBlockHeight = storedBlock.getBlockNo();
-            int apiBlockCount = 0;
             boolean needGetTxs = true;
             int page = 1;
-            List<Tx> transactions;
             while (needGetTxs) {
                 JSONObject unspentsJsonObject = BitherQueryAddressUnspentApi.queryAddressUnspent(hdAccountAddress.getAddress(), page);
                 transactions = getUnspentTransactions(hdAccountAddress.getAddress(), unspentsJsonObject, storeBlockHeight);
@@ -1016,10 +1154,6 @@ public class TransactionsUtil {
                 }
                 needGetTxs = getNeedGetTxs(unspentsJsonObject, page, transactions);
                 page++;
-            }
-
-            if (apiBlockCount < storeBlockHeight && storeBlockHeight - apiBlockCount < 100) {
-                BlockChain.getInstance().rollbackBlock(apiBlockCount);
             }
 
             updateHdAccountAddress(hdAccountAddress, true, isHDAccountHot);
@@ -1079,6 +1213,41 @@ public class TransactionsUtil {
             }
             desktopHDMKeychain.supplyEnoughKeys(false);
         }
+    }
+
+    private static List<Tx> getBlockchairUnspentTransactions(ArrayList<JSONObject> blockchairUtxos, int beginIndex, int endIndex, int storeBlockHeight, ArrayList<String> utxoAddresses) throws Exception {
+        ArrayList<String> txHashs = new ArrayList<String>();
+        String txHashStr = "";
+        for (int i = beginIndex; i < endIndex; i++) {
+            JSONObject utxo = blockchairUtxos.get(i);
+            if (utxo == null || !utxo.has("transaction_hash") || !utxo.has("address")) {
+                continue;
+            }
+            String txHash = utxo.getString("transaction_hash");
+            String address = utxo.getString("address");
+            if (!Utils.isEmpty(txHash) && !Utils.isEmpty(address)) {
+                if (!txHashs.contains(txHash)) {
+                    txHashs.add(txHash);
+                    if (txHashStr.length() == 0) {
+                        txHashStr = txHash;
+                    } else {
+                        txHashStr = txHashStr + "," + txHash;
+                    }
+                }
+                if (!utxoAddresses.contains(address)) {
+                    utxoAddresses.add(address);
+                }
+            }
+        }
+        JSONObject txsJsonObject = BlockchairUnspentTxsApi.getUnspentTxs(txHashStr);
+        ArrayList<JSONObject> txs = new ArrayList<JSONObject>();
+        for (String txHash: txHashs) {
+            JSONObject txJson = txsJsonObject.getJSONObject(txHash);
+            if (txJson != null) {
+                txs.add(txJson);
+            }
+        }
+        return getUnspentTxsFromBlockchair(txs, storeBlockHeight, utxoAddresses);
     }
 
     private static List<Tx> getUnspentTransactions(String address, JSONObject unspentsJsonObject, int storeBlockHeight) throws Exception {

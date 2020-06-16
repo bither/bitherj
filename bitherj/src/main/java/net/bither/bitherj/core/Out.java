@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -74,6 +75,18 @@ public class Out extends Message {
         this.tx = tx;
         this.txHash = tx.getTxHash();
         if (getOutAddress() != null && !getOutAddress().equals(unspentOutAddress)) {
+            outStatus = OutStatus.reloadSpent;
+        } else {
+            outStatus = OutStatus.reloadUnSpent;
+        }
+    }
+
+    public Out(Tx tx, JSONObject blockchairJsonObject) {
+        outValue = blockchairJsonObject.getLong("value");
+        outScript = Utils.hexStringToByteArray(blockchairJsonObject.getString("script_hex"));
+        this.tx = tx;
+        this.txHash = tx.getTxHash();
+        if (blockchairJsonObject.getBoolean("is_spent")) {
             outStatus = OutStatus.reloadSpent;
         } else {
             outStatus = OutStatus.reloadUnSpent;
