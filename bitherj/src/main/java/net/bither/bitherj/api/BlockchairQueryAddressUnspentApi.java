@@ -40,7 +40,6 @@ public class BlockchairQueryAddressUnspentApi extends RerequestHttpGetResponse {
             if (blockchairDataIsError(jsonObject)) {
                 return reRequest(new Exception("data error"));
             }
-            String lastTxAddress = addressList[addressList.length - 1];
             if (!jsonObject.has("data")) {
                 return result;
             }
@@ -56,6 +55,7 @@ public class BlockchairQueryAddressUnspentApi extends RerequestHttpGetResponse {
                 if (addressesJson == null || addressesJson.length() == 0) {
                     return result;
                 }
+                String lastTxAddress = "";
                 String hasTxAddresses = "";
                 for (int i = 0; i < addressList.length - 1; i++) {
                     String address = addressList[i];
@@ -78,11 +78,11 @@ public class BlockchairQueryAddressUnspentApi extends RerequestHttpGetResponse {
                 result.put(LAST_TX_ADDRESS, lastTxAddress);
                 result.put(HAS_TX_ADDRESSES, hasTxAddresses);
             }
-            int unspentOutputCount = 0;
             if (!dataJson.has("set")) {
                 return result;
             }
             JSONObject setJson = dataJson.getJSONObject("set");
+            int unspentOutputCount = 0;
             if (setJson != null) {
                 unspentOutputCount = setJson.getInt("unspent_output_count");
             }
@@ -113,9 +113,9 @@ public class BlockchairQueryAddressUnspentApi extends RerequestHttpGetResponse {
             }
             result.put(HAS_UTXO_ADDRESSES, hasUtxoAddresses);
             result.put(UTXO, lastUtxo);
-            long currentUnspentOutputCount = offset == 0 ? utxoArray.length() : offset * 100 + utxoArray.length();
+            long currentUnspentOutputCount = offset == 0 ? utxoArray.length() : offset + utxoArray.length();
             if (currentUnspentOutputCount < unspentOutputCount) {
-                setUrl(addresses, offset + 1);
+                setUrl(addresses, offset + 100);
                 return query();
             }
             return result;
@@ -130,6 +130,7 @@ public class BlockchairQueryAddressUnspentApi extends RerequestHttpGetResponse {
     }
 
     private void setUrl(String addresses, int offset) {
+        this.requestCount = 1;
         this.offset = offset;
         String url = Utils.format(BitherUrl.BLOCKCHAIR_COM_Q_ADDRESSES_UNSPENT, addresses);
         if (offset > 0) {

@@ -33,23 +33,19 @@ public class BitherQueryAddressUnspentApi extends HttpGetResponse<String> {
             return jsonObject;
         } catch (Exception ex) {
             ex.printStackTrace();
-            if (BitherAndBtcComUrl.isChangeDns(ex)) {
+            if (requestCount > TIMEOUT_REREQUEST_CNT) {
                 String nextBcDns = BitherAndBtcComUrl.getNextBcDns(firstBcDns);
                 if (!Utils.isEmpty(nextBcDns)) {
                     return queryAddress(firstBcDns, address, page, 1);
                 }
                 throw ex;
-            } else {
-                if (requestCount > TIMEOUT_REREQUEST_CNT) {
-                    throw ex;
-                }
-                try {
-                    Thread.sleep(TIMEOUT_REREQUEST_DELAY);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                return queryAddress(firstBcDns, address, page, requestCount + 1);
             }
+            try {
+                Thread.sleep(TIMEOUT_REREQUEST_DELAY);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return queryAddress(firstBcDns, address, page, requestCount + 1);
         }
     }
 

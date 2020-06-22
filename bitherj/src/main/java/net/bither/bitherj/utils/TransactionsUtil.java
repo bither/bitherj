@@ -203,7 +203,7 @@ public class TransactionsUtil {
         return transactions;
     }
 
-    private static List<Tx> getUnspentTxsFromBlockchair(ArrayList<JSONObject> jsonArray, int storeBlockHeight, ArrayList<String> utxoAddresses) throws JSONException {
+    private static List<Tx> getUnspentTxsFromBlockchair(ArrayList<JSONObject> jsonArray, int storeBlockHeight) throws JSONException {
         List<Tx> transactions = new ArrayList<Tx>();
         List<Block> blocks = AbstractDb.blockProvider.getAllBlocks();
         Map<Integer, Integer> blockMapList = new HashMap<Integer, Integer>();
@@ -1215,7 +1215,7 @@ public class TransactionsUtil {
         }
     }
 
-    private static List<Tx> getBlockchairUnspentTransactions(ArrayList<JSONObject> blockchairUtxos, int beginIndex, int endIndex, int storeBlockHeight, ArrayList<String> utxoAddresses) throws Exception {
+    private static List<Tx>getBlockchairUnspentTransactions(ArrayList<JSONObject> blockchairUtxos, int beginIndex, int endIndex, int storeBlockHeight, ArrayList<String> utxoAddresses) throws Exception {
         ArrayList<String> txHashs = new ArrayList<String>();
         String txHashStr = "";
         for (int i = beginIndex; i < endIndex; i++) {
@@ -1247,7 +1247,7 @@ public class TransactionsUtil {
                 txs.add(txJson);
             }
         }
-        return getUnspentTxsFromBlockchair(txs, storeBlockHeight, utxoAddresses);
+        return getUnspentTxsFromBlockchair(txs, storeBlockHeight);
     }
 
     private static List<Tx> getUnspentTransactions(String address, JSONObject unspentsJsonObject, int storeBlockHeight) throws Exception {

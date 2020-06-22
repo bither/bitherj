@@ -1,11 +1,5 @@
 package net.bither.bitherj.api.http;
 
-import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.conn.HttpHostConnectException;
-
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-
 import static net.bither.bitherj.api.http.BitherUrl.BITHER_DNS.BITHER_BC;
 import static net.bither.bitherj.api.http.BitherUrl.BITHER_DNS.BITHER_BC2;
 import static net.bither.bitherj.api.http.BitherUrl.BITHER_DNS.BITHER_BC3;
@@ -40,12 +34,8 @@ public class BitherAndBtcComUrl {
         } else {
             nextBcDns = BTC_COM_URL;
         }
-        BitherBCUrl.getInstance().setDns(nextBcDns);
+        BitherAndBtcComUrl.getInstance().setDns(nextBcDns);
         return nextBcDns.equals(firstBcDns) ? null : nextBcDns;
     }
 
-    public static boolean isChangeDns(Exception ex) {
-        return ex instanceof ConnectTimeoutException || ex instanceof HttpHostConnectException || ex instanceof UnknownHostException || ex instanceof SocketTimeoutException;
-
-    }
 }
