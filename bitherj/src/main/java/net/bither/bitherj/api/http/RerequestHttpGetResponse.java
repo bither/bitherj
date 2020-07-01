@@ -1,5 +1,7 @@
 package net.bither.bitherj.api.http;
 
+import net.bither.bitherj.utils.Utils;
+
 import org.json.JSONObject;
 
 import static net.bither.bitherj.api.http.HttpSetting.TIMEOUT_REREQUEST_CNT;
@@ -10,10 +12,15 @@ public abstract class RerequestHttpGetResponse extends HttpGetResponse<String> {
 
     protected int requestCount = 1;
 
-    protected abstract JSONObject query() throws Exception;
+    protected abstract JSONObject query(String firstDns) throws Exception;
 
-    protected JSONObject reRequest(Exception ex) throws Exception {
+    protected JSONObject reRequest(String firstDns, Exception ex) throws Exception {
         if (requestCount > TIMEOUT_REREQUEST_CNT) {
+            String nextBcDns = BlockchairUrl.getNextDns(firstDns);
+            if (!Utils.isEmpty(nextBcDns)) {
+                requestCount = 1;
+                return  query(firstDns);
+            }
             throw ex;
         }
         try {
@@ -22,7 +29,7 @@ public abstract class RerequestHttpGetResponse extends HttpGetResponse<String> {
             e.printStackTrace();
         }
         requestCount = requestCount + 1;
-        return query();
+        return query(firstDns);
     }
 
     protected boolean blockchairDataIsError(JSONObject jsonObject) throws Exception {

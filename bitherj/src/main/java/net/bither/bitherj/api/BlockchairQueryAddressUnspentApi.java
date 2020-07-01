@@ -1,6 +1,7 @@
 package net.bither.bitherj.api;
 
 import net.bither.bitherj.api.http.BitherUrl;
+import net.bither.bitherj.api.http.BlockchairUrl;
 import net.bither.bitherj.api.http.Http404Exception;
 import net.bither.bitherj.api.http.RerequestHttpGetResponse;
 import net.bither.bitherj.utils.Utils;
@@ -28,17 +29,17 @@ public class BlockchairQueryAddressUnspentApi extends RerequestHttpGetResponse {
         blockchairQueryAddressUnspentApi.result.put(HAS_TX_ADDRESSES, "");
         blockchairQueryAddressUnspentApi.result.put(HAS_UTXO_ADDRESSES, "");
         blockchairQueryAddressUnspentApi.setUrl(addresses, 0);
-        return blockchairQueryAddressUnspentApi.query();
+        return blockchairQueryAddressUnspentApi.query(BlockchairUrl.getInstance().getDns());
     }
 
     @Override
-    protected JSONObject query() throws Exception {
+    protected JSONObject query(String firstDns) throws Exception {
         try {
             handleHttpGet();
             String unspentResult = getResult();
             JSONObject jsonObject = new JSONObject(unspentResult);
             if (blockchairDataIsError(jsonObject)) {
-                return reRequest(new Exception("data error"));
+                return reRequest(firstDns, new Exception("data error"));
             }
             if (!jsonObject.has("data")) {
                 return result;
@@ -116,7 +117,7 @@ public class BlockchairQueryAddressUnspentApi extends RerequestHttpGetResponse {
             long currentUnspentOutputCount = offset == 0 ? utxoArray.length() : offset + utxoArray.length();
             if (currentUnspentOutputCount < unspentOutputCount) {
                 setUrl(addresses, offset + 100);
-                return query();
+                return query(firstDns);
             }
             return result;
         } catch (Exception ex) {
@@ -124,7 +125,7 @@ public class BlockchairQueryAddressUnspentApi extends RerequestHttpGetResponse {
             if (ex instanceof Http404Exception) {
                 return result;
             } else {
-                return reRequest(ex);
+                return reRequest(firstDns, ex);
             }
         }
     }
@@ -132,12 +133,11 @@ public class BlockchairQueryAddressUnspentApi extends RerequestHttpGetResponse {
     private void setUrl(String addresses, int offset) {
         this.requestCount = 1;
         this.offset = offset;
-        String url = Utils.format(BitherUrl.BLOCKCHAIR_COM_Q_ADDRESSES_UNSPENT, addresses);
+        String url = Utils.format(BitherUrl.BLOCKCHAIR_COM_Q_ADDRESSES_UNSPENT, BlockchairUrl.getInstance().getDns(), addresses);
         if (offset > 0) {
             url = url + "&offset=" + offset;
         }
         setUrl(url);
     }
-
 }
 

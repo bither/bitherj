@@ -74,10 +74,19 @@ public class Out extends Message {
         outScript = Utils.hexStringToByteArray(jsonObject.getString("script_hex"));
         this.tx = tx;
         this.txHash = tx.getTxHash();
-        if (getOutAddress() != null && !getOutAddress().equals(unspentOutAddress)) {
-            outStatus = OutStatus.reloadSpent;
+        if (jsonObject.isNull("spent_by_tx")) {
+            if (getOutAddress() != null && getOutAddress().equals(unspentOutAddress)) {
+                outStatus = OutStatus.reloadUnSpent;
+            } else {
+                outStatus = OutStatus.reloadSpent;
+            }
         } else {
-            outStatus = OutStatus.reloadUnSpent;
+            String spentByTx = jsonObject.getString("spent_by_tx");
+            if (Utils.isEmpty(spentByTx)) {
+                outStatus = OutStatus.reloadUnSpent;
+            } else {
+                outStatus = OutStatus.reloadSpent;
+            }
         }
     }
 

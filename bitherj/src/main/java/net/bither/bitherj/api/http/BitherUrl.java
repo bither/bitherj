@@ -58,6 +58,8 @@ public class BitherUrl {
         // blockchair.com
         public static final String BLOCKCHAIR_COM_URL = "https://api.blockchair.com/bitcoin/dashboards/";
 
+        public static final String BITHER_BLOCKCHAIR_COM_URL = "http://bc1.bithernet.com/blockchair/bitcoin/dashboards/";
+
     }
 
     // bither blockChain
@@ -95,9 +97,9 @@ public class BitherUrl {
     public static final String BTC_COM_Q_ADDRESS_UNSPENT_TXS = "%sv3/tx/%s";
 
     // blockchair.com
-    public static final String BLOCKCHAIR_COM_Q_ADDRESSES_UNSPENT = BITHER_DNS.BLOCKCHAIR_COM_URL + "addresses/%s?limit=100";
-    public static final String BLOCKCHAIR_COM_ADDRESS_UNSPENT_TXS = BITHER_DNS.BLOCKCHAIR_COM_URL + "transactions/%s";
-    public static final String BLOCKCHAIR_COM_Q_ADDRESS_UNSPENT_TXS_BLOCK_HASHS = BITHER_DNS.BLOCKCHAIR_COM_URL + "blocks/%s";
+    public static final String BLOCKCHAIR_COM_Q_ADDRESSES_UNSPENT = "%saddresses/%s?limit=100";
+    public static final String BLOCKCHAIR_COM_ADDRESS_UNSPENT_TXS = "%stransactions/%s";
+    public static final String BLOCKCHAIR_COM_Q_ADDRESS_UNSPENT_TXS_BLOCK_HASHS = "%sblocks/%s";
 
     // hdm api
     public static final String BITHER_HDM_PASSWORD = BITHER_DNS.BITHER_HDM + "api/v1/%s/hdm/password";
@@ -118,7 +120,7 @@ public class BitherUrl {
     //other
     public static final String BLOCKCHAIN_INFO_ADDRESS_URL = "http://blockchain.info/address/";
     public static final String BTC_COM_ADDRESS_URL = "https://btc.com/";
-    public static final String BLOCKCHAIR_ADDRESS_URL = "https://blockchair.com/bitcoin/address/";
+    public static final String BLOCKCHAIR_ADDRESS_URL = "https://blockchair.com/bitcoin/address/%s?from=bither";
 
     //blockChain.info Api
     public static final String BLOCKCHAIN_INFO_GET_LASTST_BLOCK = BITHER_DNS.BLOCK_CHAIN+"latestblock";
