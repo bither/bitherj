@@ -1071,7 +1071,7 @@ public class TransactionsUtil {
                                         apiBlockCount = firstBlockCount;
                                     }
                                 }
-                                transactions = AddressManager.getInstance().compressTxsForHDAccount(transactions);
+                                transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
                                 Collections.sort(transactions, new ComparatorTx());
                                 address.initTxs(transactions);
                                 needGetTxs = blockchairUtxos.size() - beginIndex > 10;
