@@ -137,15 +137,13 @@ public class BitherjSettings {
     }
 
     public enum MarketType {
-        BITSTAMP, BITFINEX, COINBASE;
+        BITSTAMP, BITFINEX;
     }
 
     public static MarketType getMarketType(int value) {
         switch (value) {
             case 2:
                 return MarketType.BITFINEX;
-            case 3:
-                return MarketType.COINBASE;
         }
         return MarketType.BITSTAMP;
     }
@@ -154,8 +152,6 @@ public class BitherjSettings {
         switch (marketType) {
             case BITFINEX:
                 return 2;
-            case COINBASE:
-                return 3;
         }
         return 1;
     }
