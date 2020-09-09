@@ -6,7 +6,7 @@ import static net.bither.bitherj.api.http.BitherUrl.BITHER_DNS.BLOCKCHAIR_COM_UR
 public class BlockchairUrl {
 
     private static BlockchairUrl uniqueInstance = new BlockchairUrl();
-    private String dns = BLOCKCHAIR_COM_URL;
+    private String dns = BITHER_BLOCKCHAIR_COM_URL;
 
     public static BlockchairUrl getInstance() {
         return uniqueInstance;
@@ -21,15 +21,7 @@ public class BlockchairUrl {
     }
 
     public static String getNextDns(String firstDns) {
-        String nextDns = "";
-        String currentDns = BlockchairUrl.getInstance().getDns();
-        if (currentDns.equals(BLOCKCHAIR_COM_URL)) {
-            nextDns = BITHER_BLOCKCHAIR_COM_URL;
-        } else {
-            nextDns = BLOCKCHAIR_COM_URL;
-        }
-        BlockchairUrl.getInstance().setDns(nextDns);
-        return nextDns.equals(firstDns) ? null : nextDns;
+        return null;
     }
 
 }

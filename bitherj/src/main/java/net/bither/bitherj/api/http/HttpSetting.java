@@ -28,7 +28,7 @@ public class HttpSetting {
      * HTTP_SO_TIMEOUT: Set the default socket timeout (SO_TIMEOUT). in
      * milliseconds which is the timeout for waiting for data.
      */
-    public static final int HTTP_SO_TIMEOUT = 80 * 1000;
+    public static final int HTTP_SO_TIMEOUT = 60 * 1000;
 
 
     // enum

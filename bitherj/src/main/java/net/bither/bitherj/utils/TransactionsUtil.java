@@ -24,6 +24,7 @@ import net.bither.bitherj.api.BitherQueryAddressUnspentApi;
 import net.bither.bitherj.api.BitherUnspentTxsApi;
 import net.bither.bitherj.api.BlockChainMytransactionsApi;
 import net.bither.bitherj.api.BlockchairQueryAddressUnspentApi;
+import net.bither.bitherj.api.BlockchairQueryAddressesUnspentApi;
 import net.bither.bitherj.api.BlockchairUnspentTxsApi;
 import net.bither.bitherj.core.*;
 import net.bither.bitherj.db.AbstractDb;
@@ -44,10 +45,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static net.bither.bitherj.api.BlockchairQueryAddressUnspentApi.HAS_TX_ADDRESSES;
-import static net.bither.bitherj.api.BlockchairQueryAddressUnspentApi.HAS_UTXO_ADDRESSES;
-import static net.bither.bitherj.api.BlockchairQueryAddressUnspentApi.LAST_TX_ADDRESS;
-import static net.bither.bitherj.api.BlockchairQueryAddressUnspentApi.UTXO;
+import static net.bither.bitherj.api.BlockchairQueryAddressesUnspentApi.HAS_TX_ADDRESSES;
+import static net.bither.bitherj.api.BlockchairQueryAddressesUnspentApi.HAS_UTXO_ADDRESSES;
+import static net.bither.bitherj.api.BlockchairQueryAddressesUnspentApi.LAST_TX_ADDRESS;
+import static net.bither.bitherj.api.BlockchairQueryAddressesUnspentApi.UTXO;
 import static net.bither.bitherj.core.AbstractHD.PathType.EXTERNAL_ROOT_PATH;
 
 
@@ -822,7 +823,12 @@ public class TransactionsUtil {
             return;
         }
         try {
-            JSONObject jsonObject = BlockchairQueryAddressUnspentApi.queryAddressUnspent(addressesStr);
+            JSONObject jsonObject;
+            if (addressesStr.contains(",")) {
+                jsonObject = BlockchairQueryAddressesUnspentApi.queryAddressesUnspent(addressesStr);
+            } else {
+                jsonObject = BlockchairQueryAddressUnspentApi.queryAddressUnspent(addressesStr);
+            }
             if (jsonObject == null) {
                 nextHDAccountUnspentAddress(queryHdAccountAddressList, hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot, blockchairUtxos);
             }
@@ -1062,9 +1068,9 @@ public class TransactionsUtil {
                         if (blockchairUtxos.size() > 0) {
                             ArrayList<String> utxoAddresses = new ArrayList<String>();
                             while (needGetTxs) {
-                                int beginIndex = page * 10;
-                                int endIndex = blockchairUtxos.size() - beginIndex > 10 ? beginIndex + 10 : blockchairUtxos.size();
-                                transactions = getBlockchairUnspentTransactions(blockchairUtxos, beginIndex, endIndex, storeBlockHeight, utxoAddresses);
+                                int beginIndex = page;
+                                int endIndex = blockchairUtxos.size() - beginIndex > 1 ? beginIndex + 1 : blockchairUtxos.size();
+                                transactions = getAddressBlockchairUnspentTransactions(address.getAddress(), blockchairUtxos, beginIndex, endIndex, storeBlockHeight, utxoAddresses);
                                 if (transactions.size() > 0) {
                                     int firstBlockCount = transactions.get(0).getBlockNo();
                                     if (firstBlockCount > apiBlockCount) {
@@ -1074,7 +1080,7 @@ public class TransactionsUtil {
                                 transactions = AddressManager.getInstance().compressTxsForApi(transactions, address);
                                 Collections.sort(transactions, new ComparatorTx());
                                 address.initTxs(transactions);
-                                needGetTxs = blockchairUtxos.size() - beginIndex > 10;
+                                needGetTxs = blockchairUtxos.size() - beginIndex > 1;
                                 page++;
                             }
                         }
@@ -1095,6 +1101,7 @@ public class TransactionsUtil {
                     int page = 1;
                     while (needGetTxs) {
                         JSONObject unspentsJsonObject = BitherQueryAddressUnspentApi.queryAddressUnspent(address.getAddress(), page);
+
                         transactions = getUnspentTransactions(address.getAddress(), unspentsJsonObject, storeBlockHeight);
                         if (transactions.size() > 0) {
                             int lastBlockCount = transactions.get(transactions.size() - 1).getBlockNo();
@@ -1134,9 +1141,9 @@ public class TransactionsUtil {
             int page = 0;
             ArrayList<String> utxoAddresses = new ArrayList<String>();
             while (needGetTxs) {
-                int beginIndex = page * 10;
-                int endIndex = blockchairUtxos.size() - beginIndex > 10 ? beginIndex + 10 : blockchairUtxos.size();
-                transactions = getBlockchairUnspentTransactions(blockchairUtxos, beginIndex, endIndex, storeBlockHeight, utxoAddresses);
+                int beginIndex = page;
+                int endIndex = blockchairUtxos.size() - beginIndex > 1 ? beginIndex + 1 : blockchairUtxos.size();
+                transactions = getAddressesBlockchairUnspentTransactions(blockchairUtxos, beginIndex, endIndex, storeBlockHeight, utxoAddresses);
                 if (transactions.size() > 0) {
                     int firstBlockCount = transactions.get(0).getBlockNo();
                     if (firstBlockCount > apiBlockCount) {
@@ -1150,7 +1157,7 @@ public class TransactionsUtil {
                 } else {
                     AddressManager.getInstance().getHDAccountMonitored().initTxs(transactions);
                 }
-                needGetTxs = blockchairUtxos.size() - beginIndex > 10;
+                needGetTxs = blockchairUtxos.size() - beginIndex > 1;
                 page++;
             }
 
@@ -1257,7 +1264,41 @@ public class TransactionsUtil {
         }
     }
 
-    private static List<Tx> getBlockchairUnspentTransactions(ArrayList<JSONObject> blockchairUtxos, int beginIndex, int endIndex, int storeBlockHeight, ArrayList<String> utxoAddresses) throws Exception {
+    private static List<Tx> getAddressBlockchairUnspentTransactions(String address, ArrayList<JSONObject> blockchairUtxos, int beginIndex, int endIndex, int storeBlockHeight, ArrayList<String> utxoAddresses) throws Exception {
+        ArrayList<String> txHashs = new ArrayList<String>();
+        String txHashStr = "";
+        for (int i = beginIndex; i < endIndex; i++) {
+            JSONObject utxo = blockchairUtxos.get(i);
+            if (utxo == null || !utxo.has("transaction_hash")) {
+                continue;
+            }
+            String txHash = utxo.getString("transaction_hash");
+            if (!Utils.isEmpty(txHash) && !Utils.isEmpty(address)) {
+                if (!txHashs.contains(txHash)) {
+                    txHashs.add(txHash);
+                    if (txHashStr.length() == 0) {
+                        txHashStr = txHash;
+                    } else {
+                        txHashStr = txHashStr + "," + txHash;
+                    }
+                }
+                if (!utxoAddresses.contains(address)) {
+                    utxoAddresses.add(address);
+                }
+            }
+        }
+        JSONObject txsJsonObject = BlockchairUnspentTxsApi.getUnspentTxs(txHashStr);
+        ArrayList<JSONObject> txs = new ArrayList<JSONObject>();
+        for (String txHash : txHashs) {
+            JSONObject txJson = txsJsonObject.getJSONObject(txHash);
+            if (txJson != null) {
+                txs.add(txJson);
+            }
+        }
+        return getUnspentTxsFromBlockchair(txs, storeBlockHeight);
+    }
+
+    private static List<Tx> getAddressesBlockchairUnspentTransactions(ArrayList<JSONObject> blockchairUtxos, int beginIndex, int endIndex, int storeBlockHeight, ArrayList<String> utxoAddresses) throws Exception {
         ArrayList<String> txHashs = new ArrayList<String>();
         String txHashStr = "";
         for (int i = beginIndex; i < endIndex; i++) {
@@ -1308,34 +1349,21 @@ public class TransactionsUtil {
             return transactions;
         }
 
-        String txHashs = "";
         for (int i = 0; i < unspentJsonArray.length(); i++) {
             JSONObject unspentJson = unspentJsonArray.getJSONObject(i);
             if (!unspentJson.isNull(TX_HASH) && !Utils.isEmpty(unspentJson.getString(TX_HASH)) && !unspentJson.isNull(VALUE) && unspentJson.getLong(VALUE) > 0) {
                 String txHash = unspentJson.getString(TX_HASH);
-                if (txHashs.length() > 0) {
-                    if (!txHashs.contains(txHash)) {
-                        txHashs = txHashs + "," + txHash;
+                if (!Utils.isEmpty(txHash)) {
+                    JSONObject txsJsonObject = BitherUnspentTxsApi.getUnspentTxs(txHash);
+                    if (dataIsError(txsJsonObject)) {
+                        throw new Exception("error");
                     }
-                } else {
-                    txHashs = txHash;
+                    JSONArray jsonArray = new JSONArray();
+                    jsonArray.put(txsJsonObject.getJSONObject(DATA));
+                    transactions.addAll(TransactionsUtil.getUnspentTxsFromBither(address, jsonArray, storeBlockHeight));
                 }
             }
         }
-        if (txHashs.equals("")) {
-            return transactions;
-        }
-        JSONObject txsJsonObject = BitherUnspentTxsApi.getUnspentTxs(txHashs);
-        if (dataIsError(txsJsonObject)) {
-            throw new Exception("error");
-        }
-        JSONArray jsonArray = new JSONArray();
-        if (txHashs.contains(",")) {
-            jsonArray = txsJsonObject.getJSONArray(DATA);
-        } else {
-            jsonArray.put(txsJsonObject.getJSONObject(DATA));
-        }
-        transactions = TransactionsUtil.getUnspentTxsFromBither(address, jsonArray, storeBlockHeight);
         return transactions;
     }
 

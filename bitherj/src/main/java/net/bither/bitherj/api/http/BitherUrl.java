@@ -97,6 +97,7 @@ public class BitherUrl {
     public static final String BTC_COM_Q_ADDRESS_UNSPENT_TXS = "%sv3/tx/%s";
 
     // blockchair.com
+    public static final String BLOCKCHAIR_COM_Q_ADDRESS_UNSPENT = "%saddress/%s?limit=100";
     public static final String BLOCKCHAIR_COM_Q_ADDRESSES_UNSPENT = "%saddresses/%s?limit=100";
     public static final String BLOCKCHAIR_COM_ADDRESS_UNSPENT_TXS = "%stransactions/%s";
     public static final String BLOCKCHAIR_COM_Q_ADDRESS_UNSPENT_TXS_BLOCK_HASHS = "%sblocks/%s";
