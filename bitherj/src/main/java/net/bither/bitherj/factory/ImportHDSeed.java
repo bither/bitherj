@@ -16,6 +16,7 @@
 
 package net.bither.bitherj.factory;
 
+import net.bither.bitherj.api.BitherErrorApi;
 import net.bither.bitherj.core.AbstractHD;
 import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.HDAccountCold;
@@ -28,6 +29,8 @@ import net.bither.bitherj.crypto.mnemonic.MnemonicWordList;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.List;
 
 public abstract class ImportHDSeed {
@@ -83,8 +86,9 @@ public abstract class ImportHDSeed {
                                 , password, null);
 
                     } catch (Exception e) {
-                        importError(IMPORT_FAILED);
                         e.printStackTrace();
+                        importError(IMPORT_FAILED);
+                        uploadError(e);
                         return null;
                     }
 
@@ -101,6 +105,7 @@ public abstract class ImportHDSeed {
                 } catch (Exception e) {
                     e.printStackTrace();
                     importError(IMPORT_FAILED);
+                    uploadError(e);
                 }
                 return null;
 
@@ -126,8 +131,9 @@ public abstract class ImportHDSeed {
                     try {
                         return new HDAccountCold(mnemonicCode, new EncryptedData(encreyptString), password);
                     } catch (Exception e) {
-                        importError(IMPORT_FAILED);
                         e.printStackTrace();
+                        importError(IMPORT_FAILED);
+                        uploadError(e);
                         return null;
                     }
 
@@ -143,6 +149,7 @@ public abstract class ImportHDSeed {
                 } catch (Exception e) {
                     e.printStackTrace();
                     importError(IMPORT_FAILED);
+                    uploadError(e);
                 }
                 return null;
         }
@@ -172,6 +179,7 @@ public abstract class ImportHDSeed {
                     } catch (Exception e) {
                         e.printStackTrace();
                         importError(IMPORT_FAILED);
+                        uploadError(e);
                         return null;
                     }
 
@@ -190,6 +198,7 @@ public abstract class ImportHDSeed {
                 } catch (Exception e) {
                     e.printStackTrace();
                     importError(IMPORT_FAILED);
+                    uploadError(e);
                 }
                 return null;
         }
@@ -198,5 +207,33 @@ public abstract class ImportHDSeed {
     }
 
     public abstract void importError(int errorCode);
+
+    private void uploadError(final Exception ex) {
+        PrintStream printStream = null;
+        ByteArrayOutputStream baos = null;
+        try {
+            baos = new ByteArrayOutputStream();
+            printStream = new PrintStream(baos);
+            ex.printStackTrace(printStream);
+            String exception = baos.toString();
+            if (!Utils.isEmpty(exception)) {
+                BitherErrorApi addFeedbackApi = new BitherErrorApi(exception);
+                addFeedbackApi.handleHttpPost();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (printStream != null) {
+                    printStream.close();
+                }
+                if (baos != null) {
+                    baos.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 }
