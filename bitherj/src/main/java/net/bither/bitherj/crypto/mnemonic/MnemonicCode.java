@@ -298,7 +298,7 @@ public abstract class MnemonicCode {
             .MnemonicLengthException {
         if (entropy.length % 4 > 0) {
             throw new MnemonicException.MnemonicLengthException("Entropy length not multiple of "
-                    + "32 bits.");
+                    + "32 bits." + " Entropy length " + entropy.length);
         }
 
         if (entropy.length == 0) {
