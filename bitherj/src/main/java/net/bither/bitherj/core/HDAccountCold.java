@@ -101,13 +101,7 @@ public class HDAccountCold extends AbstractHD {
         internalKey.wipe();
 
         try {
-            List<String> words = getSeedWords(password);
-            String validFirstAddress = getValidFirstAddress(words);
-            String dbFirstAddress = getFirstAddressFromDb();
-            if (!validFirstAddress.equals(dbFirstAddress)) {
-                validFailedDelete(password);
-                throw new EncryptionException();
-            }
+            getSeedWords(password);
         } catch (Exception ex) {
             validFailedDelete(password);
             throw new EncryptionException();
@@ -136,7 +130,19 @@ public class HDAccountCold extends AbstractHD {
         this.isFromXRandom = AbstractDb.hdAccountProvider.hdAccountIsXRandom(hdSeedId);
     }
 
-    private void validFailedDelete(CharSequence password) {
+    public List<String> getSeedWords(CharSequence password) throws MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
+        List<String> words = getSeedWords(password, false);
+        String validFirstAddress = getValidFirstAddress(words);
+        String dbFirstAddress = getFirstAddressFromDb();
+        if (!validFirstAddress.equals(dbFirstAddress)) {
+            wipeMnemonicSeed();
+            throw new EncryptionException();
+        }
+        wipeMnemonicSeed();
+        return words;
+    }
+
+    public void validFailedDelete(CharSequence password) {
         if (AddressManager.getInstance().noAddress()) {
             AbstractDb.addressProvider.deletePassword(password);
         }

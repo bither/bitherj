@@ -187,11 +187,6 @@ public abstract class AbstractHD {
         }
     }
 
-    public List<String> getSeedWords(CharSequence password) throws MnemonicException
-            .MnemonicLengthException {
-        return getSeedWords(password, false);
-    }
-
     public List<String> getSeedWords(CharSequence password, boolean isBitpieCold) throws MnemonicException
             .MnemonicLengthException {
         decryptMnemonicSeed(password);

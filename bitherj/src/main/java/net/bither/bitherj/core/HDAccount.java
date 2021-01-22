@@ -278,15 +278,17 @@ public class HDAccount extends Address {
             hasSeed = true;
 
             try {
-                List<String> words = getSeedWords(password);
-                String validFirstAddress = getValidFirstAddress(words);
-                String dbFirstAddress = getFirstAddressFromDb();
-                if (!validFirstAddress.equals(dbFirstAddress)) {
-                    validFailedDelete(password, internalKey, externalKey, internalBIP49Key, externalBIP49Key);
-                    throw new EncryptionException();
-                }
+                getSeedWords(password);
             } catch (Exception ex) {
-                validFailedDelete(password, internalKey, externalKey, internalBIP49Key, externalBIP49Key);
+                validFailedDelete(password);
+                internalKey.wipe();
+                externalKey.wipe();
+                if (internalBIP49Key != null) {
+                    internalBIP49Key.wipe();
+                }
+                if (externalBIP49Key != null) {
+                    externalBIP49Key.wipe();
+                }
                 throw new EncryptionException();
             }
         }
@@ -331,20 +333,12 @@ public class HDAccount extends Address {
         updateBalance();
     }
 
-    private void validFailedDelete(CharSequence password, DeterministicKey internalKey, DeterministicKey externalKey, DeterministicKey internalBIP49Key, DeterministicKey externalBIP49Key) {
+    public void validFailedDelete(CharSequence password) {
         if (AddressManager.getInstance().noAddress()) {
             AbstractDb.addressProvider.deletePassword(password);
         }
         AbstractDb.hdAccountProvider.deleteHDAccount(hdSeedId);
         AbstractDb.hdAccountAddressProvider.deleteHDAccountAddress(hdSeedId);
-        internalKey.wipe();
-        externalKey.wipe();
-        if (internalBIP49Key != null) {
-            internalBIP49Key.wipe();
-        }
-        if (externalBIP49Key != null) {
-            externalBIP49Key.wipe();
-        }
     }
 
     private String getValidFirstAddress(List<String> words) throws MnemonicException.MnemonicLengthException,
@@ -1117,10 +1111,16 @@ public class HDAccount extends Address {
         }
     }
 
-    public List<String> getSeedWords(CharSequence password) throws MnemonicException
-            .MnemonicLengthException {
+    public List<String> getSeedWords(CharSequence password) throws MnemonicException.MnemonicLengthException, EncryptionException,
+            MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         decryptMnemonicSeed(password);
         List<String> words = mnemonicCode.toMnemonic(mnemonicSeed);
+        String validFirstAddress = getValidFirstAddress(words);
+        String dbFirstAddress = getFirstAddressFromDb();
+        if (!validFirstAddress.equals(dbFirstAddress)) {
+            wipeMnemonicSeed();
+            throw new EncryptionException();
+        }
         wipeMnemonicSeed();
         return words;
     }
