@@ -270,6 +270,14 @@ public abstract class AbstractAddressProvider extends AbstractProvider implement
         return true;
     }
 
+    public void deletePassword(CharSequence password) {
+        IDb writeDb = this.getWriteDb();
+        writeDb.beginTransaction();
+        String sql = "delete from password_seed";
+        execUpdate(writeDb, sql, null);
+        writeDb.endTransaction();
+    }
+
     @Override
     public PasswordSeed getPasswordSeed() {
         final PasswordSeed[] passwordSeed = {null};

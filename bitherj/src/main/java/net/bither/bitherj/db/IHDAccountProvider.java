@@ -52,4 +52,6 @@ public interface IHDAccountProvider {
 
     boolean isSegwitPubExist(byte[] segwitExternalPub, byte[] segwitInternalPub);
 
+    void deleteHDAccount(int hdAccountId);
+
 }

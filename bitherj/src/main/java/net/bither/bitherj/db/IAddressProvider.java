@@ -20,6 +20,8 @@ public interface IAddressProvider {
 
     boolean hasPasswordSeed();
 
+    void deletePassword(CharSequence password);
+
     // hdm
     List<Integer> getHDSeeds();
 

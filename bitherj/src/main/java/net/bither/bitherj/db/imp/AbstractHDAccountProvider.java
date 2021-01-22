@@ -492,4 +492,12 @@ public abstract class AbstractHDAccountProvider extends AbstractProvider impleme
         });
         return isExist[0];
     }
+
+    public void deleteHDAccount(int hdAccountId) {
+        IDb writeDb = this.getWriteDb();
+        writeDb.beginTransaction();
+        String sql = "delete from hd_account where hd_account_id=?";
+        execUpdate(writeDb, sql, new String[]{Integer.toString(hdAccountId)});
+        writeDb.endTransaction();
+    }
 }

@@ -28,7 +28,6 @@ import java.util.List;
 
 public interface IHDAccountAddressProvider {
 
-
     void addAddress(List<HDAccount.HDAccountAddress> hdAccountAddresses);
 
     int issuedIndex(int hdAccountId, AbstractHD.PathType pathType);
@@ -91,4 +90,6 @@ public interface IHDAccountAddressProvider {
     boolean requestNewReceivingAddress(int hdAccountId, AbstractHD.PathType... pathTypes);
 
     List<Out> getUnspentOutputByBlockNo(long BlockNo, int hdSeedId);
+
+    void deleteHDAccountAddress(int hdAccountId);
 }

@@ -18,6 +18,7 @@ package net.bither.bitherj.factory;
 
 import net.bither.bitherj.api.BitherErrorApi;
 import net.bither.bitherj.core.AbstractHD;
+import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.HDAccountCold;
 import net.bither.bitherj.core.HDMKeychain;
@@ -26,6 +27,7 @@ import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.crypto.SecureCharSequence;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicWordList;
+import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.qrcode.QRCodeUtil;
 import net.bither.bitherj.utils.Utils;
 
@@ -115,6 +117,7 @@ public abstract class ImportHDSeed {
     }
 
     public HDAccountCold importHDAccountCold() {
+        HDAccountCold hdAccount = null;
         switch (importPrivateKeyType) {
             case HDSeedQRCode:
                 int hdQrCodeFlagLength = MnemonicWordList.getHdQrCodeFlagLength(content, mnemonicCode.getMnemonicWordList());
@@ -129,34 +132,50 @@ public abstract class ImportHDSeed {
                         return null;
                     }
                     try {
-                        return new HDAccountCold(mnemonicCode, new EncryptedData(encreyptString), password);
+                        hdAccount = new HDAccountCold(mnemonicCode, new EncryptedData(encreyptString), password);
                     } catch (Exception e) {
                         e.printStackTrace();
                         importError(IMPORT_FAILED);
                         uploadError(e);
-                        return null;
                     }
-
                 } else {
                     importError(NOT_HD_ACCOUNT_SEED);
-                    return null;
                 }
+                break;
             case HDSeedPhrase:
                 try {
                     byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
-                    HDAccountCold hdAccount = new HDAccountCold(mnemonicCode, mnemonicCodeSeed, password, false);
-                    return hdAccount;
+                    hdAccount = new HDAccountCold(mnemonicCode, mnemonicCodeSeed, password, false);
                 } catch (Exception e) {
                     e.printStackTrace();
                     importError(IMPORT_FAILED);
                     uploadError(e);
                 }
+                break;
+        }
+        if (hdAccount != null) {
+            try {
+                final List<String> words = hdAccount.getSeedWords(password);
+                String firstAddress = HDAccount.getFirstAddress(words);
+                String dbFirstAddress = hdAccount.getFirstAddressFromDb();
+                if (!firstAddress.equals(dbFirstAddress)) {
+                    importError(IMPORT_FAILED);
+                    deleteHDAccount(hdAccount.getHdSeedId());
+                    return null;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                importError(IMPORT_FAILED);
+                deleteHDAccount(hdAccount.getHdSeedId());
+                uploadError(ex);
                 return null;
+            }
         }
         return null;
     }
 
     public HDAccount importHDAccount() {
+        HDAccount hdAccount = null;
         switch (importPrivateKeyType) {
             case HDSeedQRCode:
                 int hdQrCodeFlagLength = MnemonicWordList.getHdQrCodeFlagLength(content, mnemonicCode.getMnemonicWordList());
@@ -170,28 +189,24 @@ public abstract class ImportHDSeed {
                         return null;
                     }
                     try {
-                        return new HDAccount(mnemonicCode, new EncryptedData(encreyptString)
+                        hdAccount = new HDAccount(mnemonicCode, new EncryptedData(encreyptString)
                                 , password, false);
                     } catch (HDAccount.DuplicatedHDAccountException e) {
                         e.printStackTrace();
                         importError(DUPLICATED_HD_ACCOUNT_SEED);
-                        return null;
                     } catch (Exception e) {
                         e.printStackTrace();
                         importError(IMPORT_FAILED);
                         uploadError(e);
-                        return null;
                     }
-
                 } else {
                     importError(NOT_HD_ACCOUNT_SEED);
-                    return null;
                 }
+                break;
             case HDSeedPhrase:
                 try {
                     byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
-                    HDAccount hdAccount = new HDAccount(mnemonicCode, mnemonicCodeSeed, password, false);
-                    return hdAccount;
+                    hdAccount = new HDAccount(mnemonicCode, mnemonicCodeSeed, password, false);
                 }  catch (HDAccount.DuplicatedHDAccountException e) {
                     e.printStackTrace();
                     importError(DUPLICATED_HD_ACCOUNT_SEED);
@@ -200,10 +215,36 @@ public abstract class ImportHDSeed {
                     importError(IMPORT_FAILED);
                     uploadError(e);
                 }
-                return null;
+                break;
         }
-        return null;
+        if (hdAccount != null) {
+            try {
+                final List<String> words = hdAccount.getSeedWords(password);
+                String firstAddress = HDAccount.getFirstAddress(words);
+                String dbFirstAddress = hdAccount.getFirstAddressFromDb();
+                if (!firstAddress.equals(dbFirstAddress)) {
+                    importError(IMPORT_FAILED);
+                    deleteHDAccount(hdAccount.getHdSeedId());
+                    return null;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                importError(IMPORT_FAILED);
+                deleteHDAccount(hdAccount.getHdSeedId());
+                uploadError(ex);
+                return null;
+            }
+        }
+        return hdAccount;
+    }
 
+    private void deleteHDAccount(int hdSeedId) {
+        if (AddressManager.getInstance().noAddress()) {
+            AbstractDb.addressProvider.deletePassword(password);
+        }
+        password.wipe();
+        AbstractDb.hdAccountProvider.deleteHDAccount(hdSeedId);
+        AbstractDb.hdAccountAddressProvider.deleteHDAccountAddress(hdSeedId);
     }
 
     public abstract void importError(int errorCode);

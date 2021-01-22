@@ -36,7 +36,7 @@ public class BitpieHDAccountCold extends AbstractHD {
     private IHDAccountProvider bitpieHDAccountProvicer = AbstractDb.bitpieHdAccountProvider;
 
     public BitpieHDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password, boolean isFromXRandom)
-            throws MnemonicException.MnemonicLengthException {
+            throws MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException {
         this.mnemonicCode = mnemonicCode;
         this.mnemonicSeed = mnemonicSeed;
         hdSeed = seedFromMnemonic(mnemonicSeed, mnemonicCode);
@@ -45,6 +45,15 @@ public class BitpieHDAccountCold extends AbstractHD {
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         EncryptedData encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password,
                 isFromXRandom);
+
+        byte[] validMnemonicSeed = encryptedMnemonicSeed.decrypt(password);
+        byte[] validHdSeed = seedFromMnemonic(validMnemonicSeed, mnemonicCode);
+        if (!Arrays.equals(mnemonicSeed, validMnemonicSeed) || !Arrays.equals(hdSeed, validHdSeed)) {
+            wipeHDSeed();
+            wipeMnemonicSeed();
+            throw new MnemonicException.MnemonicWordException("seed error");
+        }
+
         ECKey k = new ECKey(mnemonicSeed, null);
         String address = k.toAddress();
         k.clearPrivateKey();
@@ -69,18 +78,18 @@ public class BitpieHDAccountCold extends AbstractHD {
     }
 
     public BitpieHDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password) throws MnemonicException
-            .MnemonicLengthException {
+            .MnemonicLengthException, MnemonicException.MnemonicWordException {
         this(mnemonicCode, mnemonicSeed, password, false);
     }
 
     public BitpieHDAccountCold(MnemonicCode mnemonicCode, SecureRandom random, CharSequence password) throws MnemonicException
-            .MnemonicLengthException {
+            .MnemonicLengthException, MnemonicException.MnemonicWordException {
         this(mnemonicCode, randomByteFromSecureRandom(random, 16), password, random.getClass().getCanonicalName
                 ().indexOf("XRandom") >= 0);
     }
 
     public BitpieHDAccountCold(MnemonicCode mnemonicCode, EncryptedData encryptedMnemonicSeed, CharSequence password) throws
-            MnemonicException.MnemonicLengthException {
+            MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException {
         this(mnemonicCode, encryptedMnemonicSeed.decrypt(password), password, encryptedMnemonicSeed.isXRandom());
     }
 

@@ -48,7 +48,7 @@ public abstract class HDMSingular {
 
         public void singularColdFinish();
 
-        public void singularServerFinish(List<String> words, String qr);
+        public void singularServerFinish(List<String> words);
 
         public void singularShowNetworkFailure();
     }
@@ -264,7 +264,7 @@ public abstract class HDMSingular {
         runOnUIThread(new Runnable() {
             @Override
             public void run() {
-                delegate.singularServerFinish(coldWords, coldQr);
+                delegate.singularServerFinish(coldWords);
             }
         });
 
