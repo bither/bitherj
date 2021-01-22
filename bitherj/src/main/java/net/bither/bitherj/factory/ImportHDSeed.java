@@ -153,25 +153,7 @@ public abstract class ImportHDSeed {
                 }
                 break;
         }
-        if (hdAccount != null) {
-            try {
-                final List<String> words = hdAccount.getSeedWords(password);
-                String firstAddress = HDAccount.getFirstAddress(words);
-                String dbFirstAddress = hdAccount.getFirstAddressFromDb();
-                if (!firstAddress.equals(dbFirstAddress)) {
-                    importError(IMPORT_FAILED);
-                    deleteHDAccount(hdAccount.getHdSeedId());
-                    return null;
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                importError(IMPORT_FAILED);
-                deleteHDAccount(hdAccount.getHdSeedId());
-                uploadError(ex);
-                return null;
-            }
-        }
-        return null;
+        return hdAccount;
     }
 
     public HDAccount importHDAccount() {
@@ -217,34 +199,7 @@ public abstract class ImportHDSeed {
                 }
                 break;
         }
-        if (hdAccount != null) {
-            try {
-                final List<String> words = hdAccount.getSeedWords(password);
-                String firstAddress = HDAccount.getFirstAddress(words);
-                String dbFirstAddress = hdAccount.getFirstAddressFromDb();
-                if (!firstAddress.equals(dbFirstAddress)) {
-                    importError(IMPORT_FAILED);
-                    deleteHDAccount(hdAccount.getHdSeedId());
-                    return null;
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                importError(IMPORT_FAILED);
-                deleteHDAccount(hdAccount.getHdSeedId());
-                uploadError(ex);
-                return null;
-            }
-        }
         return hdAccount;
-    }
-
-    private void deleteHDAccount(int hdSeedId) {
-        if (AddressManager.getInstance().noAddress()) {
-            AbstractDb.addressProvider.deletePassword(password);
-        }
-        password.wipe();
-        AbstractDb.hdAccountProvider.deleteHDAccount(hdSeedId);
-        AbstractDb.hdAccountAddressProvider.deleteHDAccountAddress(hdSeedId);
     }
 
     public abstract void importError(int errorCode);

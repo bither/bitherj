@@ -8,6 +8,7 @@ import net.bither.bitherj.crypto.EncryptedData;
 import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
+import net.bither.bitherj.crypto.mnemonic.EncryptionException;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
@@ -36,7 +37,7 @@ public class BitpieHDAccountCold extends AbstractHD {
     private IHDAccountProvider bitpieHDAccountProvicer = AbstractDb.bitpieHdAccountProvider;
 
     public BitpieHDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password, boolean isFromXRandom)
-            throws MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException {
+            throws MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException, EncryptionException, MnemonicException.MnemonicChecksumException {
         this.mnemonicCode = mnemonicCode;
         this.mnemonicSeed = mnemonicSeed;
         hdSeed = seedFromMnemonic(mnemonicSeed, mnemonicCode);
@@ -51,7 +52,7 @@ public class BitpieHDAccountCold extends AbstractHD {
         if (!Arrays.equals(mnemonicSeed, validMnemonicSeed) || !Arrays.equals(hdSeed, validHdSeed)) {
             wipeHDSeed();
             wipeMnemonicSeed();
-            throw new MnemonicException.MnemonicWordException("seed error");
+            throw new EncryptionException();
         }
 
         ECKey k = new ECKey(mnemonicSeed, null);
@@ -75,27 +76,68 @@ public class BitpieHDAccountCold extends AbstractHD {
                         .getPubKeyExtended());
         externalKey.wipe();
         internalKey.wipe();
+
+        try {
+            List<String> words = getSeedWords(password);
+            String validFirstAddress = getValidFirstAddress(words);
+            String dbFirstAddress = getFirstAddressFromDb();
+            if (!validFirstAddress.equals(dbFirstAddress)) {
+                validFailedDelete(password);
+                throw new EncryptionException();
+            }
+        } catch (Exception ex) {
+            validFailedDelete(password);
+            throw new EncryptionException();
+        }
+
     }
 
     public BitpieHDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password) throws MnemonicException
-            .MnemonicLengthException, MnemonicException.MnemonicWordException {
+            .MnemonicLengthException, MnemonicException.MnemonicWordException, EncryptionException, MnemonicException.MnemonicChecksumException {
         this(mnemonicCode, mnemonicSeed, password, false);
     }
 
     public BitpieHDAccountCold(MnemonicCode mnemonicCode, SecureRandom random, CharSequence password) throws MnemonicException
-            .MnemonicLengthException, MnemonicException.MnemonicWordException {
+            .MnemonicLengthException, MnemonicException.MnemonicWordException, EncryptionException, MnemonicException.MnemonicChecksumException {
         this(mnemonicCode, randomByteFromSecureRandom(random, 16), password, random.getClass().getCanonicalName
                 ().indexOf("XRandom") >= 0);
     }
 
     public BitpieHDAccountCold(MnemonicCode mnemonicCode, EncryptedData encryptedMnemonicSeed, CharSequence password) throws
-            MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException {
+            MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException, EncryptionException, MnemonicException.MnemonicChecksumException {
         this(mnemonicCode, encryptedMnemonicSeed.decrypt(password), password, encryptedMnemonicSeed.isXRandom());
     }
 
     public BitpieHDAccountCold(int hdSeedId) {
         this.hdSeedId = hdSeedId;
         this.isFromXRandom = bitpieHDAccountProvicer.hdAccountIsXRandom(hdSeedId);
+    }
+
+    private void validFailedDelete(CharSequence password) {
+        if (AddressManager.getInstance().noAddress()) {
+            AbstractDb.addressProvider.deletePassword(password);
+        }
+        AbstractDb.hdAccountProvider.deleteHDAccount(hdSeedId);
+    }
+
+    private String getValidFirstAddress(List<String> words) throws MnemonicException.MnemonicLengthException,
+            MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
+        if (words == null || words.size() == 0) {
+            throw new MnemonicException.MnemonicLengthException("Word list size must be multiple " +
+                    "" + "of three words.");
+        }
+        byte[] mnemonicSeed = mnemonicCode.toEntropy(words);
+        byte[] hdSeed = seedFromMnemonic(mnemonicSeed, mnemonicCode);
+        DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
+        DeterministicKey account = getAccount(master, AbstractHD.PurposePathLevel.Normal);
+        DeterministicKey externalKey = getChainRootKey(account, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
+        DeterministicKey key = externalKey.deriveSoftened(0);
+        String firstAddress = key.toAddress();
+        master.wipe();
+        account.wipe();
+        externalKey.wipe();
+        key.wipe();
+        return firstAddress;
     }
 
     public List<byte[]> signHashHexes(final Collection<String> hashes,

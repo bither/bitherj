@@ -23,6 +23,7 @@ import net.bither.bitherj.crypto.KeyCrypterException;
 import net.bither.bitherj.crypto.TransactionSignature;
 import net.bither.bitherj.crypto.hd.DeterministicKey;
 import net.bither.bitherj.crypto.hd.HDKeyDerivation;
+import net.bither.bitherj.crypto.mnemonic.EncryptionException;
 import net.bither.bitherj.crypto.mnemonic.MnemonicCode;
 import net.bither.bitherj.crypto.mnemonic.MnemonicException;
 import net.bither.bitherj.db.AbstractDb;
@@ -77,12 +78,12 @@ public class HDAccount extends Address {
     private static final Logger log = LoggerFactory.getLogger(HDAccount.class);
 
     public HDAccount(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password) throws MnemonicException
-            .MnemonicLengthException, MnemonicException.MnemonicWordException {
+            .MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         this(mnemonicCode, mnemonicSeed, password, true);
     }
 
     public HDAccount(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password,
-                     boolean isSyncedComplete) throws MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException {
+                     boolean isSyncedComplete) throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         super();
         this.mnemonicCode = mnemonicCode;
         this.mnemonicSeed = mnemonicSeed;
@@ -95,19 +96,18 @@ public class HDAccount extends Address {
         byte[] validMnemonicSeed = encryptedMnemonicSeed.decrypt(password);
         byte[] validHdSeed = seedFromMnemonic(mnemonicCode, validMnemonicSeed);
         if (!Arrays.equals(mnemonicSeed, validMnemonicSeed) || !Arrays.equals(hdSeed, validHdSeed)) {
-            throw new MnemonicException.MnemonicWordException("seed error");
+            throw new EncryptionException();
         }
 
         DeterministicKey account = getAccount(master, AbstractHD.PurposePathLevel.Normal);
         DeterministicKey purpose49Account = getAccount(master, AbstractHD.PurposePathLevel.P2SHP2WPKH);
         account.clearPrivateKey();
         purpose49Account.clearPrivateKey();
-        initHDAccount(account, purpose49Account, encryptedMnemonicSeed, encryptedHDSeed, isFromXRandom,
-                isSyncedComplete, null);
+        initHDAccount(account, purpose49Account, encryptedMnemonicSeed, encryptedHDSeed, isFromXRandom, password, isSyncedComplete, null);
     }
 
     // Create With Random
-    public HDAccount(SecureRandom random, CharSequence password, HDAccountGenerationDelegate generationDelegate) throws MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException {
+    public HDAccount(SecureRandom random, CharSequence password, HDAccountGenerationDelegate generationDelegate) throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         isFromXRandom = random.getClass().getCanonicalName().indexOf("XRandom") >= 0;
         mnemonicSeed = new byte[16];
         random.nextBytes(mnemonicSeed);
@@ -119,7 +119,7 @@ public class HDAccount extends Address {
         byte[] validMnemonicSeed = encryptedMnemonicSeed.decrypt(password);
         byte[] validHdSeed = seedFromMnemonic(mnemonicCode, validMnemonicSeed);
         if (!Arrays.equals(mnemonicSeed, validMnemonicSeed) || !Arrays.equals(hdSeed, validHdSeed)) {
-            throw new MnemonicException.MnemonicWordException("seed error");
+            throw new EncryptionException();
         }
 
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
@@ -128,14 +128,14 @@ public class HDAccount extends Address {
         account.clearPrivateKey();
         purpose49Account.clearPrivateKey();
 
-        initHDAccount(account, purpose49Account, encryptedMnemonicSeed, encryptedHDSeed, isFromXRandom, true,
+        initHDAccount(account, purpose49Account, encryptedMnemonicSeed, encryptedHDSeed, isFromXRandom, password, true,
                 generationDelegate);
     }
 
     //use in import
     public HDAccount(MnemonicCode mnemonicCode, EncryptedData encryptedMnemonicSeed, CharSequence password, boolean
             isSyncedComplete)
-            throws MnemonicException.MnemonicLengthException {
+            throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         this.mnemonicCode = mnemonicCode;
         mnemonicSeed = encryptedMnemonicSeed.decrypt(password);
         hdSeed = seedFromMnemonic(mnemonicCode, mnemonicSeed);
@@ -146,34 +146,33 @@ public class HDAccount extends Address {
         DeterministicKey purpose49Account = getAccount(master, AbstractHD.PurposePathLevel.P2SHP2WPKH);
         account.clearPrivateKey();
         purpose49Account.clearPrivateKey();
-        initHDAccount(account, purpose49Account, encryptedMnemonicSeed, encryptedHDSeed, isFromXRandom,
-                isSyncedComplete, null);
+        initHDAccount(account, purpose49Account, encryptedMnemonicSeed, encryptedHDSeed, isFromXRandom, password, isSyncedComplete,null);
     }
 
-    public HDAccount(byte[] accountExtentedPub, byte[] p2shp2wpkhAccountExtentedPub) throws MnemonicException.MnemonicLengthException {
+    public HDAccount(byte[] accountExtentedPub, byte[] p2shp2wpkhAccountExtentedPub) throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         this(accountExtentedPub, p2shp2wpkhAccountExtentedPub, false);
     }
 
-    public HDAccount(byte[] accountExtentedPub, byte[] p2shp2wpkhAccountExtentedPub, boolean isFromXRandom) {
+    public HDAccount(byte[] accountExtentedPub, byte[] p2shp2wpkhAccountExtentedPub, boolean isFromXRandom) throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         this(accountExtentedPub, p2shp2wpkhAccountExtentedPub, isFromXRandom, true, null);
     }
 
 
     public HDAccount(byte[] accountExtentedPub, byte[] p2shp2wpkhAccountExtentedPub, boolean isFromXRandom, boolean isSyncedComplete,
-                     HDAccount.HDAccountGenerationDelegate generationDelegate) {
+                     HDAccount.HDAccountGenerationDelegate generationDelegate) throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         super();
         this.isFromXRandom = isFromXRandom;
         DeterministicKey account = HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                 (accountExtentedPub);
         DeterministicKey accountPurpose49Key = p2shp2wpkhAccountExtentedPub == null ? null : HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                 (p2shp2wpkhAccountExtentedPub);
-        initHDAccount(account, accountPurpose49Key, null, null, isFromXRandom, isSyncedComplete, generationDelegate);
+        initHDAccount(account, accountPurpose49Key, null, null, isFromXRandom, null, isSyncedComplete, generationDelegate);
     }
 
     private void initHDAccount(DeterministicKey accountKey, DeterministicKey accountPurpose49Key, EncryptedData encryptedMnemonicSeed,
-                               EncryptedData encryptedHDSeed, boolean isFromXRandom, boolean
+                               EncryptedData encryptedHDSeed, boolean isFromXRandom, CharSequence password, boolean
                                        isSyncedComplete, HDAccount.HDAccountGenerationDelegate
-                                       generationDelegate) {
+                                       generationDelegate) throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         this.isFromXRandom = isFromXRandom;
         double progress = 0;
         if (generationDelegate != null) {
@@ -277,7 +276,21 @@ public class HDAccount extends Address {
                     isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
                             .getPubKeyExtended());
             hasSeed = true;
+
+            try {
+                List<String> words = getSeedWords(password);
+                String validFirstAddress = getValidFirstAddress(words);
+                String dbFirstAddress = getFirstAddressFromDb();
+                if (!validFirstAddress.equals(dbFirstAddress)) {
+                    validFailedDelete(password, internalKey, externalKey, internalBIP49Key, externalBIP49Key);
+                    throw new EncryptionException();
+                }
+            } catch (Exception ex) {
+                validFailedDelete(password, internalKey, externalKey, internalBIP49Key, externalBIP49Key);
+                throw new EncryptionException();
+            }
         }
+
         if (externalBIP49Key != null && externalBIP49Key != null) {
             AbstractDb.hdAccountProvider.addHDAccountSegwitPub(hdSeedId, externalBIP49Key.getPubKeyExtended(), internalBIP49Key.getPubKeyExtended());
         }
@@ -318,25 +331,39 @@ public class HDAccount extends Address {
         updateBalance();
     }
 
-    public static String getFirstAddress(List<String> words) throws MnemonicException.MnemonicLengthException,
+    private void validFailedDelete(CharSequence password, DeterministicKey internalKey, DeterministicKey externalKey, DeterministicKey internalBIP49Key, DeterministicKey externalBIP49Key) {
+        if (AddressManager.getInstance().noAddress()) {
+            AbstractDb.addressProvider.deletePassword(password);
+        }
+        AbstractDb.hdAccountProvider.deleteHDAccount(hdSeedId);
+        AbstractDb.hdAccountAddressProvider.deleteHDAccountAddress(hdSeedId);
+        internalKey.wipe();
+        externalKey.wipe();
+        if (internalBIP49Key != null) {
+            internalBIP49Key.wipe();
+        }
+        if (externalBIP49Key != null) {
+            externalBIP49Key.wipe();
+        }
+    }
+
+    private String getValidFirstAddress(List<String> words) throws MnemonicException.MnemonicLengthException,
             MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         if (words == null || words.size() == 0) {
             throw new MnemonicException.MnemonicLengthException("Word list size must be multiple " +
                     "" + "of three words.");
         }
-        MnemonicCode mnemonicCode = MnemonicCode.instance();
-        byte[] mnemonicSeed = MnemonicCode.instance().toEntropy(words);
+        byte[] mnemonicSeed = mnemonicCode.toEntropy(words);
         byte[] hdSeed = seedFromMnemonic(mnemonicCode, mnemonicSeed);
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
-        DeterministicKey purpose = master.deriveHardened(getPurposePathLevel(AbstractHD.PurposePathLevel.Normal).getValue());
-        DeterministicKey coinType = purpose.deriveHardened(0);
-        DeterministicKey account = coinType.deriveHardened(0);
-        purpose.wipe();
-        coinType.wipe();
-        account.clearPrivateKey();
-        DeterministicKey externalKey = account.deriveSoftened(AbstractHD.PathType.EXTERNAL_ROOT_PATH.getValue());
+        DeterministicKey account = getAccount(master, AbstractHD.PurposePathLevel.Normal);
+        DeterministicKey externalKey = getChainRootKey(account, AbstractHD.PathType.EXTERNAL_ROOT_PATH);
         DeterministicKey key = externalKey.deriveSoftened(0);
         String firstAddress = key.toAddress();
+        master.wipe();
+        account.wipe();
+        externalKey.wipe();
+        key.wipe();
         return firstAddress;
     }
 
