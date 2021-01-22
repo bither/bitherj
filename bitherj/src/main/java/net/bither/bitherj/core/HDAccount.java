@@ -77,7 +77,7 @@ public class HDAccount extends Address {
     private static final Logger log = LoggerFactory.getLogger(HDAccount.class);
 
     public HDAccount(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password) throws MnemonicException
-            .MnemonicLengthException {
+            .MnemonicLengthException, MnemonicException.MnemonicWordException {
         this(mnemonicCode, mnemonicSeed, password, true);
     }
 
