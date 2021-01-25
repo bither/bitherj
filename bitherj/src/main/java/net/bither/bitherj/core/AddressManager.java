@@ -71,11 +71,13 @@ public class AddressManager implements HDMKeychain.HDMAddressChangeDelegate,
     }
 
     public boolean noAddress() {
-        return getPrivKeyAddresses() == null ||
-                getPrivKeyAddresses().size() == 0 ||
-                hasHDAccountHot() ||
-                hasHDAccountMonitored() ||
-                hasHDMKeychain();
+        List<Address> allAddresses = getAllAddresses();
+        return (allAddresses == null || allAddresses.size() == 0) &&
+                (getTrashAddresses() == null || getTrashAddresses().size() == 0) &&
+                !hasHDAccountHot() &&
+                !hasHDAccountMonitored() &&
+                !hasHDAccountCold() &&
+                !hasBitpieHDAccountCold();
     }
 
     private void initAliasAndVanityLen() {
