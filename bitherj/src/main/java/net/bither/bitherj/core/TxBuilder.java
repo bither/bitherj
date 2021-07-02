@@ -21,6 +21,7 @@ import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.script.Script;
 import net.bither.bitherj.script.ScriptBuilder;
+import net.bither.bitherj.utils.MinerFeeUtils;
 import net.bither.bitherj.utils.Utils;
 
 import java.math.BigInteger;
@@ -45,7 +46,7 @@ public class TxBuilder {
         return uniqueInstance;
     }
 
-    public Tx buildTxFromAllAddress(List<Out> unspendOuts, String changeAddress, List<Long> amounts, List<String> addresses, Long dynamicFeeBase) throws TxBuilderException {
+    public Tx buildTxFromAllAddress(List<Out> unspendOuts, String changeAddress, List<Long> amounts, List<String> addresses, Long dynamicFeeBase, boolean isNoPrivKey) throws TxBuilderException {
 
         long value = 0;
         for (long amount : amounts) {
@@ -56,8 +57,7 @@ public class TxBuilder {
             throw new TxBuilderException.TxBuilderNotEnoughMoneyException(value - TxBuilder.getAmount(unspendOuts));
         }
 
-        Tx emptyWalletTx = emptyWallet.buildTx(changeAddress, unspendOuts, prepareTx(amounts,
-                addresses), dynamicFeeBase);
+        Tx emptyWalletTx = emptyWallet.buildTx(changeAddress, unspendOuts, prepareTx(amounts, addresses), dynamicFeeBase, isNoPrivKey);
         if (emptyWalletTx != null && TxBuilder.estimationTxSize(emptyWalletTx.getIns().size(),
                 emptyWalletTx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
             return emptyWalletTx;
@@ -74,7 +74,7 @@ public class TxBuilder {
         boolean mayMaxTxSize = false;
         List<Tx> txs = new ArrayList<Tx>();
         for (TxBuilderProtocol builder : this.txBuilders) {
-            Tx tx = builder.buildTx(changeAddress, unspendOuts, prepareTx(amounts, addresses), dynamicFeeBase);
+            Tx tx = builder.buildTx(changeAddress, unspendOuts, prepareTx(amounts, addresses), dynamicFeeBase, isNoPrivKey);
             // note: need all unspent out is pay-to-pubkey-hash
             if (tx != null && TxBuilder.estimationTxSize(tx.getIns().size(), tx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
                 txs.add(tx);
@@ -92,7 +92,7 @@ public class TxBuilder {
         }
     }
 
-    public List<Tx> buildSplitCoinTxsFromAllAddress(List<Out> unspendOuts, String changeAddress, List<Long> amounts, List<String> addresses, SplitCoin splitCoin) throws TxBuilderException {
+    public List<Tx> buildSplitCoinTxsFromAllAddress(List<Out> unspendOuts, String changeAddress, List<Long> amounts, List<String> addresses, SplitCoin splitCoin, boolean isNoPrivKey) throws TxBuilderException {
         long value = 0;
         for (long amount : amounts) {
             value += amount;
@@ -102,14 +102,14 @@ public class TxBuilder {
             throw new TxBuilderException.TxBuilderNotEnoughMoneyException(value - TxBuilder.getAmount(unspendOuts));
         }
 
-        List<Tx> emptyWalletTxs = getEmptyWalletTxs(addresses, changeAddress, unspendOuts, 1, splitCoin);
+        List<Tx> emptyWalletTxs = getEmptyWalletTxs(addresses, changeAddress, unspendOuts, 1, splitCoin, isNoPrivKey);
         if (emptyWalletTxs == null || emptyWalletTxs.size() == 0) {
             throw new TxBuilderException();
         }
         return emptyWalletTxs;
     }
 
-    private List<Tx> getEmptyWalletTxs(List<String> addresses, String changeAddress, List<Out> unspendOuts, int splitNumber, SplitCoin splitCoin) {
+    private List<Tx> getEmptyWalletTxs(List<String> addresses, String changeAddress, List<Out> unspendOuts, int splitNumber, SplitCoin splitCoin, boolean isNoPrivKey) {
         List<Tx> emptyWalletTxs = new ArrayList<Tx>();
         int count = (unspendOuts.size() % splitNumber == (splitNumber - 1) && splitNumber != 1) ? (unspendOuts.size() / splitNumber + 1) : unspendOuts.size() / splitNumber;
         for (int i = 0; i < splitNumber; i++) {
@@ -117,7 +117,7 @@ public class TxBuilder {
             int toIndex = fromIndex + Math.min(count, unspendOuts.size() - fromIndex);
             List<Out> outs = unspendOuts.subList(fromIndex, toIndex);
             List<Long> amounts = Arrays.asList(TxBuilder.getAmount(outs));
-            Tx emptyWalletTx = emptyWallet.buildTx(changeAddress, outs, prepareTx(amounts, addresses), null, splitCoin.getCoin());
+            Tx emptyWalletTx = emptyWallet.buildTx(changeAddress, outs, prepareTx(amounts, addresses), null, isNoPrivKey, splitCoin.getCoin());
             if (emptyWalletTx != null && TxBuilder.estimationTxSize(emptyWalletTx.getIns().size(), emptyWalletTx.getOuts().size()) <= BitherjSettings.MAX_TX_SIZE) {
                 emptyWalletTx.setCoin(splitCoin.getCoin());
                 emptyWalletTxs.add(emptyWalletTx);
@@ -125,13 +125,13 @@ public class TxBuilder {
                 if (count == 1) {
                     return null;
                 }
-                return getEmptyWalletTxs(addresses, changeAddress, unspendOuts, splitNumber + 1, splitCoin);
+                return getEmptyWalletTxs(addresses, changeAddress, unspendOuts, splitNumber + 1, splitCoin, isNoPrivKey);
             }
         }
         return emptyWalletTxs;
     }
 
-    public Tx buildTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses, Coin coin, Long dynamicFeeBase) throws TxBuilderException {
+    public Tx buildTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses, Coin coin, Long dynamicFeeBase, boolean isNoPrivKey) throws TxBuilderException {
         Script scriptPubKey = null;
         if (address.isHDM()) {
             scriptPubKey = new Script(address.getPubKey());
@@ -166,7 +166,7 @@ public class TxBuilder {
             throw new TxBuilderException.TxBuilderWaitConfirmException(TxBuilder.getAmount(canNotSpendOuts));
         }
 
-        Tx emptyWalletTx = emptyWallet.buildTx(address, changeAddress, unspendTxs, prepareTx(amounts, addresses), dynamicFeeBase);
+        Tx emptyWalletTx = emptyWallet.buildTx(address, changeAddress, unspendTxs, prepareTx(amounts, addresses), dynamicFeeBase, isNoPrivKey);
         if (emptyWalletTx != null && TxBuilder.estimationTxSize(emptyWalletTx.getIns().size(), scriptPubKey, emptyWalletTx.getOuts(), address.isCompressed()) <= BitherjSettings.MAX_TX_SIZE) {
             return emptyWalletTx;
         } else if (emptyWalletTx != null) {
@@ -182,7 +182,7 @@ public class TxBuilder {
         boolean mayMaxTxSize = false;
         List<Tx> txs = new ArrayList<Tx>();
         for (TxBuilderProtocol builder : this.txBuilders) {
-            Tx tx = builder.buildTx(address, changeAddress, unspendTxs, prepareTx(amounts, addresses), dynamicFeeBase);
+            Tx tx = builder.buildTx(address, changeAddress, unspendTxs, prepareTx(amounts, addresses), dynamicFeeBase, isNoPrivKey);
             if (tx != null && TxBuilder.estimationTxSize(tx.getIns().size(), scriptPubKey, tx.getOuts(), address.isCompressed()) <= BitherjSettings.MAX_TX_SIZE) {
                 txs.add(tx);
             } else if (tx != null) {
@@ -199,7 +199,7 @@ public class TxBuilder {
         }
     }
 
-    public List<Tx> buildSplitCoinTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses, SplitCoin splitCoin) throws TxBuilderException {
+    public List<Tx> buildSplitCoinTx(Address address, String changeAddress, List<Long> amounts, List<String> addresses, SplitCoin splitCoin, boolean isNoPrivKey) throws TxBuilderException {
         Script scriptPubKey = null;
         if (address.isHDM()) {
             scriptPubKey = new Script(address.getPubKey());
@@ -227,7 +227,7 @@ public class TxBuilder {
             throw new TxBuilderException.TxBuilderWaitConfirmException(TxBuilder.getAmount(canNotSpendOuts));
         }
 
-        List<Tx> txs = getEmptyWalletTxs(address, changeAddress, unspendTxs, addresses, scriptPubKey, 1, splitCoin.getCoin());
+        List<Tx> txs = getEmptyWalletTxs(address, changeAddress, unspendTxs, addresses, scriptPubKey, 1, splitCoin.getCoin(), isNoPrivKey);
         if (txs == null || txs.size() == 0) {
             throw new TxBuilderException();
         }
@@ -257,7 +257,7 @@ public class TxBuilder {
         return txs;
     }
 
-    private List<Tx> getEmptyWalletTxs(Address address, String changeAddress, List<Tx> unspendTxs, List<String> addresses, Script scriptPubKey, int splitNumber, Coin coin) {
+    private List<Tx> getEmptyWalletTxs(Address address, String changeAddress, List<Tx> unspendTxs, List<String> addresses, Script scriptPubKey, int splitNumber, Coin coin, boolean isNoPrivKey) {
         List<Tx> emptyWalletTxs = new ArrayList<Tx>();
         int count = (unspendTxs.size() % splitNumber == (splitNumber - 1) && splitNumber != 1) ? (unspendTxs.size() / splitNumber + 1) : unspendTxs.size() / splitNumber;
         for (int i = 0; i < splitNumber; i++) {
@@ -266,7 +266,7 @@ public class TxBuilder {
             List<Tx> txs = unspendTxs.subList(fromIndex, toIndex);
             List<Out> outs = TxBuilder.getUnspendOuts(txs);
             List<Long> amounts = Arrays.asList(TxBuilder.getAmount(outs));
-            Tx emptyWalletTx = emptyWallet.buildTx(address, changeAddress, txs, prepareTx(amounts, addresses), null, coin);
+            Tx emptyWalletTx = emptyWallet.buildTx(address, changeAddress, txs, prepareTx(amounts, addresses), null, isNoPrivKey, coin);
             if (emptyWalletTx != null && TxBuilder.estimationTxSize(emptyWalletTx.getIns().size(), scriptPubKey, emptyWalletTx.getOuts(), address.isCompressed()) <= BitherjSettings.MAX_TX_SIZE) {
                 emptyWalletTx.setCoin(coin);
                 emptyWalletTxs.add(emptyWalletTx);
@@ -274,7 +274,7 @@ public class TxBuilder {
                 if (count == 1) {
                     return null;
                 }
-                return getEmptyWalletTxs(address, changeAddress, unspendTxs, addresses, scriptPubKey, splitNumber + 1, coin);
+                return getEmptyWalletTxs(address, changeAddress, unspendTxs, addresses, scriptPubKey, splitNumber + 1, coin, isNoPrivKey);
             }
         }
         return emptyWalletTxs;
@@ -383,15 +383,15 @@ public class TxBuilder {
 }
 
 interface TxBuilderProtocol {
-    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx, Long dynamicFeeBase, Coin... coin);
+    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx, Long dynamicFeeBase, boolean isNoPrivKey, Coin... coin);
 
     public Tx buildBCCTx(Address address, String changeAddress, List<Out> unspendOuts, Tx tx, Coin... coin);
 
-    public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx, Long dynamicFeeBase, Coin... coin);
+    public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx, Long dynamicFeeBase, boolean isNoPrivKey, Coin... coin);
 }
 
 class TxBuilderEmptyWallet implements TxBuilderProtocol {
-    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx, Long dynamicFeeBase, Coin... coin) {
+    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx, Long dynamicFeeBase, boolean isNoPrivKey, Coin... coin) {
         Script scriptPubKey = null;
         if (address.isHDM()) {
             scriptPubKey = new Script(address.getPubKey());
@@ -443,6 +443,9 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 
         // note : like bitcoinj, empty wallet will not check min output
         if (fees > 0) {
+            if (isNoPrivKey) {
+                fees = MinerFeeUtils.getFinalMinerFee(fees);
+            }
             Out lastOut = tx.getOuts().get(tx.getOuts().size() - 1);
             if (lastOut.getOutValue() > fees) {
                 lastOut.setOutValue(lastOut.getOutValue() - fees);
@@ -500,6 +503,7 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 
         // note : like bitcoinj, empty wallet will not check min output
         if (fees > 0) {
+            fees = MinerFeeUtils.getFinalMinerFee(fees);
             Out lastOut = tx.getOuts().get(tx.getOuts().size() - 1);
             if (lastOut.getOutValue() > fees) {
                 lastOut.setOutValue(lastOut.getOutValue() - fees);
@@ -515,7 +519,7 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
         return tx;
     }
 
-    public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx, Long dynamicFeeBase, Coin... coin) {
+    public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx, Long dynamicFeeBase, boolean isNoPrivKey, Coin... coin) {
         List<Out> outs = unspendOuts;
 
         long value = 0;
@@ -558,6 +562,9 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 
         // note : like bitcoinj, empty wallet will not check min output
         if (fees > 0) {
+            if (isNoPrivKey) {
+                fees = MinerFeeUtils.getFinalMinerFee(fees);
+            }
             Out lastOut = tx.getOuts().get(tx.getOuts().size() - 1);
             if (lastOut.getOutValue() > fees) {
                 lastOut.setOutValue(lastOut.getOutValue() - fees);
@@ -575,7 +582,7 @@ class TxBuilderEmptyWallet implements TxBuilderProtocol {
 }
 
 class TxBuilderDefault implements TxBuilderProtocol {
-    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx, Long dynamicFeeBase, Coin... coin) {
+    public Tx buildTx(Address address, String changeAddress, List<Tx> unspendTxs, Tx tx, Long dynamicFeeBase, boolean isNoPrivKey, Coin... coin) {
         boolean isCompressed = address.isCompressed();
         Script scriptPubKey = null;
         if (address.isHDM()) {
@@ -641,8 +648,13 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 // If the size is exactly 1000 bytes then we'll over-pay, but this should be rare.
                 fees += (lastCalculatedSize / 1000 + 1) * feeBase;
             }
-            if (needAtLeastReferenceFee && fees < feeBase)
+            if (needAtLeastReferenceFee && fees < feeBase) {
                 fees = feeBase;
+            }
+
+            if (isNoPrivKey) {
+                fees = MinerFeeUtils.getFinalMinerFee(fees);
+            }
 
             valueNeeded = value + fees;
 
@@ -812,7 +824,7 @@ class TxBuilderDefault implements TxBuilderProtocol {
         return null;
     }
 
-    public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx, Long dynamicFeeBase, Coin... coin) {
+    public Tx buildTx(String changeAddress, List<Out> unspendOuts, Tx tx, Long dynamicFeeBase, boolean isNoPrivKey, Coin... coin) {
         List<Out> outs = unspendOuts;
 
         long additionalValueForNextCategory = 0;
@@ -841,8 +853,13 @@ class TxBuilderDefault implements TxBuilderProtocol {
                 // If the size is exactly 1000 bytes then we'll over-pay, but this should be rare.
                 fees += (lastCalculatedSize / 1000 + 1) * feeBase;
             }
-            if (needAtLeastReferenceFee && fees < feeBase)
+            if (needAtLeastReferenceFee && fees < feeBase) {
                 fees = feeBase;
+            }
+
+            if (isNoPrivKey) {
+                fees = MinerFeeUtils.getFinalMinerFee(fees);
+            }
 
             valueNeeded = value + fees;
 

@@ -358,18 +358,18 @@ public class DesktopHDMKeychain extends AbstractHD {
         return getRelatedAddressesForTx(tx, inAddresses).size() > 0;
     }
 
-    public Tx newTx(String toAddress, Long amount) throws
+    public Tx newTx(String toAddress, Long amount, boolean isNoPrivKey) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
-        return newTx(new String[]{toAddress}, new Long[]{amount});
+        return newTx(new String[]{toAddress}, new Long[]{amount}, isNoPrivKey);
     }
 
 
-    public Tx newTx(String[] toAddresses, Long[] amounts) throws
+    public Tx newTx(String[] toAddresses, Long[] amounts, boolean isNoPrivKey) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
         List<Out> outs = AbstractDb.desktopTxProvider.getUnspendOutByHDAccount(hdSeedId);
 
         Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(), Arrays
-                .asList(amounts), Arrays.asList(toAddresses), null);
+                .asList(amounts), Arrays.asList(toAddresses), null, isNoPrivKey);
         List<DesktopHDMAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
         assert signingAddresses.size() == tx.getIns().size();
 

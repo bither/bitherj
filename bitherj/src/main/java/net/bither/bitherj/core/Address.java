@@ -312,36 +312,36 @@ public class Address implements Comparable<Address> {
         }
     }
 
-    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses, Long dynamicFeeBase) throws TxBuilderException {
-        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, Coin.BTC, dynamicFeeBase);
+    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses, Long dynamicFeeBase, boolean isNoPrivKey) throws TxBuilderException {
+        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, Coin.BTC, dynamicFeeBase, isNoPrivKey);
     }
 
-    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses, Coin coin, Long dynamicFeeBase) throws TxBuilderException {
-        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, coin, dynamicFeeBase);
+    public Tx buildTx(String changeAddress, List<Long> amounts, List<String> addresses, Coin coin, Long dynamicFeeBase, boolean isNoPrivKey) throws TxBuilderException {
+        return TxBuilder.getInstance().buildTx(this, changeAddress, amounts, addresses, coin, dynamicFeeBase, isNoPrivKey);
     }
 
-    public Tx buildTx(long amount, String address, String changeAddress, Long dynamicFeeBase) throws TxBuilderException {
+    public Tx buildTx(long amount, String address, String changeAddress, Long dynamicFeeBase, boolean isNoPrivKey) throws TxBuilderException {
         List<Long> amounts = new ArrayList<Long>();
         amounts.add(amount);
         List<String> addresses = new ArrayList<String>();
         addresses.add(address);
-        return buildTx(changeAddress, amounts, addresses, dynamicFeeBase);
+        return buildTx(changeAddress, amounts, addresses, dynamicFeeBase, isNoPrivKey);
     }
 
-    public Tx buildTx(long amount, String address, String changeAddress, Coin coin, Long dynamicFeeBase) throws TxBuilderException {
+    public Tx buildTx(long amount, String address, String changeAddress, Coin coin, Long dynamicFeeBase, boolean isNoPrivKey) throws TxBuilderException {
         List<Long> amounts = new ArrayList<Long>();
         amounts.add(amount);
         List<String> addresses = new ArrayList<String>();
         addresses.add(address);
-        return buildTx(changeAddress, amounts, addresses, coin, dynamicFeeBase);
+        return buildTx(changeAddress, amounts, addresses, coin, dynamicFeeBase, isNoPrivKey);
     }
 
-    public List<Tx> buildSplitCoinTx(long amount, String address, String changeAddress, SplitCoin splitCoin) throws TxBuilderException {
+    public List<Tx> buildSplitCoinTx(long amount, String address, String changeAddress, SplitCoin splitCoin, boolean isNoPrivKey) throws TxBuilderException {
         List<Long> amounts = new ArrayList<Long>();
         amounts.add(amount);
         List<String> addresses = new ArrayList<String>();
         addresses.add(address);
-        List<Tx> txs = TxBuilder.getInstance().buildSplitCoinTx(this, changeAddress, amounts, addresses, splitCoin);
+        List<Tx> txs = TxBuilder.getInstance().buildSplitCoinTx(this, changeAddress, amounts, addresses, splitCoin, isNoPrivKey);
         return txs;
     }
 

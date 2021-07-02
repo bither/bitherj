@@ -740,7 +740,7 @@ public class HDAccount extends Address {
         if (password != null && !hasPrivKey()) {
             throw new RuntimeException("Can not sign without private key");
         }
-        Tx tx = newTx(toAddresses, amounts, isSegwitChangeAddress, dynamicFeeBase);
+        Tx tx = newTx(toAddresses, amounts, isSegwitChangeAddress, dynamicFeeBase, !hasPrivKey());
 
         List<HDAccountAddress> signingAddresses = getSigningAddressesForInputs(tx.getIns());
         assert signingAddresses.size() == tx.getIns().size();
@@ -822,7 +822,7 @@ public class HDAccount extends Address {
         if (password != null && !hasPrivKey()) {
             throw new RuntimeException("Can not sign without private key");
         }
-        List<Tx> txs = newForkTx(toAddresses, amounts, splitCoin);
+        List<Tx> txs = newForkTx(toAddresses, amounts, splitCoin, !hasPrivKey());
         for (Tx tx: txs) {
             if(blockHash != null && blockHash.length > 0) {
                 tx.setBlockHash(Utils.hexStringToByteArray(blockHash[0]));
@@ -876,12 +876,12 @@ public class HDAccount extends Address {
         return txs;
     }
 
-    public List<Tx> extractBcc(String toAddresses, Long amounts, List<Out> outs, AbstractHD.PathType path, int index,CharSequence password) throws
+    public List<Tx> extractBcc(String toAddresses, Long amounts, List<Out> outs, AbstractHD.PathType path, int index, CharSequence password) throws
             TxBuilderException, MnemonicException.MnemonicLengthException {
         if (password != null && !hasPrivKey()) {
             throw new RuntimeException("Can not sign without private key");
         }
-        List<Tx> txs = newForkTx(toAddresses, amounts, outs, SplitCoin.BCC);
+        List<Tx> txs = newForkTx(toAddresses, amounts, outs, SplitCoin.BCC, !hasPrivKey());
         for (Tx tx: txs) {
             DeterministicKey master = masterKey(password);
             if (master == null) {
@@ -916,30 +916,30 @@ public class HDAccount extends Address {
         return txs;
     }
 
-    public List<Tx> newForkTx(String toAddress, Long amount, List<Out> outs, SplitCoin splitCoin) throws TxBuilderException,
+    public List<Tx> newForkTx(String toAddress, Long amount, List<Out> outs, SplitCoin splitCoin, boolean isNoPrivKey) throws TxBuilderException,
             MnemonicException.MnemonicLengthException {
-        List<Tx> txs = TxBuilder.getInstance().buildSplitCoinTxsFromAllAddress(outs, toAddress, Arrays.asList(amount), Arrays.asList(toAddress), splitCoin);
+        List<Tx> txs = TxBuilder.getInstance().buildSplitCoinTxsFromAllAddress(outs, toAddress, Arrays.asList(amount), Arrays.asList(toAddress), splitCoin, isNoPrivKey);
         return txs;
     }
 
-    public List<Tx> newForkTx(String toAddress, Long amount, SplitCoin splitCoin) throws TxBuilderException,
+    public List<Tx> newForkTx(String toAddress, Long amount, SplitCoin splitCoin, boolean isNoPrivKey) throws TxBuilderException,
             MnemonicException.MnemonicLengthException {
         List<Out> outs = AbstractDb.hdAccountAddressProvider.getUnspentOutputByBlockNo(splitCoin.getForkBlockHeight(), hdSeedId);
-        List<Tx> txs = TxBuilder.getInstance().buildSplitCoinTxsFromAllAddress(outs, toAddress, Arrays.asList(amount), Arrays.asList(toAddress), splitCoin);
+        List<Tx> txs = TxBuilder.getInstance().buildSplitCoinTxsFromAllAddress(outs, toAddress, Arrays.asList(amount), Arrays.asList(toAddress), splitCoin, isNoPrivKey);
         return txs;
     }
 
-    public Tx newTx(String toAddress, Long amount, boolean isSegwitChangeAddress, Long dynamicFeeBase) throws TxBuilderException, MnemonicException
+    public Tx newTx(String toAddress, Long amount, boolean isSegwitChangeAddress, Long dynamicFeeBase, boolean isNoPrivKey) throws TxBuilderException, MnemonicException
             .MnemonicLengthException {
-        return newTx(new String[]{toAddress}, new Long[]{amount}, isSegwitChangeAddress, dynamicFeeBase);
+        return newTx(new String[]{toAddress}, new Long[]{amount}, isSegwitChangeAddress, dynamicFeeBase, isNoPrivKey);
     }
 
 
-    public Tx newTx(String[] toAddresses, Long[] amounts, boolean isSegwitChangeAddress, Long dynamicFeeBase) throws TxBuilderException,
+    public Tx newTx(String[] toAddresses, Long[] amounts, boolean isSegwitChangeAddress, Long dynamicFeeBase, boolean isNoPrivKey) throws TxBuilderException,
             MnemonicException.MnemonicLengthException {
         List<Out> outs = AbstractDb.hdAccountAddressProvider.getUnspendOutByHDAccount(hdSeedId);
         Tx tx = TxBuilder.getInstance().buildTxFromAllAddress(outs, getNewChangeAddress(isSegwitChangeAddress), Arrays
-                .asList(amounts), Arrays.asList(toAddresses), dynamicFeeBase);
+                .asList(amounts), Arrays.asList(toAddresses), dynamicFeeBase, isNoPrivKey);
         return tx;
     }
 
