@@ -387,7 +387,7 @@ public class QRCodeTxTransport implements Serializable {
         return preSignString;
     }
 
-    private static QRCodeTxTransport changeFormatQRCodeTransportOfDesktopHDM(String str) {
+    private static QRCodeTxTransport changeFormatQRCodeTransportOfDesktopHDM(String str, long changeAmt) {
         try {
             String[] strArray = QRCodeUtil.splitString(str);
             QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
@@ -497,14 +497,16 @@ public class QRCodeTxTransport implements Serializable {
 //            }
             boolean hasChangeAddress = isAddressHex(strArray[1]);
             if (hasChangeAddress) {
-                qrCodeTxTransport = changeFormatQRCodeTransportOfDesktopHDM(str);
-
+                try {
+                    long changeAmt = Long.parseLong(strArray[2], 16);
+                    qrCodeTxTransport = changeFormatQRCodeTransportOfDesktopHDM(str, changeAmt);
+                } catch (NumberFormatException ex) {
+                    qrCodeTxTransport = noChangeFormatDesktopHDMQRCodeTransport(str);
+                }
             } else {
                 qrCodeTxTransport = noChangeFormatDesktopHDMQRCodeTransport(str);
             }
             qrCodeTxTransport.setTxTransportType(txTransportType);
-
-
             return qrCodeTxTransport;
         } catch (Exception e) {
             e.printStackTrace();
@@ -537,7 +539,12 @@ public class QRCodeTxTransport implements Serializable {
         }
         boolean hasChangeAddress = isAddressHex(strArray[1]);
         if (hasChangeAddress) {
-            qrCodeTxTransport = changeFormatQRCodeTransport(str);
+            try {
+                long changeAmt = Long.parseLong(strArray[2], 16);
+                qrCodeTxTransport = changeFormatQRCodeTransport(str, changeAmt);
+            } catch (NumberFormatException ex) {
+                qrCodeTxTransport = noChangeFormatQRCodeTransport(str);
+            }
         } else {
             qrCodeTxTransport = noChangeFormatQRCodeTransport(str);
         }
@@ -628,7 +635,7 @@ public class QRCodeTxTransport implements Serializable {
         return coinDetail;
     }
 
-    private static QRCodeTxTransport changeFormatQRCodeTransport(String str) {
+    private static QRCodeTxTransport changeFormatQRCodeTransport(String str, long changeAmt) {
         try {
             String[] strArray = QRCodeUtil.splitString(str);
             QRCodeTxTransport qrCodeTransport = new QRCodeTxTransport();
@@ -643,7 +650,7 @@ public class QRCodeTxTransport implements Serializable {
                 return null;
             }
             qrCodeTransport.setChangeAddress(changeAddress);
-            qrCodeTransport.setChangeAmt(Long.parseLong(strArray[2], 16));
+            qrCodeTransport.setChangeAmt(changeAmt);
             qrCodeTransport.setFee(Long.parseLong(strArray[3], 16));
             String toAddress = Base58.hexToBase58WithAddress(strArray[4]);
             if (!Utils.validBicoinAddress(toAddress)) {
