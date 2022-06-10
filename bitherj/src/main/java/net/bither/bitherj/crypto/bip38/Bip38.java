@@ -27,6 +27,7 @@ import net.bither.bitherj.utils.Sha256Hash;
 import net.bither.bitherj.utils.Utils;
 
 import java.math.BigInteger;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -94,7 +95,7 @@ public class Bip38 {
         ByteBuffer bb = Charset.forName("UTF-8").encode(CharBuffer.wrap(charSequence));
         byte[] result = new byte[bb.remaining()];
         bb.get(result);
-        bb.clear();
+        ((Buffer) bb).clear();
         byte[] clearTest = new byte[bb.remaining()];
         java.util.Arrays.fill(clearTest, (byte) 0);
         bb.put(clearTest);

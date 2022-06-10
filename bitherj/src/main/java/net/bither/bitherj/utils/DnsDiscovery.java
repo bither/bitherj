@@ -43,6 +43,7 @@ public class DnsDiscovery {
     private final String[] hostNames = BitherjSettings.dnsSeeds;
 
     private static DnsDiscovery instance;
+    private String getPeersErrorMsg;
 
     // added by scw (bither)
     public static final DnsDiscovery instance() {
@@ -55,45 +56,60 @@ public class DnsDiscovery {
     private DnsDiscovery() {
     }
 
-    public Peer[] getPeers(long timeoutValue, TimeUnit timeoutUnit) {
+    public String getPeersErrorMsg() {
+        return getPeersErrorMsg;
+    }
 
+    public Peer[] getPeers(long timeoutValue, TimeUnit timeoutUnit) {
+        return getPeers(hostNames, BitherjSettings.port, timeoutValue, timeoutUnit);
+    }
+
+    public Peer[] getPeers(String hostName, int port, long timeoutValue, TimeUnit timeoutUnit) {
+        return getPeers(new String[]{hostName}, port, timeoutValue, timeoutUnit);
+    }
+
+    private Peer[] getPeers(String[] hostNames, int port, long timeoutValue, TimeUnit timeoutUnit) {
         // Java doesn't have an async DNS API so we have to do all lookups in a thread pool,
         // as sometimes seeds go
         // hard down and it takes ages to give up and move on.
+        getPeersErrorMsg = null;
         ExecutorService threadPool = Executors.newFixedThreadPool(hostNames.length);
         ArrayList<Peer> peers = Lists.newArrayList();
         try {
             List<Callable<InetAddress[]>> tasks = Lists.newArrayList();
-            for (final String seed : hostNames)
+            for (final String seed : hostNames) {
                 tasks.add(new Callable<InetAddress[]>() {
                     public InetAddress[] call() throws Exception {
                         return InetAddress.getAllByName(seed);
                     }
                 });
-            final List<Future<InetAddress[]>> futures = threadPool.invokeAll(tasks, timeoutValue,
-                    timeoutUnit);
-            for (int i = 0;
-                 i < futures.size();
-                 i++) {
+            }
+
+            final List<Future<InetAddress[]>> futures = threadPool.invokeAll(tasks, timeoutValue, timeoutUnit);
+            for (int i = 0; i < futures.size(); i++) {
                 Future<InetAddress[]> future = futures.get(i);
                 if (future.isCancelled()) {
-                    log.warn("{} timed out", hostNames[i]);
+                    getPeersErrorMsg = String.format("%s timed out", hostNames[i]);
+                    log.warn(getPeersErrorMsg);
                     continue;  // Timed out.
                 }
                 final InetAddress[] inetAddresses;
                 try {
                     inetAddresses = future.get();
                 } catch (ExecutionException e) {
-                    log.error("Failed to look up DNS seeds from {}: {}", hostNames[i],
-                            e.getMessage());
+                    getPeersErrorMsg = String.format("Failed to look up DNS seeds from %s: %s", hostNames[i], e.getMessage());
+                    log.error(getPeersErrorMsg);
                     continue;
                 }
                 for (InetAddress addr : inetAddresses) {
                     //todo support ipv6
                     if (addr.getAddress().length <= Ints.BYTES) {
-                        peers.add(new Peer(addr));
+                        peers.add(new Peer(addr, port));
                     }
                 }
+            }
+            if (peers.size() > 0) {
+                getPeersErrorMsg = null;
             }
             Collections.shuffle(peers);
             threadPool.shutdownNow();
@@ -103,4 +119,5 @@ public class DnsDiscovery {
         }
         return peers.toArray(new Peer[peers.size()]);
     }
+
 }

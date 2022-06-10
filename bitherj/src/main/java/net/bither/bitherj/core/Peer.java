@@ -128,9 +128,13 @@ public class Peer extends PeerSocketHandler {
 
 
     public Peer(InetAddress address) {
-        super(new InetSocketAddress(address, BitherjSettings.port));
+        this(address, BitherjSettings.port);
+    }
+
+    public Peer(InetAddress address, int port) {
+        super(new InetSocketAddress(address, port));
         this.peerAddress = address;
-        peerPort = BitherjSettings.port;
+        peerPort = port;
         state = State.Disconnected;
         peerServices = 1;
         currentTxHashes = new HashSet<Sha256Hash>();
@@ -167,7 +171,7 @@ public class Peer extends PeerSocketHandler {
             bloomFilterSent = false;
             try {
                 NioClientManager.instance().openConnection(new InetSocketAddress(getPeerAddress(),
-                        BitherjSettings.port), this);
+                        peerPort), this);
             } catch (Exception ex) {
                 exceptionCaught(ex);
             }

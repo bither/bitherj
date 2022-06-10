@@ -87,6 +87,8 @@ public class PeerManager {
     private HashMap<Sha256Hash, Timer> publishTxTimeoutTimers;
 
     private boolean onlyBroadcasting = false;
+    private String customPeerDnsOrIp;
+    private int customPeerPort = BitherjSettings.port;
 
     public static final PeerManager instance() {
         if (instance == null) {
@@ -97,6 +99,11 @@ public class PeerManager {
             }
         }
         return instance;
+    }
+
+    public void setCustomPeer(String dnsOrIp, int port) {
+        customPeerDnsOrIp = dnsOrIp;
+        customPeerPort = port;
     }
 
     private PeerManager() {
@@ -230,14 +237,20 @@ public class PeerManager {
 
     private HashSet<Peer> bestPeers() {
         HashSet<Peer> peers = new HashSet<Peer>();
-        peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect()));
+        HashSet<Peer> customPeers = getPeersFromCustomPeer();
+        peers.addAll(customPeers);
+        if (peers.size() < getMaxPeerConnect()) {
+            peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect() - peers.size()));
+        }
         log.info("{} dbpeers", peers.size());
         if (peers.size() < getMaxPeerConnect()) {
             AbstractDb.peerProvider.recreate();
             AbstractDb.peerProvider.addPeers(new ArrayList<Peer>(peers));
-            if (getPeersFromDns().size() > 0) {
+            HashSet<Peer> dnsPeers = getPeersFromDns();
+            if (dnsPeers.size() > 0) {
                 peers.clear();
-                peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect()));
+                peers.addAll(customPeers);
+                peers.addAll(AbstractDb.peerProvider.getPeersWithLimit(getMaxPeerConnect() - peers.size()));
             }
         }
         log.info("{} totalpeers", peers.size());
@@ -247,6 +260,17 @@ public class PeerManager {
     private HashSet<Peer> getPeersFromDns() {
         HashSet<Peer> peers = new HashSet<Peer>();
         Peer[] ps = DnsDiscovery.instance().getPeers(5, TimeUnit.SECONDS);
+        Collections.addAll(peers, ps);
+        AbstractDb.peerProvider.addPeers(new ArrayList<Peer>(peers));
+        return peers;
+    }
+
+    private HashSet<Peer> getPeersFromCustomPeer() {
+        HashSet<Peer> peers = new HashSet<Peer>();
+        if (Utils.isEmpty(customPeerDnsOrIp)) {
+            return peers;
+        }
+        Peer[] ps = DnsDiscovery.instance().getPeers(customPeerDnsOrIp, customPeerPort, 5, TimeUnit.SECONDS);
         Collections.addAll(peers, ps);
         AbstractDb.peerProvider.addPeers(new ArrayList<Peer>(peers));
         return peers;
@@ -1090,7 +1114,9 @@ public class PeerManager {
 
     private void sendSyncProgress() {
         long lastBlockHeight = getLastBlockHeight();
-        if (synchronizing && syncStartHeight > 0 && downloadingPeer != null && lastBlockHeight >=
+        if (downloadingPeer == null) {
+            AbstractApp.notificationService.sendBroadcastProgressState(-2, -2);
+        } else if (synchronizing && syncStartHeight > 0 && lastBlockHeight >=
                 syncStartHeight && lastBlockHeight <= downloadingPeer.getVersionLastBlockHeight()) {
             double progress = (double) (lastBlockHeight - syncStartHeight) / (double) (downloadingPeer.getVersionLastBlockHeight() -
                     syncStartHeight);

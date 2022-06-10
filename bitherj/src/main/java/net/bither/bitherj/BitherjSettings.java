@@ -84,12 +84,12 @@ public class BitherjSettings {
      */
     public static final int spendableCoinbaseDepth = 100;
     public static final String[] dnsSeeds = new String[]{
-            "seed.bitcoin.sipa.be",        // Pieter Wuille
-            "dnsseed.bluematt.me",         // Matt Corallo
-            "seed.bitcoinstats.com",       // Chris Decker
-            "bitseed.xf2.org",
+            "seed.bitcoin.sipa.be",
             "seed.bitcoinstats.com",
-            "seed.bitnodes.io"
+            "dnsseed.bitcoin.dashjr.org",
+            "seed.bitcoin.jonasschnelli.ch",
+            "dnsseed.emzy.de",
+            "seed.btc.petertodd.org"
     };
 
     public static final long MAX_MONEY = 21000000l * 100000000l;
