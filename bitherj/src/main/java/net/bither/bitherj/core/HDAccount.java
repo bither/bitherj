@@ -373,7 +373,7 @@ public class HDAccount extends Address {
         if (!hasPrivKey()) {
             return null;
         }
-        return MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag() + getFullEncryptPrivKey();
+        return mnemonicCode.getMnemonicWordList().getHdQrCodeFlag() + getFullEncryptPrivKey();
     }
 
     public byte[] getInternalPub(AbstractHD.PathType pathType) {

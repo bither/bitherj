@@ -190,7 +190,7 @@ public abstract class AbstractHD {
     public List<String> getSeedWords(CharSequence password, boolean isBitpieCold) throws MnemonicException
             .MnemonicLengthException {
         decryptMnemonicSeed(password);
-        List<String> words = MnemonicCode.instance().toMnemonic(mnemonicSeed, isBitpieCold);
+        List<String> words = mnemonicCode.toMnemonic(mnemonicSeed, isBitpieCold);
         wipeMnemonicSeed();
         return words;
     }

@@ -266,7 +266,7 @@ public class HDAccountCold extends AbstractHD {
     }
 
     public String getQRCodeFullEncryptPrivKey() {
-        return MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag() + getFullEncryptPrivKey();
+        return mnemonicCode.getMnemonicWordList().getHdQrCodeFlag() + getFullEncryptPrivKey();
     }
 
     private static byte[] randomByteFromSecureRandom(SecureRandom random, int length) {
