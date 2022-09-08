@@ -96,5 +96,6 @@ public interface IAddressProvider {
 
     void updateVaitylen(String address, int vanitylen);
 
+    Address.AddMode getAddressAddMode(String accountId);
 
 }

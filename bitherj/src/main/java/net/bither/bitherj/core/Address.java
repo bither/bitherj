@@ -41,6 +41,44 @@ import javax.annotation.Nonnull;
 
 public class Address implements Comparable<Address> {
 
+    public enum AddMode {
+        Other(0), Create(1), Import(2), Clone(3), DiceCreate(4), BinaryCreate(5);
+
+        private int modeValue;
+
+        AddMode(int modeValue) {
+            this.modeValue = modeValue;
+        }
+
+        public int getModeValue() {
+            return modeValue;
+        }
+
+        public static AddMode fromValue(Integer value) {
+            if (value == null) {
+                return Other;
+            }
+            for (AddMode mode: AddMode.values()) {
+                if (mode.modeValue == value) {
+                    return mode;
+                }
+            }
+            return Other;
+        }
+
+        public static AddMode fromValue(String value) {
+            if (Utils.isEmpty(value)) {
+                return Other;
+            }
+            for (AddMode mode: AddMode.values()) {
+                if (String.valueOf(mode.getModeValue()).equals(value)) {
+                    return mode;
+                }
+            }
+            return Other;
+        }
+    }
+
     public static int VANITY_LEN_NO_EXSITS = -1;
 
     private static final Logger log = LoggerFactory.getLogger(Address.class);
@@ -53,6 +91,7 @@ public class Address implements Comparable<Address> {
     protected byte[] pubKey;
     protected byte[] pubKeyUnCompressed;
     protected String address;
+    protected AddMode addMode;
 
     protected boolean syncComplete = false;
     private long mSortTime;
@@ -86,6 +125,9 @@ public class Address implements Comparable<Address> {
         this.updateBalance();
     }
 
+    public void setAddMode(AddMode addMode) {
+        this.addMode = addMode;
+    }
 
     public int txCount() {
         return AbstractDb.txProvider.txCount(this.address);
@@ -268,6 +310,16 @@ public class Address implements Comparable<Address> {
         return this.isFromXRandom;
     }
 
+    public AddMode getAddMode() {
+        if (addMode == null) {
+            addMode = AddMode.Other;
+        }
+        return addMode;
+    }
+
+    public int getAddModeValue() {
+        return getAddMode().modeValue;
+    }
 
     public void updateSyncComplete() {
         AbstractDb.addressProvider.updateSyncComplete(Address.this);

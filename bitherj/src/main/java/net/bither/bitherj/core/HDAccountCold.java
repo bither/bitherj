@@ -59,12 +59,13 @@ public class HDAccountCold extends AbstractHD {
 
     private static final Logger log = LoggerFactory.getLogger(HDAccountCold.class);
 
-    public HDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password, boolean isFromXRandom)
+    public HDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password, boolean isFromXRandom, Address.AddMode addMode)
             throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         this.mnemonicCode = mnemonicCode;
         this.mnemonicSeed = mnemonicSeed;
         hdSeed = seedFromMnemonic(mnemonicSeed, mnemonicCode);
         this.isFromXRandom = isFromXRandom;
+        this.addMode = addMode;
         DeterministicKey master = HDKeyDerivation.createMasterPrivateKey(hdSeed);
         EncryptedData encryptedHDSeed = new EncryptedData(hdSeed, password, isFromXRandom);
         EncryptedData encryptedMnemonicSeed = new EncryptedData(mnemonicSeed, password,
@@ -96,7 +97,7 @@ public class HDAccountCold extends AbstractHD {
         hdSeedId = AbstractDb.hdAccountProvider.addHDAccount(encryptedMnemonicSeed
                         .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
                 isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
-                        .getPubKeyExtended());
+                        .getPubKeyExtended(), addMode);
         externalKey.wipe();
         internalKey.wipe();
 
@@ -109,25 +110,27 @@ public class HDAccountCold extends AbstractHD {
 
     }
 
-    public HDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password) throws MnemonicException
+    public HDAccountCold(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password, Address.AddMode addMode) throws MnemonicException
             .MnemonicLengthException, MnemonicException.MnemonicWordException, EncryptionException, MnemonicException.MnemonicChecksumException {
-        this(mnemonicCode, mnemonicSeed, password, false);
+        this(mnemonicCode, mnemonicSeed, password, false, addMode);
     }
 
+    // create
     public HDAccountCold(MnemonicCode mnemonicCode, SecureRandom random, CharSequence password) throws MnemonicException
             .MnemonicLengthException, MnemonicException.MnemonicWordException, EncryptionException, MnemonicException.MnemonicChecksumException {
         this(mnemonicCode, randomByteFromSecureRandom(random, 16), password, random.getClass().getCanonicalName
-                ().indexOf("XRandom") >= 0);
+                ().indexOf("XRandom") >= 0, Address.AddMode.Create);
     }
 
-    public HDAccountCold(MnemonicCode mnemonicCode, EncryptedData encryptedMnemonicSeed, CharSequence password) throws
+    public HDAccountCold(MnemonicCode mnemonicCode, EncryptedData encryptedMnemonicSeed, CharSequence password, Address.AddMode addMode) throws
             MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException, EncryptionException, MnemonicException.MnemonicChecksumException {
-        this(mnemonicCode, encryptedMnemonicSeed.decrypt(password), password, encryptedMnemonicSeed.isXRandom());
+        this(mnemonicCode, encryptedMnemonicSeed.decrypt(password), password, encryptedMnemonicSeed.isXRandom(), addMode);
     }
 
     public HDAccountCold(int hdSeedId) {
         this.hdSeedId = hdSeedId;
         this.isFromXRandom = AbstractDb.hdAccountProvider.hdAccountIsXRandom(hdSeedId);
+        this.addMode = AbstractDb.addressProvider.getAddressAddMode(String.valueOf(hdSeedId));
     }
 
     public List<String> getSeedWords(CharSequence password) throws MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {

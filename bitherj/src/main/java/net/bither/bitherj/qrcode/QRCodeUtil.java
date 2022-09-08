@@ -52,6 +52,7 @@ public class QRCodeUtil {
     public static final String HD_MONITOR_QR_PREFIX = "BitherHDSupportP2SHP2WPKH:";
     public static final String HD_MONITOR_QR_SPLIT = ",";
     public static final String BITPIE_COLD_MONITOR_QR_PREFIX = "BitpieCold:";
+    public static final String ADD_MODE_QR_CODE_FLAG = "#";
 
     public static String[] splitString(String str) {
         if (str.indexOf(OLD_QR_CODE_SPLIT) >= 0) {

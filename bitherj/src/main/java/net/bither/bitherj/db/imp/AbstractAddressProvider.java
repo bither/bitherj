@@ -32,6 +32,9 @@ import net.bither.bitherj.exception.AddressFormatException;
 import net.bither.bitherj.utils.Base58;
 import net.bither.bitherj.utils.Utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +43,8 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 public abstract class AbstractAddressProvider extends AbstractProvider implements IAddressProvider {
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractAddressProvider.class);
 
     @Override
     public boolean changePassword(CharSequence oldPassword, CharSequence newPassword) {
@@ -719,6 +724,9 @@ public abstract class AbstractAddressProvider extends AbstractProvider implement
                     e.printStackTrace();
                 }
                 if (address != null) {
+                    if (!Utils.isEmpty(address.getAddress())) {
+                        address.setAddMode(getAddressAddMode(address.getAddress()));
+                    }
                     addressList.add(address);
                 }
                 return null;
@@ -865,6 +873,24 @@ public abstract class AbstractAddressProvider extends AbstractProvider implement
         }
     }
 
+    @Override
+    public Address.AddMode getAddressAddMode(String accountId) {
+        String sql = "select add_mode from address_add_modes where account_id=?";
+        final Address.AddMode[] result = {Address.AddMode.Other};
+        this.execQueryLoop(sql, new String[]{accountId}, new Function<ICursor, Void>() {
+            @Nullable
+            @Override
+            public Void apply(@Nullable ICursor c) {
+                int idColumn = c.getColumnIndex(AbstractDb.AddressAddModesColumns.ADD_MODE);
+                if (idColumn != -1) {
+                    result[0] = Address.AddMode.fromValue(c.getInt(idColumn));
+                }
+                return null;
+            }
+        });
+        return result[0];
+    }
+
     private HDMAddress applyHDMAddress(ICursor c, HDMKeychain keychain) {
         HDMAddress hdmAddress;
 
@@ -942,6 +968,7 @@ public abstract class AbstractAddressProvider extends AbstractProvider implement
         boolean isSynced = false;
         boolean isTrash = false;
         long sortTime = 0;
+        int mode = 0;
 
         if (idColumn != -1) {
             addressStr = c.getString(idColumn);

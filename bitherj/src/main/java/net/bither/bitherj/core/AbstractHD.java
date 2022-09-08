@@ -119,14 +119,13 @@ public abstract class AbstractHD {
     protected int hdSeedId = -1;
     protected boolean isFromXRandom;
     protected MnemonicCode mnemonicCode = MnemonicCode.instance();
+    protected Address.AddMode addMode;
 
     private static final Logger log = LoggerFactory.getLogger(AbstractHD.class);
-
 
     protected abstract String getEncryptedHDSeed();
 
     protected abstract String getEncryptedMnemonicSeed();
-
 
     protected DeterministicKey getChainRootKey(DeterministicKey accountKey, PathType pathType) {
         return accountKey.deriveSoftened(pathType.getValue());
@@ -197,6 +196,29 @@ public abstract class AbstractHD {
 
     public boolean isFromXRandom() {
         return isFromXRandom;
+    }
+
+    public boolean isCreateMode() {
+        if (isFromXRandom && getAddMode() == Address.AddMode.Other) {
+            return true;
+        } else {
+            return getAddMode() == Address.AddMode.Create;
+        }
+    }
+
+    public boolean isImportMode() {
+        return getAddMode() == Address.AddMode.Import;
+    }
+
+    public Address.AddMode getAddMode() {
+        if (addMode == null) {
+            addMode = Address.AddMode.Other;
+        }
+        return addMode;
+    }
+
+    public int getAddModeValue() {
+        return getAddMode().getModeValue();
     }
 
     protected String getFirstAddressFromSeed(CharSequence password) {

@@ -16,6 +16,8 @@
 
 package net.bither.bitherj.utils;
 
+import static net.bither.bitherj.qrcode.QRCodeUtil.ADD_MODE_QR_CODE_FLAG;
+
 import net.bither.bitherj.BitherjSettings;
 import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
@@ -283,7 +285,7 @@ public class PrivateKeyUtil {
                 try {
                     String encryptedString = strs[i].substring(hdQrCodeFlagLength) + QRCodeUtil.QR_CODE_SPLIT + strs[i + 1]
                             + QRCodeUtil.QR_CODE_SPLIT + strs[i + 2];
-                    hdAccountCold = new HDAccountCold(mnemonicCode, new EncryptedData(encryptedString), password);
+                    hdAccountCold = new HDAccountCold(mnemonicCode, new EncryptedData(encryptedString), password, Address.AddMode.Clone);
                     str = str.replace(getCloneReplaceString(str, strs, i), "");
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -350,6 +352,7 @@ public class PrivateKeyUtil {
             } else {
                 Address address = new Address(key.toAddress(), key.getPubKey(), encryptedString,
                         false, key.isFromXRandom());
+                address.setAddMode(Address.AddMode.Clone);
                 key.clearPrivateKey();
                 list.add(address);
                 str = str.replace(getCloneReplaceString(str, strs, i), "");
@@ -466,6 +469,8 @@ public class PrivateKeyUtil {
                 PasswordSeed passwordSeed = new PasswordSeed(address.getAddress(), address.getFullEncryptPrivKey());
                 backupString = backupString
                         + passwordSeed.toPasswordSeedString()
+                        + ADD_MODE_QR_CODE_FLAG
+                        + address.getAddModeValue()
                         + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
 
             }
@@ -475,9 +480,11 @@ public class PrivateKeyUtil {
             try {
                 if (!keychain.isInRecovery()) {
                     String address = keychain.getFirstAddressFromDb();
-                    backupString += QRCodeUtil.HDM_QR_CODE_FLAG + Base58.bas58ToHexWithAddress(address)
+                    backupString += QRCodeUtil.HDM_QR_CODE_FLAG
+                            + Base58.bas58ToHexWithAddress(address)
                             + QRCodeUtil.QR_CODE_SPLIT
-                            + keychain.getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
+                            + keychain.getFullEncryptPrivKey()
+                            + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
                 }
             } catch (AddressFormatException e) {
                 e.printStackTrace();
@@ -487,9 +494,13 @@ public class PrivateKeyUtil {
         if (hdAccount != null) {
             try {
                 String address = hdAccount.getFirstAddressFromDb();
-                backupString += MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag() + Base58.bas58ToHexWithAddress(address)
+                backupString += MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag()
+                        + Base58.bas58ToHexWithAddress(address)
                         + QRCodeUtil.QR_CODE_SPLIT
-                        + hdAccount.getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
+                        + hdAccount.getFullEncryptPrivKey()
+                        + ADD_MODE_QR_CODE_FLAG
+                        + hdAccount.getAddModeValue()
+                        + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
             } catch (AddressFormatException e) {
                 e.printStackTrace();
             }
@@ -498,9 +509,13 @@ public class PrivateKeyUtil {
         if (hdAccountCold != null) {
             try {
                 String address = hdAccountCold.getFirstAddressFromDb();
-                backupString += MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag() + Base58.bas58ToHexWithAddress
-                        (address) + QRCodeUtil.QR_CODE_SPLIT + hdAccountCold
-                        .getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
+                backupString += MnemonicCode.instance().getMnemonicWordList().getHdQrCodeFlag()
+                        + Base58.bas58ToHexWithAddress(address)
+                        + QRCodeUtil.QR_CODE_SPLIT
+                        + hdAccountCold.getFullEncryptPrivKey()
+                        + ADD_MODE_QR_CODE_FLAG
+                        + hdAccountCold.getAddModeValue()
+                        + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
             } catch (AddressFormatException e) {
                 e.printStackTrace();
             }
@@ -509,14 +524,16 @@ public class PrivateKeyUtil {
         if (bitpieHDAccountCold != null) {
             try {
                 String address = bitpieHDAccountCold.getFirstAddressFromDb();
-                backupString += MnemonicCode.instance().getMnemonicWordList().getBitpieColdQrCodeFlag() + Base58.bas58ToHexWithAddress
-                        (address) + QRCodeUtil.QR_CODE_SPLIT + bitpieHDAccountCold.getFullEncryptPrivKey() + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
+                backupString += MnemonicCode.instance().getMnemonicWordList().getBitpieColdQrCodeFlag()
+                        + Base58.bas58ToHexWithAddress(address)
+                        + QRCodeUtil.QR_CODE_SPLIT
+                        + bitpieHDAccountCold.getFullEncryptPrivKey()
+                        + BACKUP_KEY_SPLIT_MUTILKEY_STRING;
             } catch (AddressFormatException e) {
-
+                e.printStackTrace();
             }
         }
         return backupString;
-
     }
 
 }

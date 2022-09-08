@@ -200,6 +200,10 @@ public abstract class AbstractDb {
             ", is_synced integer " +
             ", primary key (hdm_index));";
 
+    public static final String CREATE_ADDRESS_ADD_MODES_SQL = "create table if not exists address_add_modes " +
+            "(account_id text not null primary key" +
+            ", add_mode integer not null);";
+
     public static IBlockProvider blockProvider;
     public static IPeerProvider peerProvider;
     public static ITxProvider txProvider;
@@ -252,6 +256,8 @@ public abstract class AbstractDb {
         public static final String INS = "ins";
         public static final String OUTS = "outs";
         public static final String PEERS = "peers";
+
+        public static final String ADDRESS_ADD_MODES = "address_add_modes";
 
         //address
         public static final String Addresses = "addresses";
@@ -334,8 +340,12 @@ public abstract class AbstractDb {
         public static final String PASSWORD_SEED = "password_seed";
     }
 
-    //address
+    public interface AddressAddModesColumns {
+        public static final String ACCOUNT_ID = "account_id";
+        public static final String ADD_MODE = "add_mode";
+    }
 
+    //address
     public interface AddressesColumns {
         public static final String ADDRESS = "address";
         public static final String ENCRYPT_PRIVATE_KEY = "encrypt_private_key";

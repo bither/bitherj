@@ -73,7 +73,7 @@ public class BitpieHDAccountCold extends AbstractHD {
         hdSeedId = bitpieHDAccountProvicer.addHDAccount(encryptedMnemonicSeed
                         .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
                 isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
-                        .getPubKeyExtended());
+                        .getPubKeyExtended(), addMode);
         externalKey.wipe();
         internalKey.wipe();
 

@@ -16,13 +16,15 @@
 
 package net.bither.bitherj.db;
 
+import net.bither.bitherj.core.Address;
+
 import java.util.List;
 
 public interface IHDAccountProvider {
 
     int addHDAccount(String encryptedMnemonicSeed, String encryptSeed
             , String firstAddress, boolean isXrandom, String addressOfPS
-            , byte[] externalPub, byte[] internalPub);
+            , byte[] externalPub, byte[] internalPub, Address.AddMode addMode);
 
     int addMonitoredHDAccount(String firstAddress, boolean isXrandom, byte[] externalPub, byte[] internalPub);
 

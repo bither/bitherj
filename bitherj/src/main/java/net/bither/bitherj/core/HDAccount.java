@@ -33,7 +33,6 @@ import net.bither.bitherj.exception.TxBuilderException;
 import net.bither.bitherj.script.ScriptBuilder;
 import net.bither.bitherj.utils.PrivateKeyUtil;
 import net.bither.bitherj.utils.Utils;
-import net.bither.bitherj.utils.VarInt;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,6 +81,7 @@ public class HDAccount extends Address {
         this(mnemonicCode, mnemonicSeed, password, true);
     }
 
+    // import
     public HDAccount(MnemonicCode mnemonicCode, byte[] mnemonicSeed, CharSequence password,
                      boolean isSyncedComplete) throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         super();
@@ -103,7 +103,7 @@ public class HDAccount extends Address {
         DeterministicKey purpose49Account = getAccount(master, AbstractHD.PurposePathLevel.P2SHP2WPKH);
         account.clearPrivateKey();
         purpose49Account.clearPrivateKey();
-        initHDAccount(account, purpose49Account, encryptedMnemonicSeed, encryptedHDSeed, isFromXRandom, password, isSyncedComplete, null);
+        initHDAccount(account, purpose49Account, encryptedMnemonicSeed, encryptedHDSeed, isFromXRandom, password, isSyncedComplete, null, AddMode.Import);
     }
 
     // Create With Random
@@ -128,8 +128,7 @@ public class HDAccount extends Address {
         account.clearPrivateKey();
         purpose49Account.clearPrivateKey();
 
-        initHDAccount(account, purpose49Account, encryptedMnemonicSeed, encryptedHDSeed, isFromXRandom, password, true,
-                generationDelegate);
+        initHDAccount(account, purpose49Account, encryptedMnemonicSeed, encryptedHDSeed, isFromXRandom, password, true, generationDelegate, AddMode.Create);
     }
 
     //use in import
@@ -146,7 +145,7 @@ public class HDAccount extends Address {
         DeterministicKey purpose49Account = getAccount(master, AbstractHD.PurposePathLevel.P2SHP2WPKH);
         account.clearPrivateKey();
         purpose49Account.clearPrivateKey();
-        initHDAccount(account, purpose49Account, encryptedMnemonicSeed, encryptedHDSeed, isFromXRandom, password, isSyncedComplete,null);
+        initHDAccount(account, purpose49Account, encryptedMnemonicSeed, encryptedHDSeed, isFromXRandom, password, isSyncedComplete,null, AddMode.Import);
     }
 
     public HDAccount(byte[] accountExtentedPub, byte[] p2shp2wpkhAccountExtentedPub) throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
@@ -157,7 +156,7 @@ public class HDAccount extends Address {
         this(accountExtentedPub, p2shp2wpkhAccountExtentedPub, isFromXRandom, true, null);
     }
 
-
+    // monitor cold hd
     public HDAccount(byte[] accountExtentedPub, byte[] p2shp2wpkhAccountExtentedPub, boolean isFromXRandom, boolean isSyncedComplete,
                      HDAccount.HDAccountGenerationDelegate generationDelegate) throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         super();
@@ -166,14 +165,20 @@ public class HDAccount extends Address {
                 (accountExtentedPub);
         DeterministicKey accountPurpose49Key = p2shp2wpkhAccountExtentedPub == null ? null : HDKeyDerivation.createMasterPubKeyFromExtendedBytes
                 (p2shp2wpkhAccountExtentedPub);
-        initHDAccount(account, accountPurpose49Key, null, null, isFromXRandom, null, isSyncedComplete, generationDelegate);
+        initHDAccount(account, accountPurpose49Key, null, null, isFromXRandom, null, isSyncedComplete, generationDelegate, AddMode.Other);
     }
 
-    private void initHDAccount(DeterministicKey accountKey, DeterministicKey accountPurpose49Key, EncryptedData encryptedMnemonicSeed,
-                               EncryptedData encryptedHDSeed, boolean isFromXRandom, CharSequence password, boolean
-                                       isSyncedComplete, HDAccount.HDAccountGenerationDelegate
-                                       generationDelegate) throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
+    private void initHDAccount(DeterministicKey accountKey,
+                               DeterministicKey accountPurpose49Key,
+                               EncryptedData encryptedMnemonicSeed,
+                               EncryptedData encryptedHDSeed,
+                               boolean isFromXRandom,
+                               CharSequence password,
+                               boolean isSyncedComplete,
+                               HDAccount.HDAccountGenerationDelegate generationDelegate,
+                               AddMode addMode) throws MnemonicException.MnemonicLengthException, EncryptionException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
         this.isFromXRandom = isFromXRandom;
+        this.addMode = addMode;
         double progress = 0;
         if (generationDelegate != null) {
             generationDelegate.onHDAccountGenerationProgress(progress);
@@ -274,9 +279,8 @@ public class HDAccount extends Address {
             hdSeedId = AbstractDb.hdAccountProvider.addHDAccount(encryptedMnemonicSeed
                     .toEncryptedString(), encryptedHDSeed.toEncryptedString(), firstAddress,
                     isFromXRandom, address, externalKey.getPubKeyExtended(), internalKey
-                            .getPubKeyExtended());
+                            .getPubKeyExtended(), addMode);
             hasSeed = true;
-
             try {
                 getSeedWords(password);
             } catch (Exception ex) {
@@ -330,6 +334,7 @@ public class HDAccount extends Address {
         this.hdSeedId = seedId;
         this.isFromXRandom = AbstractDb.hdAccountProvider.hdAccountIsXRandom(seedId);
         hasSeed = AbstractDb.hdAccountProvider.hasMnemonicSeed(this.hdSeedId);
+        this.addMode = AbstractDb.addressProvider.getAddressAddMode(String.valueOf(hdSeedId));
         updateBalance();
     }
 

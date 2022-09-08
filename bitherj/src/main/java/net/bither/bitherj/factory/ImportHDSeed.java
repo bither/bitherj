@@ -18,6 +18,7 @@ package net.bither.bitherj.factory;
 
 import net.bither.bitherj.api.BitherErrorApi;
 import net.bither.bitherj.core.AbstractHD;
+import net.bither.bitherj.core.Address;
 import net.bither.bitherj.core.AddressManager;
 import net.bither.bitherj.core.HDAccount;
 import net.bither.bitherj.core.HDAccountCold;
@@ -132,7 +133,7 @@ public abstract class ImportHDSeed {
                         return null;
                     }
                     try {
-                        hdAccount = new HDAccountCold(mnemonicCode, new EncryptedData(encreyptString), password);
+                        hdAccount = new HDAccountCold(mnemonicCode, new EncryptedData(encreyptString), password, Address.AddMode.Import);
                     } catch (Exception e) {
                         e.printStackTrace();
                         importError(IMPORT_FAILED);
@@ -145,7 +146,7 @@ public abstract class ImportHDSeed {
             case HDSeedPhrase:
                 try {
                     byte[] mnemonicCodeSeed = mnemonicCode.toEntropy(worlds);
-                    hdAccount = new HDAccountCold(mnemonicCode, mnemonicCodeSeed, password, false);
+                    hdAccount = new HDAccountCold(mnemonicCode, mnemonicCodeSeed, password, false, Address.AddMode.Import);
                 } catch (Exception e) {
                     e.printStackTrace();
                     importError(IMPORT_FAILED);

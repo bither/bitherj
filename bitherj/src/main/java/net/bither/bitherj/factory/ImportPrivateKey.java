@@ -176,6 +176,7 @@ public abstract class ImportPrivateKey {
         }
         Address address = new Address(ecKey.toAddress(), ecKey.getPubKey(), encryptedPrivateString
                 , false, ecKey.isFromXRandom());
+        address.setAddMode(Address.AddMode.Import);
         if (AddressManager.getInstance().getWatchOnlyAddresses().contains(address)) {
             password.wipe();
             importError(CAN_NOT_IMPORT_BITHER_COLD_PRIVATE_KEY);
@@ -206,15 +207,12 @@ public abstract class ImportPrivateKey {
         try {
             switch (this.importPrivateKeyType) {
                 case Text:
+                case Bip38:
                     dumpedPrivateKey = new DumpedPrivateKey(this.content);
                     ecKey = dumpedPrivateKey.getKey();
                     break;
                 case BitherQrcode:
                     ecKey = PrivateKeyUtil.getECKeyFromSingleString(content, password);
-                    break;
-                case Bip38:
-                    dumpedPrivateKey = new DumpedPrivateKey(this.content);
-                    ecKey = dumpedPrivateKey.getKey();
                     break;
             }
         } catch (Exception e) {

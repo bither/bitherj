@@ -18,6 +18,7 @@ package net.bither.bitherj.db.imp;
 
 import com.google.common.base.Function;
 
+import net.bither.bitherj.core.Address;
 import net.bither.bitherj.crypto.PasswordSeed;
 import net.bither.bitherj.db.AbstractDb;
 import net.bither.bitherj.db.IHDAccountProvider;
@@ -67,14 +68,14 @@ public abstract class AbstractHDAccountProvider extends AbstractProvider impleme
     @Override
     public int addHDAccount(String encryptedMnemonicSeed, String encryptSeed, String firstAddress
             , boolean isXrandom, String addressOfPS, byte[] externalPub
-            , byte[] internalPub) {
+            , byte[] internalPub, Address.AddMode addMode) {
         if (this.isPubExist(externalPub, internalPub)) {
             return -1;
         }
         IDb writeDb = this.getWriteDb();
         writeDb.beginTransaction();
         int hdAccountId = this.insertHDAccountToDb(writeDb, encryptedMnemonicSeed, encryptSeed
-                , firstAddress, isXrandom, externalPub, internalPub);
+                , firstAddress, isXrandom, externalPub, internalPub, addMode);
         if (!this.hasPasswordSeed(writeDb) && !Utils.isEmpty(addressOfPS)) {
             this.addPasswordSeed(writeDb, new PasswordSeed(addressOfPS, encryptedMnemonicSeed));
         }
@@ -100,7 +101,7 @@ public abstract class AbstractHDAccountProvider extends AbstractProvider impleme
     }
 
     protected abstract int insertHDAccountToDb(IDb db, String encryptedMnemonicSeed, String encryptSeed
-            , String firstAddress, boolean isXrandom, byte[] externalPub, byte[] internalPub);
+            , String firstAddress, boolean isXrandom, byte[] externalPub, byte[] internalPub, Address.AddMode addMode);
 
     protected abstract boolean hasPasswordSeed(IDb db);
 //    protected boolean hasPasswordSeed(IDb db) {
@@ -500,4 +501,5 @@ public abstract class AbstractHDAccountProvider extends AbstractProvider impleme
         execUpdate(writeDb, sql, new String[]{Integer.toString(hdAccountId)});
         writeDb.endTransaction();
     }
+
 }
