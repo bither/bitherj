@@ -53,15 +53,16 @@ public abstract class ImportHDSeed {
 
     private ImportHDSeedType importPrivateKeyType;
     protected MnemonicCode mnemonicCode = MnemonicCode.instance();
+    protected MnemonicCode qrSelectMnemonicCode = MnemonicCode.instance();
 
 
-    public ImportHDSeed(ImportHDSeedType importHDSeedType
-            , String content, List<String> worlds, SecureCharSequence password, MnemonicCode mnemonicCode) {
+    public ImportHDSeed(ImportHDSeedType importHDSeedType, String content, List<String> worlds, SecureCharSequence password, MnemonicCode mnemonicCode, MnemonicCode qrSelectMnemonicCode) {
         this.content = content;
         this.password = password;
         this.importPrivateKeyType = importHDSeedType;
         this.worlds = worlds;
         this.mnemonicCode = mnemonicCode;
+        this.qrSelectMnemonicCode = qrSelectMnemonicCode;
     }
 
     public ImportHDSeed(ImportHDSeedType importHDSeedType
@@ -133,7 +134,7 @@ public abstract class ImportHDSeed {
                         return null;
                     }
                     try {
-                        hdAccount = new HDAccountCold(mnemonicCode, new EncryptedData(encreyptString), password, Address.AddMode.Import);
+                        hdAccount = new HDAccountCold(qrSelectMnemonicCode, new EncryptedData(encreyptString), password, Address.AddMode.Import);
                     } catch (Exception e) {
                         e.printStackTrace();
                         importError(IMPORT_FAILED);
@@ -172,7 +173,7 @@ public abstract class ImportHDSeed {
                         return null;
                     }
                     try {
-                        hdAccount = new HDAccount(mnemonicCode, new EncryptedData(encreyptString)
+                        hdAccount = new HDAccount(qrSelectMnemonicCode, new EncryptedData(encreyptString)
                                 , password, false);
                     } catch (HDAccount.DuplicatedHDAccountException e) {
                         e.printStackTrace();
