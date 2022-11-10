@@ -835,12 +835,12 @@ public class Utils {
     }
 
     //add by jjz (bither)
-    public static void writeFile(String data, File tar) throws IOException {
+    public static void writeFile(String data, File tar) throws Exception {
         writeFile(data.getBytes(), tar);
     }
 
     //add by jjz (bither)
-    public static void writeFile(byte[] data, File tar) throws IOException {
+    public static void writeFile(byte[] data, File tar) throws Exception {
         FileOutputStream outputStream = null;
         try {
 //            if (!tar.exists()) {
@@ -852,6 +852,7 @@ public class Utils {
             outputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
+            throw e;
         } finally {
             if (outputStream != null) {
                 outputStream.close();
@@ -878,8 +879,9 @@ public class Utils {
             arrayOutputStream.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
