@@ -14,7 +14,6 @@ import javax.net.ssl.HttpsURLConnection;
 public abstract class HttpsPostResponse<T> extends BaseHttpsResponse<T> {
 
     public void handleHttpPost() throws Exception {
-        trustCerts();
         HttpsURLConnection con = null;
         String responseContent = null;
         try {
@@ -53,7 +52,7 @@ public abstract class HttpsPostResponse<T> extends BaseHttpsResponse<T> {
             in.close();
         } catch (IOException e) {
             e.printStackTrace();
-            if (con.getResponseCode() == 400) {
+            if (con != null && con.getResponseCode() == 400) {
                 String str = getStringFromIn(con.getErrorStream());
                 JSONObject json = new JSONObject(str);
                 Iterator it = json.keys();
@@ -62,7 +61,7 @@ public abstract class HttpsPostResponse<T> extends BaseHttpsResponse<T> {
                     String value = json.getString(key);
                     throw new Http400Exception(Integer.valueOf(key), value);
                 }
-            } else if (con.getResponseCode() != 200) {
+            } else if (con != null && con.getResponseCode() != 200) {
                 String str = getStringFromIn(con.getErrorStream());
                 throw new HttpException(con.getResponseCode() + "," + str);
             } else {
