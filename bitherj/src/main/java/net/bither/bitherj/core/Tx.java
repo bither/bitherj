@@ -235,6 +235,7 @@ public class Tx extends Message implements Comparable<Tx> {
     private List<byte[]> witnesses = new ArrayList<byte[]>();
     private boolean isSegwitAddress = false;
     private boolean isSigned = false;
+    private long estimationTxSize;
 
 //    public int length;
 
@@ -262,6 +263,14 @@ public class Tx extends Message implements Comparable<Tx> {
 
     public void setBlockHash(byte[] blockHash) {
         this.blockHash = blockHash;
+    }
+
+    public void setEstimationTxSize(long estimationTxSize) {
+        this.estimationTxSize = estimationTxSize;
+    }
+
+    public long getEstimationTxSize() {
+        return estimationTxSize;
     }
 
     /**
