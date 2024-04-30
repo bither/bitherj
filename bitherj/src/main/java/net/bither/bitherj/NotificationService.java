@@ -47,4 +47,7 @@ public interface NotificationService {
     void sendBroadcastAddressTxLoading(String address);
 
     void removeAddressTxLoading();
+
+    void sendMinerFeeChange();
+
 }
