@@ -800,16 +800,16 @@ public class TransactionsUtil {
             if (hdAccountAddress == null) {
                 unusedAddressCnt += 1;
                 if (unusedAddressCnt > HDAccount.MaxUnusedNewAddressCount) {
-                    if (pathType.nextPathType() != null) {
-                        if (addressesStr.equals("")) {
+                    if (addressesStr.equals("")) {
+                        if (pathType.nextPathType() != null) {
                             getHDAccountUnspentAddress(hdSeedId, pathType.nextPathType(), 0, MaxNoTxAddress, -1, 0, unspentAddresses, isHDAccountHot, blockchairUtxos);
                         } else {
-                            queryAddressesUnspent(hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot, blockchairUtxos, queryHdAccountAddressList, addressesStr);
+                            getUnspentTxForHDAccount(unspentAddresses, isHDAccountHot, blockchairUtxos);
                         }
+                        AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, endIndex - 1);
                     } else {
-                        getUnspentTxForHDAccount(unspentAddresses, isHDAccountHot, blockchairUtxos);
+                        queryAddressesUnspent(hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot, blockchairUtxos, queryHdAccountAddressList, addressesStr);
                     }
-                    AbstractDb.hdAccountAddressProvider.updateSyncedForIndex(hdSeedId, pathType, endIndex - 1);
                     return;
                 }
                 log.warn("hd address is null path {} ,index {}", pathType, i);
