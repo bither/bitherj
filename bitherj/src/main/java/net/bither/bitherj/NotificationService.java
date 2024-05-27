@@ -48,6 +48,8 @@ public interface NotificationService {
 
     void removeAddressTxLoading();
 
+    void sendBroadcastAddressTxLoadError();
+
     void sendMinerFeeChange();
 
 }

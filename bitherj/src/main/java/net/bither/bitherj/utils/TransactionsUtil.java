@@ -74,6 +74,7 @@ public class TransactionsUtil {
     private static final int MaxNoTxAddress = 50;
 
     private static List<UnSignTransaction> unsignTxs = new ArrayList<UnSignTransaction>();
+    public static boolean isReloading = false;
 
     /**
      * TODO: get data from blockChain.info
@@ -322,18 +323,23 @@ public class TransactionsUtil {
         if (AbstractApp.bitherjSetting.getAppMode() != BitherjSettings.AppMode.HOT) {
             return;
         }
-
+        isReloading = true;
         getUnspentTxForAddress();
-        if (AddressManager.getInstance().getHDAccountHot() != null) {
-            getHDAccountUnspentAddress(AddressManager.getInstance().getHDAccountHot().getHdSeedId(), EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<HDAccount.HDAccountAddress>(), true, new ArrayList<JSONObject>());
+        HDAccount hdAccountHot = AddressManager.getInstance().getHDAccountHot();
+        if (hdAccountHot != null && !hdAccountHot.isSyncComplete()) {
+            getHDAccountUnspentAddress(hdAccountHot.getHdSeedId(), EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<HDAccount.HDAccountAddress>(), true, new ArrayList<JSONObject>());
         }
-        if (AddressManager.getInstance().hasHDAccountMonitored()) {
-            getHDAccountUnspentAddress(AddressManager.getInstance().getHDAccountMonitored().getHdSeedId(), EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<HDAccount.HDAccountAddress>(), false, new ArrayList<JSONObject>());
+        HDAccount hdAccountMonitored = AddressManager.getInstance().getHDAccountMonitored();
+        if (hdAccountMonitored != null && !hdAccountMonitored.isSyncComplete()) {
+            getHDAccountUnspentAddress(hdAccountMonitored.getHdSeedId(), EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<HDAccount.HDAccountAddress>(), false, new ArrayList<JSONObject>());
         }
         if (AddressManager.getInstance().hasDesktopHDMKeychain()) {
             DesktopHDMKeychain desktopHDMKeychain = AddressManager.getInstance().getDesktopHDMKeychains().get(0);
-            getDesktopHDMUnspentAddress(desktopHDMKeychain, EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<DesktopHDMAddress>());
+            if (!desktopHDMKeychain.isSyncComplete()) {
+                getDesktopHDMUnspentAddress(desktopHDMKeychain, EXTERNAL_ROOT_PATH, 0, MaxNoTxAddress, -1, 0, new ArrayList<DesktopHDMAddress>());
+            }
         }
+        isReloading = false;
         AbstractApp.notificationService.sendBroadcastAddressTxLoading(null);
     }
 
@@ -795,7 +801,11 @@ public class TransactionsUtil {
                 unusedAddressCnt += 1;
                 if (unusedAddressCnt > HDAccount.MaxUnusedNewAddressCount) {
                     if (pathType.nextPathType() != null) {
-                        getHDAccountUnspentAddress(hdSeedId, pathType.nextPathType(), 0, MaxNoTxAddress, -1, 0, unspentAddresses, isHDAccountHot, blockchairUtxos);
+                        if (addressesStr.equals("")) {
+                            getHDAccountUnspentAddress(hdSeedId, pathType.nextPathType(), 0, MaxNoTxAddress, -1, 0, unspentAddresses, isHDAccountHot, blockchairUtxos);
+                        } else {
+                            queryAddressesUnspent(hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot, blockchairUtxos, queryHdAccountAddressList, addressesStr);
+                        }
                     } else {
                         getUnspentTxForHDAccount(unspentAddresses, isHDAccountHot, blockchairUtxos);
                     }
@@ -818,6 +828,10 @@ public class TransactionsUtil {
                 addressesStr = addressesStr + "," + hdAccountAddress.getAddress();
             }
         }
+        queryAddressesUnspent(hdSeedId, pathType, endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot, blockchairUtxos, queryHdAccountAddressList, addressesStr);
+    }
+
+    private static void queryAddressesUnspent(final int hdSeedId, final AbstractHD.PathType pathType, final int endIndex, int lastTxIndex, int unusedAddressCnt, ArrayList<HDAccount.HDAccountAddress> unspentAddresses, boolean isHDAccountHot, ArrayList<JSONObject> blockchairUtxos, ArrayList<HDAccount.HDAccountAddress> queryHdAccountAddressList, String addressesStr) throws Exception {
         if (addressesStr.equals("")) {
             getHDAccountUnspentAddress(hdSeedId, pathType, endIndex, MaxNoTxAddress + endIndex, lastTxIndex, unusedAddressCnt, unspentAddresses, isHDAccountHot, blockchairUtxos);
             return;
