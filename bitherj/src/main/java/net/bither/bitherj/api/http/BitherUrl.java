@@ -33,6 +33,7 @@ public class BitherUrl {
         public static final String BITHER_HDM_DOMAIN = "hdm.bither.net";
         public static final String BLOCK_CHAIN_INFO = "blockChain.info";
         public static final String BTC_COM = "chain.api.btc.com";
+        public static final String MEMPOOL_SPACE = "mempool.space";
 
 
         public static final String BITHER_BITCOIN = Utils.format(FORMAT_HTTP, BITHER_BITCOIN_DOMAIN);
@@ -46,6 +47,7 @@ public class BitherUrl {
         public static final String BITHER_URL = Utils.format(FORMAT_HTTP, "bither.net");
         public static final String BLOCK_CHAIN = Utils.format(FORMAT_HTTPS, BLOCK_CHAIN_INFO);
         public static final String BTC_COM_URL = Utils.format(FORMAT_HTTPS, BTC_COM);
+        public static final String MEMPOOL_SPACE_URL = Utils.format(FORMAT_HTTPS, MEMPOOL_SPACE);
 
         // BlockChain.info
         public static final String BITHER_BLOCKCHAIN_DOMAIN = "blockchain.info";
@@ -130,5 +132,9 @@ public class BitherUrl {
     // btc.com Api
     public static final String BTC_COM_GET_LASTST_BLOCK = BITHER_DNS.BTC_COM_URL + "v3/block/latest";
     public static final String BTC_COM_GET_SPVBLOCK_API = BITHER_DNS.BTC_COM_URL + "v3/block/%d";
+
+    //mempool.space Api
+    public static final String MEMPOOL_SPACE_GET_LASTST_BLOCK = BITHER_DNS.MEMPOOL_SPACE_URL + "api/blocks/tip/height";
+    public static final String MEMPOOL_SPACE_GET_SPVBLOCK_API = BITHER_DNS.MEMPOOL_SPACE_URL + "api/v1/blocks/%d";
 
 }

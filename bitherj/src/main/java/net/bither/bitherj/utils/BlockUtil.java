@@ -24,6 +24,9 @@ import net.bither.bitherj.api.BlockChainGetLatestBlockApi;
 import net.bither.bitherj.api.BtcComDownloadSpvApi;
 import net.bither.bitherj.api.BtcComGetLatestBlockApi;
 import net.bither.bitherj.api.DownloadSpvApi;
+import net.bither.bitherj.api.MempoolSpaceDownloadSpvApi;
+import net.bither.bitherj.api.MempoolSpaceGetLatestBlockApi;
+import net.bither.bitherj.api.http.BitherUrl;
 import net.bither.bitherj.core.Block;
 import net.bither.bitherj.core.BlockChain;
 
@@ -75,6 +78,18 @@ public class BlockUtil {
         return block;
     }
 
+    public static Block getLatestBlockHeightFromMempoolSpace(int latestHeight) throws Exception {
+        int height = 0;
+        if (latestHeight % 2016 !=0){
+            height = latestHeight - (latestHeight%2016);
+        }else {
+            height = latestHeight;
+        }
+        MempoolSpaceDownloadSpvApi mempoolSpaceDownloadSpvApi = new MempoolSpaceDownloadSpvApi(height);
+        mempoolSpaceDownloadSpvApi.handleHttpGet();
+        Block block = mempoolSpaceDownloadSpvApi.getResult();
+        return block;
+    }
 
     public static Block formatStoreBlockFromBlockChainInfo(JSONObject jsonObject)
             throws JSONException {
@@ -84,6 +99,20 @@ public class BlockUtil {
         String mrklRoot = jsonObject.getString(MRKL_ROOT);
         int time = jsonObject.getInt(TIME);
         long difficultyTarget = jsonObject.getLong(BITS);
+        long nonce = jsonObject.getLong(NONCE);
+
+        return BlockUtil.getStoredBlock(ver, prevBlock, mrklRoot, time,
+                difficultyTarget, nonce, height);
+    }
+
+    public static Block formatStoreBlockFromMempoolSpaceInfo(JSONObject jsonObject)
+            throws JSONException {
+        long ver = jsonObject.getLong("version");
+        int height = jsonObject.getInt(HEIGHT);
+        String prevBlock = jsonObject.getString("previousblockhash");
+        String mrklRoot = jsonObject.getString("merkle_root");
+        int time = jsonObject.getInt("timestamp");
+        long difficultyTarget = jsonObject.getLong("bits");
         long nonce = jsonObject.getLong(NONCE);
 
         return BlockUtil.getStoredBlock(ver, prevBlock, mrklRoot, time,
@@ -148,29 +177,38 @@ public class BlockUtil {
         }
         Block block = null;
         try {
-            block = DownloadSpvApi.getOneSpvBlock();
+            MempoolSpaceGetLatestBlockApi mempoolSpaceGetLatestBlockApi = new MempoolSpaceGetLatestBlockApi();
+            mempoolSpaceGetLatestBlockApi.handleHttpGet();
+            block = mempoolSpaceGetLatestBlockApi.getResult();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        try {
-            if (block == null) {
+        if (block == null) {
+            try {
+                block = DownloadSpvApi.getOneSpvBlock();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (block == null) {
+            try {
                 BtcComGetLatestBlockApi btcComGetLatestBlockApi = new BtcComGetLatestBlockApi();
                 btcComGetLatestBlockApi.handleHttpGet();
                 block = btcComGetLatestBlockApi.getResult();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        try {
-            if (block == null) {
+        if (block == null) {
+            try {
                 BlockChainGetLatestBlockApi blockChainGetLatestBlockApi = new BlockChainGetLatestBlockApi();
                 blockChainGetLatestBlockApi.handleHttpGet();
                 block = blockChainGetLatestBlockApi.getResult();
+            } catch (Exception e) {
+                e.printStackTrace();
+                AbstractApp.notificationService.sendBroadcastGetSpvBlockComplete(false);
+                throw e;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            AbstractApp.notificationService.sendBroadcastGetSpvBlockComplete(false);
-            throw e;
         }
         if (block.getBlockNo() % BitherjSettings.INTERVAL == 0) {
             BlockChain.getInstance().addSPVBlock(block);

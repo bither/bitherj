@@ -31,7 +31,7 @@ import static net.bither.bitherj.api.http.HttpSetting.TIMEOUT_REREQUEST_DELAY;
 public class DownloadSpvApi extends HttpGetResponse<Block> {
 
     public static Block getOneSpvBlock() throws Exception {
-        return getOneSpvBlock(BitherBCUrl.getInstance().getDns(), 1);
+        return getOneSpvBlock(1);
     }
 
     private DownloadSpvApi() {
@@ -39,8 +39,8 @@ public class DownloadSpvApi extends HttpGetResponse<Block> {
         setUrl(url);
     }
 
-    private static Block getOneSpvBlock(String firstBcDns, int requestCount) throws Exception {
-        Block block = null;
+    private static Block getOneSpvBlock(int requestCount) throws Exception {
+        Block block;
         try {
             DownloadSpvApi downloadSpvApi = new DownloadSpvApi();
             downloadSpvApi.handleHttpGet();
@@ -48,23 +48,15 @@ public class DownloadSpvApi extends HttpGetResponse<Block> {
             return block;
         } catch (Exception ex) {
             ex.printStackTrace();
-            if (BitherBCUrl.isChangeDns(ex)) {
-                String nextBcDns = BitherBCUrl.getNextBcDns(firstBcDns);
-                if (!Utils.isEmpty(nextBcDns)) {
-                    return getOneSpvBlock(firstBcDns, 1);
-                }
+            if (requestCount > TIMEOUT_REREQUEST_CNT) {
                 throw ex;
-            } else {
-                if (requestCount > TIMEOUT_REREQUEST_CNT) {
-                    throw ex;
-                }
-                try {
-                    Thread.sleep(TIMEOUT_REREQUEST_DELAY);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                return getOneSpvBlock(firstBcDns, requestCount + 1);
             }
+            try {
+                Thread.sleep(TIMEOUT_REREQUEST_DELAY);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return getOneSpvBlock(requestCount + 1);
         }
     }
 
