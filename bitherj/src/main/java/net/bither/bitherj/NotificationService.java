@@ -21,8 +21,6 @@ public interface NotificationService {
 
     void sendBroadcastSyncSPVFinished(boolean isFinished);
 
-    void removeBroadcastSyncSPVFinished();
-
     void sendBroadcastGetSpvBlockComplete(boolean isComplete);
 
     void sendLastBlockChange();
@@ -32,21 +30,13 @@ public interface NotificationService {
 
     void sendBroadcastPeerState(int numPeers);
 
-    void removeBroadcastPeerState();
-
     void sendBroadcastAddressLoadCompleteState();
-
-    void removeAddressLoadCompleteState();
 
     void sendConnectedChangeBroadcast(String connectedChangeBroadcast, boolean isConnected);
 
     void sendBroadcastProgressState(double value, long unsyncBlockNumber);
 
-    void removeProgressState();
-
     void sendBroadcastAddressTxLoading(String address);
-
-    void removeAddressTxLoading();
 
     void sendBroadcastAddressTxLoadError();
 

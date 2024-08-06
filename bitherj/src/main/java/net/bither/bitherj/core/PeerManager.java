@@ -38,6 +38,7 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -161,7 +162,6 @@ public class PeerManager {
         if (running.getAndSet(false)) {
             log.info("peer manager stop");
             if (connected.getAndSet(false)) {
-                AbstractApp.notificationService.removeBroadcastPeerState();
                 bloomFilter = null;
                 sendConnectedChangeBroadcast();
                 executor.getQueue().clear();
@@ -232,7 +232,7 @@ public class PeerManager {
     }
 
     public List<Peer> getConnectedPeers() {
-        return new ArrayList<Peer>(connectedPeers);
+        return new CopyOnWriteArrayList<Peer>(connectedPeers);
     }
 
     private HashSet<Peer> bestPeers() {
