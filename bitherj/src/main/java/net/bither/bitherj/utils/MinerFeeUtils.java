@@ -3,7 +3,7 @@ package net.bither.bitherj.utils;
 public class MinerFeeUtils {
 
     public static long getFinalMinerFee(long fee, boolean isNoPrivKey) {
-        long finalMinerFee = Math.max(fee, 1000);
+        long finalMinerFee = Math.max(fee, 546);
         if (!isNoPrivKey) {
             return finalMinerFee;
         }
