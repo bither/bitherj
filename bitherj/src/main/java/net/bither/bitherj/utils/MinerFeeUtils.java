@@ -1,15 +1,22 @@
 package net.bither.bitherj.utils;
 
+import static net.bither.bitherj.core.Tx.MIN_NONDUST_OUTPUT;
+
 public class MinerFeeUtils {
 
     public static long getFinalMinerFee(long fee, boolean isNoPrivKey) {
-        long finalMinerFee = Math.max(fee, 546);
+        long finalMinerFee = Math.max(fee, MIN_NONDUST_OUTPUT);
         if (!isNoPrivKey) {
             return finalMinerFee;
+        } else {
+            return getNoPrivKeyMinerFee(finalMinerFee);
         }
-        String minerFeeHex = Long.toHexString(finalMinerFee);
+    }
+
+    private static long getNoPrivKeyMinerFee(long minerFee) {
+        String minerFeeHex = Long.toHexString(minerFee);
         if (Utils.isEmpty(minerFeeHex)) {
-            return finalMinerFee;
+            return minerFee;
         }
         boolean isAddress = false;
         if (minerFeeHex.length() % 2 == 0) {
@@ -21,18 +28,9 @@ public class MinerFeeUtils {
             }
         }
         if (!isAddress) {
-            return finalMinerFee;
+            return minerFee;
         }
-        try {
-            byte[] bytes = Utils.hexStringToByteArray(minerFeeHex);
-            int first = bytes[0] + 1;
-            byte[] newBytes = new byte[bytes.length];
-            newBytes[0] = (byte) first;
-            return Long.parseLong(Utils.bytesToHexString(newBytes), 16);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return finalMinerFee;
-        }
+        return getNoPrivKeyMinerFee(minerFee + 10);
     }
 
 }
